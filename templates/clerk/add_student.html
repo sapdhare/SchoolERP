@@ -1,0 +1,604 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_student.css') }}">
+
+<!-- FLATPICKR CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- FLATPICKR JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+<!-- ================= HEADER ================= -->
+<div class="student-page-header">
+    <div class="header-content">
+        <h1>Student Registration</h1>
+        <span class="marathi-title">विद्यार्थी नोंदणी</span>
+
+        <p class="header-desc">
+            Fill student details as per school register. All TC data will be generated from this.
+        </p>
+    </div>
+</div>
+
+<!-- ================= NOTE ================= -->
+<div class="student-note">
+    <p>
+        कृपया माहिती अचूक भरा. हीच माहिती टीसी व इतर कागदपत्रांसाठी वापरली जाईल.
+    </p>
+</div>
+
+<!-- ================= 1. STUDENT IDENTITY ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Student Identity</h2>
+        <p>विद्यार्थ्याची ओळख माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>School Register No <span>अंक क्रमांक</span></label>
+            <input type="text" name="school_register_no"
+                placeholder="Enter Register Number" required>
+        </div>
+
+        <div class="form-group">
+            <label>Full Name <span>पूर्ण नाव</span></label>
+            <input type="text" name="name" placeholder="Enter Full Name " required>
+        </div>
+
+        <div class="form-group">
+            <label>Father Name <span>वडिलांचे नाव</span></label>
+            <input type="text" name="father_name" placeholder="Enter Father Name " required>
+        </div>
+
+        <div class="form-group">
+            <label>Mother Name <span>आईचे नाव</span></label>
+            <input type="text" name="mother_name" placeholder="Enter Mother Name " required>
+        </div>
+        <div class="form-group">
+            <label>Student ID <span>विद्यार्थी आयडी</span></label>
+            <input type="text" name="student_uid"
+                placeholder="Enter Student ID">
+        </div>
+        <div class="form-group">
+            <label>Aadhaar / UID <span>आधार / UID</span></label>
+
+            <input 
+                type="text" 
+                name="aadhaar"
+                id="aadhaarInput"
+                placeholder="Enter 12-digit Aadhaar Number"
+                maxlength="12"
+                required
+                oninput="validateAadhaar(this)">
+        </div>
+        <div class="form-group">
+            <label>APAAR ID <span>अपार आयडी</span></label>
+            <input
+                type="text"
+                name="apaar_id"
+                placeholder="Enter APAAR ID"
+                maxlength="20">
+        </div>
+    </div>
+</div>
+ 
+<!-- ================= 2. PERSONAL ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Personal Details</h2>
+        <p>वैयक्तिक माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Date of Birth <span>जन्मतारीख</span></label>
+            <input type="text" name="dob" id="dobPicker" placeholder="Select Date of Birth" required readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Birth Place <span>जन्मस्थान</span></label>
+            <input type="text" name="birth_place" placeholder="Enter Birth Place">
+        </div>
+
+        <div class="form-group">
+            <label>Nationality <span>राष्ट्रीयत्व</span></label>
+            <input type="text" name="nationality" placeholder="Enter Your Nationality">
+        </div>
+
+        <div class="form-group">
+            <label>Mother Tongue <span>मातृभाषा</span></label>
+            <input type="text" name="mother_tongue" placeholder="Enter your mother Tongue" required>
+        </div>
+
+        <div class="form-group">
+            <label>Religion <span>धर्म</span></label>
+            <input type="text" name="religion" placeholder="Enter your Religion " required>
+        </div>
+
+        <div class="form-group">
+            <label>Caste <span>जात</span></label>
+            <input type="text" name="caste" placeholder="Enter your caste" required>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= 3. ADDRESS ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Address Details</h2>
+        <p>पत्ता माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Village / City <span>गाव / शहर</span></label>
+            <input type="text" name="city" placeholder="Enter your city " required>
+        </div>
+
+        <div class="form-group">
+            <label>Taluka <span>तालुका</span></label>
+            <input type="text" name="taluka" placeholder="Enter your taluka" required>
+        </div>
+
+        <div class="form-group">
+            <label>District <span>जिल्हा</span></label>
+            <input type="text" name="district" placeholder="Enter your district" required>
+        </div>
+
+        <div class="form-group">
+            <label>State <span>राज्य</span></label>
+            <input type="text" name="state" placeholder="Enter your state" required>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= 4. ADMISSION ================= -->
+
+<div class="form-section">
+    <div class="section-title">
+        <h2>Admission Details</h2>
+        <p>प्रवेश माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Admission No <span>प्रवेश क्रमांक</span></label>
+
+            <input type="text" value="{{ next_admission }}" readonly>
+
+            <!-- hidden field -->
+            <input type="hidden" name="admission_no" value="{{ next_admission }}">
+
+            <small>Auto generated (स्वयंचलित तयार)</small>
+        </div>
+
+        <div class="form-group">
+            <label>UDISE No <span>यूडायस क्रमांक</span></label>
+
+            <input 
+                type="text" 
+                value="{{ school_udise }}" 
+                readonly
+            >
+
+            <!-- hidden field for form submit -->
+            <input 
+                type="hidden" 
+                name="school_udise" 
+                value="{{ school_udise }}"
+            >
+        </div>
+        
+        <div class="form-group">
+            <label>Admission Date <span>प्रवेश दिनांक</span></label>
+            <input type="text" name="admission_date" id="admissionPicker" placeholder="Enter Admission Date "required readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Class <span>इयत्ता</span></label>
+            <select name="class" required>
+                <option value="">Select Class</option>
+                <option>1</option><option>2</option><option>3</option>
+                <option>4</option><option>5</option><option>6</option>
+                <option>7</option><option>8</option><option>9</option><option>10</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Section <span>विभाग</span></label>
+            <select name="section" required>
+                <option value="">Select Section</option>
+                <option>A</option><option>B</option><option>C</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Last School <span>मागील शाळा</span></label>
+            <input type="text" name="previous_school" placeholder="Enter Your Last School Name" >
+        </div>
+
+    </div>
+</div>
+<!-- NOTE -->
+ <div class="student-note">
+    <p>
+        * Fill previous school details only if student is coming from another school.<span>* विद्यार्थी इतर शाळेतून प्रवेश घेत असल्यासच मागील शाळेची माहिती भरावी</span>
+        
+    </p>
+</div>
+<!-- ================= 5. Previous ACADEMIC PROGRESS ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Previous Academic Details</h2>
+        <p>मागील शैक्षणिक माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Last Exam Passed <span>शेवटची परीक्षा</span></label>
+            <input type="text" name="last_exam" placeholder="for e.g. 8th Standard and Leave blank if first admission">
+        </div>
+
+        <div class="form-group">
+            <label>Result <span>निकाल</span></label>
+            <select name="result_status" required>
+                <option value="">Select Status</option>
+                <option>Pass</option>
+                <option>Fail</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Progress <span>प्रगती</span></label>
+            <select name="progress" required>
+                <option value="">Select Academic Progress</option>
+                <option>Excellent (85%+)</option>
+                <option>Good (60–85%)</option>
+                <option>Average (40–60%)</option>
+                <option>Needs Improvement</option>
+            </select>
+        </div>
+
+    <div class="form-group">
+    <label>Conduct <span>वर्तन</span></label>
+    <textarea 
+    name="conduct"
+    rows="3"
+    placeholder="e.g. Well-behaved, disciplined, respectful towards teachers and students"></textarea>
+    </div>
+
+    </div>
+</div>
+
+<!-- ================= 6. LEAVING =================
+<div class="form-section">
+    <div class="section-title">
+        <h2>Leaving Details</h2>
+        <p>शाळा सोडण्याची माहिती</p>
+    </div> 
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Leaving Date <span>सोडल्याची तारीख</span></label>
+            <input 
+                type="date" 
+                name="leaving_date" 
+                title="Date when student officially left the school" required>
+        </div>
+
+        <div class="form-group">
+            <label>Reason for Leaving <span>कारण</span></label>
+            <select name="leaving_reason">
+                <option value="">Select Reason</option>
+                <option>Transfer to another school</option>
+                <option>Completed schooling</option>
+                <option>Family relocation</option>
+                <option>Personal reasons</option>
+                <option>Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>TC Issue Date <span>टीसी दिनांक</span></label>
+            <input 
+                type="date" 
+                name="tc_date" 
+                title="Date when Transfer Certificate is issued" required> 
+        </div> -->
+
+        <!-- Optional but VERY useful -->
+        <!-- <div class="form-group">
+            <label>TC Number <span>टीसी क्रमांक</span></label>
+            <input 
+                type="text" 
+                name="tc_number" 
+                placeholder="e.g. TC/2026/045"
+                required
+            >
+        </div>
+
+    </div>
+</div> -->
+
+<!-- ================= 6. PARENT DETAILS ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Parent Details</h2>
+        <p>पालक माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <!-- PRIMARY CONTACT -->
+       <div class="form-group">
+    <label>Primary Mobile <span>मुख्य मोबाईल</span></label>
+    <input 
+        type="tel"
+        name="primary_mobile"
+        placeholder="e.g. 9876543210"
+        maxlength="10"
+        pattern="[6-9]{1}[0-9]{9}"
+        inputmode="numeric"
+        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+        required
+    >
+</div>
+
+        <!-- ALTERNATE CONTACT -->
+        <div class="form-group">
+            <label>Alternate Mobile <span>पर्यायी मोबाईल</span></label>
+            <input 
+                type="tel" 
+                name="alternate_mobile" 
+                placeholder="Optional secondary contact number"
+                maxlength="10"
+                pattern="[6-9]{1}[0-9]{9}"
+                inputmode="numeric"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+            >
+        </div>
+
+        <!-- EMAIL -->
+        <div class="form-group">
+            <label>Email Address <span>ईमेल पत्ता</span></label>
+
+            <input
+                type="email"
+                name="email"
+                placeholder="e.g. parent@gmail.com"
+                maxlength="255"
+            >
+        </div>
+
+        <!-- OCCUPATION -->
+        <div class="form-group">
+            <label>Parent Occupation <span>व्यवसाय</span></label>
+            <input 
+                type="text" 
+                name="occupation" 
+                placeholder="e.g. Farmer / Teacher / Business"
+            >
+        </div>
+
+        <!-- ANNUAL INCOME -->
+        <div class="form-group">
+            <label>Annual Income <span>वार्षिक उत्पन्न</span></label>
+            <input 
+                type="number" 
+                name="income" 
+                placeholder="e.g. 200000"
+                min="0"
+            >
+        </div>
+
+        <!-- GUARDIAN () -->
+        <div class="form-group">
+            <label>Guardian Name <span>संरक्षक (ऐच्छिक)</span></label>
+            <input 
+                type="text" 
+                name="guardian_name" 
+                placeholder="Only if different from parents"
+            >
+        </div>
+
+        <div class="form-group">
+            <label>Guardian Mobile <span>संरक्षक मोबाईल</span></label>
+            <input 
+                type="tel" 
+                name="guardian_mobile" 
+                placeholder="e.g. 9876543210"
+                maxlength="10"
+                pattern="[6-9]{1}[0-9]{9}"
+                inputmode="numeric"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+             
+            >
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= 7. PHOTO ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Upload Photo</h2>
+        <p>फोटो अपलोड</p>
+    </div>
+
+    <div class="photo-upload-wrapper">
+
+        <!-- File Input -->
+        <input 
+            type="file" 
+            name="photo" 
+            accept="image/*"
+            onchange="previewImage(event)" required
+        >
+
+        <!-- Helper Text -->
+        <small style="color: #777;">
+            Upload passport size photo (JPG/PNG, max 2MB)
+        </small>
+
+        <!-- Image Preview -->
+        <div style="margin-top:10px;">
+            <img id="photoPreview" src="" alt="Preview" 
+                 style="max-width:150px; margin-top: -150px; margin-left:170px; display:none; border-radius:8px;">
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= ACTION ================= -->
+<div class="form-actions">
+  <button type="submit" id="saveBtn" class="btn-save">💾 Save Student</button>
+    <button type="reset" class="btn-reset">🔄 Reset</button>
+   <a href="{{ url_for('clerk_students') }}" class="btn-reset">📋 View Students</a>
+</div>
+
+ 
+</form>
+
+ 
+ 
+<script>
+
+/* ================= 1. IMAGE PREVIEW ================= */
+/* This shows image before uploading */
+function previewImage(event) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    // File size validation (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert("File size must be less than 2MB");
+        event.target.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(){
+        const img = document.getElementById('photoPreview');
+        img.src = reader.result;
+        img.style.display = 'block';
+    }
+
+    reader.readAsDataURL(file);
+}
+
+
+/* ================= COMMON ELEMENTS ================= */
+const form = document.querySelector("form");
+const btn = document.getElementById("saveBtn");
+
+
+/* ================= 2. AUTO SAVE FORM (NEW) ================= */
+
+// Load saved data when page loads
+window.addEventListener("load", () => {
+    const savedData = JSON.parse(localStorage.getItem("studentForm_{{ school_udise }}"));
+
+    if (savedData) {
+        Object.keys(savedData).forEach(key => {
+            const field = form.elements[key];
+            if (field) {
+                field.value = savedData[key];
+            }
+        });
+    }
+});
+
+// Save data on every input
+form.addEventListener("input", () => {
+    const formData = {};
+
+    Array.from(form.elements).forEach(el => {
+        if (el.name && el.type !== "file") { // skip file input
+            formData[el.name] = el.value;
+        }
+    });
+
+    localStorage.setItem("studentForm_{{ school_udise }}", JSON.stringify(formData));
+});
+
+
+/* ================= 3. FORM SUBMIT LOADING ================= */
+
+form.addEventListener("submit", function() {
+
+    // Clear saved data after successful submit
+    localStorage.removeItem("studentForm_{{ school_udise }}");
+
+    btn.innerText = "Saving...";
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+
+});
+
+
+/* ================= 4. RESET CONFIRMATION ================= */
+
+const resetBtn = document.querySelector("button[type='reset']");
+
+resetBtn.addEventListener("click", function(e){
+
+    const confirmReset = confirm("Are you sure you want to reset the form?");
+
+    if(!confirmReset){
+        e.preventDefault();
+    } else {
+        localStorage.removeItem("studentForm_{{ school_udise }}"); // also clear saved data
+    }
+
+});
+
+function validateAadhaar(input) {
+
+    // remove non-numbers
+    input.value = input.value.replace(/\D/g, '');
+
+    // validation
+    if (input.value.length === 12) {
+        input.style.border = "2px solid #16a34a"; // green
+    } else {
+        input.style.border = "2px solid #dc2626"; // red
+    }
+}
+
+// DOB PICKER
+flatpickr("#dobPicker", {
+    dateFormat: "d-m-Y",
+    maxDate: "today", // cannot select future DOB
+    yearRange: [1990, new Date().getFullYear()],
+    allowInput: false, // disable typing
+    disableMobile: true
+});
+
+// ADMISSION DATE
+flatpickr("#admissionPicker", {
+    dateFormat: "d-m-Y",
+    maxDate: "today",
+    allowInput: false,
+    disableMobile: true
+});
+
+</script>
+
+
+{% endblock %}

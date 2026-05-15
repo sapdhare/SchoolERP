@@ -1,0 +1,232 @@
+/* ================= HEADER ================= */
+.admin-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.admin-header p {
+    color: #64748b;
+    margin-bottom: 25px;
+}
+
+/* ================= STATS ================= */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.admin-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    padding: 25px;
+    border-radius: 18px;
+
+    color: white;
+    font-weight: 500;
+
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-6px) scale(1.02);
+}
+
+/* ICON */
+.stat-icon {
+    font-size: 30px;
+    background: rgba(255,255,255,0.2);
+    padding: 12px;
+    border-radius: 12px;
+}
+
+/* TEXT */
+.admin-stat-card h2 {
+    font-size: 32px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* COLORS */
+.card-school {
+    background: linear-gradient(135deg, #0ea5a4, #22c55e);
+}
+
+.card-student {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+}
+
+.card-tc {
+    background: linear-gradient(135deg, #f97316, #f59e0b);
+}
+
+.card-bonafide {
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
+}
+
+/* ================= ACTION ================= */
+.admin-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.admin-action-card {
+    background: white;
+    padding: 25px;
+    border-radius: 18px;
+
+    border: 2px solid #e2e8f0;
+
+    transition: 0.3s;
+    cursor: pointer;
+    position: relative;
+}
+
+.admin-action-card:hover {
+    transform: translateY(-6px);
+    border-color: #0ea5a4;
+    box-shadow: 0 20px 40px rgba(14,165,164,0.15);
+}
+
+/* floating icon */
+.action-icon {
+    position: absolute;
+    top: -18px;
+    left: 20px;
+
+    background: #0ea5a4;
+    color: white;
+
+    font-size: 20px;
+    padding: 10px 12px;
+
+    border-radius: 12px;
+}
+
+.admin-action-card h3 {
+    margin-top: 15px;
+}
+
+.admin-action-card p {
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* ================= DASHBOARD INSIGHTS ================= */
+
+.admin-insight{
+    display:grid;
+    grid-template-columns: 2fr 1fr;
+    gap:25px;
+    margin-top:30px;
+    align-items:start;
+}
+
+/* ================= CHART SECTION ================= */
+
+.admin-chart-section{
+    width:100%;
+}
+
+.chart-card{
+    background:#ffffff;
+    border-radius:22px;
+    padding:28px;
+    box-shadow:0 15px 35px rgba(0,0,0,0.05);
+    border:1px solid #eef2f7;
+    min-height:450px;
+    display:flex;
+    flex-direction:column;
+}
+
+.chart-card h3{
+    font-size:22px;
+    font-weight:700;
+    color:#0f172a;
+    margin-bottom:25px;
+}
+
+.chart-card canvas{
+    width:100% !important;
+    height:350px !important;
+}
+
+/* ================= RECENT ACTIVITY ================= */
+
+.insight-card{
+    background:#ffffff;
+    border-radius:22px;
+    padding:28px;
+    box-shadow:0 15px 35px rgba(0,0,0,0.05);
+    border:1px solid #eef2f7;
+    min-height:450px;
+    display:flex;
+    flex-direction:column;
+}
+
+.insight-card h3{
+    font-size:22px;
+    font-weight:700;
+    color:#0f172a;
+    margin-bottom:20px;
+}
+
+/* ================= RECENT LIST ================= */
+
+.recent-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    max-height:360px;
+    overflow-y:auto;
+    padding-right:8px;
+}
+
+.recent-list::-webkit-scrollbar{
+    width:6px;
+}
+
+.recent-list::-webkit-scrollbar-thumb{
+    background:#d1d5db;
+    border-radius:20px;
+}
+
+.recent-item{
+    padding:14px 16px;
+    border-radius:14px;
+    background:#f8fafc;
+    border:1px solid #edf2f7;
+    font-size:15px;
+    color:#334155;
+    line-height:1.5;
+    transition:0.3s ease;
+}
+
+.recent-item:hover{
+    transform:translateY(-2px);
+    background:#f1f5f9;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:1100px){
+    .admin-insight{
+        grid-template-columns:1fr;
+    }
+
+    .chart-card,
+    .insight-card{
+        min-height:auto;
+    }
+
+    .chart-card canvas{
+        height:280px !important;
+    }
+}

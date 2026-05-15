@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Renewal</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/subscription/renew_subscription.css') }}">
+</head>
+<body>
+
+<div class="rs-page">
+
+    <!-- TOPBAR -->
+    <div class="rs-topbar">
+
+        <a href="{{ url_for('clerk_dashboard') }}" class="rs-back-btn">
+            ← Back
+        </a>
+
+        <div class="rs-top-title">
+            Subscription Management
+        </div>
+
+    </div>
+
+    <!-- ACTIVE PLAN -->
+    <div class="rs-current-wrapper">
+
+        <div class="rs-card">
+
+            <div class="rs-badge">
+                Current Active Plan
+            </div>
+
+            <h2 class="rs-plan-name">
+                {{ subscription.plan_name }}
+            </h2>
+
+            <div class="rs-price-box">
+                <p class="rs-label">Current Renewal Amount</p>
+                <h1 class="rs-price">
+                    ₹{{ subscription.amount }}
+                </h1>
+            </div>
+
+            <div class="rs-details">
+
+                <div class="rs-item">
+                    <span>Status</span>
+                    <strong>{{ subscription.status }}</strong>
+                </div>
+
+                <div class="rs-item">
+                    <span>Expiry Date</span>
+                    <strong>{{ subscription.end_date }}</strong>
+                </div>
+
+            </div>
+
+            <form method="POST"
+                  action="/clerk/subscription/payment">
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                <input type="hidden"
+                       name="subscription_id"
+                       value="{{ subscription.id }}">
+
+                <input type="hidden"
+                       name="plan_id"
+                       value="{{ subscription.plan_id }}">
+
+                <button type="submit"
+                        class="rs-renew-btn">
+                    Renew Current Plan
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- NOTICE -->
+    <div class="rs-note-box">
+
+        <h3>Important Note</h3>
+
+        <p>
+            Renew your current subscription or upgrade your school to a better plan.
+            After successful payment, your subscription will be activated immediately.
+        </p>
+
+        <p>
+            आपली सध्याची योजना नूतनीकरण करा किंवा अधिक चांगल्या योजनेत अपग्रेड करा.
+            पेमेंट यशस्वी झाल्यानंतर योजना त्वरित सक्रिय होईल.
+        </p>
+
+    </div>
+
+    <!-- AVAILABLE PLANS -->
+    <div class="rs-plan-section">
+
+        <div class="rs-section-head">
+            Available Plans
+        </div>
+
+        <div class="rs-plan-grid">
+
+            {% for plan in plans %}
+
+            {% if plan[0] != subscription.plan_id %}
+            <div class="rs-plan-option">
+
+                <div class="rs-plan-top">
+                    <h4>{{ plan[1] }}</h4>
+                    <h2>₹{{ plan[2] }}</h2>
+                    <span>per month</span>
+                </div>
+
+                <ul class="rs-feature-list">
+                    <li>✔ Student Management</li>
+                    <li>✔ TC Management</li>
+                    <li>✔ Bonafide Certificates</li>
+                    <li>✔ School Reports</li>
+                    <li>✔ Support Included</li>
+                </ul>
+
+                <form method="POST"
+                      action="/clerk/subscription/payment">
+
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="{{ csrf_token() }}">
+
+                    <input type="hidden"
+                           name="subscription_id"
+                           value="{{ subscription.id }}">
+
+                    <input type="hidden"
+                           name="plan_id"
+                           value="{{ plan[0] }}">
+
+                    <button type="submit"
+                            class="rs-plan-btn">
+                        Choose This Plan
+                    </button>
+
+                </form>
+
+            </div>
+              {% endif %}
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

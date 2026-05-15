@@ -1,0 +1,201 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_student.css') }}">
+<!-- FLATPICKR -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
+
+<form id="tcForm" method="POST"
+      action="{{ url_for('tc_form', id=student.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ 
+
+<!-- ================= HEADER ================= -->
+<div class="student-page-header">
+    <div class="header-content">
+        <h1>Generate TC</h1>
+        <span class="marathi-title">टीसी तयार करा</span>
+
+        <p class="header-desc">
+            Fill leaving details and verify student information before generating TC.
+        </p>
+    </div>
+</div>
+
+<!-- ================= NOTE ================= -->
+<div class="student-note">
+    <p>
+        कृपया खालील माहिती तपासा. चुकीची माहिती असल्यास आधी "Edit Student" मध्ये दुरुस्ती करा.
+    </p>
+</div>
+
+<!-- ================= STUDENT INFO (READ ONLY) ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Student Information</h2>
+        <p>विद्यार्थ्याची माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>School Register No</label>
+            <input type="text" value="{{ student.school_register_no or '' }}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" value="{{ student.name }}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Father Name</label>
+            <input type="text" value="{{ student.father_name }}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Student ID</label>
+            <input type="text" value="{{ student.student_uid or '' }}" readonly>
+        </div>
+
+
+        <div class="form-group">
+            <label>Aadhaar</label>
+            <input type="text" value="{{ student.aadhaar }}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>APAAR ID</label>
+            <input type="text" value="{{ student.apaar_id or '' }}" readonly>
+        </div>
+
+
+        <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="text" value="{{ student.dob }}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Class</label>
+            <input type="text" value="{{ student['class'] }}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Previous School</label>
+            <input type="text" value="{{ student.previous_school or '' }}" readonly>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= LEAVING DETAILS ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Leaving Details</h2>
+        <p>शाळा सोडण्याची माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Leaving Date <span>सोडल्याची तारीख</span></label>
+            <input type="text" name="leaving_date" id="leavingDatePicker" placeholder="Select Leaving Date" required readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Reason for Leaving <span>कारण</span></label>
+            <input type="text" name="leaving_reason" maxlength="200" required>
+        </div>
+
+        <div class="form-group">
+            <label>TC Issue Date <span>टीसी दिनांक</span></label>
+            <input type="text" name="tc_date" id="tcDatePicker" placeholder="Select TC ISSUE Date" required readonly>
+        </div>
+
+        <div class="form-group">
+            <label>TC Number <span>टीसी क्रमांक</span></label>
+
+           <input type="text" value="{{ tc_number }}" readonly>
+
+            <small>Auto generated (स्वयंचलित तयार)</small>
+        </div>
+
+        <div class="form-group">
+            <label>Remark <span>शेरा</span></label>
+            <textarea name="remark" rows="3" maxlength="200"></textarea>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= FINAL WARNING ================= -->
+<div class="student-note">
+    <p>
+        ⚠️ कृपया सर्व माहिती नीट तपासा. TC तयार झाल्यानंतर बदल करणे कठीण होऊ शकते.
+    </p>
+</div>
+
+<!-- ================= ACTION ================= -->
+<div class="form-actions">
+
+    <button type="button" class="btn-save" onclick="confirmTC()">
+        📄 Generate TC
+    </button>
+
+    <a href="{{ url_for('clerk_students') }}" class="btn-reset">Back</a>
+
+</div>
+
+</form>
+
+<script>
+function confirmTC() {
+
+    const message = `
+⚠️ Please verify all details before generating TC.
+
+कृपया सर्व माहिती नीट तपासा.
+
+Do you want to proceed?
+तुम्हाला पुढे जायचे आहे का?
+`;
+
+    if (confirm(message)) {
+
+        // ✅ PREVENT DOUBLE CLICK (IMPORTANT)
+        const btn = document.querySelector(".btn-save");
+        btn.disabled = true;
+        btn.innerText = "Generating...";
+
+         document.getElementById("tcForm").submit();
+    }
+
+}
+
+// ================= DATE PICKERS =================
+
+// Leaving Date
+flatpickr("#leavingDatePicker", {
+    dateFormat: "Y-m-d",
+    maxDate: "today",
+    allowInput: false,
+    disableMobile: true
+});
+
+// TC Date
+flatpickr("#tcDatePicker", {
+    dateFormat: "Y-m-d",
+    maxDate: "today",
+    defaultDate: "today",
+    allowInput: false,
+    disableMobile: true
+});
+
+</script>
+
+{% endblock %}

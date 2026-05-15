@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+<section class="login-page">
+
+    <div class="login-container">
+
+        <!-- LEFT SIDE -->
+        <div class="login-left">
+
+            <!-- TEXT -->
+            <div class="left-content">
+                <h2>SchoolSphere</h2>
+                <h1>Admin Control Panel</h1>
+                <p>
+                    Secure access to manage all schools, users, and system analytics.
+                </p>
+            </div>
+
+            <!-- SVG IMAGE -->
+            <img src="{{ url_for('static', filename='images/student_login.png') }}" class="student-svg">
+
+            <!-- DOT PATTERN -->
+            <div class="dots1"></div>
+            <div class="dots2"></div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="login-right">
+
+            <div class="login-box">
+
+                <h2>Admin Access 🔐</h2>
+                <p class="login-sub">Restricted system login</p>
+
+                <!-- FORM -->
+                <form class="login-form" method="POST" action="{{ url_for('superadmin_login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <input type="email" name="email" placeholder="Admin Email" required>
+
+                    <input type="password" name="password" placeholder="Password" required>
+
+                    <button type="submit" class="btn-login">Login</button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

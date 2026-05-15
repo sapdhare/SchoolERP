@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ global_settings.system_name or "SchoolSphere" }}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CSRF TOKEN -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+ 
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<header class="navbar">
+
+    <div class="logo-area">
+
+    {% if global_settings.system_logo %}
+
+        <img src="{{ url_for('static',
+        filename=global_settings.system_logo) }}"
+        class="navbar-logo">
+
+    {% endif %}
+
+    <span>
+        {{ global_settings.system_name or "SchoolSphere" }}
+    </span>
+
+</div>
+
+    <nav class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="#features">Features</a>
+        <a href="#plans">Plans</a>
+        <a href="#demo">Demo</a>
+        <a href="#how">How It Works</a>
+        <a href="#contact">Contact</a>
+        <a href="/login" class="btn-primary">Login</a>
+    </nav>
+    <div class="menu-toggle">☰</div>
+</header>
+
+<!-- ================= PAGE CONTENT ================= -->
+{% block content %}{% endblock %}
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+    <h3>
+{{ global_settings.system_name or "SchoolSphere" }}
+</h3>
+    <p>All-in-One School ERP System</p>
+    <p>© 2026 All rights reserved</p>
+</footer>
+
+<!-- JS -->
+<script>
+function toggleMenu() {
+    document.getElementById("navLinks").classList.toggle("active");
+}
+</script>
+
+<!-- ================= GLOBAL CSRF TOKEN ================= -->
+<script>
+
+    // GLOBAL CSRF TOKEN
+    const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        .getAttribute('content');
+
+</script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

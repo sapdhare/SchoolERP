@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/subscription/payment.css') }}">
+</head>
+<body>
+
+<div class="pay-page">
+
+    <div class="pay-topbar">
+
+        <a href="{{ url_for('renew_subscription') }}"
+           class="pay-back-btn">
+
+            ← Back
+
+        </a>
+
+        <h2>Secure Payment</h2>
+
+    </div>
+
+    <div class="pay-container">
+
+        <div class="pay-card">
+
+            <div class="pay-badge">
+                Payment Summary
+            </div>
+
+            <h1>{{ plan_name }}</h1>
+
+            <div class="pay-price-box">
+
+                <span>Total Payable</span>
+
+                <h2>₹{{ amount }}</h2>
+
+            </div>
+
+            <div class="pay-note">
+
+                <p>
+                    Complete payment securely to activate your subscription.
+                </p>
+
+                <p>
+                    सुरक्षित पेमेंट करून आपली योजना सक्रिय करा.
+                </p>
+
+            </div>
+
+            <button id="rzp-button"
+                    class="pay-btn">
+
+                Pay Now
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Razorpay SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    var options = {
+        "key": "{{ razorpay_key }}",
+        "amount": "{{ amount * 100 }}",
+        "currency": "INR",
+        "name": "SchoolSphere ERP",
+        "description": "Subscription Payment",
+        "order_id": "{{ razorpay_order_id }}",
+
+        "handler": function (response) {
+
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "/clerk/subscription/payment-success";
+
+            const csrf = document.createElement("input");
+            csrf.type = "hidden";
+            csrf.name = "csrf_token";
+            csrf.value = "{{ csrf_token() }}";
+
+            const subscription = document.createElement("input");
+            subscription.type = "hidden";
+            subscription.name = "subscription_id";
+            subscription.value = "{{ subscription_id }}";
+
+            const plan = document.createElement("input");
+            plan.type = "hidden";
+            plan.name = "plan_id";
+            plan.value = "{{ plan_id }}";
+
+            const payment_id = document.createElement("input");
+            payment_id.type = "hidden";
+            payment_id.name = "razorpay_payment_id";
+            payment_id.value = response.razorpay_payment_id;
+
+            const order_id = document.createElement("input");
+            order_id.type = "hidden";
+            order_id.name = "razorpay_order_id";
+            order_id.value = response.razorpay_order_id;
+
+            const signature = document.createElement("input");
+            signature.type = "hidden";
+            signature.name = "razorpay_signature";
+            signature.value = response.razorpay_signature;
+
+            form.appendChild(csrf);
+            form.appendChild(subscription);
+            form.appendChild(plan);
+            form.appendChild(payment_id);
+            form.appendChild(order_id);
+            form.appendChild(signature);
+
+            document.body.appendChild(form);
+            form.submit();
+        },
+
+        "theme": {
+            "color": "#14b8a6"
+        }
+    };
+
+    var rzp = new Razorpay(options);
+
+    document.getElementById("rzp-button").onclick = function(e){
+        rzp.open();
+        e.preventDefault();
+    };
+</script>
+
+</body>
+</html>

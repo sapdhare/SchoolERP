@@ -1,0 +1,152 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<style>
+
+/* PAGE LAYOUT FIX */
+.coming-page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;   /* 🔥 not center vertically */
+    padding: 40px 20px;
+    min-height: calc(100vh - 60px);
+}
+
+/* CARD (NOW BIG & PROPER WIDTH) */
+.coming-card {
+    width: 75%;                /* 🔥 MAIN FIX */
+    max-width: 900px;         /* prevent over stretch */
+    text-align: center;
+
+    background: linear-gradient(135deg, #f8fafc, #eef2ff);
+    padding: 50px 60px;
+    border-radius: 18px;
+    margin-top: 180px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+/* TITLE */
+.coming-card h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 10px;
+}
+
+/* DESCRIPTION */
+.coming-card p {
+    font-size: 16px;
+    color: #64748b;
+    margin-bottom: 25px;
+}
+
+/* BADGE */
+.coming-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+/* SVG */
+.svg-container {
+    margin: 25px 0;
+}
+
+svg {
+    width: 150px;
+    height: 70px;
+}
+
+/* LINE ANIMATION */
+.line {
+    fill: none;
+    stroke: #14b8a6;
+    stroke-width: 3;
+    stroke-dasharray: 120;
+    stroke-dashoffset: 120;
+    animation: draw 2s infinite ease-in-out;
+}
+
+@keyframes draw {
+    0% { stroke-dashoffset: 120; }
+    50% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -120; }
+}
+
+/* FLOAT CIRCLE */
+.coming-card::after {
+    content: "";
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    background: rgba(20,184,166,0.1);
+    border-radius: 50%;
+    top: -40px;
+    right: -40px;
+}
+ 
+
+/* PULSE DOT */
+.pulse-dot {
+    width: 12px;
+    height: 12px;
+    background: #14b8a6;
+    border-radius: 50%;
+    margin: 18px auto 0;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.7); opacity: 0.3; }
+    100% { transform: scale(1); opacity: 0.7; }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .coming-card {
+        width: 95%;
+        padding: 30px 20px;
+    }
+
+    .coming-card h1 {
+        font-size: 22px;
+    }
+}
+
+</style>
+
+<div class="coming-page">
+
+    <div class="coming-card">
+
+        <h1>{{ feature }}</h1>
+
+        <p>
+            This feature is under development and will be available soon.
+        </p>
+
+        <!-- ANIMATED SVG -->
+        <div class="svg-container">
+            <svg viewBox="0 0 120 60">
+                <path class="line" d="M5 40 Q30 10, 60 40 T115 40"></path>
+            </svg>
+        </div>
+
+        <div class="coming-badge">🚀 Coming Soon</div>
+
+        <div class="pulse-dot"></div>
+
+    </div>
+
+</div>
+
+{% endblock %}

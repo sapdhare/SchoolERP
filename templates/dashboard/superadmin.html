@@ -1,0 +1,147 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+
+<!-- ================= HEADER ================= -->
+<div class="admin-header">
+    <h1>Super Admin Dashboard</h1>
+    <p>Control all schools, students and system operations</p>
+</div>
+
+<!-- ================= STATS ================= -->
+<div class="admin-stats-grid">
+
+    <div class="admin-stat-card card-school">
+        <div class="stat-icon">🏫</div>
+        <div>
+            <p>Total Schools</p>
+            <h2>{{ total_schools }}</h2>
+        </div>
+    </div>
+
+    <div class="admin-stat-card card-student">
+        <div class="stat-icon">🎓</div>
+        <div>
+            <p>Total Students</p>
+            <h2>{{ total_students }}</h2>
+        </div>
+    </div>
+
+    <div class="admin-stat-card card-tc">
+        <div class="stat-icon">📄</div>
+        <div>
+            <p>TC Generated</p>
+            <h2>{{ total_tc }}</h2>
+        </div>
+    </div>
+
+    <div class="admin-stat-card card-bonafide">
+        <div class="stat-icon">🏅</div>
+        <div>
+            <p>Bonafide</p>
+            <h2>{{ total_bonafide or 0 }}</h2>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= ACTION CARDS ================= -->
+<div class="admin-actions">
+
+    <div class="admin-action-card" onclick="location.href='/superadmin/schools'">
+        <div class="action-icon">🏫</div>
+        <h3>School Management</h3>
+        <p>Manage all registered schools</p>
+    </div>
+
+    <div class="admin-action-card" onclick="location.href='/superadmin/all-students'">
+        <div class="action-icon">🎓</div>
+        <h3>Student Management</h3>
+        <p>Filter students by school</p>
+    </div>
+
+    <div class="admin-action-card" onclick="location.href='/superadmin/tc'">
+        <div class="action-icon">📄</div>
+        <h3>TC Records</h3>
+        <p>All transfer certificates</p>
+    </div>
+
+    <div class="admin-action-card" onclick="location.href='/superadmin/bonafide'">
+        <div class="action-icon">🏅</div>
+        <h3>Bonafide Records</h3>
+        <p>All bonafide certificates</p>
+    </div>
+
+</div>
+
+<div class="admin-insight">
+
+    <!-- Chart -->
+    <div class="admin-chart-section">
+        <div class="chart-card"
+             id="chartData"
+             data-labels='{{ chart_labels|tojson }}'
+             data-values='{{ chart_values|tojson }}'>
+
+            <h3>School-wise Students</h3>
+            <canvas id="schoolChart"></canvas>
+
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="insight-card">
+        <h3>Recent Activity</h3>
+
+        <div class="recent-list">
+
+            {% for tc in recent_tc %}
+            <div class="recent-item">
+                📄 {{ tc[0] }} → TC Generated ({{ tc[1] }})
+            </div>
+            {% endfor %}
+
+            {% for b in recent_bonafide %}
+            <div class="recent-item">
+                🏅 {{ b[0] }} → Bonafide Generated ({{ b[1] }})
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+
+</div>
+
+</div>
+<!-- CHART JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const chartBox = document.getElementById("chartData");
+
+    const labels = JSON.parse(chartBox.dataset.labels);
+    const values = JSON.parse(chartBox.dataset.values);
+
+    const ctx = document.getElementById("schoolChart");
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Students",
+                data: values
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+});
+</script>
+{% endblock %}

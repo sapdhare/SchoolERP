@@ -1,0 +1,210 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/superadmin_bonafide.css') }}">
+
+<div class="sab-container">
+
+    <!-- HEADER -->
+    <div class="sab-header">
+        <div>
+            <h1>📜 Bonafide Certificate Management</h1>
+            <p>Manage all school bonafide certificates in one place</p>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="sab-stats-grid">
+
+        <div class="sab-stat-card">
+            <div>
+                <h3>Total Bonafide</h3>
+                <h2>{{ total_bonafide }}</h2>
+            </div>
+            <span>📄</span>
+        </div>
+
+        <div class="sab-stat-card">
+            <div>
+                <h3>This Month</h3>
+                <h2>{{ month_bonafide }}</h2>
+            </div>
+            <span>📅</span>
+        </div>
+
+        <div class="sab-stat-card">
+            <div>
+                <h3>Last 7 Days</h3>
+                <h2>{{ week_bonafide }}</h2>
+            </div>
+            <span>🔥</span>
+        </div>
+
+        <div class="sab-stat-card">
+            <div>
+                <h3>Schools Using</h3>
+                <h2>{{ school_count }}</h2>
+            </div>
+            <span>🏫</span>
+        </div>
+
+    </div>
+
+    <!-- FILTERS -->
+    <form method="GET" class="sab-filter-box">
+
+        <input 
+            type="text"
+            name="search"
+            placeholder="Search student / admission / bonafide number..."
+            value="{{ request.args.get('search','') }}"
+        >
+
+        <select name="school_id">
+            <option value="">All Schools</option>
+            {% for school in schools %}
+                <option value="{{ school[0] }}"
+                    {% if request.args.get('school_id') == school[0]|string %}selected{% endif %}>
+                    {{ school[1] }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="class">
+            <option value="">All Classes</option>
+            {% for i in range(1,13) %}
+                <option value="{{ i }}"
+                    {% if request.args.get('class') == i|string %}selected{% endif %}>
+                    Class {{ i }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="sab-search-btn">Search</button>
+
+        <a href="{{ url_for('superadmin_bonafide_management') }}" class="sab-clear-btn">
+            Clear
+        </a>
+
+    </form>
+
+    <!-- TABLE -->
+    <div class="sab-table-wrapper">
+
+        <table class="sab-table">
+
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Admission No</th>
+                    <th>School Name</th>
+                    <th>Class</th>
+                    <th>Certificate No</th>
+                    <th>Purpose</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for b in bonafides %}
+                <tr>
+
+                    <td>{{ b[1] }}</td>
+                    <td>{{ b[2] }}</td>
+                    <td>
+                        <span class="sab-school-badge">
+                            {{ b[4] }}
+                        </span>
+                    </td>
+                    <td>{{ b[3] }}</td>
+                    <td>{{ b[5] }}</td>
+                    <td>{{ b[6] }}</td>
+                    <td>{{ b[7] }}</td>
+
+                    <td>
+                        <div class="sab-action-buttons">
+
+                            <a href="/clerk/bonafide/view/{{ b[0] }}?mode=admin" class="sab-btn-view">
+                                View
+                            </a>
+
+                            <a href="/clerk/bonafide/print/{{ b[0] }}?mode=admin" class="sab-btn-print">
+                                Print
+                            </a>
+
+                            <a href="/clerk/bonafide/pdf/{{ b[0] }}?mode=admin" class="sab-btn-pdf">
+                                PDF
+                            </a>
+                            <button
+                                type="button"
+                                onclick="openDeleteBonafideModal('{{ b[0] }}')"
+                                class="sab-btn-delete">
+                                Delete
+                            </button>
+
+                        </div>
+                    </td>
+
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<div id="deleteBonafideModal" class="sab-modal" style="display:none;">
+
+    <div class="sab-modal-box">
+
+        <h3>⚠️ Confirm Delete</h3>
+
+        <p>Delete this bonafide certificate?</p>
+
+        <form method="POST" action="{{ url_for('delete_bonafide') }}">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <input type="hidden" name="bonafide_id" id="deleteBonafideId">
+
+            <div class="sab-action-buttons">
+
+                <button type="button" onclick="closeDeleteBonafideModal()">
+                    Cancel
+                </button>
+
+                <button type="submit" class="sab-btn-delete">
+                    Delete
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+function openDeleteBonafideModal(id){
+
+    document.getElementById("deleteBonafideId").value = id;
+
+    document.getElementById("deleteBonafideModal").style.display = "flex";
+}
+
+function closeDeleteBonafideModal(){
+
+    document.getElementById("deleteBonafideModal").style.display = "none";
+}
+
+</script>
+
+{% endblock %}

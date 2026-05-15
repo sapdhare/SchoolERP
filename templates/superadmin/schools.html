@@ -1,0 +1,1016 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/schools.css') }}">
+
+<!-- ================= HERO HEADER ================= -->
+<div class="sa-hero">
+
+    <div class="hero-left">
+        <h1>🏫 School Management</h1>
+        <p>Manage all schools, track students and control system access</p>
+    </div>
+ 
+
+    <div class="hero-stats">
+        <div class="hero-stat-card">
+            <span>Total Schools</span>
+           <h3>{{ total_schools }}</h3>
+        </div>
+
+        <div class="hero-stat-card">
+            <span>Active Schools</span>
+            <h3>{{ active_schools }}</h3>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= SEARCH BAR ================= -->
+<div class="sa-search-box">
+
+    <div class="search-wrapper">
+        <input 
+            type="text" 
+            id="schoolSearch" 
+            placeholder="Search school name..."
+        >
+    </div>
+
+    <button onclick="searchSchools()">Search</button>
+    <button class="clear-btn" onclick="clearSearch()">Clear</button>
+
+</div>
+
+<!-- ================= SECTION TITLE ================= -->
+<div class="section-head">
+
+    <div class="section-head-left">
+        <h2>Registered Schools</h2>
+        <p>Click any school card to manage student records</p>
+    </div>
+
+    <button class="add-school-btn" onclick="openSchoolModal()">
+        + Add School
+    </button>
+
+</div>
+
+<!-- ================= SCHOOL GRID ================= -->
+<div class="sa-grid" id="schoolGrid">
+
+    {% for school in schools %}
+    <div class="sa-card" 
+         data-name="{{ school.name | lower }}"
+         onclick="goToSchool('{{ school.school_id }}')">
+
+        <div class="card-glow"></div>
+
+        <div class="sa-top">
+            <div>
+                <h2>{{ school.name }}</h2>
+                <p class="school-label">School Profile</p>
+            </div>
+
+            <span class="badge">{{ school.school_code }}</span>
+        </div>
+
+        <div class="sa-middle">
+            <div class="metric-box">
+                <span>Total Students</span>
+                <h3>{{ school.total_students }}</h3>
+            </div>
+        </div>
+
+    <div class="sa-bottom">
+
+        <!-- VIEW -->
+        <button
+            class="card-btn view-btn"
+            onclick="event.stopPropagation(); goToSchool('{{ school.school_id }}')">
+            View
+        </button>
+
+        <!-- EDIT -->
+        <button
+            class="card-btn edit-btn"
+            onclick="event.stopPropagation(); openEditSchoolModal(
+                '{{ school.school_id }}',
+                '{{ school.name }}',
+                '{{ school.udise_no or '' }}',
+                '{{ school.address }}',
+                '{{ school.phone }}',
+                '{{ school.email }}',
+                '{{ school.school_code }}',
+                '{{ school.principal_name or '' }}'
+            )">
+            Edit
+        </button>
+
+        <!-- FEATURES -->
+        <button
+            class="card-btn feature-btn"
+            onclick="event.stopPropagation(); openFeatureModal(
+                '{{ school.school_id }}'
+            )">
+            Features
+        </button>
+
+        <!-- CERTIFICATES -->
+
+        <button
+        class="card-btn certificate-btn"
+
+        
+        onclick="event.stopPropagation(); openCertificateModal(
+
+        '{{ school.school_id }}',
+
+        '{{ school.tc_prefix }}',
+        '{{ school.bonafide_prefix }}',
+
+        '{{ school.auto_numbering }}',
+        '{{ school.enable_certificate_labels }}',
+
+        '{{ school.show_tc_logo }}',
+        '{{ school.show_tc_watermark }}',
+
+        '{{ school.show_bonafide_logo }}',
+        '{{ school.show_bonafide_watermark }}'
+
+        )">
+
+        Certificates
+        
+
+        </button>
+        
+
+        <!-- STATUS -->
+        {% if school.is_active == 1 %}
+        <button
+            type="button"
+            class="card-btn deactivate-btn"
+            onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 1)">
+            Deactivate
+        </button>
+        {% else %}
+        <button
+            type="button"
+            class="card-btn activate-btn"
+            onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 0)">
+            Activate
+        </button>
+        {% endif %}
+
+    </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+<!-- ================= ADD SCHOOL MODAL ================= -->
+<div class="school-modal" id="schoolModal">
+
+    <div class="school-modal-box">
+
+        <div class="modal-head">
+            <h2>Add New School</h2>
+            <span onclick="closeSchoolModal()">&times;</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('save_school') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="school-form-grid">
+
+                <div class="school-form-group">
+                    <label>School Name</label>
+                    <input type="text" name="name" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>UDISE Number</label>
+                    <input type="text" name="udise_no" required>
+                </div>
+
+                <div class="school-form-group full">
+                    <label>Address</label>
+                    <input type="text" name="address" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>School Code</label>
+                    <input type="text" name="school_code" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>Principal Name</label>
+                    <input type="text" name="principal_name">
+                </div>
+
+            </div>
+
+            <div class="school-modal-actions">
+                <button type="button" class="cancel-btn" onclick="closeSchoolModal()">Cancel</button>
+                <button type="submit" class="save-btn">Save School</button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- EDIT SCHOOL MODAL -->
+<div class="school-modal" id="editSchoolModal">
+
+    <div class="school-modal-box">
+
+        <div class="modal-head">
+            <h2>Edit School</h2>
+            <span onclick="closeEditSchoolModal()">&times;</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('update_school') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <input type="hidden" name="school_id" id="editSchoolId">
+
+            <div class="school-form-grid">
+
+                <div class="school-form-group">
+                    <label>School Name</label>
+                    <input type="text" name="name" id="editName" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>UDISE Number</label>
+                    <input type="text" name="udise_no" id="editUdise" required>
+                </div>
+
+                <div class="school-form-group full">
+                    <label>Address</label>
+                    <input type="text" name="address" id="editAddress" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" id="editPhone" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" id="editEmail" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>School Code</label>
+                    <input type="text" name="school_code" id="editCode" required>
+                </div>
+
+                <div class="school-form-group">
+                    <label>Principal Name</label>
+                    <input type="text" name="principal_name" id="editPrincipal">
+                </div>
+
+            </div>
+
+            <div class="school-modal-actions">
+                <button type="button" class="cancel-btn" onclick="closeEditSchoolModal()">Cancel</button>
+                <button type="submit" class="save-btn">Update School</button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- ================= FEATURE MODAL ================= -->
+
+<div class="school-modal" id="featureModal">
+
+    <div class="school-modal-box">
+
+        <div class="modal-head">
+            <h2>Manage School Features</h2>
+            <span onclick="closeFeatureModal()">&times;</span>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('update_school_features') }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <input type="hidden"
+                   name="school_id"
+                   id="featureSchoolId">
+
+            <div class="feature-grid">
+
+                <!-- TC -->
+                <div class="feature-item">
+                    <label>TC Management</label>
+
+                    <select name="enable_tc_management">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+                <!-- BONAFIDE -->
+                <div class="feature-item">
+                    <label>Bonafide Management</label>
+
+                    <select name="enable_bonafide_management">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+                <!-- IMPORT EXPORT -->
+                <div class="feature-item">
+                    <label>Import / Export</label>
+
+                    <select name="enable_import_export">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+                <!-- ATTENDANCE -->
+                <div class="feature-item">
+                    <label>Attendance</label>
+
+                    <select name="enable_attendance">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+                <!-- FEES -->
+                <div class="feature-item">
+                    <label>Fee Management</label>
+
+                    <select name="enable_fee_management">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+                <!-- TEACHERS -->
+                <div class="feature-item">
+                    <label>Teacher Management</label>
+
+                    <select name="enable_teacher_management">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+                <!-- RESULTS -->
+                <div class="feature-item">
+                    <label>Results Module</label>
+
+                    <select name="enable_results">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+                <!-- TIMETABLE -->
+                <div class="feature-item">
+                    <label>Timetable</label>
+
+                    <select name="enable_timetable">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+                <!-- NOTICE -->
+                <div class="feature-item">
+                    <label>Notice Board</label>
+
+                    <select name="enable_notice_board">
+                        <option value="Enabled">Enabled</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="school-modal-actions">
+
+                <button type="button"
+                        class="cancel-btn"
+                        onclick="closeFeatureModal()">
+
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        class="save-btn">
+
+                    Save Features
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+<!-- ================= CERTIFICATE MODAL ================= -->
+
+<div class="school-modal" id="certificateModal">
+
+    <div class="school-modal-box">
+
+        <div class="modal-head">
+
+            <h2>
+                Certificate Settings
+            </h2>
+
+            <span onclick="closeCertificateModal()">
+                &times;
+            </span>
+
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('update_school_certificates') }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <input type="hidden"
+                   name="school_id"
+                   id="certificateSchoolId">
+
+            <div class="feature-grid">
+
+                <!-- TC PREFIX -->
+                <div class="feature-item">
+
+                    <label>TC Prefix</label>
+
+                    <input type="text"
+                           name="tc_prefix"
+                           id="tc_prefix"
+                           value="TC"> 
+
+                </div>
+
+                <!-- BONAFIDE PREFIX -->
+                <div class="feature-item">
+
+                    <label>Bonafide Prefix</label>
+
+                    <input type="text"
+                           name="bonafide_prefix"
+                           id="bonafide_prefix"
+                           value="BON">
+
+                </div>
+
+                <!-- AUTO NUMBERING -->
+                <div class="feature-item">
+
+                    <label>Auto Numbering</label>
+
+                    <select name="auto_numbering" id="auto_numbering">
+
+                        <option value="Enabled">
+                            Enabled
+                        </option>
+
+                        <option value="Disabled">
+                            Disabled
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- CERTIFICATE LABELS -->
+                <div class="feature-item">
+
+                    <label>Certificate Labels</label>
+
+                    <select name="enable_certificate_labels" id="enable_certificate_labels">
+
+                        <option value="Enabled">
+                            Enabled
+                        </option>
+
+                        <option value="Disabled">
+                            Disabled
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- TC LOGO -->
+                <div class="feature-item">
+
+                    <label>TC Logo</label>
+
+                    <select name="show_tc_logo" id="show_tc_logo">
+
+                        <option value="Enabled">
+                            Enabled
+                        </option>
+
+                        <option value="Disabled">
+                            Disabled
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- TC WATERMARK -->
+                <div class="feature-item">
+
+                    <label>TC Watermark</label>
+
+                    <select name="show_tc_watermark" id="show_tc_watermark">
+
+                        <option value="Enabled">
+                            Enabled
+                        </option>
+
+                        <option value="Disabled">
+                            Disabled
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- BONAFIDE LOGO -->
+                <div class="feature-item">
+
+                    <label>Bonafide Logo</label>
+
+                    <select name="show_bonafide_logo" id="show_bonafide_logo">
+
+                        <option value="Enabled">
+                            Enabled
+                        </option>
+
+                        <option value="Disabled">
+                            Disabled
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- BONAFIDE WATERMARK -->
+                <div class="feature-item">
+
+                    <label>Bonafide Watermark</label>
+
+                    <select name="show_bonafide_watermark" id="show_bonafide_watermark">
+
+                        <option value="Enabled">
+                            Enabled
+                        </option>
+
+                        <option value="Disabled">
+                            Disabled
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="school-modal-actions">
+
+                <button type="button"
+                        class="cancel-btn"
+                        onclick="closeCertificateModal()">
+
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        class="save-btn">
+
+                    Save Certificates
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- ================= STATUS TOGGLE MODAL =================  -->
+
+ <div class="school-modal" id="statusModal">
+
+ <div class="school-modal-box small">
+
+              <div class="modal-head">
+                    <h2>Confirm Action</h2>
+               </div>
+               <p id="statusMessage">
+                    Are you sure you want to change school status?
+               </p>
+
+    <form method="POST" action="{{ url_for('toggle_school_status') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="school_id" id="statusSchoolId">
+
+                  <div class="school-modal-actions">
+                           <button type="button" class="cancel-btn" onclick="closeStatusModal()">Cancel</button>
+                            <button type="submit" class="save-btn">OK</button>
+                 </div>
+    </form>
+
+     </div>
+
+  </div>
+
+                    
+<!-- ================= ANALYTICS SECTION ================= -->
+<div class="sa-insight">
+
+    <!-- LEFT : PIE CHART -->
+    <div class="insight-card analytics-card">
+
+        <div class="analytics-head">
+            <h3>📊 School Analytics</h3>
+            <p>Student distribution by school</p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="schoolPieChart"></canvas>
+        </div>
+
+    </div>
+
+ 
+    <!-- RIGHT : SYSTEM STATUS -->
+    <!-- <div class="insight-card status-card glass-status">
+
+        <div class="analytics-head">
+            <h3>📈 System Status</h3>
+            <p>Live platform overview</p>
+        </div>
+
+        <div class="status-grid">
+
+            <div class="status-box glass-box">
+                <div>
+                    <span>Total Schools</span>
+                    <h4>{{ schools|length }}</h4>
+                </div>
+                <div class="status-icon">🏫</div>
+            </div>
+
+            <div class="status-box glass-box">
+                <div>
+                    <span>System Status</span>
+                    <h4>Active</h4>
+                </div>
+                <div class="status-icon">🟢</div>
+            </div>
+
+            <div class="status-box glass-box">
+                <div>
+                    <span>Total Registered</span>
+                    <h4>{{ schools|length }}</h4>
+                </div>
+                <div class="status-icon">📚</div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div> -->
+
+<!-- CHART JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+/* =========================================================
+   📊 SCHOOL ANALYTICS PIE CHART
+   Shows total student distribution school-wise
+========================================================= */
+
+const schoolLabels = [
+    {% for school in schools %}
+        "{{ school.name }}",
+    {% endfor %}
+];
+
+const schoolData = [
+    {% for school in schools %}
+        {{ school.total_students }},
+    {% endfor %}
+];
+
+// Chart canvas
+const chartCanvas = document.getElementById("schoolPieChart");
+
+// Create pie chart
+new Chart(chartCanvas, {
+    type: "pie",
+    data: {
+        labels: schoolLabels,
+        datasets: [{
+            data: schoolData,
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "bottom"
+            }
+        }
+    }
+});
+
+
+/* =========================================================
+   🏫 ADD SCHOOL MODAL
+   Open + Close modal for new school creation
+========================================================= */
+
+// Open Add School Modal
+function openSchoolModal() {
+    document.getElementById("schoolModal").style.display = "flex";
+}
+
+// Close Add School Modal
+function closeSchoolModal() {
+    document.getElementById("schoolModal").style.display = "none";
+}
+
+
+/* =========================================================
+   ✏ EDIT SCHOOL MODAL
+   Open modal with existing school data prefilled
+========================================================= */
+
+// Open Edit Modal + Fill Existing Values
+function openEditSchoolModal(
+    id,
+    name,
+    udise,
+    address,
+    phone,
+    email,
+    code,
+    principal
+) {
+    document.getElementById("editSchoolModal").style.display = "flex";
+
+    document.getElementById("editSchoolId").value = id;
+    document.getElementById("editName").value = name;
+    document.getElementById("editUdise").value = udise;
+    document.getElementById("editAddress").value = address;
+    document.getElementById("editPhone").value = phone;
+    document.getElementById("editEmail").value = email;
+    document.getElementById("editCode").value = code;
+    document.getElementById("editPrincipal").value = principal;
+}
+
+// Close Edit Modal
+function closeEditSchoolModal() {
+    document.getElementById("editSchoolModal").style.display = "none";
+}
+
+/* =========================================================
+   ⚙ FEATURE MODAL
+========================================================= */
+
+function openFeatureModal(id){
+
+    document.getElementById(
+        "featureModal"
+    ).style.display = "flex";
+
+    document.getElementById(
+        "featureSchoolId"
+    ).value = id;
+}
+
+function closeFeatureModal(){
+
+    document.getElementById(
+        "featureModal"
+    ).style.display = "none";
+}
+
+/* =========================================================
+   📜 CERTIFICATE MODAL
+========================================================= */
+
+function openCertificateModal(
+
+    schoolId,
+
+    tcPrefix,
+    bonafidePrefix,
+
+    autoNumbering,
+    certificateLabels,
+
+    tcLogo,
+    tcWatermark,
+
+    bonafideLogo,
+    bonafideWatermark
+
+) {
+
+    // OPEN MODAL
+    document.getElementById(
+        "certificateModal"
+    ).style.display = "flex";
+
+    // SCHOOL ID
+    document.getElementById(
+    "certificateSchoolId"
+    ).value = schoolId;
+
+    // PREFIXES
+    document.getElementById(
+        "tc_prefix"
+    ).value = tcPrefix;
+
+    document.getElementById(
+        "bonafide_prefix"
+    ).value = bonafidePrefix;
+
+    // SETTINGS
+    document.getElementById(
+        "auto_numbering"
+    ).value = autoNumbering;
+
+    document.getElementById(
+        "enable_certificate_labels"
+    ).value = certificateLabels;
+
+    // TC
+    document.getElementById(
+        "show_tc_logo"
+    ).value = tcLogo;
+
+    document.getElementById(
+        "show_tc_watermark"
+    ).value = tcWatermark;
+
+    // BONAFIDE
+    document.getElementById(
+        "show_bonafide_logo"
+    ).value = bonafideLogo;
+
+    document.getElementById(
+        "show_bonafide_watermark"
+    ).value = bonafideWatermark;
+}
+
+function closeCertificateModal(){
+
+    document.getElementById(
+        "certificateModal"
+    ).style.display = "none";
+}
+
+/* =========================================================
+   🔒 SCHOOL STATUS MODAL
+   Activate / Deactivate confirmation modal
+========================================================= */
+function toggleSchoolStatus(id, currentStatus){
+
+     console.log("School ID:", id);
+    console.log("Current Status:", currentStatus);
+
+    // set school id in hidden field
+    document.getElementById("statusSchoolId").value = id;
+
+    // get modal message element
+    const msg = document.getElementById("statusMessage");
+
+    // dynamic message based on current status
+    if (Number(currentStatus) === 1) {
+        msg.innerText = "This school will be deactivated and login will be blocked.";
+    } else {
+        msg.innerText = "This school will be activated and login will be allowed.";
+    }
+
+    // open modal
+    document.getElementById("statusModal").style.display = "flex";
+}
+
+ 
+// Close Status Modal
+function closeStatusModal() {
+    document.getElementById("statusModal").style.display = "none";
+}
+
+
+/* =========================================================
+   🔍 SEARCH SCHOOLS
+   Search school cards by school name
+========================================================= */
+
+// Search function
+function searchSchools() {
+    const input = document
+        .getElementById("schoolSearch")
+        .value
+        .toLowerCase();
+
+    const cards = document.querySelectorAll(".sa-card");
+
+    cards.forEach(card => {
+        const schoolName = card.getAttribute("data-name");
+
+        if (schoolName.includes(input)) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
+    });
+}
+
+// Clear search input
+function clearSearch() {
+    document.getElementById("schoolSearch").value = "";
+    searchSchools();
+}
+
+// Live search while typing
+document.getElementById("schoolSearch")
+.addEventListener("keyup", searchSchools);
+
+
+/* =========================================================
+   📂 SCHOOL CARD NAVIGATION
+   Open selected school's student records
+========================================================= */
+
+function goToSchool(id) {
+    window.location.href =
+        "/superadmin/superadmin_students?school_id=" + id;
+}
+
+
+/* =========================================================
+   ❌ CLOSE MODALS ON OUTSIDE CLICK
+   If user clicks outside modal box
+========================================================= */
+
+window.onclick = function(e) {
+
+    const addModal = document.getElementById("schoolModal");
+    const editModal = document.getElementById("editSchoolModal");
+    const statusModal = document.getElementById("statusModal");
+
+    if (e.target === addModal) {
+        closeSchoolModal();
+    }
+
+    if (e.target === editModal) {
+        closeEditSchoolModal();
+    }
+
+    if (e.target === statusModal) {
+        closeStatusModal();
+    }
+};
+
+</script>
+
+{% endblock %}

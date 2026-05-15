@@ -1,0 +1,590 @@
+/* ================= MAIN WRAPPER ================= */
+body {
+    background: #f8fafc;
+}
+
+/* ================= HERO ================= */
+.sa-hero {
+    background: linear-gradient(135deg, #0ea5a4, #22c55e);
+    padding: 35px;
+    border-radius: 24px;
+    color: white;
+    margin-bottom: 30px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+
+    box-shadow: 0 20px 40px rgba(14, 165, 164, 0.18);
+}
+
+.hero-left h1 {
+    font-size: 34px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.hero-left p {
+    font-size: 15px;
+    opacity: 0.95;
+}
+
+/* ================= HERO STATS ================= */
+.hero-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.hero-stat-card {
+    min-width: 160px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    padding: 20px;
+    border-radius: 18px;
+}
+
+.hero-stat-card span {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.hero-stat-card h3 {
+    margin-top: 10px;
+    font-size: 30px;
+}
+
+/* ================= SEARCH ================= */
+.sa-search-box {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 30px;
+    align-items: center;
+}
+
+.search-wrapper {
+    flex: 1;
+}
+
+.sa-search-box input {
+    width: 100%;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 1px solid #dbe2ea;
+    font-size: 14px;
+    background: white;
+}
+
+.sa-search-box button {
+    padding: 14px 22px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0ea5a4, #14b8a6);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.sa-search-box button:hover {
+    transform: translateY(-2px);
+}
+
+.clear-btn {
+    background: #64748b;
+}
+
+/* ================= SECTION HEAD ================= */
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 25px 0;
+}
+
+.section-head-left h2{
+    margin: 0;
+}
+
+.section-head-left p{
+    margin-top: 8px;
+}
+
+/* ADD BUTTON */
+.add-school-btn{
+    border: none;
+    cursor: pointer;
+    padding: 14px 22px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    background: linear-gradient(
+        135deg,
+        #0f766e,
+        #10b981
+    );
+    box-shadow: 0 10px 25px rgba(16,185,129,0.25);
+    transition: 0.25s ease;
+}
+
+.add-school-btn:hover{
+    transform: translateY(-2px);
+}
+
+/* ================= GRID ================= */
+.sa-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+/* ================= CARD ================= */
+.sa-card {
+    position: relative;
+    overflow: hidden;
+
+    background: white;
+    padding: 25px;
+    border-radius: 24px;
+
+    border: 1px solid #eef2f7;
+
+    box-shadow: 0 12px 25px rgba(0,0,0,0.04);
+
+    cursor: pointer;
+    transition: 0.35s;
+}
+
+.sa-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 40px rgba(0,0,0,0.08);
+}
+
+.card-glow {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    background: rgba(14,165,164,0.06);
+    border-radius: 50%;
+    right: -50px;
+    top: -50px;
+}
+
+/* ================= CARD TOP ================= */
+.sa-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.sa-top h2 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.school-label {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* ================= BADGE ================= */
+.badge {
+    background: linear-gradient(135deg, #0ea5a4, #14b8a6);
+    color: white;
+    padding: 7px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ================= CARD MIDDLE ================= */
+.sa-middle {
+    margin: 30px 0;
+}
+
+.metric-box {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 18px;
+}
+
+.metric-box span {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.metric-box h3 {
+    margin-top: 10px;
+    font-size: 34px;
+    font-weight: 700;
+}
+
+/* ================= CARD BOTTOM ================= */
+.sa-bottom{
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.card-btn{
+    flex: 1;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.view-btn{
+    background: #0ea5a4;
+    color: white;
+}
+
+.edit-btn{
+    background: #f59e0b;
+    color: white;
+}
+
+.activate-btn{
+    background: #16a34a;
+    color: white;
+}
+
+.deactivate-btn{
+    background: #dc2626;
+    color: white;
+}
+
+/* ================= INSIGHT LAYOUT ================= */
+.sa-insight {
+    margin-top: 35px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 25px;
+}
+
+/* ================= GLASS CARD ================= */
+.insight-card {
+    position: relative;
+    overflow: hidden;
+
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(18px);
+
+    border: 1px solid rgba(255,255,255,0.3);
+
+    border-radius: 28px;
+    padding: 25px;
+
+    box-shadow: 
+        0 20px 50px rgba(0,0,0,0.06);
+}
+
+/* ================= HEAD ================= */
+.analytics-head {
+    margin-bottom: 20px;
+}
+
+.analytics-head h3 {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.analytics-head p {
+    margin-top: 8px;
+    color: #64748b;
+}
+
+/* ================= PIE CHART ================= */
+.chart-container {
+    height: 350px;
+    padding: 10px;
+}
+
+/* ================= STATUS ================= */
+.glass-status {
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,0.75),
+            rgba(255,255,255,0.45)
+        );
+}
+
+/* ================= STATUS GRID ================= */
+.status-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ================= GLASS BOX ================= */
+.glass-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 22px;
+
+    border-radius: 22px;
+
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(14px);
+
+    border: 1px solid rgba(255,255,255,0.25);
+
+    transition: 0.35s;
+}
+
+.glass-box:hover {
+    transform: translateY(-5px);
+}
+
+/* ================= STATUS TEXT ================= */
+.glass-box span {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.glass-box h4 {
+    margin-top: 8px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* ================= ICON ================= */
+.status-icon {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 18px;
+
+    background: rgba(14,165,164,0.12);
+
+    font-size: 24px;
+}
+
+ 
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1200px) {
+    .sa-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sa-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sa-insight{
+        grid-template-columns: 1fr;
+    }
+    .sa-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .hero-stats {
+        width: 100%;
+    }
+}
+
+/* ================= SCHOOL MODAL ================= */
+
+.school-modal{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(8px);
+}
+
+.school-modal-box{
+    width: 760px;
+    background: white;
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.15);
+    animation: modalPop .25s ease;
+}
+
+@keyframes modalPop{
+    from{
+        transform: scale(.92);
+        opacity: 0;
+    }
+    to{
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-head{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.modal-head h2{
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.modal-head span{
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.school-form-grid{
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 18px;
+}
+
+.school-form-group{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.school-form-group.full{
+    grid-column: span 2;
+}
+
+.school-form-group label{
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.school-form-group input{
+    padding: 14px;
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+}
+
+.school-form-group input:focus{
+    border-color: #0b8f8e;
+}
+
+.school-modal-actions{
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.cancel-btn,
+.save-btn{
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.cancel-btn{
+    background: #f1f5f9;
+}
+
+.save-btn{
+    background: linear-gradient(135deg,#0b8f8e,#22c55e);
+    color: white;
+}
+
+ 
+
+/* =========================================
+   FEATURE BUTTON
+========================================= */
+
+.feature-btn{
+    background: linear-gradient(
+        135deg,
+        #6366f1,
+        #8b5cf6
+    );
+
+    color: white;
+}
+
+/* =========================================
+   FEATURE MODAL
+========================================= */
+
+.feature-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(2,1fr);
+
+    gap:18px;
+
+    margin-top:20px;
+}
+
+.feature-item{
+
+    background:#f8fafc;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:18px;
+
+    padding:18px;
+}
+
+.feature-item label{
+
+    display:block;
+
+    font-size:14px;
+
+    font-weight:700;
+
+    margin-bottom:12px;
+
+    color:#0f172a;
+}
+
+.feature-item select{
+
+    width:100%;
+
+    padding:14px;
+
+    border-radius:12px;
+
+    border:1px solid #dbe4ee;
+
+    font-size:14px;
+
+    outline:none;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width:768px){
+
+    .feature-grid{
+        grid-template-columns:1fr;
+    }
+
+}

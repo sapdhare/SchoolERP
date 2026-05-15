@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+<section class="login-page">
+
+    <div class="login-container">
+
+        <!-- LEFT SIDE -->
+  <div class="login-left">
+
+    <!-- TEXT -->
+    <div class="left-content">
+        <h2>SchoolSphere</h2>
+        <h1>Smart School ERP</h1>
+        <p>
+            Manage TC, marksheets and complete school operations with ease.
+        </p>
+    </div>
+
+    <!-- SVG IMAGE -->
+    <img src="{{ url_for('static', filename='images/student_login.png') }}" class="student-svg">
+
+    <!-- DOT PATTERN -->
+    <div class="dots1"></div>
+    <div class="dots2"></div>
+
+</div>
+        <!-- RIGHT SIDE -->
+        <div class="login-right">
+
+            <div class="login-box">
+
+                <h2>Welcome Back 👋</h2>
+                        <p class="login-sub">
+            Login to your school dashboard<br>
+            <span style="font-size:12px; color:#64748B;">
+                आपल्या शाळेच्या डॅशबोर्डमध्ये लॉगिन करा
+            </span>
+        </p>
+
+                <!-- ROLE TABS -->
+                <!-- <div class="login-tabs"  method="POST" action="/login">
+                    <button class="active" type="button" data-role="admin">Admin</button>
+                    <button type="button" data-role="teacher">Teacher</button>
+                    <button type="button" data-role="student">Student</button>
+                </div> -->
+
+                <!-- FORM -->
+                 <form class="login-form" method="POST" action="/login">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                    <!-- EMAIL -->
+                    <input 
+                        type="email" 
+                        name="email" 
+                        placeholder="Enter Email (ईमेल)" 
+                        autocomplete="email"
+                        required
+                    >
+
+                    <!-- PASSWORD -->
+                    <input 
+                        type="password" 
+                        name="password" 
+                        placeholder="Enter Password (पासवर्ड)" 
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button type="submit" class="btn-login">Login</button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- // ROLE TAB SWITCH -->
+<!-- <script> 
+document.querySelectorAll(".login-tabs button").forEach(btn => {
+    btn.addEventListener("click", () => {
+
+        // active UI
+        document.querySelectorAll(".login-tabs button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // set role
+        document.getElementById("roleInput").value = btn.dataset.role;
+    });
+});
+</script> -->
+
+{% endblock %}

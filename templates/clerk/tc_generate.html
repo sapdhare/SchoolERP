@@ -1,0 +1,758 @@
+ 
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tc.css') }}">
+{% if is_pdf %}
+<style>
+@page{
+    size:A4 portrait;
+    margin:8mm;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,body{
+    width:100%;
+    background:#fff;
+    font-family:"Noto Sans Devanagari", Arial, sans-serif;
+    font-size:16px;
+}
+
+.tc-container{
+    width:194mm;
+    min-height:279mm;
+    margin:0 auto;
+    background:#fff;
+    border:2px solid #222;
+    padding:12mm;
+    position:relative;
+    overflow:hidden;
+}
+
+.tc-floating-actions{
+    display:none !important;
+}
+
+/* HEADER */
+.tc-header{
+    width:100%;
+    display:table;
+    table-layout:fixed;
+    border-bottom:2px solid #222;
+    padding-bottom:14px;
+    margin-bottom:16px;
+}
+
+.tc-logo-box{
+    display:table-cell;
+    width:110px;
+    vertical-align:middle;
+    text-align:center;
+}
+
+.school-logo{
+    width:100px;
+    height:100px;
+    object-fit:contain;
+}
+
+.tc-header-center{
+    display:table-cell;
+    vertical-align:middle;
+    text-align:center;
+}
+
+.tc-header-center h1{
+    font-size:28px;
+    line-height:1.5;
+    margin-bottom:10px;
+}
+
+.school-address{
+    font-size:15px;
+    line-height:1.8;
+    margin-bottom:14px;
+}
+
+/* HEADER ROWS */
+.header-row{
+    width:100%;
+    display:table;
+    table-layout:fixed;
+    margin-bottom:6px;
+}
+
+.header-row span{
+    display:table-cell;
+    width:33.33%;
+    font-size:12px;
+    padding:2px 6px;
+    text-align:center;
+}
+
+/* WATERMARK FIXED FOR PDF */
+.tc-watermark{
+    position:absolute;
+    top:50%;
+    left:50%;
+
+    width:210px;
+    height:auto;
+
+    margin-left:-105px;
+    margin-top:-105px;
+
+    opacity:0.015;
+
+    z-index:1;
+
+    filter:grayscale(100%);
+    pointer-events:none;
+}
+
+/* TITLE */
+.tc-title{
+    text-align:center;
+    margin:18px 0 22px;
+    position:relative;
+    z-index:5;
+}
+
+.tc-title h2{
+    font-size:22px;
+    font-weight:700;
+}
+
+/* BODY */
+.tc-body{
+    position:relative;
+    z-index:5;
+}
+
+/* SINGLE ROW */
+.tc-row{
+    width:100%;
+    display:table;
+    table-layout:fixed;
+    margin-bottom:12px;
+}
+
+.tc-row .tc-label{
+    display:table-cell;
+    width:32%;
+    font-weight:600;
+    font-size:13px;
+    vertical-align:middle;
+}
+
+.tc-row .tc-value{
+    display:table-cell;
+    width:68%;
+    border-bottom:1px solid #111;
+    padding:4px 6px;
+    min-height:24px;
+    font-size:15px;
+    vertical-align:middle;
+}
+
+/* DOUBLE ROW */
+.tc-row-2{
+    width:100%;
+    display:table;
+    table-layout:fixed;
+    margin-bottom:12px;
+}
+
+.tc-row-2 .tc-label{
+    display:table-cell;
+    width:14%;
+    font-weight:600;
+    font-size:15px;
+    vertical-align:middle;
+}
+
+.tc-row-2 .tc-value{
+    display:table-cell;
+    width:28%;
+    border-bottom:1px solid #111;
+    padding:4px 6px;
+    min-height:24px;
+    font-size:13px;
+    vertical-align:middle;
+}
+
+/* FOOTER */
+.tc-footer{
+    width:100%;
+    margin-top:55px;
+    display:table;
+    table-layout:fixed;
+    position:relative;
+    z-index:5;
+}
+
+.footer-box{
+    display:table-cell;
+    width:33.33%;
+    text-align:center;
+    padding:0 10px;
+}
+
+.footer-line{
+    border-top:1px solid #111;
+    margin-bottom:8px;
+}
+
+.footer-box p{
+    font-size:13px;
+    font-weight:600;
+}
+
+/* NOTE */
+.tc-note{
+    margin-top:35px;
+    border-top:1px solid #ddd;
+    padding-top:8px;
+    font-size:11px;
+    line-height:1.5;
+    position:relative;
+    z-index:5;
+}
+
+/* SAFETY */
+.tc-row,
+.tc-row-2,
+.tc-footer{
+    page-break-inside:avoid;
+}
+</style>
+{% endif %}
+
+<!-- LANGUAGE TOGGLE + PRINT -->
+ {% if not is_pdf %}
+<div class="tc-floating-actions no-print">
+
+    <a href="{{ url_for('clerk_students') }}" class="fab-btn back">← BACK </a>
+
+    <button onclick="setLanguage('mr')" id="btn-mr" class="fab-btn lang active"> मराठी</button>
+
+    <button onclick="setLanguage('en')" id="btn-en" class="fab-btn lang">ENGLISH</button>
+
+    <button onclick="printTC()" class="fab-btn print">🖨 PRINT</button>
+
+     <!-- PDF -->
+    <a href="{{ url_for('download_tc_pdf', tc_id=tc.id) }}" 
+    class="fab-btn pdf"
+    target="_blank"
+    rel="noopener noreferrer">
+    PDF
+    </a>
+
+    
+    <!-- ✅ WHATSAPP BUTTON -->
+    <button onclick="openTCWAModal()" class="fab-btn wa"> WHATSAPP</button>
+
+</div>
+{% endif %} 
+
+<div class="tc-container">
+ 
+<div class="tc-header">
+
+<!-- LEFT LOGO -->
+<div class="tc-logo-box">
+
+    {% if school.logo_path %}
+
+        {% if is_pdf %}
+            <img src="{{ school.logo_path }}" class="school-logo">
+        {% else %}
+            <img 
+                src="{{ url_for(
+                    'static',
+                    filename=school.logo_path.replace('static/', '')
+                ) }}"
+                class="school-logo"
+                alt="School Logo"
+            >
+        {% endif %}
+
+    {% endif %}
+
+</div>
+
+    <!-- CENTER HEADER -->
+    <div class="tc-header-center">
+
+        <h1 id="schoolTitle">{{ school.name }}</h1>
+
+        <p class="school-address" id="schoolAddress">
+            {{ school.address }}
+        </p>
+
+       <div class="header-row">
+            <span id="headPhone">फोन : {{ school.phone }}</span>
+            <span id="headEmail">ई-मेल : {{ school.email }}</span>
+       </div>
+
+        <div class="header-row">
+            <span id="headRecognitionNo">शाळा मान्यता क्र. : {{ school.recognition_no }}</span>
+            <span id="headMedium">माध्यम : {{ school.medium }}</span>
+        </div>
+
+        <div class="header-row">
+            <span id="headUdise">यु डायस क्र. : {{ school.udise_no }}</span>
+            <span id="headBoard">बोर्ड : {{ school.board_name }}</span>
+            <span id="headSchoolIndexNo">शाळा संकेतांक : {{ school.school_index_no }}</span>
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- WATERMARK -->
+    {% if school.watermark_path %}
+
+        {% if is_pdf %}
+            <img
+                src="{{ school.watermark_path }}"
+                class="tc-watermark"
+                alt="Watermark"
+            >
+        {% else %}
+            <img
+                src="{{ url_for(
+                    'static',
+                    filename=school.watermark_path.replace('static/', '')
+                ) }}"
+                class="tc-watermark"
+                alt="Watermark"
+            >
+        {% endif %}
+
+    {% endif %}
+
+
+    <!-- ================= TITLE ================= -->
+    <div class="tc-title">
+        <h2 id="tcTitle">शाळा सोडल्याचे प्रमाणपत्र</h2>
+    </div>
+
+
+    <!-- ================= BODY ================= -->
+   <div class="tc-body">
+
+    <!-- SCHOOL REGISTER NO -->
+<div class="tc-row">
+    <div class="tc-label" id="l0">शाळा नोंद क्रमांक :</div>
+    <div class="tc-value">{{ student.school_register_no or '' }}</div>
+</div>
+<!-- AADHAAR NUMBER -->
+    <div class="tc-row">
+        <div class="tc-label" id="l2">यू.आय.डी. नं. :</div>
+        <div class="tc-value">{{ student.aadhaar }}</div>
+    </div>
+
+<!-- STUDENT NAME -->
+<div class="tc-row">
+    <div class="tc-label" id="l3">विद्यार्थ्याचे नाव :</div>
+    <div class="tc-value">{{ student.name }}</div>
+</div>
+<!-- STUDENT UID -->
+<div class="tc-row">
+    <div class="tc-label" id="l1a">विद्यार्थी आयडी :</div>
+    <div class="tc-value">{{ student.student_uid or '' }}</div>
+</div>
+
+<!-- FATHER NAME -->
+<div class="tc-row">
+    <div class="tc-label" id="l3a">वडिलांचे नाव :</div>
+    <div class="tc-value">{{ student.father_name }}</div>
+</div>
+<!-- MOTHER NAME -->
+    <div class="tc-row">
+        <div class="tc-label" id="l4">आईचे नाव :</div>
+        <div class="tc-value">{{ student.mother_name }}</div>
+    </div>
+<!-- APAAR ID -->
+ <div class="tc-row">
+    <div class="tc-label" id="l1b">APAAR ID :</div>
+    <div class="tc-value">{{ student.apaar_id or '' }}</div>
+</div>   
+
+    <!-- 2 COLUMN -->
+
+    <!-- NATIONALITY -->
+    <div class="tc-row-2">
+        <div class="tc-label" id="l5">राष्ट्रीयत्व :</div>
+        <div class="tc-value">{{ student.nationality }}</div>
+
+<!-- MOTHER TONGUE -->
+        <div class="tc-label" id="l6">मातृभाषा :</div>
+        <div class="tc-value">{{ student.mother_tongue }}</div>
+    </div>
+ 
+    <div class="tc-row-2">
+           <!-- RELIGION -->
+        <div class="tc-label" id="l7">धर्म :</div>
+        <div class="tc-value">{{ student.religion }}</div>
+        <!-- CASTE -->
+        <div class="tc-label" id="l8">जात :</div>
+        <div class="tc-value">{{ student.caste }}</div>
+    </div>
+
+    <div class="tc-row-2">
+           <!-- BIRTHPLACE-->
+        <div class="tc-label" id="l9">जन्मस्थळ :</div>
+        <div class="tc-value">{{ student.birth_place }}</div>
+
+           <!-- TALUKA -->
+        <div class="tc-label" id="l10">तालुका :</div>
+        <div class="tc-value">{{ student.taluka }}</div>
+    </div>
+
+    <div class="tc-row-2">
+        <div class="tc-label" id="l11">जिल्हा :</div>
+        <div class="tc-value">{{ student.district }}</div>
+
+        <div class="tc-label" id="l12">राज्य :</div>
+        <div class="tc-value">{{ student.state }}</div>
+    </div>
+
+    <div class="tc-row">
+        <div class="tc-label" id="l13">जन्म दिनांक :</div>
+        <div class="tc-value">{{ student.dob }}</div>
+    </div>
+
+    <div class="tc-row">
+        <div class="tc-label" id="l14">मागील शाळा :</div>
+        <div class="tc-value">{{ student.previous_school or '' }}</div>
+    </div>
+
+    <div class="tc-row-2">
+        <div class="tc-label" id="l15">प्रवेश दिनांक :</div>
+        <div class="tc-value"> {{ student.admission_date }}</div>
+
+        <div class="tc-label" id="l16">इयत्ता :</div>
+        <div class="tc-value">{{ student.class_name }}</div>
+    </div>
+
+    <div class="tc-row-2">
+        <div class="tc-label" id="l17">प्रगती :</div>
+        <div class="tc-value">{{ student.progress }}</div>
+
+        <div class="tc-label" id="l18">वर्तणूक :</div>
+        <div class="tc-value">{{ student.conduct }}</div>
+    </div>
+
+    <div class="tc-row">
+        <div class="tc-label" id="l19">शाळा सोडल्याचा दिनांक :</div>
+       <div class="tc-value">
+        {{ tc.leaving_date }}
+        </div>
+    </div>
+
+    <div class="tc-row">
+        <div class="tc-label" id="l21">शाळा सोडल्याचे कारण :</div>
+        <div class="tc-value">{{ tc.leaving_reason or '' }}</div>
+    </div>
+
+    <div class="tc-row">
+        <div class="tc-label" id="l22">शेरा :</div>
+        <div class="tc-value">{{ tc.remark or '' }}</div>
+    </div>
+
+</div>
+    <!-- ================= FOOTER ================= -->
+    <div class="tc-footer">
+
+        <div class="footer-box">
+            <div class="footer-line"></div>
+            <p>वर्ग शिक्षक</p>
+        </div>
+
+        <div class="footer-box">
+            <div class="footer-line"></div>
+            <p>लिपिक</p>
+        </div>
+
+        <div class="footer-box">
+            <div class="footer-line"></div>
+            <p>मुख्याध्यापक</p>
+        </div>
+
+    </div>
+
+    <div class="tc-note" id="l23">
+         नोट : दाखल्यामध्ये बदल केल्यास संबंधितावर कारवाई करण्यात येईल.
+    </div>
+
+</div>
+<!-- ================= WHATSAPP MODAL ================= -->
+<div id="tcWaModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999;">
+
+    <div style="background:white; width:350px; padding:20px; border-radius:10px;
+                position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                box-shadow:0 10px 25px rgba(0,0,0,0.3);">
+
+        <h3>📲 Send WhatsApp</h3>
+
+        <input type="text" id="tcWaNumber"
+               value="{{ student.primary_mobile or '' }}"
+               style="width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:6px;">
+
+        <small style="color:gray;">
+            Temporary number (DB will NOT change)
+        </small>
+
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <button onclick="sendTCWhatsApp()" 
+                    style="flex:1; background:#16a34a; color:white; border:none; padding:10px; border-radius:6px;">
+                Send
+            </button>
+
+            <button onclick="closeTCWAModal()" 
+                    style="flex:1; background:#ccc; border:none; padding:10px; border-radius:6px;">
+                Cancel
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+
+// PRINT 
+  function printTC() {
+    window.print();
+}
+
+// WHATSAPP 
+function openTCWAModal() {
+    document.getElementById("tcWaModal").style.display = "block";
+}
+
+function closeTCWAModal() {
+    document.getElementById("tcWaModal").style.display = "none";
+}
+
+function sendTCWhatsApp() {
+
+    let number = document.getElementById("tcWaNumber").value.trim();
+
+    if (!number || number.length < 10) {
+        alert("Enter valid number");
+        return;
+    }
+
+    number = number.replace(/\D/g, "");
+    if (number.length === 10) number = "91" + number;
+
+    const pdfLink = window.location.origin + "/public/tc/{{ tc.id }}";
+
+    const message = `
+    🏫 ${"{{ school_name }}"}
+
+    Dear Parent,
+
+    This is to inform you that the Transfer Certificate (TC) of your ward:
+
+    👤 Student Name: ${"{{ student.name }}"}
+
+    has been successfully issued.
+
+    📄 You can download the certificate from the link below:
+    ${pdfLink}
+
+    If you have any queries, please contact the school office.
+
+    Regards,  
+    ${"{{ school_name }}"}
+    `;
+
+    const url = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+
+    closeTCWAModal();
+}
+
+// =========================================================
+//    TC LANGUAGE SWITCHER
+//==========================================================  
+ 
+
+function setLanguage(lang) {
+
+    // ================= BUTTON ACTIVE =================
+    const btnMr = document.getElementById("btn-mr");
+    const btnEn = document.getElementById("btn-en");
+
+    if (btnMr && btnEn) {
+        btnMr.classList.remove("active");
+        btnEn.classList.remove("active");
+
+        if (lang === "en") {
+            btnEn.classList.add("active");
+        } else {
+            btnMr.classList.add("active");
+        }
+    }
+
+    // SAVE LANGUAGE
+    localStorage.setItem("tcLang", lang);
+
+    // ================= SCHOOL DATA =================
+    const schoolName = "{{ school.name }}";
+    const schoolAddress = "{{ school.address }}";
+    const schoolPhone = "{{ school.phone }}";
+    const schoolEmail = "{{ school.email }}";
+    const schoolRecognition = "{{ school.recognition_no }}";
+    const schoolMedium = "{{ school.medium }}";
+    const schoolUdise = "{{ school.udise_no }}";
+    const schoolBoard = "{{ school.board_name }}";
+    const schoolIndex = "{{ school.school_index_no }}";
+
+    // =====================================================
+    // ENGLISH MODE
+    // =====================================================
+    if (lang === "en") {
+
+        // TITLE
+        setText("tcTitle", "School Leaving Certificate");
+
+        // HEADER
+        setText("headPhone", "Phone : " + schoolPhone);
+        setText("headEmail", "Email : " + schoolEmail);
+        setText("headRecognitionNo", "Recognition No : " + schoolRecognition);
+        setText("headMedium", "Medium : " + schoolMedium);
+        setText("headUdise", "UDISE : " + schoolUdise);
+        setText("headBoard", "Board : " + schoolBoard);
+        setText("headSchoolIndexNo", "School Code : " + schoolIndex);
+
+        // BODY LABELS
+        setText("l0", "School Register No :");
+        setText("l2", "Aadhaar No :");
+        setText("l3", "Student Name :");
+        setText("l1a", "Student ID :");
+        setText("l3a", "Father Name :");
+        setText("l4", "Mother Name :");
+        setText("l1b", "APAAR ID :");
+        setText("l5", "Nationality :");
+        setText("l6", "Mother Tongue :");
+        setText("l7", "Religion :");
+        setText("l8", "Caste :");
+        setText("l9", "Birth Place :");
+        setText("l10", "Taluka :");
+        setText("l11", "District :");
+        setText("l12", "State :");
+        setText("l13", "Date of Birth :");
+        setText("l14", "Previous School :");
+        setText("l15", "Admission Date :");
+        setText("l16", "Class :");
+        setText("l17", "Progress :");
+        setText("l18", "Conduct :");
+        setText("l19", "Leaving Date :");
+        setText("l21", "Reason for Leaving :");
+        setText("l22", "Remark :");
+        setText(
+    "l23",
+    "Note: Any unauthorized change in this certificate will lead to disciplinary action."
+);
+
+        // FOOTER
+        setFooter("Class Teacher", "Clerk", "Principal");
+
+    }
+
+    // =====================================================
+    // MARATHI MODE
+    // =====================================================
+    else {
+
+        setText("tcTitle", "शाळा सोडल्याचे प्रमाणपत्र");
+
+        // HEADER
+        setText("headPhone", "फोन : " + schoolPhone);
+        setText("headEmail", "ई-मेल : " + schoolEmail);
+        setText("headRecognitionNo", "शाळा मान्यता क्र. : " + schoolRecognition);
+        setText("headMedium", "माध्यम : " + schoolMedium);
+        setText("headUdise", "यु डायस क्र. : " + schoolUdise);
+        setText("headBoard", "बोर्ड : " + schoolBoard);
+        setText("headSchoolIndexNo", "शाळा संकेतांक : " + schoolIndex);
+
+        // BODY LABELS
+        setText("l0", "शाळा नोंद क्रमांक :");
+        setText("l2", "आधार क्रमांक :");
+        setText("l3", "विद्यार्थ्याचे नाव :");
+        setText("l1a", "विद्यार्थी आयडी :");
+        setText("l3a", "वडिलांचे नाव :");
+        setText("l4", "आईचे नाव :");
+        setText("l1b", "APAAR आयडी :");
+        setText("l5", "राष्ट्रीयत्व :");
+        setText("l6", "मातृभाषा :");
+        setText("l7", "धर्म :");
+        setText("l8", "जात :");
+        setText("l9", "जन्मस्थळ :");
+        setText("l10", "तालुका :");
+        setText("l11", "जिल्हा :");
+        setText("l12", "राज्य :");
+        setText("l13", "जन्म दिनांक :");
+        setText("l14", "मागील शाळा :");
+        setText("l15", "प्रवेश दिनांक :");
+        setText("l16", "इयत्ता :");
+        setText("l17", "प्रगती :");
+        setText("l18", "वर्तणूक :");
+        setText("l19", "शाळा सोडल्याचा दिनांक :");
+        setText("l21", "शाळा सोडल्याचे कारण :");
+        setText("l22", "शेरा :");
+        setText(
+        "l23",
+        "नोट : दाखल्यामध्ये बदल केल्यास संबंधितावर कारवाई करण्यात येईल."
+);
+        // FOOTER
+        setFooter("वर्ग शिक्षक", "लिपिक", "मुख्याध्यापक");
+    }
+}
+
+
+/* =========================================================
+   FOOTER HELPER
+========================================================= */
+function setFooter(a, b, c) {
+    const footerLabels = document.querySelectorAll(".footer-box p");
+
+    if (footerLabels.length >= 3) {
+        footerLabels[0].innerText = a;
+        footerLabels[1].innerText = b;
+        footerLabels[2].innerText = c;
+    }
+}
+
+
+/* =========================================================
+   SAFE TEXT SETTER
+========================================================= */
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.innerText = value;
+    }
+}
+
+
+/* =========================================================
+   PAGE LOAD
+========================================================= */
+window.addEventListener("load", function () {
+    const savedLang = localStorage.getItem("tcLang") || "mr";
+    setLanguage(savedLang);
+});
+ 
+</script>
+
+{% endblock %}

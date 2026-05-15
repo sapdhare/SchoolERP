@@ -1,0 +1,213 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tc_search.css') }}">
+
+<div class="tc-page">
+
+    <!-- ================= HEADER ================= -->
+    <div class="tc-page-header">
+        <h1>Manage Transfer Certificates</h1>
+        <p>
+            Search students, generate TC, and manage issued certificates.
+        </p>
+    </div>
+
+    <!-- ================= STATS ================= -->
+    <div class="tc-stats">
+
+        <div class="stat-card">
+            <h3>Total TC</h3>
+            <p>{{ total_tc or 0 }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Today TC</h3>
+            <p>{{ today_tc or 0 }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>This Month</h3>
+            <p>{{ month_tc or 0 }}</p>
+        </div>
+
+    </div>
+
+    <!-- ================= SEARCH ================= -->
+    <div class="tc-search-box">
+
+        <input type="text" id="searchInput" placeholder="Search by Name or Admission No">
+
+        <select id="classFilter">
+            <option value="">Filter by Class</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option><option>6</option>
+            <option>7</option><option>8</option><option>9</option><option>10</option>
+        </select>
+
+        <select id="yearFilter">
+            <option value="">Filter by Year</option>
+            <option>2026</option>
+            <option>2025</option>
+            <option>2024</option>
+        </select>
+
+        <button class="btn-search" onclick="applyFilter()">Search</button>
+
+    </div>
+
+    <!-- ================= TABLE ================= -->
+    <div class="tc-table">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Admission No</th>
+                    <th>Class</th>
+                    <th>TC Number</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="tcTableBody">
+
+                {% if tc_list %}
+                    {% for tc in tc_list %}
+                    <tr>
+                        <td class="tc-name">{{ tc.name }}</td>
+                        <td class="tc-admission">{{ tc.admission_no }}</td>
+                        <td class="tc-class">{{ tc.class }}</td>
+                        <td>{{ tc.tc_number }}</td>
+                        <td class="tc-date">
+                        {{ tc.tc_date }}
+                        </td>
+                        <td class="action-cell">
+                            <a href="{{ url_for('view_tc', tc_id=tc.id) }}" 
+                            class="btn-view" 
+                            target="_blank">
+                            View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:20px;">
+                            No TC generated yet
+                        </td>
+                    </tr>
+                {% endif %}
+
+            </tbody>
+        </table>
+
+    </div>
+
+    <!-- ================= RECENT ================= -->
+    <div class="tc-recent">
+
+        <h2>Recent TC Activity</h2>
+
+        <ul>
+            {% for item in recent_tc %}
+            <li>
+                {{ item.name }} - TC Generated on 
+                {{ item.tc_date }}
+            </li>
+            {% endfor %}
+        </ul>
+
+    </div>
+
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+function applyFilter() {
+
+    const search = document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase()
+        .trim();
+
+    const classFilter = document
+        .getElementById("classFilter")
+        .value
+        .trim();
+
+    const yearFilter = document
+        .getElementById("yearFilter")
+        .value
+        .trim();
+
+    const rows = document.querySelectorAll("#tcTableBody tr");
+
+    rows.forEach(row => {
+
+        const name = (
+            row.querySelector(".tc-name")?.innerText || ""
+        ).toLowerCase().trim();
+
+        const admission = (
+            row.querySelector(".tc-admission")?.innerText || ""
+        ).toLowerCase().trim();
+
+        const studentClass = (
+            row.querySelector(".tc-class")?.innerText || ""
+        ).trim();
+
+        const date = (
+            row.querySelector(".tc-date")?.innerText || ""
+        ).trim();
+
+        let show = true;
+
+        // SEARCH FILTER
+        if (
+            search &&
+            !name.includes(search) &&
+            !admission.includes(search)
+        ) {
+            show = false;
+        }
+
+        // CLASS FILTER
+        if (
+            classFilter &&
+            studentClass !== classFilter
+        ) {
+            show = false;
+        }
+
+        // YEAR FILTER
+        if (
+            yearFilter &&
+            !date.endsWith(yearFilter)
+        ) {
+            show = false;
+        }
+
+        row.style.display = show ? "" : "none";
+    });
+}
+
+// LIVE SEARCH
+document
+    .getElementById("searchInput")
+    .addEventListener("keyup", applyFilter);
+
+// FILTER ON SELECT CHANGE
+document
+    .getElementById("classFilter")
+    .addEventListener("change", applyFilter);
+
+document
+    .getElementById("yearFilter")
+    .addEventListener("change", applyFilter);
+</script>
+
+{% endblock %}

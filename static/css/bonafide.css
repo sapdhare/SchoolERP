@@ -1,0 +1,350 @@
+ /* ================= PAGE ================= */
+.bonafide-page {
+    padding: 20px 25px;
+}
+
+.bonafide-page > div {
+    margin-bottom: 20px;
+}
+
+/* ================= HEADER ================= */
+.bonafide-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 5px;
+}
+
+.bonafide-header p {
+    font-size: 14px;
+    color: #64748b;
+}
+
+/* ================= STATS ================= */
+.bonafide-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.bonafide-card {
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+    color: white;
+    padding: 22px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: 0.3s ease;
+}
+
+.bonafide-card::after {
+    content: "";
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+}
+
+.bonafide-card:hover {
+    transform: translateY(-3px);
+}
+
+.bonafide-card h3 {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.bonafide-card p {
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+/* ================= SEARCH ================= */
+.bonafide-search {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.bonafide-search input,
+.bonafide-search select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    outline: none;
+    min-width: 180px;
+}
+
+.bonafide-search input:focus,
+.bonafide-search select:focus {
+    border-color: #14b8a6;
+}
+
+/* BUTTON */
+.btn-bonafide-search {
+    background: #14b8a6;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.btn-bonafide-clear {
+    background: #94a3b8;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.btn-bonafide-search:hover {
+    background: #0d9488;
+}
+.btn-bonafide-clear:hover {
+    background: #64748b;
+}
+
+/* ================= TABLE ================= */
+.bonafide-table {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+}
+
+/* TABLE STRUCTURE */
+.bonafide-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* ================= HEADER ================= */
+.bonafide-table thead {
+    background: linear-gradient(135deg, #0f766e, #14b8a6);
+}
+
+.bonafide-table th {
+    padding: 16px 20px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #ffffff;
+    text-align: left;
+    font-weight: 600;
+}
+
+/* CENTER ALIGN SPECIFIC HEADERS */
+.bonafide-table th:nth-child(3),
+.bonafide-table th:nth-child(4),
+.bonafide-table th:nth-child(5) {
+    text-align: center;
+}
+
+/* ================= BODY ================= */
+.bonafide-table td {
+    padding: 16px 20px;
+    font-size: 14px;
+    border-top: 1px solid #e2e8f0;
+    vertical-align: middle;
+    color: #1e293b;
+}
+
+/* ROW STYLE */
+.bonafide-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.bonafide-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+/* ================= COLUMN ALIGNMENT ================= */
+.bonafide-table td:nth-child(3),
+.bonafide-table td:nth-child(4) {
+    text-align: center;
+}
+
+.bonafide-table td:nth-child(5) {
+    text-align: center;
+}
+
+/* ================= STATUS ================= */
+.status-badge {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* ================= ACTION COLUMN ================= */
+.action-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ================= BUTTON BASE ================= */
+.btn-bonafide {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ================= BUTTON COLORS ================= */
+
+/* Generate */
+.btn-bonafide:nth-child(1) {
+    background: #14b8a6;
+    color: white;
+}
+
+/* View */
+.btn-bonafide:nth-child(2) {
+    background: #2563eb;
+    color: white;
+}
+
+/* WhatsApp */
+.btn-bonafide:nth-child(3) {
+    background: #16a34a;
+    color: white;
+}
+
+/* ================= HOVER ================= */
+.btn-bonafide:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+
+    .bonafide-table table {
+        font-size: 12px;
+    }
+
+    .btn-bonafide {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .action-cell {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+}
+/* ================= RECENT ================= */
+.bonafide-recent {
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.bonafide-recent h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #1e293b;
+}
+
+.bonafide-recent ul {
+    padding-left: 18px;
+}
+
+.bonafide-recent li {
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #475569;
+}
+
+/* ================= MODAL ================= */
+.bonafide-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.bonafide-modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    width: 400px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.bonafide-modal-content h2 {
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.modal-actions button {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-actions button:first-child {
+    background: #e2e8f0;
+}
+
+.modal-actions button:last-child {
+    background: #14b8a6;
+    color: white;
+}

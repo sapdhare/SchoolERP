@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- CSRF TOKEN -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<title>Dashboard | SchoolSphere</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+</head>
+<body>
+
+<!-- MOBILE TOP -->
+<div class="mobile-top">
+    <div class="logo">SchoolSphere</div>
+    <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+</div>
+
+<!-- ================= SIDEBAR ================= -->
+<div class="sidebar" id="sidebar">
+
+    <!-- TOP -->
+    <div class="sidebar-top">
+       <div class="sidebar-logo-wrap">
+
+    {% if global_settings.system_logo %}
+
+        <img src="{{ url_for('static',
+        filename=global_settings.system_logo) }}"
+        class="sidebar-logo">
+
+    {% endif %}
+
+    <h2 class="logo">
+        {{ global_settings.system_name or "SchoolSphere" }}
+    </h2>
+
+</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- MENU -->
+<ul class="menu">
+
+{% if role == "admin" %}
+
+<!-- DASHBOARD -->
+<li>
+    <a href="{{ url_for('superadmin_dashboard') }}"
+       class="menu-link {{ 'active' if active_page=='dashboard' }}">
+        <span class="icon">🏠</span>
+        <span>
+            Dashboard
+            <small>System Overview</small>
+        </span>
+    </a>
+</li>
+
+<!-- SCHOOLS -->
+<li>
+    <a href="/superadmin/schools"
+       class="menu-link {{ 'active' if active_page=='schools' }}">
+        <span class="icon">🏫</span>
+        <span>
+            School Management
+            <small>All Registered Schools</small>
+        </span>
+    </a>
+</li>
+
+<!-- STUDENTS -->
+<li>
+    <a href="/superadmin/all-students"
+       class="menu-link {{ 'active' if active_page=='all-students' }}">
+        <span class="icon">👨‍🎓</span>
+        <span>
+            Students
+            <small>Manage Students</small>
+        </span>
+    </a>
+</li>
+
+<!-- TC -->
+<li>
+    <a href="/superadmin/tc-management"
+       class="menu-link {{ 'active' if active_page=='tc-management' }}">
+        <span class="icon">📄</span>
+        <span>
+            TC Records
+            <small>All Schools TC</small>
+        </span>
+    </a>
+</li>
+
+<!-- BONAFIDE -->
+<li>
+    <a href="/superadmin/bonafide-management"
+       class="menu-link {{ 'active' if active_page=='bonafide-management' }}">
+        <span class="icon">🏅</span>
+        <span>
+            Bonafide Records
+            <small>Certificates</small>
+        </span>
+    </a>
+</li>
+
+<!-- USERS -->
+<li>
+    <a href="/superadmin/users"
+       class="menu-link {{ 'active' if active_page=='users' }}">
+        <span class="icon">👥</span>
+        <span>
+            Users
+            <small>Login Accounts</small>
+        </span>
+    </a>
+</li>
+
+<!-- SETTINGS -->
+<li>
+    <a href="/superadmin/settings"
+       class="menu-link {{ 'active' if active_page=='settings' }}">
+        <span class="icon">⚙️</span>
+        <span>
+            System Settings
+            <small>Global Config</small>
+        </span>
+    </a>
+</li>
+
+{% endif %}
+
+  {% if role == "clerk" %}
+
+    <!-- DASHBOARD -->
+    <li>
+        <a href="{{ url_for('clerk_dashboard') }}" class="menu-link {{ 'active' if active_page=='dashboard' }}">
+            <span class="icon">🏠</span>
+            <span>
+                Dashboard
+                <small>डॅशबोर्ड</small>
+            </span>
+        </a>
+    </li>
+
+    <!-- ADD STUDENT -->
+    <li>
+        <a href="{{ url_for('add_student') }}" class="menu-link {{ 'active' if active_page=='add_student' }}">
+            <span class="icon">➕</span>
+            <span>
+                Add Student
+                <small>विद्यार्थी नोंदणी करा</small>
+            </span>
+        </a>
+    </li>
+
+    <!-- VIEW STUDENTS -->
+    <li>
+        <a href="{{ url_for('clerk_students') }}" class="menu-link {{ 'active' if active_page=='students' }}">
+            <span class="icon">📋</span>
+            <span>
+                View Students
+                <small>विद्यार्थ्यांची यादी</small>
+            </span>
+        </a>
+    </li>
+
+    <!-- TC MANAGEMENT -->
+    {% if feature_modules.get('tc', 'Disabled')|trim == "Enabled" %}
+    <li>
+        <a href="{{ url_for('clerk_tc_page') }}"
+        class="menu-link {{ 'active' if active_page=='tc' }}">
+
+            <span class="icon">📄</span>
+
+            <span>
+                TC Management
+                <small>स्थानांतरण प्रमाणपत्र व्यवस्थापन</small>
+            </span>
+
+        </a>
+    </li>
+    {% endif %}
+    <!-- BONAFIDE MANAGEMENT -->
+    {% if feature_modules.get('bonafide', 'Disabled')|trim == "Enabled" %}
+    <li>
+        <a href="{{ url_for('clerk_bonafide_page') }}"
+        class="menu-link {{ 'active' if active_page=='bonafide' }}">
+
+            <span class="icon">🏅</span>
+
+            <span>
+                Bonafide Management
+                <small>बोनाफाईड प्रमाणपत्र व्यवस्थापन</small>
+            </span>
+
+        </a>
+    </li>
+    {% endif %}
+    <!-- IMPORT / EXPORT  -->
+            {% if feature_modules.get('import_export', 'Disabled')|trim == "Enabled" %}
+            <li>
+                <a href="/clerk/import-export"
+                class="menu-link {{ 'active' if active_page=='import_export' }}">
+
+                    <span class="icon">📂</span>
+
+                    <span>
+                        Import / Export
+                        <small>डेटा आयात / निर्यात</small>
+                    </span>
+
+                </a>
+            </li>
+            {% endif %}
+
+    <!-- ================= NEW FEATURES (COMING SOON) ================= -->
+
+    <!-- ATTENDANCE -->
+    {% if feature_modules.get('attendance', 'Disabled')|trim == "Enabled" %}
+    <li>
+        <a href="{{ url_for('attendance_dashboard') }}"
+        class="menu-link {{ 'active' if active_page=='attendance' }}">
+
+            <span class="icon">📊</span>
+
+            <span>
+                Attendance
+                <small>हजेरी व्यवस्थापन</small>
+            </span>
+
+        </a>
+    </li>
+    {% endif %}
+
+    <!-- MARKS -->
+    {% if feature_modules.get('results', 'Disabled')|trim == "Enabled" %}
+    <li>
+        <a href="/clerk/results"
+        class="menu-link {{ 'active' if active_page=='results' }}">
+
+            <span class="icon">📝</span>
+
+            <span>
+                Marks & Results
+                <small>गुणपत्रिका</small>
+            </span>
+
+        </a>
+    </li>
+    {% endif %}
+
+    <!-- TEACHERS -->
+   {% if feature_modules.get('teachers', 'Disabled')|trim == "Enabled" %}
+    <li>
+        <a href="/clerk/teachers"
+        class="menu-link {{ 'active' if active_page=='teachers' }}">
+
+            <span class="icon">👨‍🏫</span>
+
+            <span>
+                Teacher Management
+                <small>शिक्षक व्यवस्थापन</small>
+            </span>
+
+        </a>
+    </li>
+    {% endif %}
+
+
+    <!-- FEES -->
+    {% if feature_modules.get('fees', 'Disabled')|trim == "Enabled" %}
+    <li>
+        <a href="{{ url_for('fee_dashboard') }}"
+        class="menu-link {{ 'active' if active_page=='fees' }}">
+
+            <span class="icon">💰</span>
+
+            <span>
+                Fee Management
+                <small>फी व्यवस्थापन</small>
+            </span>
+
+        </a>
+    </li>
+    {% endif %}
+    <!-- TIMETABLE -->
+    {% if feature_modules.get('timetable', 'Disabled')|trim == "Enabled" %}
+    <li>
+        <a href="/clerk/timetable"
+        class="menu-link {{ 'active' if active_page=='timetable' }}">
+
+            <span class="icon">📅</span>
+
+            <span>
+                Timetable
+                <small>वेळापत्रक</small>
+            </span>
+
+        </a>
+    </li>
+    {% endif %}
+
+    <!-- NOTICE -->
+{% if feature_modules.get('notice-board', 'Disabled')|trim == "Enabled" %}
+<li>
+    <a href="/clerk/notice-board"
+       class="menu-link {{ 'active' if active_page=='notice' }}">
+
+        <span class="icon">📢</span>
+
+        <span>
+            Notice Board
+            <small>सूचना फलक</small>
+        </span>
+
+    </a>
+</li>
+{% endif %}
+
+    {% endif %}
+
+</ul>
+
+    <div class="divider"></div>
+
+    <!-- BOTTOM -->
+    <div class="sidebar-bottom">
+
+        <div class="user-card">
+            <div class="avatar">
+                {{ school_name[0] }}
+            </div>
+            <div>
+                <p>{{ school_name }}</p>
+                <span class="status">
+                    {% if role == "admin" %}
+                        Super Admin
+                    {% else %}
+                        School Active
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- LOGOUT FOR CLERK  -->
+        {% if role == "clerk" %}
+        <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="role" value="clerk">
+
+            <button type="submit" class="logout-btn">
+                Logout
+            </button>
+        </form>
+        {% endif %}
+        <!-- LOGOUT FOR ADMIN  -->
+        {% if role == "admin" %}
+        <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="role" value="admin">
+
+            <button type="submit" class="logout-btn">
+                Logout
+            </button>
+        </form>
+        {% endif %}
+
+    </div>
+
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    {% block content %}{% endblock %}
+</div>
+
+<!-- ================= GLOBAL CSRF TOKEN ================= -->
+<script>
+
+    // GLOBAL CSRF TOKEN
+    const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        .getAttribute('content');
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+</body>
+</html>

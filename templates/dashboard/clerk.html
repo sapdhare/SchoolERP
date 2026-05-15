@@ -1,0 +1,767 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clerk.css') }}">
+
+<!-- ================= CLERK HEADER ================= -->
+<div class="clerk-top-header">
+
+    <div class="clerk-header-left">
+        <h1>{{ school_name }}</h1>
+
+        <p class="clerk-sub">
+            Clerk Panel • Manage Students, TC & Certificates
+            <br>
+            <span class="mr-text">
+                कार्यालय पॅनेल • विद्यार्थी, टीसी व प्रमाणपत्र व्यवस्थापन
+            </span>
+        </p>
+    </div>
+
+    <!-- PROFILE ICON -->
+    <div class="profile-avatar-box" onclick="openProfileModal()">
+        <div class="profile-avatar">
+            {{ user_profile.name[0] if user_profile and user_profile.name else "U" }}
+        </div>
+    </div>
+
+</div>
+<!-- ================= SUBSCRIPTION ALERT ================= -->
+{% if subscription_alert %}
+<div class="subscription-alert {{ subscription_alert.type }}">
+
+    <div class="subscription-alert-left">
+        {% if subscription_alert.type == "danger" %}
+            ⚠️
+        {% elif subscription_alert.type == "warning" %}
+            ⏳
+        {% else %}
+            ℹ️
+        {% endif %}
+    </div>
+
+    <div class="subscription-alert-content">
+        <p>{{ subscription_alert.message }}</p>
+        <span>
+            कृपया वेळेत सदस्यता नूतनीकरण करा.
+        </span>
+    </div>
+
+    <div class="subscription-alert-action">
+       <a href="/clerk/subscription/renew" class="btn-renew">
+            Renew Plan
+        </a>
+    </div>
+
+</div>
+{% endif %}
+
+
+<!-- ================= WELCOME CARD ================= -->
+<!-- <div class="clerk-welcome-card">
+
+    <div class="clerk-welcome-content">
+        <h2>
+            Welcome back 👋
+        </h2>
+
+        <h3 class="clerk-highlight">
+            Smart & Easy School Management
+        </h3>
+
+        <p>
+            Add students, update records, and generate Transfer Certificates in seconds.
+            Everything is designed to be simple, fast, and error-free.
+        </p>
+    </div> -->
+
+    <!-- FLOATING DECOR -->
+    <!-- <div class="clerk-glow"></div>
+    <div class="clerk-welcome-shape"></div>
+
+</div>  -->
+<!-- ================= CLERK STATS SECTION ================= -->
+ 
+<div class="clerk-stats-row">
+
+    <div class="clerk-stat-box teal">
+        <div class="stat-text">
+            <h2 class="counter">{{ total_students or 0 }}</h2>
+            <p class="label-en">Total Students</p>
+            <span class="label-mr">एकूण विद्यार्थी</span>
+        </div>
+        <div class="stat-icon">👨‍🎓</div>
+    </div>
+
+    <div class="clerk-stat-box orange">
+        <div class="stat-text">
+            <h2 class="counter">{{ total_tc or 0 }}</h2>
+            <p class="label-en">TC Generated</p>
+            <span class="label-mr">टीसी तयार</span>
+        </div>
+        <div class="stat-icon">📤</div>
+    </div>
+
+    <div class="clerk-stat-box blue">
+        <div class="stat-text">
+            <h2 class="counter">{{ total_bonafide or 0 }}</h2>
+            <p class="label-en">Bonafide Issued</p>
+            <span class="label-mr">बोनाफाईड दिले</span>
+        </div>
+        <div class="stat-icon">🏅</div>
+    </div>
+
+    <div class="clerk-stat-box purple">
+        <div class="stat-text">
+            <h2 class="counter">{{ total_students or 0 }}</h2>
+            <p class="label-en">Total Admissions</p>
+            <span class="label-mr">एकूण प्रवेश</span>
+        </div>
+        <div class="stat-icon">➕</div>
+    </div>
+
+</div>
+
+ 
+
+<!-- ================= ACTION CARDS ================= -->
+<div class="clerk-actions">
+
+    <!-- ADD STUDENT -->
+    <div class="action-card" onclick="window.location.href='/clerk/add-student'">
+        <div class="action-icon">➕</div>
+        <h3>Add Student</h3>
+        <p>नवीन विद्यार्थी नोंदणी करा</p>
+    </div>
+
+    <!-- VIEW STUDENTS -->
+    <div class="action-card" onclick="window.location.href='/clerk/students'">
+        <div class="action-icon">👥</div>
+        <h3>View Students</h3>
+        <p>विद्यार्थ्यांची यादी पहा</p>
+    </div>
+
+    <!-- TC MANAGEMENT -->
+    <div class="action-card" onclick="window.location.href='/clerk/tc'">
+        <div class="action-icon">📋</div>
+        <h3>TC Management</h3>
+        <p>स्थानांतरण प्रमाणपत्र व्यवस्थापन</p>
+    </div>
+    <!-- BONAFIDE MANAGEMENT-->
+      <div class="action-card" onclick="window.location.href='/clerk/bonafide'">
+        <div class="action-icon">🏅</div>
+        <h3>Bonafide Management</h3>
+        <p>प्रमाणपत्र व्यवस्थापन (बोनाफाईड)</p>
+    </div>
+
+</div>
+
+<!-- ================= PREMIUM OVERVIEW ================= -->
+<div class="clerk-main-grid">
+
+<div class="clerk-overview-card">
+
+    <!-- HEADER -->
+    <div class="overview-header">
+        <div>
+            <h3>School Overview</h3>
+            <span>शाळेचा आढावा</span>
+        </div>
+        <a href="#">View Report →</a>
+    </div>
+
+    <!-- TOP STATS CARDS -->
+        <div class="overview-top">
+
+            <!-- STUDENT GROWTH -->
+            <div class="overview-stat">
+                <p>Student Growth<br><span>विद्यार्थी वाढ</span></p>
+                <h2>{{ growth_percent or 0 }}%</h2>
+                <canvas id="chartGrowth"></canvas>
+            </div>
+
+            <!-- TC GENERATED -->
+            <div class="overview-stat">
+                <p>TC Generated<br><span>टीसी तयार</span></p>
+                <h2>{{ total_tc or 0 }}</h2>
+                <canvas id="chartTC"></canvas>
+            </div>
+
+            <!-- BONAFIDE -->
+            <div class="overview-stat">
+                <p>Bonafide Issued<br><span>बोनाफाईड दिले</span></p>
+                <h2>{{ total_bonafide or 0 }}</h2>
+                <canvas id="chartBonafide"></canvas>
+            </div>
+
+        </div>
+
+</div>
+
+<!-- RIGHT: RECENT ACTIVITY -->
+<div class="clerk-activity">
+
+    <div class="section-header">
+        <h3>Recent Activity</h3>
+        <span>अलीकडील अपडेट</span>
+    </div>
+
+     {% if activities and activities|length > 0 %}
+
+        {% for act in activities %}
+
+        <div class="activity-item">
+
+            <span class="dot {{ act.type }}"></span>
+
+              <div class="activity-content">
+                <p>{{ act.title }}</p>
+                <span>{{ act.title_mr }}</span>
+                <small>{{ act.time }}</small>
+            </div>
+            
+        </div>
+        {% endfor %}
+
+    {% else %}
+
+        <!-- EMPTY STATE -->
+        <div class="activity-empty">
+            <p>No recent activity</p>
+            <span>अलीकडील माहिती उपलब्ध नाही</span>
+        </div>
+
+    {% endif %}
+
+</div>
+
+</div>
+
+<!-- PROFILE MODAL -->
+<div id="profileModal" class="profile-modal">
+
+    <div class="profile-modal-box">
+
+        <!-- HEADER -->
+        <div class="profile-modal-header">
+            <h2>My Profile</h2>
+            <button onclick="closeProfileModal()">×</button>
+        </div>
+
+        <!-- AVATAR -->
+        <div class="profile-avatar-large">
+            {{ user_profile.name[0] if user_profile and user_profile.name else "U" }}
+        </div>
+
+        <!-- TABS -->
+        <div class="profile-tabs">
+
+            <button
+                class="profile-tab-btn active"
+                id="profileTabBtn"
+                onclick="showProfileTab('profile')">
+                Profile
+            </button>
+
+            <button
+                class="profile-tab-btn"
+                id="passwordTabBtn"
+                onclick="showProfileTab('password')">
+                Reset Password
+            </button>
+
+        </div>
+
+        <!-- PROFILE TAB -->
+        <div id="profile-tab">
+
+            <div class="profile-grid">
+
+                <div>
+                    <label>Name</label>
+                    <input
+                        id="profile_name"
+                        value="{{ user_profile.name }}">
+                </div>
+
+                <div>
+                    <label>Email</label>
+                    <input
+                        value="{{ user_profile.email }}"
+                        disabled>
+                </div>
+
+                <div>
+                    <label>Phone</label>
+                    <input
+                        id="profile_phone"
+                        value="{{ user_profile.phone }}">
+                </div>
+
+                <div>
+                    <label>Address</label>
+                    <input
+                        id="profile_address"
+                        value="{{ user_profile.address or '' }}">
+                </div>
+
+                <div>
+                    <label>Designation</label>
+                    <input
+                        id="profile_designation"
+                        value="{{ user_profile.designation or '' }}">
+                </div>
+
+                <div>
+                    <label>School</label>
+                    <input
+                        value="{{ user_profile.school_name }}"
+                        disabled>
+                </div>
+
+                <div>
+                    <label>Subscription</label>
+                    <input
+                        value="{{ user_profile.plan_name or 'No Plan' }}"
+                        disabled>
+                </div>
+
+                <div>
+                    <label>Days Remaining</label>
+                    <input
+                        value="{{ user_profile.remaining_days }}"
+                        disabled>
+                </div>
+
+            </div>
+
+            <div class="profile-actions">
+                <button onclick="saveProfile()">
+                    Save Changes
+                </button>
+            </div>
+
+        </div>
+
+        <!-- PASSWORD TAB -->
+<div id="password-tab" style="display:none;">
+
+    <div class="profile-password-wrapper">
+
+        <!-- STEP 1 -->
+        <div id="password-step-1" class="password-step">
+
+            <div class="password-step-title">
+                Password Reset Verification
+            </div>
+
+            <div class="password-step-note">
+
+                <p>
+                    Enter your registered email to receive OTP for password reset.
+                </p>
+
+                <p>
+                    पासवर्ड बदलण्यासाठी आपल्या नोंदणीकृत ईमेलवर OTP पाठविला जाईल.
+                </p>
+
+                <p>
+                    OTP validity: 5 Minutes / OTP वैधता: ५ मिनिटे
+                </p>
+
+            </div>
+
+            <div class="password-input-group">
+                <label>Registered Email</label>
+                <input
+                    id="reset_email"
+                    type="email"
+                    value="{{ user_profile.email }}"
+                    placeholder="Enter Email">
+            </div>
+
+            <button
+                class="password-main-btn"
+                onclick="sendPasswordOTP()">
+                Send OTP
+            </button>
+
+        </div>
+
+        <!-- STEP 2 -->
+        <div
+            id="password-step-2"
+            class="password-step"
+            style="display:none;">
+
+            <div class="password-step-title">
+                OTP Verification
+            </div>
+
+            <div class="password-step-note">
+                Enter the OTP sent to your email.
+                <br>
+                आपल्या ईमेलवर आलेला OTP टाका.
+            </div>
+
+            <div class="password-input-group">
+                <label>Enter OTP</label>
+                <input
+                    id="profile_otp"
+                    type="text"
+                    placeholder="Enter OTP">
+            </div>
+
+            <button
+                class="password-main-btn"
+                onclick="verifyOTPOnly()">
+                Proceed
+            </button>
+
+        </div>
+
+        <!-- STEP 3 -->
+        <div
+            id="password-step-3"
+            class="password-step"
+            style="display:none;">
+
+            <div class="password-step-title">
+                Create New Password
+            </div>
+
+            <div class="password-step-note">
+                Create a strong password.
+                <br>
+                मजबूत पासवर्ड तयार करा.
+            </div>
+
+            <div class="password-input-group">
+                <label>New Password</label>
+                <input
+                    id="new_password"
+                    type="password"
+                    placeholder="Enter New Password">
+            </div>
+
+            <div class="password-input-group">
+                <label>Confirm Password</label>
+                <input
+                    id="confirm_password"
+                    type="password"
+                    placeholder="Repeat Password">
+            </div>
+
+            <button
+                class="password-main-btn"
+                onclick="updatePasswordFinal()">
+                Update Password
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- JS for profile modal and charts is included at the end of the file for better performance. -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- ================= SAFE DATA FROM FLASK ================= -->
+<script id="chart-data" type="application/json">
+{
+    "growth": {{ (growth_data or [0,0,0,0,0]) | tojson }},
+    "tc": {{ (tc_data or [0,0,0,0,0]) | tojson }},
+    "bonafide": {{ (bonafide_data or [0,0]) | tojson }}
+}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ================= GET DATA =================
+    const chartData = JSON.parse(document.getElementById("chart-data").textContent);
+
+    const growthData = chartData.growth.length ? chartData.growth : [0,0,0,0,0];
+    const tcData = chartData.tc.length ? chartData.tc : [0,0,0,0,0];
+    const bonafideData = chartData.bonafide.length ? chartData.bonafide : [0,1];
+
+    // ================= COMMON OPTIONS =================
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }, // ✅ REMOVE "undefined"
+            tooltip: { enabled: true }
+        },
+        scales: {
+            x: { display: false },
+            y: { display: false }
+        }
+    };
+
+    // ================= STUDENT GROWTH (LINE) =================
+    const growthCanvas = document.getElementById("chartGrowth");
+    if (growthCanvas) {
+        new Chart(growthCanvas, {
+            type: "line",
+            data: {
+                labels: ["Jan","Feb","Mar","Apr","May"],
+                datasets: [{
+                    data: growthData,
+                    borderColor: "#0EA5A4",
+                    backgroundColor: "rgba(14,165,164,0.15)",
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3
+                }]
+            },
+            options: commonOptions
+        });
+    }
+
+    // ================= TC GENERATED (BAR) =================
+    const tcCanvas = document.getElementById("chartTC");
+    if (tcCanvas) {
+        new Chart(tcCanvas, {
+            type: "bar",
+            data: {
+                labels: ["Mon","Tue","Wed","Thu","Fri"],
+                datasets: [{
+                    data: tcData,
+                    backgroundColor: "#3B82F6",
+                    borderRadius: 6
+                }]
+            },
+            options: commonOptions
+        });
+    }
+
+    // ================= BONAFIDE (DOUGHNUT) =================
+    const bonafideCanvas = document.getElementById("chartBonafide");
+    if (bonafideCanvas) {
+        new Chart(bonafideCanvas, {
+            type: "doughnut",
+            data: {
+                datasets: [{
+                    data: bonafideData[0] === 0 ? [1,1] : bonafideData,
+                    backgroundColor: ["#8B5CF6", "#E5E7EB"],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                cutout: "70%"
+            }
+        });
+    }
+
+});
+</script>
+<!-- ================= LIVE COUNTER JS ================= -->
+<script>
+document.querySelectorAll('.counter').forEach(counter => {
+
+    const isPercent = counter.innerText.includes('%');
+    const target = parseInt(counter.innerText) || 0;
+    let current = 0;
+
+    const increment = target / 40;
+
+    const update = () => {
+        if (current < target) {
+            current += increment;
+            counter.innerText = Math.ceil(current) + (isPercent ? "%" : "");
+            setTimeout(update, 20);
+        } else {
+            counter.innerText = target + (isPercent ? "%" : "");
+        }
+    };
+
+    counter.innerText = "0" + (isPercent ? "%" : "");
+    update();
+});
+</script>
+
+<!-- PROFILE + PASSWORD JS -->
+
+<script>
+function openProfileModal(){
+    document.getElementById("profileModal").style.display = "flex";
+}
+
+function closeProfileModal(){
+    document.getElementById("profileModal").style.display = "none";
+}
+
+/* TAB SWITCH */
+function showProfileTab(tab){
+
+    document.getElementById("profile-tab").style.display = "none";
+    document.getElementById("password-tab").style.display = "none";
+
+    document.getElementById("profileTabBtn").classList.remove("active");
+    document.getElementById("passwordTabBtn").classList.remove("active");
+
+    document.getElementById(tab + "-tab").style.display = "block";
+
+    if(tab === "profile"){
+        document.getElementById("profileTabBtn").classList.add("active");
+    }else{
+        document.getElementById("passwordTabBtn").classList.add("active");
+    }
+}
+
+/* SAVE PROFILE */
+function saveProfile(){
+
+    const formData = new FormData();
+
+    formData.append(
+        "name",
+        document.getElementById("profile_name").value
+    );
+
+    formData.append(
+        "phone",
+        document.getElementById("profile_phone").value
+    );
+
+    formData.append(
+        "address",
+        document.getElementById("profile_address").value
+    );
+
+    formData.append(
+        "designation",
+        document.getElementById("profile_designation").value
+    );
+
+    fetch("/clerk/profile/update",{
+        method:"POST",
+
+        headers:{
+            "X-CSRFToken": csrfToken
+        },
+
+        body:formData
+    }) 
+
+    .then(res=>res.json())
+    .then(data=>{
+        alert(data.message);
+        location.reload();
+    });
+}
+
+/* STEP 1 */
+function sendPasswordOTP(){
+
+    const email = document.getElementById("reset_email").value;
+
+    fetch("/clerk/profile/send-otp",{
+    method:"POST",
+
+    headers:{
+        "Content-Type":"application/json",
+        "X-CSRFToken": csrfToken
+    },
+
+    body:JSON.stringify({
+        email:email
+    })
+})
+
+
+    .then(res=>res.json())
+    .then(data=>{
+
+        alert(data.message);
+
+        if(data.message.includes("OTP")){
+            document.getElementById("password-step-1").style.display="none";
+            document.getElementById("password-step-2").style.display="block";
+        }
+    });
+}
+
+/* STEP 2 */
+function verifyOTPOnly(){
+
+    const otp = document.getElementById("profile_otp").value;
+
+    fetch("/clerk/profile/check-otp",{
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRFToken": csrfToken
+        },
+
+        body:JSON.stringify({
+            otp:otp
+        })
+    })
+
+
+    .then(res=>res.json())
+    .then(data=>{
+
+        alert(data.message);
+
+        if(data.message==="OTP Verified"){
+            document.getElementById("password-step-2").style.display="none";
+            document.getElementById("password-step-3").style.display="block";
+        }
+    });
+}
+
+/* STEP 3 */
+function updatePasswordFinal(){
+
+    const newPassword =
+        document.getElementById("new_password").value;
+
+    const confirmPassword =
+        document.getElementById("confirm_password").value;
+
+    if(newPassword !== confirmPassword){
+        alert("Passwords do not match");
+        return;
+    }
+
+    fetch("/clerk/profile/update-password",{
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRFToken": csrfToken
+        },
+
+        body:JSON.stringify({
+            password:newPassword
+        })
+    })
+    
+    .then(res=>res.json())
+    .then(data=>{
+
+        alert(data.message);
+
+        if(data.message==="Password updated successfully"){
+            closeProfileModal();
+        }
+    });
+}
+</script>
+
+
+{% endblock %}

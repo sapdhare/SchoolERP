@@ -1,0 +1,211 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+
+
+
+<!-- ================= STUDENTS HEADER ================= -->
+<div class="students-header">
+
+    <div class="students-header-left">
+        <h1>Students List</h1>
+        <span class="marathi-title">विद्यार्थी यादी</span>
+
+        <p class="students-desc">
+            View and manage all student records in your school.
+        </p>
+    </div>
+
+    <div class="students-header-right">
+        <a href="{{ url_for('add_student') }}" class="btn-add">
+            + Add Student
+        </a>
+    </div>
+
+</div>
+
+
+<!-- ================= SEARCH + FILTER ================= -->
+<div class="students-filter">
+
+    <div class="filter-title">
+        <h3>Search & Filter</h3>
+        <span>शोध आणि निवड</span>
+    </div>
+
+    <div class="filter-controls">
+
+        <!-- SEARCH -->
+        <div class="filter-group">
+            <label>Search Student <span>विद्यार्थी शोधा</span></label>
+            <input type="text" id="searchInput" placeholder="Enter name or admission no">
+        </div>
+
+        <!-- CLASS FILTER -->
+        <div class="filter-group">
+            <label>Class <span>इयत्ता</span></label>
+            <select id="classFilter">
+                <option value="">All Classes</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+                <option>8</option>
+                <option>9</option>
+                <option>10</option>
+            </select>
+        </div>
+
+        <!-- RESET -->
+        <div class="filter-group btn-group">
+            <button id="resetFilter" class="btn-filter-reset">
+             Clear
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= STUDENTS TABLE ================= -->
+<div class="students-table-section">
+
+    <!-- TITLE -->
+    <div class="table-header">
+        <h3>Student Records</h3>
+        <span>विद्यार्थी नोंदी</span>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+
+        <table class="students-table">
+
+            <thead>
+                <tr>
+                    <th>Register No</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Admission No</th>
+                    <th>Student ID</th>
+                    <th>Mobile</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <!-- MODAL DATA -->
+<tbody>
+        {% for student in students %}
+        <tr>
+            <td>{{ student.school_register_no }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ student.class }}</td>
+            <td>{{ student.admission_no }}</td>
+            <td>{{ student.student_uid or "-" }}</td>
+            <td>{{ student.primary_mobile }}</td>
+
+            <td>
+                <span class="status active">Active</span>
+            </td>
+        {% set dob_formatted = student.dob.strftime('%d-%m-%Y') if student.dob and student.dob.__class__.__name__ != 'str' else (student.dob or '') %}
+            <td class="actions-cell">
+
+<button
+    class="btn-action view"
+    data-register="{{ student.school_register_no or '' }}"
+    data-name="{{ student.name or '' }}"
+    data-class="{{ student.class or '' }}"
+    data-admission="{{ student.admission_no or '' }}"
+    data-mobile="{{ student.primary_mobile or '' }}"
+    data-father="{{ student.father_name or '' }}"
+    data-mother="{{ student.mother_name or '' }}"
+    data-uid="{{ student.student_uid or '' }}"
+    data-apaar="{{ student.apaar_id or '' }}"
+    data-aadhaar="{{ student.aadhaar or '' }}"
+    data-dob="{{ dob_formatted or '' }}"
+    data-progress="{{ student.progress or '' }}"
+    data-conduct="{{ student.conduct or '' }}"
+    onclick="openModal(this)"
+>
+    👁 View
+</button>
+
+    <!-- EDIT -->
+   <a href="{{ url_for('edit_student', id=student.id) }}" class="btn-action edit">
+        ✏ Edit
+    </a>
+
+    <!-- TC -->
+   <a href="{{ url_for('tc_form', id=student.id) }}" class="btn-action tc">
+        📄 TC
+    </a>
+
+
+    </td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ================= VIEW STUDENT MODAL ================= -->
+<div class="modal" id="studentModal">
+
+    <div class="modal-content large">
+
+        <div class="modal-header">
+            <h3>Student Details</h3>
+            <span onclick="closeModal()" class="close-btn">&times;</span>
+        </div>
+
+        <div class="modal-body grid">
+
+            <div><strong>Register No:</strong> <span id="mRegister"></span></div>
+            <div><strong>Name:</strong> <span id="mName"></span></div>
+            <div><strong>Class:</strong> <span id="mClass"></span></div>
+            <div><strong>Admission No:</strong> <span id="mAdmission"></span></div>
+            <div><strong>Mobile:</strong> <span id="mMobile"></span></div>
+
+            <div><strong>Father Name:</strong> <span id="mFather"></span></div>
+            <div><strong>Mother Name:</strong> <span id="mMother"></span></div>
+            <div><strong>Student ID:</strong> <span id="mStudentUid"></span></div>
+
+            <div><strong>DOB:</strong> <span id="mDob"></span></div>
+
+            <div><strong>APAAR ID:</strong> <span id="mApaar"></span></div>
+            <div><strong>Aadhaar:</strong> <span id="mAadhaar"></span></div>
+
+            <div><strong>Progress:</strong> <span id="mProgress"></span></div>
+            <div><strong>Conduct:</strong> <span id="mConduct"></span></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<script src="{{ url_for('static', filename='js/student.js') }}"></script>
+{% endblock %}

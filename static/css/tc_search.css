@@ -1,0 +1,242 @@
+/* PAGE */
+.tc-page {
+    padding: 20px 25px;
+}
+
+/* consistent spacing between sections */
+.tc-page > div {
+    margin-bottom: 20px;
+}
+
+/* HEADER */
+.tc-page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 5px;
+}
+
+.tc-page-header p {
+    font-size: 14px;
+    color: #64748b;
+}
+
+/* STATS */
+.tc-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+    border-radius: 14px;
+    padding: 20px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    transition: 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px) scale(1.01);
+}
+
+/* subtle glow effect */
+.stat-card::after {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+}
+
+.stat-card h3 {
+    font-size: 22px;
+    opacity: 0.9;
+}
+
+.stat-card p {
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+/* SEARCH */
+.tc-search-box {
+    display: flex;
+    position: relative;
+    z-index: 10;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+}
+/* input */
+.tc-search-box input {
+    flex: 1;
+    min-width: 250px;
+}
+/* INPUT + SELECT */
+.tc-search-box input,
+.tc-search-box select {
+   padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    background: #f9fafb;
+}
+
+.tc-search-box input:focus,
+.tc-search-box select:focus {
+    border-color: #14b8a6;
+      background: white;
+}
+
+/* BUTTON */
+.btn-search {
+    background: #14b8a6;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+    position: relative;
+    z-index: 11;
+}
+
+.btn-search:hover {
+    background: #0d9488;
+}
+/* TABLE */
+.tc-table {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid  #d1d5db;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+.tc-table table {
+    width: 100%;
+    border-collapse: collapse;
+   
+
+}
+
+/* HEADER */
+.tc-table thead {
+background: #f1f5f9;
+}
+
+.tc-table th {
+    padding: 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #475569;
+    font-weight: 600;
+      
+    border: 1px solid #e2e8f0; 
+}
+.tc-table thead th {
+    position: sticky;
+    top: 0;
+    background: #f1f5f9;
+    z-index: 2;
+}
+
+/* BODY ROW */
+.tc-table tbody tr {
+    background: #ffffff;
+    transition: 0.2s ease;
+}
+.tc-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+ 
+
+/* HOVER EFFECT */
+.tc-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* CELLS */
+.tc-table td {
+    padding: 16px;
+    font-size: 14px;
+    color: #1e293b;
+
+    border: 1px solid #e2e8f0;
+}
+
+/* ALIGN CENTER FOR ACTION */
+.action-cell {
+    text-align: center;
+}
+
+/* VIEW BUTTON (FIXED + MODERN) */
+.btn-view {
+    display: inline-block;
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+.btn-view:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(20,184,166,0.3);
+}
+
+ 
+/* RECENT */
+.tc-recent {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+}
+
+
+.tc-recent h2 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #1e293b;
+}
+
+.tc-recent ul {
+    list-style: none;
+    padding: 0;
+}
+.tc-recent li {
+    position: relative;
+    padding-left: 22px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+.tc-recent li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    background: #14b8a6;
+    border-radius: 50%;
+}

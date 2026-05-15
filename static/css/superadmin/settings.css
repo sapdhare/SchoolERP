@@ -1,0 +1,3563 @@
+/* =========================================================
+   SCHOOLSPHERE ERP - SUPERADMIN SETTINGS
+========================================================= */
+
+
+
+/* =========================================================
+   GLOBAL SETTINGS
+========================================================= */
+
+html{
+    scroll-behavior:smooth;
+}
+
+::-webkit-scrollbar{
+    width:10px;
+}
+
+::-webkit-scrollbar-track{
+    background:#f1f5f9;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#14b8a6;
+    border-radius:20px;
+}
+
+
+
+/* =========================================================
+   MAIN SETTINGS LAYOUT
+========================================================= */
+
+.erp-settings-layout{
+    display:flex;
+    gap:30px;
+
+    padding:30px;
+
+    min-height:100vh;
+
+    background:#f8fafc;
+}
+
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.erp-settings-sidebar{
+
+    width:260px;
+
+    background:#ffffff;
+
+    border-radius:24px;
+
+    padding:25px;
+
+    height:fit-content;
+
+    position:sticky;
+    top:20px;
+
+    border:1px solid #eef2f7;
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,0.05);
+}
+
+
+
+/* =========================================================
+   SIDEBAR BRAND
+========================================================= */
+
+.erp-settings-brand{
+    margin-bottom:30px;
+}
+
+.erp-settings-brand h2{
+
+    font-size:28px;
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+.erp-settings-brand p{
+
+    margin-top:8px;
+
+    color:#64748b;
+}
+
+
+
+/* =========================================================
+   SIDEBAR NAVIGATION
+========================================================= */
+
+.erp-settings-nav{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.erp-settings-link{
+
+    position:relative;
+    overflow:hidden;
+
+    padding:14px 16px;
+
+    border-radius:14px;
+
+    text-decoration:none;
+
+    font-weight:600;
+
+    color:#334155;
+
+    transition:.3s;
+}
+
+.erp-settings-link:hover,
+.erp-settings-link.active{
+
+    background:
+    linear-gradient(
+        135deg,
+        #14b8a6,
+        #22c55e
+    );
+
+    color:white;
+}
+
+/* ACTIVE GLOW EFFECT */
+
+.erp-settings-link.active::before{
+
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background:
+    linear-gradient(
+        135deg,
+        rgba(255,255,255,0.15),
+        transparent
+    );
+}
+
+
+
+/* =========================================================
+   CONTENT AREA
+========================================================= */
+
+.erp-settings-content{
+    flex:1;
+}
+
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.erp-settings-header{
+    margin-bottom:25px;
+}
+
+.erp-settings-header h1{
+
+    font-size:38px;
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+.erp-settings-header p{
+
+    margin-top:8px;
+
+    color:#64748b;
+}
+
+
+
+/* =========================================================
+   STATS CARDS
+========================================================= */
+
+.erp-settings-stats{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:20px;
+
+    margin-bottom:30px;
+}
+
+
+
+/* =========================================================
+   INDIVIDUAL STAT CARD
+========================================================= */
+
+.erp-stat-card{
+
+    position:relative;
+    overflow:hidden;
+
+    padding:25px;
+
+    border-radius:22px;
+
+    color:white;
+
+    transition:.35s ease;
+}
+
+.erp-stat-card h4{
+
+    font-size:15px;
+
+    margin-bottom:10px;
+}
+
+.erp-stat-card h2{
+
+    font-size:35px;
+    font-weight:800;
+}
+
+
+
+/* =========================================================
+   STAT CARD HOVER
+========================================================= */
+
+.erp-stat-card:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:
+    0 20px 45px rgba(0,0,0,0.15);
+}
+
+
+
+/* =========================================================
+   STAT CARD SHINE EFFECT
+========================================================= */
+
+.erp-stat-card::after{
+
+    content:"";
+
+    position:absolute;
+
+    top:-100%;
+    left:-40%;
+
+    width:120px;
+    height:300%;
+
+    background:
+    rgba(255,255,255,0.18);
+
+    transform:rotate(25deg);
+
+    transition:.7s;
+}
+
+.erp-stat-card:hover::after{
+    left:120%;
+}
+
+
+
+/* =========================================================
+   STAT CARD COLORS
+========================================================= */
+
+.stat-green{
+    background:
+    linear-gradient(135deg,#14b8a6,#22c55e);
+}
+
+.stat-blue{
+    background:
+    linear-gradient(135deg,#0ea5e9,#3b82f6);
+}
+
+.stat-orange{
+    background:
+    linear-gradient(135deg,#f59e0b,#f97316);
+}
+
+.stat-purple{
+    background:
+    linear-gradient(135deg,#8b5cf6,#7c3aed);
+}
+
+
+
+/* =========================================================
+   SETTINGS BLOCK
+========================================================= */
+
+.erp-settings-block{
+
+    position:relative;
+    overflow:hidden;
+
+    margin-bottom:25px;
+
+    padding:30px;
+
+    border-radius:24px;
+
+    background:
+    rgba(255,255,255,0.88);
+
+    backdrop-filter:blur(14px);
+
+    border:1px solid rgba(255,255,255,0.5);
+
+    transition:.35s ease;
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,0.05);
+}
+
+
+
+/* =========================================================
+   SETTINGS BLOCK HOVER
+========================================================= */
+
+.erp-settings-block:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 20px 45px rgba(15,23,42,0.08);
+}
+
+
+
+/* =========================================================
+   BLOCK HEADER
+========================================================= */
+
+.erp-block-header{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:20px;
+
+    margin-bottom:25px;
+}
+
+.erp-block-header h2{
+
+    font-size:24px;
+    font-weight:700;
+
+    color:#0f172a;
+}
+
+.erp-block-header p{
+
+    margin-top:8px;
+
+    font-size:14px;
+
+    color:#64748b;
+}
+
+/* =========================================================
+   GENERAL SETTINGS HEADER STATUS
+========================================================= */
+
+.erp-live-status{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    padding:12px 18px;
+
+    background:
+    linear-gradient(
+        135deg,
+        rgba(20,184,166,0.12),
+        rgba(34,197,94,0.10)
+    );
+
+    border:1px solid rgba(20,184,166,0.15);
+
+    border-radius:50px;
+
+    font-size:14px;
+    font-weight:700;
+
+    color:#0f766e;
+
+    height:fit-content;
+}
+
+/* STATUS DOT */
+
+.status-dot{
+
+    width:10px;
+    height:10px;
+
+    border-radius:50%;
+
+    background:#22c55e;
+
+    position:relative;
+}
+
+/* PULSE */
+
+.status-dot::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:-4px;
+
+    border-radius:50%;
+
+    border:2px solid rgba(34,197,94,0.4);
+
+    animation:pulseStatus 1.8s infinite;
+}
+
+@keyframes pulseStatus{
+
+    0%{
+        transform:scale(0.8);
+        opacity:1;
+    }
+
+    100%{
+        transform:scale(2);
+        opacity:0;
+    }
+}
+
+/* =========================================================
+   SETTINGS GRID
+========================================================= */
+
+.erp-settings-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(3,1fr);
+
+    gap:20px;
+}
+
+
+/* =========================================================
+   LAST UPDATED
+========================================================= */
+
+.erp-last-update{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    font-size:14px;
+    font-weight:600;
+
+    color:#64748b;
+
+    background:#f8fafc;
+
+    padding:12px 16px;
+
+    border-radius:14px;
+
+    border:1px solid #e2e8f0;
+}
+
+/* =========================================================
+   INPUT GROUP
+========================================================= */
+
+.erp-input-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:600;
+
+    color:#334155;
+}
+
+
+
+/* =========================================================
+   INPUTS & SELECTS
+========================================================= */
+
+.erp-input-group input,
+.erp-input-group select{
+
+    width:100%;
+
+    padding:14px;
+
+    border-radius:14px;
+
+    border:1px solid #e2e8f0;
+
+    outline:none;
+
+    font-size:15px;
+
+    background:#f8fafc;
+
+    transition:.3s ease;
+}
+
+
+
+/* =========================================================
+   INPUT HOVER
+========================================================= */
+
+.erp-input-group input:hover,
+.erp-input-group select:hover{
+    border-color:#14b8a6;
+}
+
+
+
+/* =========================================================
+   INPUT FOCUS
+========================================================= */
+
+.erp-input-group input:focus,
+.erp-input-group select:focus{
+
+    border-color:#14b8a6;
+
+    box-shadow:
+    0 0 0 4px rgba(20,184,166,0.12);
+}
+
+
+
+/* =========================================================
+   FILE INPUT
+========================================================= */
+
+.erp-input-group input[type="file"]{
+
+    background:#f8fafc;
+
+    border:1px dashed #cbd5e1;
+
+    cursor:pointer;
+
+    transition:.3s ease;
+}
+
+.erp-input-group input[type="file"]:hover{
+
+    border-color:#14b8a6;
+
+    background:#f0fdfa;
+}
+
+
+/* =========================================================
+   PRIMARY SAVE BUTTON
+========================================================= */
+
+.erp-save-btn{
+
+    min-width:220px;
+    margin-top:25px;
+
+    padding:14px 25px;
+
+    border:none;
+    border-radius:14px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #14b8a6,
+        #22c55e
+    );
+
+    color:white;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.3s ease;
+
+    box-shadow:
+    0 10px 25px rgba(20,184,166,0.25);
+}
+
+
+
+/* =========================================================
+   SAVE BUTTON HOVER
+========================================================= */
+
+.erp-save-btn:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 18px 40px rgba(20,184,166,0.35);
+}
+
+
+
+/* =========================================================
+   DANGER BUTTON
+========================================================= */
+
+.erp-danger-btn{
+
+    margin-top:25px;
+
+    padding:14px 25px;
+
+    border:none;
+    border-radius:14px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #ef4444,
+        #dc2626
+    );
+
+    color:white;
+
+    font-weight:700;
+
+    cursor:pointer;
+}
+
+
+
+/* =========================================================
+   BACKUP ACTIONS
+========================================================= */
+
+/* .erp-backup-actions{
+    display:flex;
+    gap:15px;
+} */
+
+
+
+/* =========================================================
+   BACKUP BUTTONS
+========================================================= */
+
+/* .erp-backup-btn,
+.erp-download-btn{
+
+    padding:14px 25px;
+
+    border:none;
+    border-radius:14px;
+
+    font-weight:700;
+
+    cursor:pointer;
+}
+
+.erp-backup-btn{
+    background:#14b8a6;
+    color:white;
+}
+
+.erp-download-btn{
+    background:#3b82f6;
+    color:white;
+} */
+
+/* =========================================================
+   SETTINGS FOOTER
+========================================================= */
+
+.erp-settings-footer{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:20px;
+
+    margin-top:30px;
+
+    padding-top:25px;
+
+    border-top:1px solid #eef2f7;
+}
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
+
+@media(max-width:1200px){
+
+    .erp-settings-layout{
+        flex-direction:column;
+    }
+
+    .erp-settings-sidebar{
+        width:100%;
+        position:relative;
+    }
+
+    .erp-settings-stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .erp-settings-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+========================================================= */
+
+@media(max-width:768px){
+
+    .erp-settings-stats{
+        grid-template-columns:1fr;
+    }
+
+     .erp-block-header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .erp-settings-footer{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .erp-save-btn{
+        width:100%;
+    }
+
+
+}
+
+/* ========================================
+   SUBSCRIPTION SETTINGS
+======================================== */
+
+.subscription-preview-card{
+    margin-bottom:25px;
+
+    padding:28px;
+
+    border-radius:24px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #14b8a6,
+        #22c55e
+    );
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+
+    color:white;
+
+    position:relative;
+    overflow:hidden;
+}
+
+/* glow */
+.subscription-preview-card::before{
+    content:"";
+
+    position:absolute;
+
+    width:250px;
+    height:250px;
+
+    background:rgba(255,255,255,0.1);
+
+    border-radius:50%;
+
+    top:-100px;
+    right:-80px;
+}
+
+/* left */
+.subscription-preview-left h3{
+    font-size:32px;
+    font-weight:800;
+    margin:10px 0;
+}
+
+.subscription-preview-left p{
+    opacity:0.9;
+    max-width:450px;
+}
+
+/* badge */
+.preview-badge{
+    display:inline-block;
+
+    padding:8px 14px;
+
+    background:rgba(255,255,255,0.15);
+
+    border-radius:50px;
+
+    font-size:13px;
+    font-weight:600;
+}
+
+/* right */
+.subscription-preview-right{
+    display:flex;
+    gap:18px;
+}
+
+.preview-stat{
+    background:rgba(255,255,255,0.12);
+
+    backdrop-filter:blur(10px);
+
+    padding:18px 24px;
+
+    border-radius:18px;
+
+    text-align:center;
+
+    min-width:120px;
+}
+
+.preview-stat span{
+    font-size:13px;
+    opacity:0.9;
+}
+
+.preview-stat h4{
+    margin-top:8px;
+
+    font-size:24px;
+    font-weight:800;
+}
+
+/* small helper */
+.erp-input-group small{
+    display:block;
+    margin-top:8px;
+    color:#64748b;
+    font-size:13px;
+}
+
+/* mobile */
+@media(max-width:768px){
+
+    .subscription-preview-card{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .subscription-preview-right{
+        width:100%;
+    }
+
+    .preview-stat{
+        flex:1;
+    }
+
+}
+
+/* =========================================
+   SECURITY SETTINGS
+========================================= */
+
+.security-status{
+    background:#ecfdf5;
+    color:#059669;
+    border:1px solid #bbf7d0;
+}
+
+/* =========================================
+   SECURITY PREVIEW CARD
+========================================= */
+
+.security-preview-card{
+
+    margin-top:28px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #f0fdfa,
+        #ecfeff
+    );
+
+    border-radius:28px;
+
+    padding:35px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:40px;
+
+    border:1px solid #d1fae5;
+
+    position:relative;
+
+    overflow:hidden;
+}
+
+/* SOFT GLOW */
+
+.security-preview-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:250px;
+    height:250px;
+
+    background:rgba(20,184,166,0.08);
+
+    border-radius:50%;
+
+    top:-100px;
+    right:-60px;
+}
+
+/* =========================================
+   LEFT CONTENT
+========================================= */
+
+.security-preview-left{
+    flex:1;
+    position:relative;
+    z-index:2;
+}
+
+.security-preview-left .preview-badge{
+
+    display:inline-block;
+
+    padding:10px 18px;
+
+    background:#ccfbf1;
+
+    color:#0f766e;
+
+    border-radius:999px;
+
+    font-size:14px;
+    font-weight:700;
+}
+
+.security-preview-left h3{
+
+    margin-top:18px;
+
+    font-size:38px;
+
+    line-height:1.2;
+
+    font-weight:800;
+
+    color:#0f172a;
+
+    max-width:500px;
+}
+
+.security-preview-left p{
+
+    margin-top:16px;
+
+    color:#64748b;
+
+    line-height:1.8;
+
+    max-width:520px;
+
+    font-size:15px;
+}
+
+/* =========================================
+   SECURITY STATS
+========================================= */
+
+.security-preview-right{
+
+    display:flex;
+    align-items:center;
+    gap:16px;
+
+    position:relative;
+    z-index:2;
+}
+
+.security-preview-right .preview-stat{
+
+    width:120px;
+    min-height:120px;
+
+    background:white;
+
+    border-radius:22px;
+
+    padding:18px 14px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    border:1px solid #e2e8f0;
+
+    box-shadow:
+    0 8px 25px rgba(15,23,42,0.05);
+
+    transition:0.3s ease;
+}
+
+.security-preview-right .preview-stat:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:
+    0 15px 35px rgba(20,184,166,0.10);
+}
+
+/* LABEL */
+
+.security-preview-right .preview-stat span{
+
+    font-size:13px;
+
+    line-height:1.3;
+
+    color:#64748b;
+
+    font-weight:700;
+
+    margin-bottom:14px;
+
+    min-height:34px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* VALUE */
+
+.security-preview-right .preview-stat h4{
+
+    font-size:22px;
+
+    line-height:1.2;
+
+    font-weight:800;
+
+    color:#0f172a;
+
+    margin:0;
+}
+/* =========================================
+   INPUT SECTION
+========================================= */
+
+#security .erp-settings-grid{
+    margin-top:30px;
+}
+
+#security .erp-input-group small{
+
+    display:block;
+
+    margin-top:10px;
+
+    color:#64748b;
+
+    line-height:1.5;
+
+    font-size:13px;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+#security .erp-settings-footer{
+
+    margin-top:35px;
+
+    padding-top:25px;
+
+    border-top:1px solid #e2e8f0;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media(max-width:1100px){
+
+    .security-preview-card{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .security-preview-right{
+        width:100%;
+        justify-content:flex-start;
+        flex-wrap:wrap;
+    }
+}
+
+@media(max-width:768px){
+
+    .security-preview-left h3{
+        font-size:28px;
+    }
+
+    .security-preview-right{
+        gap:14px;
+    }
+
+    .security-preview-right .preview-stat{
+
+        width:100px;
+        height:100px;
+    }
+
+    .security-preview-right .preview-stat h4{
+        font-size:22px;
+    }
+
+    #security .erp-settings-footer{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+
+/* =========================================
+   CERTIFICATE SETTINGS
+========================================= */
+
+.certificate-status{
+    background:#ecfdf5;
+    color:#059669;
+    border:1px solid #bbf7d0;
+}
+
+/* =========================================
+   PREVIEW CARD
+========================================= */
+
+.certificate-preview-card{
+
+    margin-top:28px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #f8fbff,
+        #f0fdfa
+    );
+
+    border-radius:28px;
+
+    padding:40px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:40px;
+
+    border:1px solid #dbeafe;
+
+    overflow:hidden;
+    position:relative;
+}
+
+.certificate-preview-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:280px;
+    height:280px;
+
+    background:rgba(20,184,166,0.08);
+
+    border-radius:50%;
+
+    top:-120px;
+    right:-80px;
+}
+
+/* =========================================
+   LEFT
+========================================= */
+
+.certificate-preview-left{
+
+    flex:1;
+    position:relative;
+    z-index:2;
+
+    max-width:520px;
+}
+
+.certificate-preview-left .preview-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:10px 18px;
+
+    background:#dbeafe;
+
+    color:#1e40af;
+
+    border-radius:999px;
+
+    font-size:13px;
+    font-weight:700;
+}
+
+.certificate-preview-left h3{
+
+    margin-top:18px;
+
+    font-size:42px;
+
+    line-height:1.15;
+
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+.certificate-preview-left p{
+
+    margin-top:22px;
+
+    font-size:16px;
+
+    line-height:1.9;
+
+    color:#64748b;
+
+    max-width:520px;
+}
+
+/* =========================================
+   RIGHT STATS
+========================================= */
+
+.certificate-preview-right{
+
+    display:flex;
+    align-items:stretch;
+
+    gap:18px;
+
+    position:relative;
+    z-index:2;
+
+    flex-wrap:wrap;
+}
+
+.certificate-preview-right .preview-stat{
+
+    width:140px;
+    min-height:165px;
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:22px 16px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    border:1px solid #e2e8f0;
+
+    box-shadow:
+    0 10px 30px rgba(15,23,42,0.06);
+
+    transition:0.3s ease;
+}
+
+.certificate-preview-right .preview-stat:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+    0 20px 40px rgba(20,184,166,0.12);
+}
+
+.certificate-preview-right .preview-stat span{
+
+    display:block;
+
+    font-size:14px;
+
+    color:#64748b;
+
+    font-weight:700;
+
+    margin-bottom:16px;
+}
+
+.certificate-preview-right .preview-stat h4{
+
+    font-size:24px;
+
+    line-height:1.4;
+
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+/* =========================================
+   GRID
+========================================= */
+
+#certificate .erp-settings-grid{
+
+    margin-top:38px;
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit, minmax(320px, 1fr));
+
+    gap:24px;
+}
+
+/* =========================================
+   INPUT CARD
+========================================= */
+
+#certificate .erp-input-group{
+
+    background:#ffffff;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:22px;
+
+    padding:22px;
+
+    transition:0.3s ease;
+
+    box-shadow:
+    0 4px 12px rgba(15,23,42,0.03);
+}
+
+#certificate .erp-input-group:hover{
+
+    transform:translateY(-2px);
+
+    border-color:#14b8a6;
+
+    box-shadow:
+    0 12px 24px rgba(20,184,166,0.08);
+}
+
+#certificate .erp-input-group label{
+
+    display:block;
+
+    margin-bottom:12px;
+
+    font-size:15px;
+
+    font-weight:700;
+
+    color:#0f172a;
+}
+
+#certificate .erp-input-group input,
+#certificate .erp-input-group select{
+
+    width:100%;
+
+    height:52px;
+
+    border-radius:14px;
+
+    border:1px solid #cbd5e1;
+
+    padding:0 16px;
+
+    font-size:15px;
+
+    background:#f8fafc;
+
+    transition:0.3s ease;
+}
+
+#certificate .erp-input-group input:focus,
+#certificate .erp-input-group select:focus{
+
+    outline:none;
+
+    border-color:#14b8a6;
+
+    background:white;
+
+    box-shadow:
+    0 0 0 4px rgba(20,184,166,0.12);
+}
+
+#certificate .erp-input-group small{
+
+    display:block;
+
+    margin-top:10px;
+
+    font-size:13px;
+
+    line-height:1.5;
+
+    color:#64748b;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+#certificate .erp-settings-footer{
+
+    margin-top:40px;
+
+    padding-top:28px;
+
+    border-top:1px solid #e2e8f0;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:20px;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media(max-width:1100px){
+
+    .certificate-preview-card{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .certificate-preview-left{
+        max-width:100%;
+    }
+
+    .certificate-preview-right{
+
+        width:100%;
+
+        justify-content:flex-start;
+    }
+}
+
+@media(max-width:768px){
+
+    .certificate-preview-card{
+        padding:28px;
+    }
+
+    .certificate-preview-left h3{
+        font-size:32px;
+    }
+
+    .certificate-preview-right .preview-stat{
+
+        width:110px;
+        min-height:120px;
+    }
+
+    #certificate .erp-settings-grid{
+
+        grid-template-columns:1fr;
+    }
+
+    #certificate .erp-settings-footer{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+
+/* =========================================
+   FEATURE MODULE SETTINGS
+========================================= */
+
+.module-status{
+    background:#ecfdf5;
+    color:#059669;
+    border:1px solid #bbf7d0;
+}
+
+/* =========================================
+   MODULE PREVIEW CARD
+========================================= */
+
+.module-preview-card{
+
+    margin-top:28px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #f8fbff,
+        #f0fdfa
+    );
+
+    border-radius:28px;
+
+    padding:40px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:40px;
+
+    border:1px solid #dbeafe;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+/* SOFT GLOW */
+
+.module-preview-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:280px;
+    height:280px;
+
+    background:rgba(20,184,166,0.08);
+
+    border-radius:50%;
+
+    top:-120px;
+    right:-80px;
+}
+
+/* =========================================
+   LEFT CONTENT
+========================================= */
+
+.module-preview-left{
+
+    flex:1;
+
+    position:relative;
+    z-index:2;
+
+    max-width:540px;
+}
+
+.module-preview-left .preview-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:10px 18px;
+
+    background:#ccfbf1;
+
+    color:#0f766e;
+
+    border-radius:999px;
+
+    font-size:13px;
+    font-weight:700;
+}
+
+.module-preview-left h3{
+
+    margin-top:18px;
+
+    font-size:40px;
+
+    line-height:1.15;
+
+    font-weight:800;
+
+    color:#0f172a;
+
+    max-width:520px;
+}
+
+.module-preview-left p{
+
+    margin-top:20px;
+
+    font-size:16px;
+
+    line-height:1.8;
+
+    color:#64748b;
+
+    max-width:520px;
+}
+
+/* =========================================
+   RIGHT STATS
+========================================= */
+
+.module-preview-right{
+
+    display:flex;
+    align-items:stretch;
+
+    gap:18px;
+
+    position:relative;
+    z-index:2;
+
+    flex-wrap:wrap;
+}
+
+/* MODULE CARD */
+
+.module-preview-right .preview-stat{
+
+    width:150px;
+    min-height:165px;
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:22px 18px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    border:1px solid #e2e8f0;
+
+    box-shadow:
+    0 10px 30px rgba(15,23,42,0.06);
+
+    transition:0.3s ease;
+}
+
+/* HOVER */
+
+.module-preview-right .preview-stat:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+    0 20px 40px rgba(20,184,166,0.12);
+}
+
+/* LABEL */
+
+.module-preview-right .preview-stat span{
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    min-height:40px;
+
+    margin-bottom:14px;
+
+    font-size:14px;
+
+    line-height:1.4;
+
+    color:#64748b;
+
+    font-weight:700;
+
+    text-align:center;
+}
+
+/* VALUE */
+
+.module-preview-right .preview-stat h4{
+
+    font-size:22px;
+
+    line-height:1.3;
+
+    font-weight:800;
+
+    color:#0f172a;
+
+    word-break:break-word;
+}
+
+/* ENABLED STATE */
+
+.module-preview-right .preview-stat h4{
+
+    color:#059669;
+}
+
+/* =========================================
+   INPUT SECTION
+========================================= */
+
+#modules .erp-settings-grid{
+
+    margin-top:32px;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(260px,1fr));
+}
+
+#modules .erp-input-group{
+
+    background:#f8fafc;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:22px;
+
+    padding:22px;
+
+    transition:0.3s ease;
+}
+
+#modules .erp-input-group:hover{
+
+    border-color:#14b8a6;
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 10px 25px rgba(20,184,166,0.08);
+}
+
+/* LABEL */
+
+#modules .erp-input-group label{
+
+    display:block;
+
+    margin-bottom:12px;
+
+    font-size:15px;
+
+    font-weight:700;
+
+    color:#0f172a;
+}
+
+/* SELECT */
+
+#modules .erp-input-group select{
+
+    width:100%;
+
+    height:52px;
+
+    padding:0 16px;
+
+    border-radius:14px;
+
+    border:1px solid #dbe2ea;
+
+    background:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    color:#334155;
+
+    outline:none;
+
+    transition:0.3s ease;
+}
+
+/* FOCUS */
+
+#modules .erp-input-group select:focus{
+
+    border-color:#14b8a6;
+
+    box-shadow:
+    0 0 0 4px rgba(20,184,166,0.10);
+}
+
+/* SMALL TEXT */
+
+#modules .erp-input-group small{
+
+    display:block;
+
+    margin-top:10px;
+
+    font-size:13px;
+
+    line-height:1.5;
+
+    color:#64748b;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+#modules .erp-settings-footer{
+
+    margin-top:35px;
+
+    padding-top:25px;
+
+    border-top:1px solid #e2e8f0;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:20px;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media(max-width:1100px){
+
+    .module-preview-card{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .module-preview-left{
+        max-width:100%;
+    }
+
+    .module-preview-right{
+
+        width:100%;
+
+        justify-content:flex-start;
+    }
+}
+
+@media(max-width:768px){
+
+    .module-preview-card{
+        padding:28px;
+    }
+
+    .module-preview-left h3{
+        font-size:32px;
+    }
+
+    .module-preview-left p{
+        font-size:15px;
+    }
+
+    .module-preview-right{
+        gap:14px;
+    }
+
+    .module-preview-right .preview-stat{
+
+        width:110px;
+        min-height:130px;
+
+        padding:18px 12px;
+    }
+
+    .module-preview-right .preview-stat span{
+
+        font-size:12px;
+
+        min-height:30px;
+
+        margin-bottom:10px;
+    }
+
+    .module-preview-right .preview-stat h4{
+
+        font-size:18px;
+    }
+
+    #modules .erp-settings-footer{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+
+/* =========================================
+   PAYMENT SETTINGS
+========================================= */
+
+.payment-status{
+    background:#ecfdf5;
+    color:#059669;
+    border:1px solid #bbf7d0;
+}
+
+/* =========================================
+   PAYMENT PREVIEW CARD
+========================================= */
+
+.payment-preview-card{
+
+    margin-top:28px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #f8fbff,
+        #f0fdfa
+    );
+
+    border-radius:28px;
+
+    padding:40px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:40px;
+
+    border:1px solid #dbeafe;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+.payment-preview-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:280px;
+    height:280px;
+
+    background:rgba(20,184,166,0.08);
+
+    border-radius:50%;
+
+    top:-120px;
+    right:-80px;
+}
+
+/* =========================================
+   LEFT
+========================================= */
+
+.payment-preview-left{
+
+    flex:1;
+
+    position:relative;
+    z-index:2;
+
+    max-width:540px;
+}
+
+.payment-preview-left .preview-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:10px 18px;
+
+    background:#ccfbf1;
+
+    color:#0f766e;
+
+    border-radius:999px;
+
+    font-size:13px;
+    font-weight:700;
+}
+
+.payment-preview-left h3{
+
+    margin-top:18px;
+
+    font-size:40px;
+
+    line-height:1.15;
+
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+.payment-preview-left p{
+
+    margin-top:20px;
+
+    font-size:16px;
+
+    line-height:1.8;
+
+    color:#64748b;
+}
+
+/* =========================================
+   RIGHT STATS
+========================================= */
+
+.payment-preview-right{
+
+    display:flex;
+    align-items:stretch;
+
+    gap:18px;
+
+    position:relative;
+    z-index:2;
+
+    flex-wrap:wrap;
+}
+
+.payment-preview-right .preview-stat{
+
+    width:140px;
+    min-height:165px;
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:22px 16px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    border:1px solid #e2e8f0;
+
+    box-shadow:
+    0 10px 30px rgba(15,23,42,0.06);
+
+    transition:0.3s ease;
+}
+
+.payment-preview-right .preview-stat:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+    0 20px 40px rgba(20,184,166,0.12);
+}
+
+.payment-preview-right .preview-stat span{
+
+    font-size:14px;
+
+    color:#64748b;
+
+    font-weight:700;
+
+    margin-bottom:16px;
+}
+
+.payment-preview-right .preview-stat h4{
+
+    font-size:24px;
+
+    line-height:1.4;
+
+    font-weight:800;
+
+    color:#059669;
+}
+
+/* =========================================
+   GRID
+========================================= */
+
+#payment .erp-settings-grid{
+
+    margin-top:35px;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(280px,1fr));
+}
+
+#payment .erp-input-group{
+
+    background:#f8fafc;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:22px;
+
+    padding:22px;
+
+    transition:0.3s ease;
+}
+
+#payment .erp-input-group:hover{
+
+    border-color:#14b8a6;
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 10px 25px rgba(20,184,166,0.08);
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media(max-width:1100px){
+
+    .payment-preview-card{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .payment-preview-right{
+
+        width:100%;
+
+        justify-content:flex-start;
+    }
+}
+
+@media(max-width:768px){
+
+    .payment-preview-card{
+        padding:28px;
+    }
+
+    .payment-preview-left h3{
+        font-size:32px;
+    }
+
+    .payment-preview-right .preview-stat{
+
+        width:110px;
+        min-height:120px;
+    }
+}
+/* =========================================
+   SMTP SETTINGS
+========================================= */
+
+.smtp-status{
+    background:#ecfeff;
+    color:#0f766e;
+    border:1px solid #a5f3fc;
+}
+
+/* =========================================
+   SMTP PREVIEW CARD
+========================================= */
+
+.smtp-preview-card{
+
+    margin-top:28px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #f0fdfa,
+        #ecfeff
+    );
+
+    border-radius:28px;
+
+    padding:40px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:40px;
+
+    border:1px solid #cffafe;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+.smtp-preview-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:280px;
+    height:280px;
+
+    background:rgba(14,165,233,0.08);
+
+    border-radius:50%;
+
+    top:-120px;
+    right:-80px;
+}
+
+/* =========================================
+   LEFT
+========================================= */
+
+.smtp-preview-left{
+
+    flex:1;
+
+    position:relative;
+    z-index:2;
+
+    max-width:540px;
+}
+
+.smtp-preview-left .preview-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:10px 18px;
+
+    background:#cffafe;
+
+    color:#155e75;
+
+    border-radius:999px;
+
+    font-size:13px;
+    font-weight:700;
+}
+
+.smtp-preview-left h3{
+
+    margin-top:18px;
+
+    font-size:40px;
+
+    line-height:1.15;
+
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+.smtp-preview-left p{
+
+    margin-top:20px;
+
+    font-size:16px;
+
+    line-height:1.8;
+
+    color:#64748b;
+}
+
+/* =========================================
+   RIGHT STATS
+========================================= */
+
+.smtp-preview-right{
+
+    display:flex;
+    align-items:stretch;
+
+    gap:18px;
+
+    position:relative;
+    z-index:2;
+
+    flex-wrap:wrap;
+}
+
+.smtp-preview-right .preview-stat{
+
+    width:150px;
+    min-height:165px;
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:22px 16px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    border:1px solid #e2e8f0;
+
+    box-shadow:
+    0 10px 30px rgba(15,23,42,0.06);
+
+    transition:0.3s ease;
+}
+
+.smtp-preview-right .preview-stat:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+    0 20px 40px rgba(14,165,233,0.12);
+}
+
+.smtp-preview-right .preview-stat span{
+
+    font-size:14px;
+
+    color:#64748b;
+
+    font-weight:700;
+
+    margin-bottom:16px;
+}
+
+.smtp-preview-right .preview-stat h4{
+
+    font-size:22px;
+
+    line-height:1.4;
+
+    font-weight:800;
+
+    color:#0f766e;
+
+    word-break:break-word;
+}
+
+/* =========================================
+   GRID
+========================================= */
+
+#smtp .erp-settings-grid{
+
+    margin-top:35px;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(280px,1fr));
+}
+
+#smtp .erp-input-group{
+
+    background:#f8fafc;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:22px;
+
+    padding:22px;
+
+    transition:0.3s ease;
+}
+
+#smtp .erp-input-group:hover{
+
+    border-color:#06b6d4;
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 10px 25px rgba(6,182,212,0.08);
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media(max-width:1100px){
+
+    .smtp-preview-card{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .smtp-preview-right{
+
+        width:100%;
+
+        justify-content:flex-start;
+    }
+}
+
+@media(max-width:768px){
+
+    .smtp-preview-card{
+        padding:28px;
+    }
+
+    .smtp-preview-left h3{
+        font-size:32px;
+    }
+
+    .smtp-preview-right .preview-stat{
+
+        width:110px;
+        min-height:120px;
+    }
+}
+/* =====================================================
+   BACKUP SETTINGS
+===================================================== */
+
+.backup-status{
+
+    background:#ecfdf5;
+    color:#059669;
+    border:1px solid #bbf7d0;
+}
+
+/* =====================================================
+   PREVIEW CARD
+===================================================== */
+
+.backup-preview-card{
+
+    margin-top:28px;
+
+    padding:40px;
+
+    border-radius:28px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #f0fdfa,
+        #f8fafc
+    );
+
+    border:1px solid #ccfbf1;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+
+    gap:35px;
+
+    flex-wrap:wrap;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+/* GLOW EFFECT */
+
+.backup-preview-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:260px;
+    height:260px;
+
+    border-radius:50%;
+
+    background:
+    rgba(20,184,166,0.06);
+
+    top:-120px;
+    right:-80px;
+}
+
+/* =====================================================
+   LEFT
+===================================================== */
+
+.backup-preview-left{
+
+    flex:1;
+    min-width:320px;
+
+    position:relative;
+    z-index:2;
+}
+
+.backup-preview-left h3{
+
+    margin-top:18px;
+
+    font-size:52px;
+
+    line-height:1.05;
+
+    font-weight:800;
+
+    color:#0f172a;
+
+    max-width:620px;
+}
+
+.backup-preview-left p{
+
+    margin-top:28px;
+
+    font-size:17px;
+
+    line-height:1.9;
+
+    color:#64748b;
+
+    max-width:580px;
+}
+
+/* =====================================================
+   RIGHT STATS
+===================================================== */
+
+.backup-preview-right{
+
+    display:flex;
+    gap:18px;
+
+    flex-wrap:wrap;
+
+    position:relative;
+    z-index:2;
+}
+
+.preview-stat{
+
+    min-width:120px;
+
+    background:white;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:22px;
+
+    padding:24px 20px;
+
+    text-align:center;
+
+    box-shadow:
+    0 10px 30px rgba(15,23,42,0.05);
+}
+
+.preview-stat span{
+
+    display:block;
+
+    font-size:13px;
+
+    color:#64748b;
+
+    margin-bottom:10px;
+
+    font-weight:600;
+}
+
+.preview-stat h4{
+
+    font-size:26px;
+
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+/* =====================================================
+   ACTION BUTTONS
+===================================================== */
+
+.erp-backup-actions{
+
+    margin-top:28px;
+
+    display:flex;
+    gap:16px;
+
+    flex-wrap:wrap;
+}
+
+.erp-backup-btn{
+
+    border:none;
+
+    outline:none;
+
+    cursor:pointer;
+
+    padding:15px 28px;
+
+    border-radius:14px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #14b8a6,
+        #10b981
+    );
+
+    color:white;
+
+    font-size:14px;
+    font-weight:700;
+
+    transition:0.3s ease;
+
+    box-shadow:
+    0 12px 25px rgba(20,184,166,0.20);
+}
+
+.erp-backup-btn:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 18px 35px rgba(20,184,166,0.28);
+}
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.erp-backup-history{
+
+    margin-top:35px;
+
+    overflow-x:auto;
+
+    border-radius:20px;
+
+    border:1px solid #eef2f7;
+
+    background:white;
+}
+
+.erp-backup-table{
+
+    width:100%;
+
+    min-width:950px;
+
+    border-collapse:collapse;
+}
+
+.erp-backup-table thead{
+
+    background:#f8fafc;
+}
+
+.erp-backup-table th{
+
+    padding:18px 20px;
+
+    text-align:left;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    color:#475569;
+
+    white-space:nowrap;
+}
+
+.erp-backup-table td{
+
+    padding:18px 20px;
+
+    border-top:1px solid #f1f5f9;
+
+    font-size:14px;
+
+    color:#334155;
+
+    vertical-align:middle;
+
+    white-space:nowrap;
+}
+
+.erp-backup-table tr:hover{
+
+    background:#fcfcfc;
+}
+/* ACTIONS BUTTONS */
+.backup-actions-group{
+
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+/* =====================================================
+   DOWNLOAD BUTTON
+===================================================== */
+
+.erp-download-btn{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    min-width:110px;
+
+    padding:11px 18px;
+
+    border-radius:12px;
+
+    text-decoration:none;
+
+    background:
+    linear-gradient(
+        135deg,
+        #38bdf8,
+        #0ea5e9
+    );
+
+    color:white;
+
+    font-size:13px;
+    font-weight:700;
+
+    transition:0.3s ease;
+
+    box-shadow:
+    0 10px 20px rgba(56,189,248,0.20);
+}
+
+.erp-download-btn:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 16px 30px rgba(56,189,248,0.28);
+}
+/* =====================================================
+   RESTORE BUTTON
+===================================================== */
+.erp-restore-btn{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:10px 16px;
+
+    background:#f59e0b;
+
+    color:white;
+
+    border-radius:12px;
+
+    text-decoration:none;
+
+    font-size:13px;
+    font-weight:700;
+
+    transition:0.3s ease;
+}
+
+.erp-restore-btn:hover{
+
+    transform:translateY(-2px);
+
+    background:#d97706;
+}
+/* =====================================================
+   DELETE BUTTON
+===================================================== */
+.erp-delete-btn{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:10px 16px;
+
+    background:#ef4444;
+
+    color:white;
+
+    border-radius:12px;
+
+    text-decoration:none;
+
+    font-size:13px;
+    font-weight:700;
+
+    transition:0.3s ease;
+}
+
+.erp-delete-btn:hover{
+
+    transform:translateY(-2px);
+
+    background:#dc2626;
+}
+
+/* =====================================================
+   STATUS BADGES
+===================================================== */
+
+.backup-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:8px 14px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:700;
+}
+
+.backup-badge.success{
+
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.backup-badge.failed{
+
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media(max-width:1100px){
+
+    .backup-preview-card{
+
+        flex-direction:column;
+    }
+
+    .backup-preview-left h3{
+
+        font-size:40px;
+    }
+}
+
+@media(max-width:768px){
+
+    .backup-preview-card{
+
+        padding:28px;
+    }
+
+    .backup-preview-left h3{
+
+        font-size:32px;
+    }
+
+    .preview-stat{
+
+        width:100%;
+    }
+}
+
+/* =========================================
+   MAINTENANCE SETTINGS
+========================================= */
+
+.maintenance-status{
+    background:#fef2f2;
+    color:#dc2626;
+    border:1px solid #fecaca;
+}
+
+.maintenance-safe{
+    background:#ecfdf5;
+    color:#059669;
+    border:1px solid #bbf7d0;
+}
+
+/* =========================================
+   PREVIEW CARD
+========================================= */
+
+.maintenance-preview-card{
+
+    margin-top:28px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #f0fdfa,
+        #ecfeff
+    );
+
+    border-radius:28px;
+
+    padding:40px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:40px;
+
+    border:1px solid #ccfbf1;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+/* GLOW */
+
+.maintenance-preview-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:280px;
+    height:280px;
+
+    background:rgba(20,184,166,0.08);
+
+    border-radius:50%;
+
+    top:-120px;
+    right:-80px;
+}
+
+/* =========================================
+   LEFT
+========================================= */
+
+.maintenance-preview-left{
+
+    flex:1;
+
+    position:relative;
+    z-index:2;
+
+    max-width:540px;
+}
+
+.maintenance-preview-left .preview-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:10px 18px;
+
+    background:#ccfbf1;
+
+    color:#0f766e;
+
+    border-radius:999px;
+
+    font-size:13px;
+    font-weight:700;
+}
+
+.maintenance-preview-left h3{
+
+    margin-top:18px;
+
+    font-size:42px;
+
+    line-height:1.12;
+
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+.maintenance-preview-left p{
+
+    margin-top:22px;
+
+    font-size:16px;
+
+    line-height:1.8;
+
+    color:#64748b;
+
+    max-width:520px;
+}
+
+/* =========================================
+   RIGHT STATS
+========================================= */
+
+.maintenance-preview-right{
+
+    display:flex;
+    align-items:stretch;
+
+    gap:18px;
+
+    position:relative;
+    z-index:2;
+
+    flex-wrap:wrap;
+}
+
+.maintenance-preview-right .preview-stat{
+
+    width:140px;
+    min-height:160px;
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:22px 16px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    border:1px solid #e2e8f0;
+
+    box-shadow:
+    0 10px 30px rgba(15,23,42,0.06);
+
+    transition:0.3s ease;
+}
+
+.maintenance-preview-right .preview-stat:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+    0 20px 40px rgba(20,184,166,0.12);
+}
+
+.maintenance-preview-right .preview-stat span{
+
+    display:block;
+
+    font-size:14px;
+
+    color:#64748b;
+
+    font-weight:700;
+
+    margin-bottom:16px;
+}
+
+.maintenance-preview-right .preview-stat h4{
+
+    font-size:24px;
+
+    line-height:1.4;
+
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+/* =========================================
+   SETTINGS GRID
+========================================= */
+
+#maintenance .erp-settings-grid{
+
+    margin-top:35px;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(320px,1fr));
+}
+
+/* INPUT CARD */
+
+#maintenance .erp-input-group{
+
+    background:#f8fafc;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:22px;
+
+    padding:22px;
+
+    transition:0.3s ease;
+}
+
+#maintenance .erp-input-group:hover{
+
+    border-color:#14b8a6;
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 10px 25px rgba(20,184,166,0.08);
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+#maintenance .erp-settings-footer{
+
+    margin-top:38px;
+
+    padding-top:25px;
+
+    border-top:1px solid #e2e8f0;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:20px;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media(max-width:1100px){
+
+    .maintenance-preview-card{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .maintenance-preview-right{
+
+        width:100%;
+
+        justify-content:flex-start;
+    }
+}
+
+@media(max-width:768px){
+
+    .maintenance-preview-card{
+        padding:28px;
+    }
+
+    .maintenance-preview-left h3{
+        font-size:32px;
+    }
+
+    .maintenance-preview-right .preview-stat{
+
+        width:110px;
+        min-height:120px;
+    }
+
+    #maintenance .erp-settings-footer{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+   
+/* =========================================
+   BRANDING SETTINGS
+========================================= */
+
+.branding-status{
+    background:#ecfdf5;
+    color:#059669;
+    border:1px solid #bbf7d0;
+}
+
+/* =========================================
+   PREVIEW CARD
+========================================= */
+
+.branding-preview-card{
+
+    margin-top:28px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #f0fdfa,
+        #ecfeff
+    );
+
+    border-radius:28px;
+
+    padding:40px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:40px;
+
+    border:1px solid #ccfbf1;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+/* GLOW */
+
+.branding-preview-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:280px;
+    height:280px;
+
+    background:rgba(20,184,166,0.08);
+
+    border-radius:50%;
+
+    top:-120px;
+    right:-80px;
+}
+
+/* =========================================
+   LEFT
+========================================= */
+
+.branding-preview-left{
+
+    flex:1;
+
+    position:relative;
+    z-index:2;
+
+    max-width:540px;
+}
+
+.branding-preview-left .preview-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:10px 18px;
+
+    background:#ccfbf1;
+
+    color:#0f766e;
+
+    border-radius:999px;
+
+    font-size:13px;
+    font-weight:700;
+}
+
+.branding-preview-left h3{
+
+    margin-top:18px;
+
+    font-size:42px;
+
+    line-height:1.12;
+
+    font-weight:800;
+
+    color:#0f172a;
+}
+
+.branding-preview-left p{
+
+    margin-top:22px;
+
+    font-size:16px;
+
+    line-height:1.8;
+
+    color:#64748b;
+
+    max-width:520px;
+}
+
+/* =========================================
+   RIGHT STATS
+========================================= */
+
+.branding-preview-right{
+
+    display:flex;
+    align-items:stretch;
+
+    gap:18px;
+
+    position:relative;
+    z-index:2;
+
+    flex-wrap:wrap;
+}
+
+.branding-live-card{
+
+    width:140px;
+    min-height:160px;
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:22px 16px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    border:1px solid #e2e8f0;
+
+    box-shadow:
+    0 10px 30px rgba(15,23,42,0.06);
+
+    transition:0.3s ease;
+}
+
+.branding-live-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+    0 20px 40px rgba(20,184,166,0.12);
+}
+
+.branding-live-card span{
+
+    display:block;
+
+    font-size:14px;
+
+    color:#64748b;
+
+    font-weight:700;
+
+    margin-bottom:16px;
+}
+
+.branding-live-color{
+
+    width:72px;
+    height:72px;
+
+    border-radius:22px;
+
+    border:4px solid #f1f5f9;
+}
+
+/* =========================================
+   GRID
+========================================= */
+
+#branding .erp-settings-grid{
+
+    margin-top:35px;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(260px,1fr));
+}
+
+#branding .erp-input-group{
+
+    background:#f8fafc;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:22px;
+
+    padding:22px;
+
+    transition:0.3s ease;
+}
+
+#branding .erp-input-group:hover{
+
+    border-color:#14b8a6;
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 10px 25px rgba(20,184,166,0.08);
+}
+
+/* =========================================
+   COLOR INPUT
+========================================= */
+
+.branding-color-input{
+
+    height:58px !important;
+
+    padding:8px !important;
+
+    cursor:pointer;
+}
+
+/* =========================================
+   EXTRA GRID
+========================================= */
+
+.branding-extra-grid{
+
+    margin-top:24px;
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(320px,1fr));
+
+    gap:20px;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+#branding .erp-settings-footer{
+
+    margin-top:38px;
+
+    padding-top:25px;
+
+    border-top:1px solid #e2e8f0;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:20px;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media(max-width:1100px){
+
+    .branding-preview-card{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .branding-preview-right{
+
+        width:100%;
+
+        justify-content:flex-start;
+    }
+}
+
+@media(max-width:768px){
+
+    .branding-preview-card{
+        padding:28px;
+    }
+
+    .branding-preview-left h3{
+        font-size:32px;
+    }
+
+    .branding-live-card{
+
+        width:110px;
+        min-height:120px;
+    }
+
+    #branding .erp-settings-footer{
+
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}

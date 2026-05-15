@@ -1,0 +1,510 @@
+/* ================= HEADER ================= */
+.students-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 25px;
+
+    animation: fadeUp 0.5s ease;
+}
+
+/* LEFT */
+.students-header-left {
+    display: flex;
+    flex-direction: column;
+}
+
+/* TITLE */
+.students-header-left h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #0F172A;
+}
+
+/* MARATHI */
+.marathi-title {
+    font-size: 14px;
+    color: #0EA5A4;
+    margin-top: 3px;
+}
+
+/* DESCRIPTION */
+.students-desc {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #64748B;
+}
+
+/* ================= BUTTON ================= */
+.btn-add {
+    padding: 12px 20px;
+    border-radius: 12px;
+
+    background: linear-gradient(135deg, #0EA5A4, #14B8A6);
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+
+    transition: 0.3s;
+
+    box-shadow: 0 10px 25px rgba(14,165,164,0.3);
+}
+
+/* HOVER */
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(14,165,164,0.4);
+}
+
+/* ================= MOBILE ================= */
+@media(max-width: 768px) {
+
+    .students-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .students-header-left h1 {
+        font-size: 22px;
+    }
+
+    .students-desc {
+        font-size: 13px;
+    }
+
+    .btn-add {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* ================= ANIMATION ================= */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ================= FILTER CARD ================= */
+.students-filter {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(14px);
+
+    padding: 22px;
+    border-radius: 18px;
+
+    border: 1px solid rgba(14,165,164,0.15);
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+
+    margin-bottom: 25px;
+
+    animation: fadeUp 0.5s ease;
+}
+
+/* ================= TITLE ================= */
+.filter-title h3 {
+     
+    font-size: 18px;
+    font-weight: 700;
+    color: #0F172A;
+    margin-bottom:8px;
+    margin-top: 0;
+}
+
+.filter-title span {
+    font-size: 12px;
+    color: #64748B;
+}
+
+/* ================= CONTROLS ================= */
+.filter-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 15px;
+
+    margin-top: 25px;
+}
+
+/* ================= GROUP ================= */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+/* LABEL */
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #0F172A;
+}
+
+.filter-group label span {
+    display: block;
+    font-size: 11px;
+    color: #64748B;
+}
+
+/* INPUT */
+.filter-group input,
+.filter-group select {
+    padding: 12px;
+    border-radius: 10px;
+
+    border: 1.5px solid #E2E8F0;
+    background: #F8FAFC;
+
+    font-size: 14px;
+
+    transition: 0.3s;
+}
+
+/* FOCUS */
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: #0EA5A4;
+    background: white;
+
+    box-shadow: 0 0 0 3px rgba(14,165,164,0.1);
+}
+
+/* ================= RESET BUTTON ================= */
+.btn-filter-reset {
+    padding: 12px 18px;
+    border-radius: 10px;
+
+    border: 1.5px solid #CBD5E1;
+    background: white;
+
+    cursor: pointer;
+    margin-top: 38px;
+
+    transition: 0.3s;
+}
+
+.btn-filter-reset:hover {
+    border-color: #0EA5A4;
+    color: #0EA5A4;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width: 768px) {
+
+    .filter-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .btn-filter-reset {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+/* ================= TABLE SECTION ================= */
+.students-table-section {
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(14px);
+
+    padding: 22px;
+    border-radius: 18px;
+
+    border: 1px solid rgba(14,165,164,0.15);
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+
+    animation: fadeUp 0.5s ease;
+}
+
+/* HEADER */
+.table-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0F172A;
+}
+
+.table-header span {
+    font-size: 12px;
+    color: #64748B;
+}
+
+/* WRAPPER */
+.table-wrapper {
+    margin-top: 15px;
+    overflow-x: auto;
+}
+
+/* TABLE */
+.students-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* HEAD */
+.students-table thead {
+    background: #F1F5F9;
+}
+
+.students-table th {
+    padding: 14px;
+    text-align: left;
+
+    font-size: 13px;
+    font-weight: 600;
+    color: #0F172A;
+}
+
+.students-table th span {
+    display: block;
+    font-size: 11px;
+    color: #64748B;
+}
+
+/* ROW */
+.students-table td {
+    padding: 14px;
+    font-size: 13px;
+    color: #334155;
+    border-top: 1px solid #E2E8F0;
+}
+
+/* HOVER */
+.students-table tbody tr:hover {
+    background: #F8FAFC;
+}
+
+/* ================= STATUS ================= */
+.status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status.active {
+    background: #DCFCE7;
+    color: #16A34A;
+}
+
+.status.inactive {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+/* ================= ACTION BUTTONS ================= */
+.actions-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.btn-action {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+    transition: 0.25s;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* TYPES */
+.btn-action.view {
+    background: #E0F2FE;
+    color: #0284C7;
+}
+
+.btn-action.edit {
+    background: #FEF3C7;
+    color: #D97706;
+    text-decoration: none;
+}
+.btn-action.tc {
+    background: #DCFCE7;
+    color: #16A34A;
+    text-decoration: none;
+}
+
+/* HOVER */
+.btn-action:hover {
+    transform: translateY(-2px);
+}
+
+/* ================= MOBILE ================= */
+@media(max-width: 768px) {
+
+    /* TABLE → CARD VIEW */
+    .students-table thead {
+        display: none;
+    }
+
+    .students-table,
+    .students-table tbody,
+    .students-table tr,
+    .students-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .students-table tr {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        padding: 10px;
+
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .students-table td {
+        border: none;
+        padding: 8px 10px;
+
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .students-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #0F172A;
+    }
+     .actions-cell {
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .btn-action {
+        flex: 1;
+        text-align: center;
+        gap: 2px;
+    }
+}
+
+/* ================= MODAL ================= */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+
+    justify-content: center;
+    align-items: center;
+
+    z-index: 999;
+}
+
+/* ================= BOX ================= */
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+
+    width: 90%;
+    max-width: 600px; /* increased for more data */
+
+    animation: fadeUp 0.3s ease;
+}
+
+/* ================= HEADER ================= */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* ================= CLOSE BUTTON ================= */
+.close-btn {
+    font-size: 22px;
+    cursor: pointer;
+    color: #555;
+}
+
+.close-btn:hover {
+    color: red;
+}
+
+/* ================= BODY GRID ================= */
+.modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 column layout */
+    gap: 12px;
+}
+/* PHOTO TOP CENTER */
+.modal-photo {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.modal-photo img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+
+    border: 3px solid #0ea5a4;
+}
+
+/* GRID BELOW */
+.modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* ================= EACH FIELD ================= */
+.modal-body div {
+    background: #f8fafc;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* LABEL */
+.modal-body strong {
+    display: block;
+    font-size: 12px;
+    color: #666;
+}
+
+/* VALUE */
+.modal-body span {
+    font-weight: 600;
+    color: #111;
+}
+
+/* ================= ANIMATION ================= */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

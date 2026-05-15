@@ -1,0 +1,242 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/students.css') }}">
+
+<!-- ================= HEADER ================= -->
+<div class="sa-header">
+
+    <div class="sa-header-left">
+        <h1>🎓 {{ school_name }} Students</h1>
+        <p>Manage and control students of this school</p>
+    </div>
+
+    <div class="sa-header-actions">
+        <button onclick="goBack()">← Back</button>
+        <button class="primary" onclick="goAllStudents()">All Students</button>
+    </div>
+
+</div>
+
+<!-- ================= STATS ================= -->
+<div class="sa-stats">
+
+    <div class="sa-stat-card">
+        <p>Total Students</p>
+        <h2>{{ students|length }}</h2>
+    </div>
+
+    <div class="sa-stat-card">
+        <p>Classes</p>
+        <h2>{{ students|map(attribute=2)|unique|list|length }}</h2>
+    </div>
+
+    <div class="sa-stat-card">
+        <p>Active</p>
+        <h2>{{ students|length }}</h2>
+    </div>
+
+</div>
+
+<!-- ================= SEARCH ================= -->
+<div class="sa-search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Search by name or admission no...">
+    <button onclick="searchStudent()">Search</button>
+    <button class="clear" onclick="clearSearch()">Clear</button>
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="sa-table">
+
+    <table id="studentTable">
+
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Class</th>
+                <th>Admission No</th>
+                <th>Mobile</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>{{ s[1] }}</td>
+                <td>{{ s[2] }}</td>
+                <td>{{ s[3] }}</td>
+                <td>{{ s[4] or '-' }}</td>
+
+              <td class="actions">
+                <button class="view" onclick="openStudentModal('{{ s[0] }}')">View</button>
+                <button class="edit" onclick="editStudent('{{ s[0] }}')">Edit</button>
+                <!-- <button class="tc" onclick="generateTC('{{ s[0] }}')">TC</button> -->
+                <button class="delete" onclick="openDeleteModal('{{ s[0] }}')">Delete</button>
+             </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- ================= STUDENT MODAL ================= -->
+<div id="studentModal" class="sa-modal">
+    <div class="sa-modal-card">
+
+        <div class="sa-modal-header">
+            <h2>🎓 Student Details</h2>
+            <button class="sa-close-btn"  onclick="closeStudentModal()">✖</button>
+        </div>
+
+        <div id="studentData"></div>
+
+    </div>
+</div>
+<!-- ================= DELETE MODAL ================= -->
+<div id="deleteModal" class="modal">
+
+    <div class="modal-content">
+
+        <h3>⚠️ Confirm Delete</h3>
+
+        <p>Are you sure you want to delete this student?</p>
+
+        <form method="POST" action="/superadmin/delete_student">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <input type="hidden" name="student_id" id="deleteStudentId">
+
+            <div class="modal-actions">
+
+                <button type="button" onclick="closeDeleteModal()">
+                    Cancel
+                </button>
+
+                <button type="submit" class="danger">
+                    Delete
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+
+// delete handled via hidden input in form for better security (POST request with CSRF token)
+
+function goBack(){
+    window.location.href = "/superadmin/schools";
+}
+
+function goAllStudents(){
+    window.location.href = "/superadmin/all-students";
+}
+
+// SEARCH
+function searchStudent() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    let rows = document.querySelectorAll("#studentTable tbody tr");
+
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+    });
+}
+
+function clearSearch(){
+    document.getElementById("searchInput").value = "";
+    searchStudent();
+}
+
+function viewStudent(id){
+    window.location.href = "/clerk/view-student/" + id + "?mode=admin";
+}
+
+function editStudent(id){
+    window.location.href = "/clerk/edit-student/" + id + "?mode=admin";
+}
+
+function generateTC(id){
+    window.location.href = "/clerk/tc/" + id + "?mode=admin";
+}
+
+// Student Modal 
+function openStudentModal(id){
+
+    fetch("/get-student/" + id)
+    .then(res => res.json())
+    .then(data => {
+
+        let html = `
+
+        <div class="sa-modal-section">
+            <h3>👤 Personal Information</h3>
+
+            <div class="sa-modal-grid">
+                <div><span>Name</span><p>${data.name}</p></div>
+                <div><span>Class</span><p>${data.class}</p></div>
+                <div><span>Admission No</span><p>${data.admission_no}</p></div>
+                <div><span>Mobile</span><p>${data.primary_mobile || '-'}</p></div>
+                <div><span>Father</span><p>${data.father_name || '-'}</p></div>
+                <div><span>Mother</span><p>${data.mother_name || '-'}</p></div>
+                <div><span>DOB</span><p>${formatDate(data.dob)}</p></div>
+                <div><span>Nationality</span><p>${data.nationality || '-'}</p></div>
+            </div>
+        </div>
+
+        <div class="sa-modal-section">
+            <h3>📚 Academic Information</h3>
+
+            <div class="sa-modal-grid">
+                <div><span>Previous School</span><p>${data.previous_school || '-'}</p></div>
+                <div><span>Admission Date</span><p>${formatDate(data.admission_date)}</p></div>
+                <div><span>Progress</span><p>${data.progress || '-'}</p></div>
+                <div><span>Conduct</span><p>${data.conduct || '-'}</p></div>
+                <div><span>Aadhaar</span><p>${data.aadhaar || '-'}</p></div>
+            </div>
+        </div>
+
+        `;
+
+        document.getElementById("studentData").innerHTML = html;
+        document.getElementById("studentModal").style.display = "flex";
+    });
+}
+
+// STUDENT MODAL CLOSE
+function closeStudentModal(){
+    const modal = document.getElementById("studentModal");
+    modal.style.display = "none";
+}
+
+function formatDate(date){
+    if(!date) return '-';
+    return new Date(date).toLocaleDateString("en-IN");
+}
+
+// DELETE MODAL
+function openDeleteModal(id){
+    document.getElementById("deleteStudentId").value = id;
+
+    document.getElementById("deleteModal").style.display = "flex";
+}
+
+// DELETE MODAL CLOSE
+function closeDeleteModal(){
+    document.getElementById("deleteModal").style.display = "none";
+}
+ 
+
+</script>
+
+{% endblock %}

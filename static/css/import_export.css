@@ -1,0 +1,393 @@
+/* ================= PAGE ================= */
+.ie-page {
+    padding: 22px 28px;
+}
+
+/* spacing */
+.ie-page > div {
+    margin-bottom: 22px;
+}
+
+/* ================= HEADER ================= */
+.ie-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* left */
+.ie-header-left h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.ie-header-left p {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.ie-header-left small {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 768px) {
+
+    .ie-page {
+        padding: 16px;
+    }
+
+    .ie-header-left h1 {
+        font-size: 20px;
+    }
+
+    .ie-header-left p {
+        font-size: 13px;
+    }
+
+}
+/* ================= TABS ================= */
+.ie-tabs {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* TAB BUTTON */
+.ie-tab {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: #e2e8f0;
+    color: #334155;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* ACTIVE TAB */
+.ie-tab.active {
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+    color: white;
+    box-shadow: 0 4px 12px rgba(20,184,166,0.3);
+}
+
+/* HOVER */
+.ie-tab:hover {
+    transform: translateY(-1px);
+}
+
+/* ================= TAB CONTENT ================= */
+.ie-tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.ie-tab-content.active {
+    display: block;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* ================= IMPORT CARD ================= */
+.ie-import-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 22px;
+    margin-top: 40px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+/* title */
+.ie-import-card h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.ie-sub {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 16px;
+   
+}
+
+.ie-sub small {
+    color: #94a3b8;
+}
+
+/* ================= UPLOAD BOX ================= */
+.ie-upload-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.25s ease;
+    background: #f8fafc;
+}
+
+.ie-upload-box:hover {
+    border-color: #14b8a6;
+    background: #ecfeff;
+}
+
+/* upload content */
+.upload-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.ie-upload-content p {
+    font-weight: 600;
+    color: #334155;
+}
+
+.ie-upload-content span {
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* ================= FILE PREVIEW ================= */
+.ie-file-preview {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #ecfeff;
+    border: 1px solid #99f6e4;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #0f766e;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ================= BUTTON ================= */
+.btn-import {
+    margin-top: 16px;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-import:hover {
+    transform: translateY(-1px);
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 768px) {
+
+    .ie-upload-box {
+        padding: 20px;
+    }
+
+}
+
+/* ================= MODAL ================= */
+.ie-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+/* modal box */
+.ie-modal-content {
+    background: #ffffff;
+    padding: 22px;
+    border-radius: 14px;
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* title */
+.ie-modal-content h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+/* text */
+.ie-modal-content p {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.ie-modal-content small {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* buttons */
+.modal-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* cancel */
+.btn-cancel {
+    background: #e2e8f0;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* confirm */
+.btn-confirm {
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* ================= EXPORT CARD ================= */
+.ie-export-card {
+    background: #ffffff;
+    border-radius: 16px;
+    margin-top: 20px;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+/* FILTER WRAPPER */
+.ie-export-filters {
+    margin-top: 16px;
+}
+
+/* GROUP (LIKE SEARCH BAR) */
+.ie-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f8fafc;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+/* SELECT INPUT */
+.ie-select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    background: white;
+    min-width: 160px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* FOCUS EFFECT */
+.ie-select:focus {
+    border-color: #14b8a6;
+    outline: none;
+}
+
+.ie-upload-box.dragging {
+    border: 2px dashed #0ea5a4;
+    background: #ecfeff;
+}
+
+/* MAIN EXPORT BUTTON */
+.btn-export-main {
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+
+    margin-left: auto;
+}
+
+/* HOVER */
+.btn-export-main:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(20,184,166,0.3);
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 768px) {
+
+    .ie-filter-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .ie-select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.btn-export-main {
+    min-width: 120px;
+}
+
+}
+
+/* SUCCESS BOX CSS  */
+.success-box {
+    text-align: center;
+}
+
+/* tick animation */
+.success-icon {
+    font-size: 40px;
+    color: #16a34a;
+    margin-bottom: 10px;
+    animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+
+/* LOADING BOX CSS */
+.loading-box {
+    text-align: center;
+}
+
+/* SPINNER */
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #e2e8f0;
+    border-top: 5px solid #14b8a6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+/* ANIMATION */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

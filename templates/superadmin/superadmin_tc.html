@@ -1,0 +1,266 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/tc_management.css') }}">
+
+<div class="satc-wrapper">
+
+    <!-- HEADER -->
+    <div class="satc-header">
+
+        <div class="satc-header-left">
+            <h1>📄 Transfer Certificate Management</h1>
+            <p>Manage all school transfer certificates in one place</p>
+        </div>
+
+    </div>
+
+    <!-- STATS -->
+    <div class="satc-stats-grid">
+
+        <div class="satc-stat-card">
+            <div class="satc-stat-info">
+                <p>Total TC Generated</p>
+                <h2>{{ total_tc }}</h2>
+            </div>
+            <div class="satc-stat-icon">📄</div>
+        </div>
+
+        <div class="satc-stat-card">
+            <div class="satc-stat-info">
+                <p>This Month TC</p>
+                <h2>{{ month_tc }}</h2>
+            </div>
+            <div class="satc-stat-icon">📅</div>
+        </div>
+
+        <div class="satc-stat-card">
+            <div class="satc-stat-info">
+                <p>Today TC</p>
+                <h2>{{ today_tc }}</h2>
+            </div>
+            <div class="satc-stat-icon">🔥</div>
+        </div>
+
+        <div class="satc-stat-card">
+            <div class="satc-stat-info">
+                <p>Total Schools with TC</p>
+                <h2>{{ school_tc_count }}</h2>
+            </div>
+            <div class="satc-stat-icon">🏫</div>
+        </div>
+
+    </div>
+
+    <!-- FILTER BAR -->
+    <form method="GET" action="{{ url_for('superadmin_tc_management') }}" class="satc-filter-box">
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Search student / admission / TC number..."
+            value="{{ request.args.get('search','') }}"
+        >
+
+        <select name="school_id">
+            <option value="">All Schools</option>
+
+            {% for school in schools %}
+            <option
+                value="{{ school[0] }}"
+                {% if request.args.get('school_id') == school[0]|string %}selected{% endif %}
+            >
+                {{ school[1] }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <select name="class">
+            <option value="">All Classes</option>
+
+            {% for i in range(1,13) %}
+            <option
+                value="{{ i }}"
+                {% if request.args.get('class') == i|string %}selected{% endif %}
+            >
+                Class {{ i }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="satc-search-btn">
+            Search
+        </button>
+
+        <button type="button" class="satc-clear-btn" onclick="clearFilters()">
+            Clear
+        </button>
+
+    </form>
+
+    <!-- TABLE -->
+    <div class="satc-table-box">
+
+        <table class="satc-table">
+
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Admission No</th>
+                    <th>School Name</th>
+                    <th>TC Number</th>
+                    <th>Leaving Date</th>
+                    <th>Reason</th>
+                    <th>Generated Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% if tc_records %}
+                    {% for tc in tc_records %}
+                    <tr>
+
+                        <td>{{ tc[1] }}</td>
+                        <td>{{ tc[2] }}</td>
+
+                        <td>
+                            <span class="satc-school-badge">
+                                {{ tc[4] }}
+                            </span>
+                        </td>
+
+                        <td>{{ tc[5] }}</td>
+                        <td>{{ tc[6] }}</td>
+                        <td>{{ tc[7] }}</td>
+                        <td>{{ tc[8] }}</td>
+
+                        <td>
+
+                            <div class="satc-action-group">
+
+                                <button
+                                    class="satc-view-btn"
+                                    onclick="viewTC('{{ tc[0] }}')"
+                                >
+                                    View
+                                </button>
+
+                                <button
+                                    class="satc-print-btn"
+                                    onclick="printTC('{{ tc[0] }}')"
+                                >
+                                    Print
+                                </button>
+
+                                <button
+                                    class="satc-pdf-btn"
+                                    onclick="downloadPDF('{{ tc[0] }}')"
+                                >
+                                    PDF
+                                </button>
+
+                                <button
+                                    class="satc-delete-btn"
+                                    onclick="deleteTC('{{ tc[0] }}')"
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="8" class="satc-empty">
+                            No TC records found
+                        </td>
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+<!-- DELETE TC MODAL -->
+<div id="deleteTcModal" class="satc-modal" style="display:none;">
+
+    <div class="satc-modal-box">
+
+        <h3>⚠️ Confirm Delete</h3>
+
+        <p>Are you sure you want to delete this TC?</p>
+
+        <form method="POST" action="{{ url_for('delete_tc') }}">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <input type="hidden" name="tc_id" id="deleteTcId">
+
+            <div class="satc-action-group">
+
+                <button type="button"
+                        class="satc-print-btn"
+                        onclick="closeDeleteTCModal()">
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        class="satc-delete-btn">
+                    Delete
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+function clearFilters(){
+    window.location.href = "/superadmin/tc-management";
+}
+
+function viewTC(id){
+    console.log("Viewing TC ID:", id);
+    window.location.href = "/clerk/tc/view/" + id + "?mode=admin";
+}
+
+function printTC(id){
+    console.log("Printing TC ID:", id);
+    window.location.href = "/clerk/tc/view/" + id + "?mode=admin&print=true";
+}
+
+function downloadPDF(id){
+    window.location.href = "/clerk/tc/pdf/" + id + "?mode=admin";
+}
+
+function deleteTC(id){
+
+    document.getElementById("deleteTcId").value = id;
+
+    document.getElementById("deleteTcModal").style.display = "flex";
+}
+
+function closeDeleteTCModal(){
+
+    document.getElementById("deleteTcModal").style.display = "none";
+}
+
+</script>
+
+{% endblock %}

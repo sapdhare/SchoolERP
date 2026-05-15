@@ -1,0 +1,809 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+ 
+<section class="hero">
+
+    <!-- LEFT -->
+    <div class="hero-left">
+
+        <span class="hero-tag">● School ERP Platform</span>
+
+        <h1 class="fade-in">
+            Powerful ERP for  
+            <span>Schools & Colleges</span>
+        </h1>
+
+        <p class="fade-in delay">
+           Manage admissions, student records, attendance, fees, TC, bonafide certificates, reports and subscriptions — all in one powerful ERP platform.
+        </p>
+
+        <div class="hero-buttons fade-in delay2">
+            <a href="/login" class="btn-primary">Start Now</a>
+
+            <a href="#how" class="btn-play">
+                ▶ How it Works
+            </a>
+        </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="hero-right">
+
+      <img src="{{ url_for('static', filename='images/hero.png') }}" alt="student">
+
+        <!-- INTERACTIVE CARD -->
+       <div class="floating-msg">
+    
+    <div class="msg-avatar">
+        👨‍🎓
+    </div>
+
+    <div class="msg-content">
+        <p>TC Ready / Fee Collected / Attendance Updated</p>
+        <span>Generated in 2 sec ⚡</span>
+    </div>
+
+</div>
+
+        <!-- FLOATING SHAPES -->
+        <div class="circle one"></div>
+        <div class="circle two"></div>
+        <div class="circle three"></div>
+
+    </div>
+
+</section>
+
+ <section class="trusted">
+
+    <div class="trusted-header">
+        <p class="trusted-tag">Trusted by Schools</p>
+        <h2>Growing School Management Ecosystem</h2>
+
+        <p class="trusted-subtitle">
+            Helping schools simplify operations, automate certificates,
+            manage fees, attendance and student records seamlessly.
+        </p>
+    </div>
+
+    <!-- GLASS STATS -->
+    <div class="stats-grid">
+
+        <!-- CARD 1 -->
+        <div class="stat-card">
+            <div class="stat-glow"></div>
+            <h3>50+</h3>
+            <p>Schools Connected</p>
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="stat-card">
+            <div class="stat-glow"></div>
+            <h3>10,000+</h3>
+            <p>Students Managed</p>
+        </div>
+
+        <!-- CARD 3 -->
+        <div class="stat-card">
+            <div class="stat-glow"></div>
+            <h3>25,000+</h3>
+            <p>Certificates Generated</p>
+        </div>
+
+        <!-- CARD 4 -->
+        <div class="stat-card">
+            <div class="stat-glow"></div>
+            <h3>99.9%</h3>
+            <p>System Uptime</p>
+        </div>
+
+    </div>
+
+</section>
+<!-- // ================= FEATURES SECTION =================  -->
+<section class="features" id="features">
+
+    <div class="bg-blob one"></div>
+    <div class="bg-blob two"></div>
+
+    <div class="features-header">
+        <p class="section-tag">Powerful Features</p>
+        <h2>Complete Digital Ecosystem for Schools</h2>
+
+        <p class="features-subtitle">
+            From admissions to certificates, attendance to fees —
+            everything managed in one smart platform.
+        </p>
+    </div>
+
+    <div class="features-grid">
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">👨‍🎓</div></div>
+            <h3>Student Management</h3>
+            <p>Complete student profiles, admissions and academic history.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">📄</div></div>
+            <h3>TC Management</h3>
+            <p>Generate transfer certificates instantly with custom formats.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">🏅</div></div>
+            <h3>Bonafide Certificates</h3>
+            <p>Generate bonafide certificates in one click.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">📅</div></div>
+            <h3>Attendance System</h3>
+            <p>Track and manage daily attendance digitally.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">💰</div></div>
+            <h3>Fee Management</h3>
+            <p>Collect, track and manage fee records efficiently.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">👨‍🏫</div></div>
+            <h3>Teacher Management</h3>
+            <p>Manage teacher records, responsibilities and data.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">📊</div></div>
+            <h3>Marks & Results</h3>
+            <p>Manage marksheets, exam records and results.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">📈</div></div>
+            <h3>Reports & Analytics</h3>
+            <p>Visual insights and school performance analytics.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">📂</div></div>
+            <h3>Import / Export</h3>
+            <p>Bulk import and export school data easily.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">💳</div></div>
+            <h3>Subscription Plans</h3>
+            <p>Flexible plan-based subscription model for schools.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">🏫</div></div>
+            <h3>Multi-School ERP</h3>
+            <p>Manage multiple schools with isolated secure data.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-wrapper"><div class="icon">🔐</div></div>
+            <h3>Role-Based Security</h3>
+            <p>Secure access for admins, clerks and staff.</p>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- SCHOOL AUTOMATION SECTION -->
+ <section class="school-automation">
+
+    <div class="sa-container">
+
+        <!-- LEFT CONTENT -->
+        <div class="sa-left">
+
+            <span class="section-tag">
+                School Automation
+            </span>
+
+            <h2>
+                Automate Your Entire School Operations
+            </h2>
+
+            <p class="sa-desc">
+                From student records to certificates, fees, attendance and reports —
+                manage everything digitally in one secure ERP platform.
+            </p>
+
+            <ul class="sa-points">
+
+                <li>
+                    <span class="point-icon">⚡</span>
+                    <div>
+                        <strong>Instant Certificate Generation</strong>
+                        <p>Generate TC & Bonafide in seconds.</p>
+                    </div>
+                </li>
+
+                <li>
+                    <span class="point-icon">📚</span>
+                    <div>
+                        <strong>Student Record Management</strong>
+                        <p>Manage admissions and records easily.</p>
+                    </div>
+                </li>
+
+                <li>
+                    <span class="point-icon">💰</span>
+                    <div>
+                        <strong>Fee & Subscription Management</strong>
+                        <p>Track payments and renew plans smoothly.</p>
+                    </div>
+                </li>
+
+                <li>
+                    <span class="point-icon">📊</span>
+                    <div>
+                        <strong>Reports & Analytics</strong>
+                        <p>Visual dashboards and smart school insights.</p>
+                    </div>
+                </li>
+
+            </ul>
+
+            <button class="btn-primary sa-btn"
+                    onclick="openDemoModal()">
+
+                Request Live Demo
+
+            </button>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="sa-right">
+
+            <img src="https://i.pinimg.com/736x/0a/b4/e5/0ab4e50251fcd965b936f6a194c7a2d7.jpg"
+                 class="sa-main-img">
+
+            <div class="sa-float-card">
+                <span>⚡</span>
+                <p>ERP Active</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- PLAN AND PRICING SECTION -->
+ <section class="pricing-section" id="plans">
+
+    <div class="pricing-header">
+
+        <p class="pricing-tag">Pricing Plans</p>
+
+        <h2>Simple, Transparent Pricing</h2>
+
+        <p>
+            Choose monthly or yearly billing for your school ERP.
+        </p>
+
+    </div>
+
+    <!-- TOGGLE -->
+    <div class="billing-toggle">
+
+        <button class="billing-btn active"
+                onclick="toggleBilling('monthly')">
+            Monthly
+        </button>
+
+        <button class="billing-btn"
+                onclick="toggleBilling('yearly')">
+            Yearly
+        </button>
+
+    </div>
+
+    <!-- PRICING CARDS -->
+    <div class="pricing-wrapper">
+
+        <!-- STARTER -->
+        <div class="pricing-card side-card">
+
+            <div class="price amount"
+                 data-month="499"
+                  >
+
+                ₹499
+            </div>
+
+            <span>/month</span>
+
+            <h3>Starter</h3>
+
+            <p>
+                Best for small schools starting with digital transformation.
+            </p>
+
+            <ul>
+                <li>✔ Student Management</li>
+                <li>✔ TC Generation</li>
+                <li>✔ Bonafide Certificates</li>
+                <li>✔ Reports</li>
+                <li>✔ Email Support</li>
+            </ul>
+
+           <a href="#contact">Request Demo</a>
+
+        </div>
+
+        <!-- GROWTH (CENTER) -->
+        <div class="pricing-card featured-card">
+
+            <div class="popular-badge">
+                Most Popular
+            </div>
+
+            <div class="price amount"
+                 data-month="999"
+                 >
+
+                ₹999
+            </div>
+
+            <span>/month</span>
+
+            <h3>Growth</h3>
+
+            <p>
+                Perfect for growing schools needing automation and analytics.
+            </p>
+
+            <ul>
+                <li>✔ Everything in Starter</li>
+                <li>✔ Attendance</li>
+                <li>✔ Fee Management</li>
+                <li>✔ Analytics Dashboard</li>
+                <li>✔ Priority Support</li>
+            </ul>
+
+           <a href="#contact">Upgrade</a>
+
+        </div>
+
+        <!-- ENTERPRISE -->
+        <div class="pricing-card side-card">
+
+            <div class="price amount"
+                 data-month="1999">
+
+                ₹1999
+            </div>
+
+            <span>/month</span>
+
+            <h3>Enterprise</h3>
+
+            <p>
+                For institutions managing multiple schools and branches.
+            </p>
+
+            <ul>
+                <li>✔ Everything in Growth</li>
+                <li>✔ Multi School ERP</li>
+                <li>✔ Advanced Reports</li>
+                <li>✔ Dedicated Support</li>
+                <li>✔ Custom Integrations</li>
+            </ul>
+
+           <a href="#contact">Contact Sales</a>
+
+        </div>
+
+    </div>
+
+</section>
+
+ 
+<!-- HOW IT WORKS SECTION -->
+
+<section class="how-it-works" id="how">
+
+    <div class="how-header">
+
+        <p class="section-tag">
+            How It Works
+        </p>
+
+        <h2>
+            Smart Workflow For Complete School Management
+        </h2>
+
+        <p class="how-subtext">
+            From secure login to student management, certificates, reports and subscription renewals — everything in one place.
+        </p>
+
+    </div>
+
+    <div class="steps-row">
+
+        <!-- STEP 1 -->
+        <div class="step-card">
+
+            <div class="step-number">01</div>
+
+            <h3>Secure Login</h3>
+
+            <p>
+                Login securely and access your school dashboard instantly.
+            </p>
+
+        </div>
+
+        <div class="arrow">→</div>
+
+        <!-- STEP 2 -->
+        <div class="step-card">
+
+            <div class="step-number">02</div>
+
+            <h3>Manage Students</h3>
+
+            <p>
+                Add, update and maintain complete student records.
+            </p>
+
+        </div>
+
+        <div class="arrow">→</div>
+
+        <!-- STEP 3 -->
+        <div class="step-card highlight">
+
+            <div class="step-number">03</div>
+
+            <h3>Generate Documents</h3>
+
+            <p>
+                Generate TC, Bonafide and official certificates instantly.
+            </p>
+
+        </div>
+
+        <div class="arrow">→</div>
+
+        <!-- STEP 4 -->
+        <div class="step-card">
+
+            <div class="step-number">04</div>
+
+            <h3>Reports & Analytics</h3>
+
+            <p>
+                Track admissions, reports and performance analytics.
+            </p>
+
+        </div>
+
+        <div class="arrow">→</div>
+
+        <!-- STEP 5 -->
+        <div class="step-card">
+
+            <div class="step-number">05</div>
+
+            <h3>Renew Subscription</h3>
+
+            <p>
+                Renew plans securely and continue uninterrupted services.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+<!-- DEMO SECTION -->
+
+<section class="demo-section" id="demo">
+
+    <!-- HEADER -->
+    <div class="demo-header">
+
+        <p class="demo-tag">
+            Product Demo
+        </p>
+
+        <h2>
+            See SchoolSphere in Action
+        </h2>
+
+        <p class="demo-subtitle">
+            Explore our ERP dashboard, student management, certificates and reports system.
+        </p>
+
+    </div>
+
+    <!-- DEMO GRID -->
+    <div class="demo-grid">
+
+        <!-- CARD 1 -->
+        <div class="demo-card">
+
+            <div class="demo-image">
+                <img src="{{ url_for('static', filename='images/dashboard.png') }}"
+                     alt="Dashboard">
+            </div>
+
+            <div class="demo-content">
+                <h3>Admin Dashboard</h3>
+                <p>
+                    Monitor school operations, subscriptions and performance analytics.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="demo-card">
+
+            <div class="demo-image">
+                <img src="{{ url_for('static', filename='images/student.png') }}"
+                     alt="Student Management">
+            </div>
+
+            <div class="demo-content">
+                <h3>Student Management</h3>
+                <p>
+                    Add, update and manage student records efficiently.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- CARD 3 -->
+        <div class="demo-card">
+
+            <div class="demo-image">
+                <img src="{{ url_for('static', filename='images/certificate.png') }}"
+                     alt="Certificates">
+            </div>
+
+            <div class="demo-content">
+                <h3>Certificates System</h3>
+                <p>
+                    Generate TC and Bonafide certificates instantly.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- CARD 4 -->
+        <div class="demo-card">
+
+            <div class="demo-image">
+                <img src="{{ url_for('static', filename='images/analytics.png') }}"
+                     alt="Reports">
+            </div>
+
+            <div class="demo-content">
+                <h3>Reports & Analytics</h3>
+                <p>
+                    Smart reporting and data insights for school growth.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CTA -->
+    <div class="demo-cta">
+
+       <button class="demo-btn"
+        onclick="openDemoModal()">
+
+            Request Live Demo
+
+        </button>
+
+    </div>
+
+</section>
+
+<!-- CONTACT / FINAL CTA SECTION -->
+
+<section class="cta" id="contact">
+
+    <div class="cta-box">
+
+        <!-- FLOAT ELEMENTS -->
+        <div class="cta-blob one"></div>
+        <div class="cta-blob two"></div>
+
+        <span class="cta-tag">
+            Get Started Today
+        </span>
+
+        <h2>
+            Transform Your School Management with {{ global_settings.system_name or "SchoolSphere" }}
+        </h2>
+
+        <p>
+            Simplify admissions, student records, certificates, attendance,
+            fees, reports and subscriptions — all in one secure and powerful platform.
+        </p>
+
+        <div class="cta-buttons">
+
+            <a href="/login"
+               class="btn-primary">
+
+                Start Your Journey
+
+            </a>
+
+            <a href="#features"
+               class="btn-secondary">
+
+                Explore Features
+
+            </a>
+
+        </div>
+
+        <div class="cta-bottom-text">
+
+            <span>✔ Secure Access</span>
+            <span>✔ Fast Setup</span>
+            <span>✔ Multi-School Support</span>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- DEMO MODAL -->
+<div id="demoModal" class="demo-modal">
+
+    <div class="demo-modal-box">
+
+        <button class="demo-close"
+                onclick="closeDemoModal()">
+            ×
+        </button>
+
+        <h2>Request Live Demo</h2>
+
+        <p>
+            Fill your details and connect with us on WhatsApp.
+        </p>
+
+        <form id="demoForm">
+
+            <input type="text"
+                   id="schoolName"
+                   placeholder="School Name"
+                   required>
+
+            <input type="text"
+                   id="personName"
+                   placeholder="Your Name"
+                   required>
+
+            <input type="tel"
+                   id="phoneNumber"
+                   placeholder="Phone Number"
+                   required>
+
+            <button type="submit"
+                    class="demo-submit-btn">
+
+                Continue to WhatsApp
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+function toggleBilling(type){
+
+    const buttons = document.querySelectorAll(".billing-btn");
+    buttons.forEach(btn => btn.classList.remove("active"));
+
+    if(type === "monthly"){
+        buttons[0].classList.add("active");
+    }else{
+        buttons[1].classList.add("active");
+    }
+
+    document.querySelectorAll(".amount").forEach(item => {
+
+        const monthlyPrice = parseFloat(item.dataset.month);
+
+        if(type === "monthly"){
+
+            item.innerText = "₹" + monthlyPrice;
+
+            item.nextElementSibling.innerText = "/month";
+
+        }else{
+
+            // yearly total = 12 months
+            let yearlyPrice = monthlyPrice * 12;
+
+            // apply 10% discount
+            yearlyPrice = yearlyPrice - (yearlyPrice * 0.10);
+
+            // round price
+            yearlyPrice = Math.round(yearlyPrice);
+
+            item.innerText = "₹" + yearlyPrice;
+
+            item.nextElementSibling.innerText = "/year";
+
+        }
+
+    });
+
+}
+// DEMO MODAL FUNCTIONS
+function openDemoModal(){
+    document
+        .getElementById("demoModal")
+        .classList.add("active");
+}
+
+function closeDemoModal(){
+    document
+        .getElementById("demoModal")
+        .classList.remove("active");
+}
+
+document
+.getElementById("demoForm")
+.addEventListener("submit", function(e){
+
+    e.preventDefault();
+
+    const school =
+        document.getElementById("schoolName").value;
+
+    const person =
+        document.getElementById("personName").value;
+
+    const phone =
+        document.getElementById("phoneNumber").value;
+
+    const message =
+`Hello, I want a live demo of ShalaSync ERP.
+
+School Name: ${school}
+Contact Person: ${person}
+Phone: ${phone}`;
+
+    const whatsappUrl =
+        `https://wa.me/918308452931?text=${encodeURIComponent(message)}`;
+
+    window.open(
+        whatsappUrl,
+        "_blank"
+    );
+
+});
+</script>
+
+ 
+{% endblock %}

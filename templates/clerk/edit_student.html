@@ -1,0 +1,436 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_student.css') }}">
+
+<!-- FLATPICKR -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- IMPORTANT: enctype added for photo update -->
+<form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+<!-- ================= HEADER ================= -->
+<div class="student-page-header">
+    <div class="header-content">
+        <h1>Edit Student</h1>
+        <span class="marathi-title">विद्यार्थी माहिती संपादन</span>
+
+        <p class="header-desc">
+            Update student details carefully. Changes will overwrite existing data.
+        </p>
+    </div>
+</div>
+
+<!-- ================= NOTE ================= -->
+<div class="student-note">
+    <p>
+        कृपया माहिती अचूक अपडेट करा. नवीन नोंद तयार होणार नाही.
+    </p>
+</div>
+
+<!-- ================= 1. STUDENT IDENTITY ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Student Identity</h2>
+        <p>विद्यार्थ्याची ओळख माहिती</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>School Register No </label>
+            <input 
+                type="text" 
+                name="school_register_no" 
+                value="{{ student.school_register_no }}">
+        </div>
+
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" name="name" value="{{ student.name }}">
+        </div>
+
+        <div class="form-group">
+            <label>Father Name</label>
+            <input type="text" name="father_name" value="{{ student.father_name }}">
+        </div>
+
+        <div class="form-group">
+            <label>Mother Name</label>
+            <input type="text" name="mother_name" value="{{ student.mother_name }}">
+        </div>
+        
+        <div class="form-group">
+            <label>Student ID </label>
+            <input 
+                type="text" 
+                name="student_uid" 
+                value="{{ student.student_uid }}">
+        </div>
+
+        <div class="form-group">
+            <label>Aadhaar</label>
+            <input 
+            type="text" 
+            name="aadhaar" 
+            value="{{ student.aadhaar }}"
+            maxlength="12"
+            oninput="this.value = this.value.replace(/\D/g,'')">
+        </div>
+        
+        <div class="form-group">
+            <label>APAAR ID</label>
+            <input 
+                type="text" 
+                name="apaar_id" 
+                value="{{ student.apaar_id }}"
+                maxlength="20">
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= 2. PERSONAL ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Personal Details</h2>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Date of Birth</label>
+            <input
+                type="text"
+                name="dob"
+                id="dobPicker"
+                value="{{ student.dob.strftime('%Y-%m-%d') if student.dob else '' }}"
+                placeholder="Select Date of Birth"
+                required
+                readonly
+            >
+        </div>
+
+        <div class="form-group">
+            <label>Birth Place</label>
+            <input type="text" name="birth_place" value="{{ student.birth_place }}">
+        </div>
+
+        <div class="form-group">
+            <label>Nationality</label>
+            <input type="text" name="nationality" value="{{ student.nationality }}">
+        </div>
+
+        <div class="form-group">
+            <label>Mother Tongue</label>
+            <input type="text" name="mother_tongue" value="{{ student.mother_tongue }}">
+        </div>
+
+        <div class="form-group">
+            <label>Religion</label>
+            <input type="text" name="religion" value="{{ student.religion }}">
+        </div>
+
+        <div class="form-group">
+            <label>Caste</label>
+            <input type="text" name="caste" value="{{ student.caste }}">
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= 3. ADDRESS ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Address Details</h2>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+    <label>City</label>
+    <input type="text" name="city" value="{{ student.city }}">
+</div>
+
+<div class="form-group">
+    <label>Taluka</label>
+    <input type="text" name="taluka" value="{{ student.taluka }}">
+</div>
+
+<div class="form-group">
+    <label>District</label>
+    <input type="text" name="district" value="{{ student.district }}">
+</div>
+
+<div class="form-group">
+    <label>State</label>
+    <input type="text" name="state" value="{{ student.state }}">
+</div>
+    </div>
+</div>
+
+<!-- ================= 4. ADMISSION ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Admission Details</h2>
+    </div>
+
+    <div class="form-grid">
+
+<div class="form-group">
+    <label>Admission No</label>
+    <input type="text" name="admission_no" value="{{ student.admission_no }}" readonly>
+</div>
+<div class="form-group">
+        <label>UDISE No</label>
+        <input 
+           type="text" 
+           value="{{ school_udise }}" 
+           readonly>
+</div>
+
+<div class="form-group">
+    <label>Admission Date</label>
+        <input
+        type="text"
+        name="admission_date"
+        id="admissionPicker"
+        value="{{ student.admission_date.strftime('%Y-%m-%d') if student.admission_date else '' }}"
+        placeholder="Enter Admission Date"
+        required
+        readonly
+    >
+</div>
+
+<div class="form-group">
+    <label>Class</label>
+    <select name="class">
+        {% for i in range(1,11) %}
+        <option value="{{ i }}" {% if student.class == i|string %}selected{% endif %}>{{ i }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Section</label>
+    <select name="section">
+        <option {% if student.section=='A' %}selected{% endif %}>A</option>
+        <option {% if student.section=='B' %}selected{% endif %}>B</option>
+        <option {% if student.section=='C' %}selected{% endif %}>C</option>
+    </select>
+</div>
+  <div class="form-group">
+            <label>Last School</label>
+            <input type="text" name="previous_school" value="{{ student.previous_school }}" readonly>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= 5. ACADEMIC ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Previous Academic Details</h2>
+    </div>
+
+    <div class="form-grid">
+
+<div class="form-group">
+    <label>Last Exam</label>
+    <input type="text" name="last_exam" value="{{ student.last_exam }}">
+</div>
+
+<div class="form-group">
+    <label>Result</label>
+    <select name="result_status">
+        <option {% if student.result_status=='Pass' %}selected{% endif %}>Pass</option>
+        <option {% if student.result_status=='Fail' %}selected{% endif %}>Fail</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Progress</label>
+    <select name="progress">
+        <option {% if student.progress=='Excellent (85%+)' %}selected{% endif %}>Excellent (85%+)</option>
+        <option {% if student.progress=='Good (60–85%)' %}selected{% endif %}>Good (60–85%)</option>
+        <option {% if student.progress=='Average (40–60%)' %}selected{% endif %}>Average (40–60%)</option>
+        <option {% if student.progress=='Needs Improvement' %}selected{% endif %}>Needs Improvement</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Conduct</label>
+    <textarea name="conduct">{{ student.conduct }}</textarea>
+</div>
+
+    </div>
+</div>
+<!-- ================= 6. Leaving Details ================= -->
+<!-- <div class="form-section">
+    <div class="section-title">
+        <h2>Leaving Details</h2>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Leaving Date</label>
+            <input type="date" name="leaving_date" value="{{ student.leaving_date }}">
+        </div>
+
+        <div class="form-group">
+            <label>Reason</label>
+            <input type="text" name="leaving_reason" value="{{ student.leaving_reason }}">
+        </div>
+
+        <div class="form-group">
+            <label>TC Date</label>
+            <input type="date" name="tc_date" value="{{ student.tc_date }}">
+        </div>
+
+    </div>
+</div> -->
+<!-- ================= 7. Parent details ================= -->
+ <div class="form-section">
+    <div class="section-title">
+        <h2>Parent Details</h2>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Primary Mobile</label>
+            <input type="tel" name="primary_mobile" value="{{ student.primary_mobile }}">
+        </div>
+         
+        <div class="form-group">
+            <label>Email Address </label>
+            <input
+                type="email"
+                name="email"
+                placeholder="e.g. parent@gmail.com"
+                value="{{ student.email}}"
+            >
+        </div>
+
+        <div class="form-group">
+            <label>Alternate Mobile</label>
+            <input type="tel" name="alternate_mobile" value="{{ student.alternate_mobile }}">
+        </div>
+
+        <div class="form-group">
+            <label>Occupation</label>
+            <input type="text" name="occupation" value="{{ student.occupation }}">
+        </div>
+
+        <div class="form-group">
+            <label>Annual Income</label>
+            <input type="text" name="income" value="{{ student.income }}">
+        </div>
+
+        <div class="form-group">
+            <label>Guardian Name</label>
+            <input type="text" name="guardian_name" value="{{ student.guardian_name }}">
+        </div>
+
+        <div class="form-group">
+            <label>Guardian Mobile</label>
+            <input type="tel" name="guardian_mobile" value="{{ student.guardian_mobile }}">
+        </div>
+
+    </div>
+</div>
+<!-- ================= PHOTO ================= -->
+<div class="form-section">
+    <div class="section-title">
+        <h2>Student Photo</h2>
+    </div>
+
+    {% if student.photo %}
+        <img 
+            src="{{ url_for('static', filename='uploads/' + student.photo) }}" 
+            style="width:120px; border-radius:10px; margin-top:10px;"
+        >
+    {% else %}
+        <p style="color:gray;">No photo uploaded</p>
+    {% endif %}
+</div>
+
+<!-- ================= ACTION ================= -->
+<div class="form-actions">
+
+    <button type="submit" id="saveBtn" class="btn-save">
+        Update Student
+    </button>
+
+    <!-- <button type="reset" class="btn-reset">Reset</button> -->
+
+    <a href="{{ url_for('clerk_students') }}" class="btn-reset">Back</a>
+
+</div>
+
+</form>
+
+<!-- ================= JS ================= -->
+<script>
+
+/* ================= IMAGE PREVIEW ================= */
+// function previewImage(event) {
+//     const file = event.target.files[0];
+//     if (!file) return;
+
+//     const reader = new FileReader();
+//     reader.onload = function(){
+//         document.getElementById('photoPreview').src = reader.result;
+//     }
+//     reader.readAsDataURL(file);
+// }
+
+
+/* ================= UPDATE CONFIRMATION + LOADING ================= */
+const form = document.querySelector("form");
+const btn = document.getElementById("saveBtn");
+
+form.addEventListener("submit", function(e) {
+
+    // ✅ Confirmation popup
+    const confirmUpdate = confirm("Are you sure you want to update this student's details?");
+
+    if (!confirmUpdate) {
+        e.preventDefault(); // stop form submission
+        return;
+    }
+
+    // ✅ If confirmed → show loading
+    btn.innerText = "Updating...";
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+
+});
+
+// DOB PICKER
+flatpickr("#dobPicker", {
+    defaultDate: document.getElementById("dobPicker").value,
+    dateFormat: "Y-m-d",
+    maxDate: "today", // cannot select future DOB
+    yearRange: [1990, new Date().getFullYear()],
+    allowInput: false, // disable typing
+    disableMobile: true
+});
+
+// ADMISSION DATE
+flatpickr("#admissionPicker", {
+    defaultDate: document.getElementById("admissionPicker").value,
+    dateFormat: "Y-m-d",
+    maxDate: "today",
+    allowInput: false,
+    disableMobile: true
+});
+
+</script>
+
+{% endblock %}

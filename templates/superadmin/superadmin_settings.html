@@ -1,0 +1,2678 @@
+{% extends "dashboard/dashboard_base.html" %} 
+
+
+
+{% block content %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/superadmin/settings.css') }}"
+/>
+
+<div class="erp-settings-layout">
+  <!-- LEFT SETTINGS SIDEBAR -->
+  <aside class="erp-settings-sidebar">
+    <div class="erp-settings-brand">
+      <h2>⚙ Settings</h2>
+      <p>ERP Control Panel</p>
+    </div>
+
+    <nav class="erp-settings-nav">
+      <a href="#general" class="erp-settings-link active">
+        <span>🏢</span> General
+      </a>
+
+      <a href="#subscription" class="erp-settings-link">
+        <span>💳</span> Subscription
+      </a>
+
+      <a href="#security" class="erp-settings-link">
+        <span>🔐</span> Security
+      </a>
+
+      <a href="#certificate" class="erp-settings-link">
+        <span>📄</span> Certificates
+      </a>
+
+      <a href="#modules" class="erp-settings-link">
+        <span>🧩</span> Feature Modules
+      </a>
+      
+      <a href="#payment" class="erp-settings-link">
+        <span>💳</span> Payment Settings
+      </a>
+      <a href="#smtp" class="erp-settings-link">
+        <span>📧</span> SMTP / Email
+      </a>
+
+      <a href="#backup" class="erp-settings-link">
+         <span>💾</span> Backup 
+      </a>
+
+      <a href="#maintenance" class="erp-settings-link">
+        <span>🛠</span> Maintenance
+      </a>
+      <a href="#branding" class="erp-settings-link">
+        <span>🎨 </span> Branding
+      </a>
+    </nav>
+  </aside>
+
+  <!-- RIGHT SETTINGS CONTENT -->
+
+  <div class="erp-settings-content">
+    <!-- TOP HEADER -->
+    <div class="erp-settings-header">
+      <h1>System Settings</h1>
+      <p>Manage ERP configuration from one place</p>
+    </div>
+
+    <!-- STATUS BLOCK -->
+    <div class="erp-settings-stats">
+      <div class="erp-stat-card stat-green">
+        <h4>System Status</h4>
+        <h2>Running</h2>
+      </div>
+
+      <div class="erp-stat-card stat-blue">
+        <h4>Active Schools</h4>
+        <h2>{{ total_schools }}</h2>
+      </div>
+
+      <div class="erp-stat-card stat-orange">
+        <h4>Alerts</h4>
+        <h2>3</h2>
+      </div>
+
+      <div class="erp-stat-card stat-purple">
+        <h4>Backup</h4>
+        <h2>Safe</h2>
+      </div>
+    </div>
+
+    <!-- ================= GENERAL SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('save_general_settings') }}"
+      enctype="multipart/form-data">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="general" class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+                <h2>General Settings</h2>
+                <p>
+                    Configure branding, localization and basic ERP preferences.
+                </p>
+            </div>
+
+            <div class="erp-live-status">
+                <span class="status-dot"></span>
+                System Active
+            </div>
+
+        </div>
+
+        <!-- SETTINGS GRID -->
+        <div class="erp-settings-grid">
+
+            <!-- SYSTEM NAME -->
+            <div class="erp-input-group">
+                <label>System Name</label>
+
+                <input type="text"
+                       name="system_name"
+                       placeholder="Enter ERP system name"
+                       value="{{ settings.system_name or '' }}">
+            </div>
+
+            <!-- SUPPORT EMAIL -->
+            <div class="erp-input-group">
+                <label>Support Email</label>
+
+                <input type="email"
+                       name="support_email"
+                       placeholder="support@schoolsphere.com"
+                       value="{{ settings.support_email or '' }}">
+            </div>
+
+            <!-- SUPPORT PHONE -->
+            <div class="erp-input-group">
+                <label>Support Phone</label>
+
+                <input type="text"
+                       name="support_phone"
+                       placeholder="+91 9876543210"
+                       value="{{ settings.support_phone or '' }}">
+            </div>
+
+            <!-- DEFAULT LANGUAGE -->
+            <div class="erp-input-group">
+                <label>Default Language</label>
+
+                <select name="default_language">
+
+                    <option value="English"
+                    {% if settings.default_language == "English" %}
+                    selected
+                    {% endif %}>
+                        English
+                    </option>
+
+                    <option value="Marathi"
+                    {% if settings.default_language == "Marathi" %}
+                    selected
+                    {% endif %}>
+                        Marathi
+                    </option>
+
+                </select>
+            </div>
+
+            <!-- TIMEZONE -->
+            <div class="erp-input-group">
+                <label>Timezone</label>
+
+                <select name="timezone">
+
+                    <option value="Asia/Kolkata"
+                    {% if settings.timezone == "Asia/Kolkata" %}
+                    selected
+                    {% endif %}>
+                        Asia/Kolkata
+                    </option>
+
+                </select>
+            </div>
+
+            <!-- LOGO -->
+            <div class="erp-input-group">
+                <label>System Logo</label>
+
+                <input type="file"
+                       name="system_logo"
+                       accept="image/*">
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="erp-settings-footer">
+
+           <div class="erp-last-update">
+
+              <span>🕒</span>
+
+              <span>
+                  Last Updated :
+                 {{ settings.updated_at.strftime('%d %b %Y, %I:%M %p') if settings.updated_at else "Never" }}
+              </span>
+
+          </div>
+
+            <button class="erp-save-btn">
+                Save General Settings
+            </button>
+
+        </div>
+
+    </section>
+
+</form>
+
+    <!-- ================= SUBSCRIPTION SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('save_subscription_settings') }}">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="subscription"
+             class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+                <h2>Subscription Settings</h2>
+
+                <p>
+                    Configure default subscription behavior,
+                    trial access and billing lifecycle.
+                </p>
+            </div>
+
+            <!-- LIVE STATUS -->
+            <div class="erp-live-status subscription-status">
+
+                <span class="status-dot"></span>
+
+                Subscription Active
+
+            </div>
+
+        </div>
+
+        <!-- LIVE PLAN PREVIEW -->
+        <div class="subscription-preview-card">
+
+            <div class="subscription-preview-left">
+
+                <span class="preview-badge">
+                    Default ERP Plan
+                </span>
+
+                <h3 id="livePlanName">
+                    {{ default_plan_name }}
+                </h3>
+
+                <p>
+                    New schools will automatically receive
+                    this plan during onboarding.
+                </p>
+
+            </div>
+
+            <div class="subscription-preview-right">
+
+                <div class="preview-stat">
+                    <span>Trial</span>
+                    <h4 id="liveTrialDays">
+                        {{ settings.trial_days or 15 }} Days
+                    </h4>
+                </div>
+
+                <div class="preview-stat">
+                    <span>Grace</span>
+                    <h4 id="liveGraceDays">
+                        {{ settings.grace_period or 7 }} Days
+                    </h4>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- SETTINGS GRID -->
+        <div class="erp-settings-grid">
+
+            <!-- DEFAULT PLAN -->
+            <div class="erp-input-group">
+
+                <label>
+                    Default Subscription Plan
+                </label>
+
+                <select name="default_plan_id"
+                        id="defaultPlanSelect"
+                        onchange="updatePlanPreview()">
+
+                    {% for plan in plans %}
+
+                    <option
+                        value="{{ plan.id }}"
+                        data-name="{{ plan.plan_name }}"
+                        data-price="{{ plan.monthly_price }}"
+                        {% if settings.default_plan_id == plan.id %}
+                        selected
+                        {% endif %}
+                    >
+
+                        {{ plan.plan_name }}
+                        — ₹{{ plan.monthly_price }}/month
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <small>
+                    Automatically assigned to new schools.
+                </small>
+
+            </div>
+
+            <!-- TRIAL DAYS -->
+            <div class="erp-input-group">
+
+                <label>
+                    Trial Period (Days)
+                </label>
+
+                <input type="number"
+                       name="trial_days"
+                       id="trialDaysInput"
+                       value="{{ settings.trial_days or 15 }}"
+                       min="0"
+                       oninput="updateTrialPreview()">
+
+                <small>
+                    Free access duration after registration.
+                </small>
+
+            </div>
+
+            <!-- GRACE PERIOD -->
+            <div class="erp-input-group">
+
+                <label>
+                    Grace Period (Days)
+                </label>
+
+                <input type="number"
+                       name="grace_period"
+                       id="graceDaysInput"
+                       value="{{ settings.grace_period or 7 }}"
+                       min="0"
+                       oninput="updateGracePreview()">
+
+                <small>
+                    Extra access after subscription expiry.
+                </small>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="erp-settings-footer">
+
+            <div class="erp-last-update">
+
+                Last Updated:
+                 {{ settings.updated_at.strftime('%d %b %Y, %I:%M %p') if settings.updated_at else "Never" }}
+
+            </div>
+
+            <button class="erp-save-btn">
+
+                Save Subscription Settings
+
+            </button>
+
+        </div>
+
+    </section>
+
+</form>
+<!-- ================= SECURITY SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('save_security_settings') }}">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="security"
+             class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+                <h2>Security Settings</h2>
+
+                <p>
+                    Configure password policies,
+                    login protection and session security.
+                </p>
+            </div>
+
+            <!-- LIVE STATUS -->
+            <div class="erp-live-status security-status">
+
+                <span class="status-dot"></span>
+
+                Security Active
+
+            </div>
+
+        </div>
+
+        <!-- SECURITY PREVIEW -->
+        <div class="security-preview-card">
+
+            <!-- LEFT -->
+            <div class="security-preview-left">
+
+                <span class="preview-badge">
+                    ERP Protection
+                </span>
+
+                <h3>
+                    Advanced Security Policies Enabled
+                </h3>
+
+                <p>
+                    These settings are applied globally across
+                    all ERP users and school dashboards.
+                </p>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="security-preview-right">
+
+                <div class="preview-stat">
+                    <span>Min. Password Length</span>
+
+                    <h4 id="livePasswordLength">
+                        {{ settings.password_length or 8 }} Char
+                    </h4>
+                </div>
+
+                <div class="preview-stat">
+                    <span>Login Attempts</span>
+
+                    <h4 id="liveAttempts">
+                        {{ settings.login_attempt_limit or 5 }}
+                    </h4>
+                </div>
+
+                <div class="preview-stat">
+                    <span>Session Timeout</span>
+
+                    <h4 id="liveTimeout">
+                        {{ settings.session_timeout or 60 }} Min
+                    </h4>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- SETTINGS GRID -->
+        <div class="erp-settings-grid">
+
+            <!-- PASSWORD LENGTH -->
+            <div class="erp-input-group">
+
+                <label>
+                    Minimum Password Length
+                </label>
+
+                <input type="number"
+                       name="password_length"
+                       id="passwordLengthInput"
+                       value="{{ settings.password_length or 8 }}"
+                       min="6"
+                       max="50"
+                       oninput="updatePasswordPreview()">
+
+                <small>
+                    Minimum characters required for user passwords.
+                </small>
+
+            </div>
+
+            <!-- LOGIN ATTEMPTS -->
+            <div class="erp-input-group">
+
+                <label>
+                    Login Attempt Limit
+                </label>
+
+                <input type="number"
+                       name="login_attempt_limit"
+                       id="loginAttemptInput"
+                       value="{{ settings.login_attempt_limit or 5 }}"
+                       min="1"
+                       max="20"
+                       oninput="updateAttemptPreview()">
+
+                <small>
+                    Maximum failed login attempts before restriction.
+                </small>
+
+            </div>
+
+            <!-- SESSION TIMEOUT -->
+            <div class="erp-input-group">
+
+                <label>
+                    Session Timeout (Minutes)
+                </label>
+
+                <input type="number"
+                       name="session_timeout"
+                       id="sessionTimeoutInput"
+                       value="{{ settings.session_timeout or 60 }}"
+                       min="5"
+                       max="1440"
+                       oninput="updateTimeoutPreview()">
+
+                <small>
+                    Auto logout after inactivity duration.
+                </small>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="erp-settings-footer">
+
+            <div class="erp-last-update">
+
+                Last Updated:
+                {{ settings.updated_at.strftime('%d %b %Y, %I:%M %p') if settings.updated_at else "Never" }}
+            </div>
+
+            <button class="erp-save-btn">
+
+                Save Security Settings
+
+            </button>
+
+        </div>
+
+    </section>
+
+</form>
+
+<!-- ================= CERTIFICATE SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('save_certificate_settings') }}">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="certificate"
+             class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+                <h2>Certificate Settings</h2>
+
+                <p>
+                    Configure certificate numbering,
+                    prefixes and document formatting rules.
+                </p>
+            </div>
+
+            <div class="erp-live-status certificate-status">
+
+                <span class="status-dot"></span>
+
+                Certificate Engine Active
+
+            </div>
+
+        </div>
+
+        <!-- PREVIEW CARD -->
+        <div class="certificate-preview-card">
+
+            <!-- LEFT -->
+            <div class="certificate-preview-left">
+
+                <span class="preview-badge">
+                    Smart Certificate System
+                </span>
+
+                <h3>
+                    Automated Certificate Numbering
+                </h3>
+
+                <p>
+                    Configure TC and Bonafide generation
+                    rules globally across all schools.
+                </p>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="certificate-preview-right">
+
+                <div class="preview-stat">
+
+                    <span>TC Format</span>
+
+                    <h4 id="liveTcPreview">
+                        {{ settings.tc_prefix or 'TC' }}-1001
+                    </h4>
+
+                </div>
+
+                <div class="preview-stat">
+
+                    <span>Bonafide</span>
+
+                    <h4 id="liveBonafidePreview">
+                        {{ settings.bonafide_prefix or 'BON' }}-1001
+                    </h4>
+
+                </div>
+
+                <div class="preview-stat">
+
+                    <span>Auto Numbering</span>
+
+                    <h4 id="liveAutoNumbering">
+                        {{ settings.auto_numbering or 'Enabled' }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- SETTINGS GRID -->
+        <div class="erp-settings-grid">
+
+            <!-- TC PREFIX -->
+            <div class="erp-input-group">
+
+                <label>
+                    TC Prefix
+                </label>
+
+                <input type="text"
+                       name="tc_prefix"
+                       id="tcPrefixInput"
+                       maxlength="10"
+                       value="{{ settings.tc_prefix or 'TC' }}"
+                       oninput="updateCertificatePreview()">
+
+                <small>
+                    Prefix added before TC certificate number.
+                </small>
+
+            </div>
+
+            <!-- BONAFIDE PREFIX -->
+            <div class="erp-input-group">
+
+                <label>
+                    Bonafide Prefix
+                </label>
+
+                <input type="text"
+                       name="bonafide_prefix"
+                       id="bonafidePrefixInput"
+                       maxlength="10"
+                       value="{{ settings.bonafide_prefix or 'BON' }}"
+                       oninput="updateCertificatePreview()">
+
+                <small>
+                    Prefix added before bonafide certificate number.
+                </small>
+
+            </div>
+
+            <!-- AUTO NUMBERING -->
+            <div class="erp-input-group">
+
+                <label>
+                    Auto Numbering
+                </label>
+
+                <select name="auto_numbering"
+                        id="autoNumberingSelect"
+                        onchange="updateAutoNumberingPreview()">
+
+                    <option value="Enabled"
+                    {% if settings.auto_numbering == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.auto_numbering == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+                <small>
+                    Automatically generate sequential certificate numbers.
+                </small>
+
+            </div>
+
+            <!-- LABEL ENABLE -->
+            <div class="erp-input-group">
+
+                <label>
+                    Certificate Labels
+                </label>
+
+                <select name="enable_certificate_labels">
+
+                    <option value="Enabled"
+                    {% if settings.enable_certificate_labels == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_certificate_labels == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+                <small>
+                    Show or hide certificate prefixes for schools.
+                </small>
+
+            </div>
+
+        <!-- TC LOGO -->
+            <div class="erp-input-group">
+
+                <label>
+                    TC Logo
+                </label>
+
+                <select name="show_tc_logo">
+
+                    <option value="Enabled"
+                    {% if settings.show_tc_logo == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.show_tc_logo == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- TC WATERMARK -->
+            <div class="erp-input-group">
+
+                <label>
+                    TC Watermark
+                </label>
+
+                <select name="show_tc_watermark">
+
+                    <option value="Enabled"
+                    {% if settings.show_tc_watermark == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.show_tc_watermark == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- BONAFIDE LOGO -->
+            <div class="erp-input-group">
+
+                <label>
+                    Bonafide Logo
+                </label>
+
+                <select name="show_bonafide_logo">
+
+                    <option value="Enabled"
+                    {% if settings.show_bonafide_logo == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.show_bonafide_logo == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- BONAFIDE WATERMARK -->
+            <div class="erp-input-group">
+
+                <label>
+                    Bonafide Watermark
+                </label>
+
+                <select name="show_bonafide_watermark">
+
+                    <option value="Enabled"
+                    {% if settings.show_bonafide_watermark == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.show_bonafide_watermark == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>  
+        </div>
+
+        <!-- FOOTER -->
+        <div class="erp-settings-footer">
+
+            <div class="erp-last-update">
+
+                Last Updated:
+                 {{ settings.updated_at.strftime('%d %b %Y, %I:%M %p') if settings.updated_at else "Never" }}
+
+            </div>
+
+            <button class="erp-save-btn">
+
+                Save Certificate Settings
+
+            </button>
+
+        </div>
+
+    </section>
+
+</form>
+
+ 
+<!-- ================= FEATURE MODULE SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('save_feature_module_settings') }}">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="modules"
+             class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+
+                <h2>
+                    Default School Feature Settings
+                </h2>
+
+                <p>
+                    Configure default ERP modules for newly
+                    created schools and subscription plans.
+                </p>
+
+            </div>
+
+            <div class="erp-live-status module-status">
+
+                <span class="status-dot"></span>
+
+                SaaS Module Engine Active
+
+            </div>
+
+        </div>
+
+        <!-- PREVIEW CARD -->
+        <div class="module-preview-card">
+
+            <div class="module-preview-left">
+
+                <span class="preview-badge">
+                    Smart SaaS ERP Modules
+                </span>
+
+                <h3>
+                    School Subscription Feature Control
+                </h3>
+
+                <p>
+                    Manage default school access modules
+                    dynamically for subscription-based ERP
+                    onboarding and future plan management.
+                </p>
+
+            </div>
+
+            <div class="module-preview-right">
+
+                <!-- TC -->
+                <div class="preview-stat">
+
+                    <span>TC</span>
+
+                    <h4>
+                        {{ settings.enable_tc_management }}
+                    </h4>
+
+                </div>
+
+                <!-- BONAFIDE -->
+                <div class="preview-stat">
+
+                    <span>Bonafide</span>
+
+                    <h4>
+                        {{ settings.enable_bonafide_management }}
+                    </h4>
+
+                </div>
+
+                <!-- ATTENDANCE -->
+                <div class="preview-stat">
+
+                    <span>Attendance</span>
+
+                    <h4>
+                        {{ settings.enable_attendance }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- MODULE GRID -->
+        <div class="erp-settings-grid">
+
+            <!-- TC -->
+            <div class="erp-input-group">
+
+                <label>
+                    TC Management
+                </label>
+
+                <select name="enable_tc_management">
+
+                    <option value="Enabled"
+                    {% if settings.enable_tc_management == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_tc_management == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- BONAFIDE -->
+            <div class="erp-input-group">
+
+                <label>
+                    Bonafide Management
+                </label>
+
+                <select name="enable_bonafide_management">
+
+                    <option value="Enabled"
+                    {% if settings.enable_bonafide_management == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_bonafide_management == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- ATTENDANCE -->
+            <div class="erp-input-group">
+
+                <label>
+                    Attendance Module
+                </label>
+
+                <select name="enable_attendance">
+
+                    <option value="Enabled"
+                    {% if settings.enable_attendance == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_attendance == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- FEES -->
+            <div class="erp-input-group">
+
+                <label>
+                    Fee Management
+                </label>
+
+                <select name="enable_fee_management">
+
+                    <option value="Enabled"
+                    {% if settings.enable_fee_management == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_fee_management == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- TEACHERS -->
+            <div class="erp-input-group">
+
+                <label>
+                    Teacher Management
+                </label>
+
+                <select name="enable_teacher_management">
+
+                    <option value="Enabled"
+                    {% if settings.enable_teacher_management == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_teacher_management == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- RESULTS -->
+            <div class="erp-input-group">
+
+                <label>
+                    Results Module
+                </label>
+
+                <select name="enable_results">
+
+                    <option value="Enabled"
+                    {% if settings.enable_results == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_results == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- IMPORT EXPORT -->
+            <div class="erp-input-group">
+
+                <label>
+                    Import / Export
+                </label>
+
+                <select name="enable_import_export">
+
+                    <option value="Enabled"
+                    {% if settings.enable_import_export == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_import_export == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- TIMETABLE -->
+            <div class="erp-input-group">
+
+                <label>
+                    Timetable Module
+                </label>
+
+                <select name="enable_timetable">
+
+                    <option value="Enabled"
+                    {% if settings.enable_timetable == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_timetable == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- NOTICE -->
+            <div class="erp-input-group">
+
+                <label>
+                    Notice Board
+                </label>
+
+                <select name="enable_notice_board">
+
+                    <option value="Enabled"
+                    {% if settings.enable_notice_board == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.enable_notice_board == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="erp-settings-footer">
+
+            <div class="erp-last-update">
+
+                Last Updated:
+                 {{ settings.updated_at.strftime('%d %b %Y, %I:%M %p') if settings.updated_at else "Never" }}
+
+            </div>
+
+            <button class="erp-save-btn">
+
+                Save Default Features
+
+            </button>
+
+        </div>
+
+    </section>
+
+</form>
+
+<!-- ================= PAYMENT SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('save_payment_settings') }}">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="payment"
+             class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+
+                <h2>
+                    Payment Settings
+                </h2>
+
+                <p>
+                    Configure global ERP billing gateway,
+                    taxation and payment processing options.
+                </p>
+
+            </div>
+
+            <div class="erp-live-status payment-status">
+
+                <span class="status-dot"></span>
+
+                Payment Gateway Active
+
+            </div>
+
+        </div>
+
+        <!-- PREVIEW CARD -->
+        <div class="payment-preview-card">
+
+            <!-- LEFT -->
+            <div class="payment-preview-left">
+
+                <span class="preview-badge">
+                    Smart ERP Billing
+                </span>
+
+                <h3>
+                    Centralized Payment Gateway Control
+                </h3>
+
+                <p>
+                    Manage Razorpay integration,
+                    GST configuration and billing
+                    preferences globally for all schools.
+                </p>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="payment-preview-right">
+
+                <!-- GATEWAY -->
+                <div class="preview-stat">
+
+                    <span>Gateway</span>
+
+                    <h4 id="liveGatewayPreview">
+                        {{ settings.payment_gateway or 'Razorpay' }}
+                    </h4>
+
+                </div>
+
+                <!-- MODE -->
+                <div class="preview-stat">
+
+                    <span>Mode</span>
+
+                    <h4 id="liveModePreview">
+                        {{ settings.razorpay_mode or 'Sandbox' }}
+                    </h4>
+
+                </div>
+
+                <!-- GST -->
+                <div class="preview-stat">
+
+                    <span>GST</span>
+
+                    <h4 id="liveGstPreview">
+                        {{ settings.gst_percentage or 18 }}%
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- SETTINGS GRID -->
+        <div class="erp-settings-grid">
+
+            <!-- PAYMENT GATEWAY -->
+            <div class="erp-input-group">
+
+                <label>
+                    Payment Gateway
+                </label>
+
+                <select name="payment_gateway"
+                        id="paymentGatewaySelect"
+                        onchange="updatePaymentPreview()">
+
+                    <option value="Razorpay"
+                    {% if settings.payment_gateway == "Razorpay" %}
+                    selected
+                    {% endif %}>
+                        Razorpay
+                    </option>
+
+                    <option value="Stripe"
+                    {% if settings.payment_gateway == "Stripe" %}
+                    selected
+                    {% endif %}>
+                        Stripe
+                    </option>
+
+                    <option value="PayPal"
+                    {% if settings.payment_gateway == "PayPal" %}
+                    selected
+                    {% endif %}>
+                        PayPal
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.payment_gateway == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- RAZORPAY KEY -->
+            <div class="erp-input-group">
+
+                <label>
+                    Razorpay Key ID
+                </label>
+
+                <input type="text"
+                       name="razorpay_key_id"
+                       value="{{ settings.razorpay_key_id or '' }}"
+                       placeholder="rzp_test_xxxxxxxxx">
+
+            </div>
+
+            <!-- MODE -->
+            <div class="erp-input-group">
+
+                <label>
+                    Razorpay Mode
+                </label>
+
+                <select name="razorpay_mode"
+                        id="paymentModeSelect"
+                        onchange="updatePaymentPreview()">
+
+                    <option value="Sandbox"
+                    {% if settings.razorpay_mode == "Sandbox" %}
+                    selected
+                    {% endif %}>
+                        Sandbox
+                    </option>
+
+                    <option value="Live"
+                    {% if settings.razorpay_mode == "Live" %}
+                    selected
+                    {% endif %}>
+                        Live
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- CURRENCY -->
+            <div class="erp-input-group">
+
+                <label>
+                    Currency
+                </label>
+
+                <select name="currency">
+
+                    <option value="INR"
+                    {% if settings.currency == "INR" %}
+                    selected
+                    {% endif %}>
+                        INR
+                    </option>
+
+                    <option value="USD"
+                    {% if settings.currency == "USD" %}
+                    selected
+                    {% endif %}>
+                        USD
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- GST -->
+            <div class="erp-input-group">
+
+                <label>
+                    GST Percentage
+                </label>
+
+                <input type="number"
+                       name="gst_percentage"
+                       id="gstInput"
+                       min="0"
+                       max="100"
+                       value="{{ settings.gst_percentage or 18 }}"
+                       oninput="updatePaymentPreview()">
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="erp-settings-footer">
+
+            <div class="erp-last-update">
+
+                Last Updated:
+                 {{ settings.updated_at.strftime('%d %b %Y, %I:%M %p') if settings.updated_at else "Never" }}
+
+            </div>
+
+            <button class="erp-save-btn">
+
+                Save Payment Settings
+
+            </button>
+
+        </div>
+
+    </section>
+
+</form>
+
+<!-- ================= SMTP SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('save_smtp_settings') }}">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="smtp"
+             class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+
+                <h2>
+                    SMTP / Email Settings
+                </h2>
+
+                <p>
+                    Configure global ERP email delivery,
+                    OTP system, receipts and notification services.
+                </p>
+
+            </div>
+
+            <div class="erp-live-status smtp-status">
+
+                <span class="status-dot"></span>
+
+                Email Service Active
+
+            </div>
+
+        </div>
+
+        <!-- PREVIEW CARD -->
+        <div class="smtp-preview-card">
+
+            <!-- LEFT -->
+            <div class="smtp-preview-left">
+
+                <span class="preview-badge">
+                    Smart ERP Mail Engine
+                </span>
+
+                <h3>
+                    Centralized Email Delivery System
+                </h3>
+
+                <p>
+                    Manage OTP emails, payment receipts,
+                    certificate delivery and ERP alerts globally
+                    from one secure SMTP configuration.
+                </p>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="smtp-preview-right">
+
+                <div class="preview-stat">
+
+                    <span>SMTP Server</span>
+
+                    <h4 id="liveSmtpServer">
+                        {{ settings.smtp_server or 'smtp.gmail.com' }}
+                    </h4>
+
+                </div>
+
+                <div class="preview-stat">
+
+                    <span>SMTP Port</span>
+
+                    <h4 id="liveSmtpPort">
+                        {{ settings.smtp_port or '587' }}
+                    </h4>
+
+                </div>
+
+                <div class="preview-stat">
+
+                    <span>TLS Security</span>
+
+                    <h4 id="liveSmtpTls">
+                        {{ settings.smtp_tls or 'Enabled' }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- SETTINGS GRID -->
+        <div class="erp-settings-grid">
+
+            <!-- SMTP EMAIL -->
+            <div class="erp-input-group">
+
+                <label>
+                    SMTP Email
+                </label>
+
+                <input type="email"
+                       name="smtp_email"
+                       placeholder="erp@gmail.com"
+                       value="{{ settings.smtp_email or '' }}">
+
+                <small>
+                    Main ERP sender email address.
+                </small>
+
+            </div>
+
+            <!-- SMTP PASSWORD -->
+            <div class="erp-input-group">
+
+                <label>
+                    SMTP App Password
+                </label>
+
+                <input type="password"
+                       name="smtp_password"
+                       placeholder="Enter App Password"
+                       value="{{ settings.smtp_password or '' }}">
+
+                <small>
+                    Use Gmail App Password for secure login.
+                </small>
+
+            </div>
+
+            <!-- SMTP SERVER -->
+            <div class="erp-input-group">
+
+                <label>
+                    SMTP Server
+                </label>
+
+                <input type="text"
+                       name="smtp_server"
+                       id="smtpServerInput"
+                       value="{{ settings.smtp_server or 'smtp.gmail.com' }}"
+                       oninput="updateSmtpPreview()">
+
+            </div>
+
+            <!-- SMTP PORT -->
+            <div class="erp-input-group">
+
+                <label>
+                    SMTP Port
+                </label>
+
+                <input type="number"
+                       name="smtp_port"
+                       id="smtpPortInput"
+                       value="{{ settings.smtp_port or 587 }}"
+                       oninput="updateSmtpPreview()">
+
+            </div>
+
+            <!-- TLS -->
+            <div class="erp-input-group">
+
+                <label>
+                    SMTP TLS
+                </label>
+
+                <select name="smtp_tls"
+                        id="smtpTlsInput"
+                        onchange="updateSmtpPreview()">
+
+                    <option value="Enabled"
+                    {% if settings.smtp_tls == "Enabled" %}
+                    selected
+                    {% endif %}>
+                        Enabled
+                    </option>
+
+                    <option value="Disabled"
+                    {% if settings.smtp_tls == "Disabled" %}
+                    selected
+                    {% endif %}>
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="erp-settings-footer">
+
+            <div class="erp-last-update">
+             
+                  Last Updated :
+
+                  {{ settings.updated_at.strftime('%d %b %Y, %I:%M %p') if settings.updated_at else "Never" }}
+            </div>
+
+            <button class="erp-save-btn">
+
+                Save SMTP Settings
+
+            </button>
+
+        </div>
+
+    </section>
+
+</form>
+<!-- ================= BACKUP SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('create_backup') }}">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="backup"
+             class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+
+                <h2>
+                    Backup Settings
+                </h2>
+
+                <p>
+                    Manage ERP database backups,
+                    recovery logs and secure restore points.
+                </p>
+
+            </div>
+
+            <div class="erp-live-status backup-status">
+
+                <span class="status-dot"></span>
+
+                Backup Protection Active
+
+            </div>
+
+        </div>
+
+        <!-- PREVIEW CARD -->
+        <div class="backup-preview-card">
+
+            <!-- LEFT -->
+            <div class="backup-preview-left">
+
+                <span class="preview-badge">
+                    Smart ERP Backup Engine
+                </span>
+
+                <h3>
+                    Centralized Backup & Recovery System
+                </h3>
+
+                <p>
+                    Create secure database backups,
+                    maintain restore history and
+                    protect ERP data automatically.
+                </p>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="backup-preview-right">
+
+                <!-- STATUS -->
+                <div class="preview-stat">
+
+                    <span>Status</span>
+
+                    <h4>
+                        {{ settings.backup_status or "Enabled" }}
+                    </h4>
+
+                </div>
+
+                <!-- LAST BACKUP -->
+                <div class="preview-stat">
+
+                    <span>Last Backup</span>
+
+                    <h4>
+                        {% if settings.last_backup %}
+                            {{ settings.last_backup.strftime('%d %b %Y') }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </h4>
+
+                </div>
+
+                <!-- TOTAL LOGS -->
+                <div class="preview-stat">
+
+                    <span>Total Logs</span>
+
+                    <h4>
+                        {{ backup_logs|length }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="erp-backup-actions">
+
+            <button type="submit"
+                    class="erp-backup-btn">
+
+                💾 Create Backup
+
+            </button>
+
+        </div>
+
+        <!-- BACKUP TABLE -->
+        <div class="erp-backup-history">
+
+            <table class="erp-backup-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+                        <th>Backup File</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Size</th>
+                        <th>Date</th>
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for log in backup_logs %}
+
+                    <tr>
+
+                        <td>{{ log.id }}</td>
+
+                        <td>
+                            {{ log.backup_file or 'N/A' }}
+                        </td>
+
+                        <td>
+                            {{ log.backup_type }}
+                        </td>
+
+                        <td>
+
+                            <span class="backup-badge
+                            {% if log.backup_status == 'Success' %}
+                                success
+                            {% else %}
+                                failed
+                            {% endif %}
+                            ">
+
+                                {{ log.backup_status or 'Pending' }}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+                            {{ log.backup_size or 'N/A' }}
+                        </td>
+
+                        <td>
+
+                            {% if log.backup_date %}
+                                {{ log.backup_date.strftime('%d %b %Y %I:%M %p') }}
+                            {% endif %}
+
+                        </td>
+                       <td>
+
+                        <div class="backup-actions-group">
+
+                            <!-- DOWNLOAD -->
+                            <a
+                                href="{{ url_for('download_backup', filename=log.backup_file) }}"
+                                class="erp-download-btn"
+                            >
+                                Download
+                            </a>
+
+                            <!-- RESTORE -->
+                            <a
+                                href="{{ url_for('restore_backup', filename=log.backup_file) }}"
+                                class="erp-restore-btn"
+                                onclick="return confirm(
+                                    'Restore this backup? Current database will be replaced.'
+                                )"
+                            >
+                                Restore
+                            </a>
+
+                            <!-- DELETE -->
+                            <a
+                                href="{{ url_for('delete_backup', backup_id=log.id) }}"
+                                class="erp-delete-btn"
+                                onclick="return confirm('Delete this backup permanently?')"
+                            >
+                                Delete
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</form>
+<!-- ===================================================== -->
+<!-- 🛠 MAINTENANCE SETTINGS -->
+<!-- ===================================================== -->
+
+<form
+    method="POST"
+    action="{{ url_for('save_maintenance_settings') }}"
+>
+<input
+    type="hidden"
+    name="csrf_token"
+    value="{{ csrf_token() }}"
+>
+
+<section
+    id="maintenance"
+    class="erp-settings-block"
+>
+
+    <!-- HEADER -->
+    <div class="erp-block-header">
+
+        <div>
+            <h2>Maintenance Settings</h2>
+
+            <p>
+                Control ERP downtime,
+                service protection and
+                system maintenance mode.
+            </p>
+        </div>
+
+        <!-- STATUS BADGE -->
+        <div class="
+            {% if settings.maintenance_mode == 'ON' %}
+                erp-live-status maintenance-status
+            {% else %}
+                erp-live-status maintenance-safe
+            {% endif %}
+        ">
+
+            {% if settings.maintenance_mode == 'ON' %}
+                🔴 Maintenance Active
+            {% else %}
+                🟢 System Live
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <!-- MAIN CARD -->
+    <div class="maintenance-preview-card">
+
+        <!-- LEFT -->
+        <div class="maintenance-preview-left">
+
+            <span class="erp-maintenance-tag">
+                Smart ERP Protection Layer
+            </span>
+
+            <h1>
+                Centralized Maintenance
+                Control System
+            </h1>
+
+            <p>
+                Enable secure maintenance mode,
+                temporarily disable school access
+                and protect ERP during updates
+                or deployments.
+            </p>
+
+        </div>
+
+        <!-- RIGHT STATS -->
+        <div class="maintenance-preview-right">
+
+            <div class="preview-stat">
+
+                <span>Status</span>
+
+                <strong>
+                    {% if settings.maintenance_mode == 'ON' %}
+                        Active
+                    {% else %}
+                        Running
+                    {% endif %}
+                </strong>
+
+            </div>
+
+            <div class="preview-stat">
+
+                <span>Last Updated</span>
+
+                <strong>
+                    {{ settings.updated_at.strftime('%d %b %Y') if settings.updated_at else 'N/A' }}
+                </strong>
+
+            </div>
+
+            <div class="preview-stat">
+
+                <span>ERP State</span>
+
+                <strong>
+                    {% if settings.maintenance_mode == 'ON' %}
+                        Locked
+                    {% else %}
+                        Online
+                    {% endif %}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SETTINGS GRID -->
+    <div class="erp-settings-grid">
+
+        <!-- MODE -->
+        <div class="erp-input-group">
+
+            <label>
+                Maintenance Mode
+            </label>
+
+            <select name="maintenance_mode">
+
+                <option
+                    value="OFF"
+                    {% if settings.maintenance_mode == "OFF" %}
+                    selected
+                    {% endif %}
+                >
+                    OFF
+                </option>
+
+                <option
+                    value="ON"
+                    {% if settings.maintenance_mode == "ON" %}
+                    selected
+                    {% endif %}
+                >
+                    ON
+                </option>
+
+            </select>
+
+        </div>
+
+        <!-- MESSAGE -->
+        <div class="erp-input-group">
+
+            <label>
+                Maintenance Message
+            </label>
+
+            <input
+                type="text"
+                name="maintenance_message"
+                value="{{ settings.maintenance_message or '' }}"
+                placeholder="ERP is under scheduled maintenance..."
+            />
+
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="erp-settings-footer">
+
+        <div class="erp-last-update">
+
+            <span>🕒</span>
+
+            <span>
+                Last Updated :
+                {{ settings.updated_at.strftime('%d %b %Y, %I:%M %p') if settings.updated_at else "Never" }}
+            </span>
+
+        </div>
+
+        <button
+            type="submit"
+            class="erp-danger-btn"
+        >
+            Save Maintenance Settings
+        </button>
+
+    </div>
+
+</section>
+
+</form>
+
+<!-- ================= BRANDING SETTINGS ================= -->
+
+<form method="POST"
+      action="{{ url_for('save_branding_settings') }}"
+      enctype="multipart/form-data">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <section id="branding"
+             class="erp-settings-block">
+
+        <!-- HEADER -->
+        <div class="erp-block-header">
+
+            <div>
+
+                <h2>Branding Settings</h2>
+
+                <p>
+                    Configure ERP colors, favicon,
+                    footer branding and platform identity.
+                </p>
+
+            </div>
+
+            <div class="erp-live-status branding-status">
+
+                <span class="status-dot"></span>
+
+                Branding Active
+
+            </div>
+
+        </div>
+
+        <!-- PREVIEW CARD -->
+        <div class="branding-preview-card">
+
+            <!-- LEFT -->
+            <div class="branding-preview-left">
+
+                <span class="preview-badge">
+                    Smart ERP Branding Layer
+                </span>
+
+                <h3>
+                    Live Branding & Theme Control System
+                </h3>
+
+                <p>
+                    Customize ERP visual identity globally using
+                    modern theme controls, live color previews,
+                    favicon branding and footer customization.
+                </p>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="branding-preview-right">
+
+                <!-- PRIMARY -->
+                <div class="branding-live-card">
+
+                    <span>Primary</span>
+
+                    <div class="branding-live-color"
+                         id="primaryPreview"
+                         style="background: {{ settings.primary_color or '#0EA5A4' }};">
+                    </div>
+
+                </div>
+
+                <!-- SECONDARY -->
+                <div class="branding-live-card">
+
+                    <span>Secondary</span>
+
+                    <div class="branding-live-color"
+                         id="secondaryPreview"
+                         style="background: {{ settings.secondary_color or '#14B8A6' }};">
+                    </div>
+
+                </div>
+
+                <!-- BUTTON -->
+                <div class="branding-live-card">
+
+                    <span>Button</span>
+
+                    <div class="branding-live-color"
+                         id="buttonPreview"
+                         style="background: {{ settings.button_color or '#38BDF8' }};">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- COLOR SETTINGS -->
+        <div class="erp-settings-grid">
+
+            <div class="erp-input-group">
+
+                <label>Primary Color</label>
+
+                <input type="color"
+                       name="primary_color"
+                       id="primaryColor"
+                       class="branding-color-input"
+                       value="{{ settings.primary_color or '#0EA5A4' }}"
+                       oninput="updateBrandingPreview()">
+
+            </div>
+
+            <div class="erp-input-group">
+
+                <label>Secondary Color</label>
+
+                <input type="color"
+                       name="secondary_color"
+                       id="secondaryColor"
+                       class="branding-color-input"
+                       value="{{ settings.secondary_color or '#14B8A6' }}"
+                       oninput="updateBrandingPreview()">
+
+            </div>
+
+            <div class="erp-input-group">
+
+                <label>Button Color</label>
+
+                <input type="color"
+                       name="button_color"
+                       id="buttonColor"
+                       class="branding-color-input"
+                       value="{{ settings.button_color or '#38BDF8' }}"
+                       oninput="updateBrandingPreview()">
+
+            </div>
+
+        </div>
+
+        <!-- EXTRA SETTINGS -->
+        <div class="branding-extra-grid">
+
+            <div class="erp-input-group">
+
+                <label>ERP Version</label>
+
+                <input type="text"
+                       name="erp_version"
+                       placeholder="v2.0 Enterprise"
+                       value="{{ settings.erp_version or '' }}">
+
+            </div>
+
+            <div class="erp-input-group">
+
+                <label>Powered By</label>
+
+                <input type="text"
+                       name="powered_by"
+                       placeholder="Pranex Labs"
+                       value="{{ settings.powered_by or '' }}">
+
+            </div>
+
+            <div class="erp-input-group">
+
+                <label>Website URL</label>
+
+                <input type="text"
+                       name="website_url"
+                       placeholder="https://example.com"
+                       value="{{ settings.website_url or '' }}">
+
+            </div>
+
+            <div class="erp-input-group">
+
+                <label>Favicon</label>
+
+                <input type="file"
+                       name="favicon"
+                       accept="image/*">
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="erp-settings-footer">
+
+            <div class="erp-last-update">
+
+                <span>🎨</span>
+
+                <span>
+                    Branding Engine Connected
+                </span>
+
+            </div>
+
+            <button type="submit"
+                    class="erp-save-btn">
+
+                Save Branding Settings
+
+            </button>
+
+        </div>
+
+    </section>
+
+</form>
+
+  </div>
+</div>
+
+<!-- JS -->
+
+<!-- // ================= SUBSCRIPTION SETTINGS SCRIPTS ================= // -->
+
+<script>
+
+function updatePlanPreview() {
+
+    const select =
+        document.getElementById("defaultPlanSelect");
+
+    const selectedOption =
+        select.options[select.selectedIndex];
+
+    const planName =
+        selectedOption.dataset.name;
+
+    document.getElementById(
+        "livePlanName"
+    ).innerText = planName;
+
+}
+
+function updateTrialPreview() {
+
+    const days =
+        document.getElementById(
+            "trialDaysInput"
+        ).value;
+
+    document.getElementById(
+        "liveTrialDays"
+    ).innerText = days + " Days";
+
+}
+
+function updateGracePreview() {
+
+    const days =
+        document.getElementById(
+            "graceDaysInput"
+        ).value;
+
+    document.getElementById(
+        "liveGraceDays"
+    ).innerText = days + " Days";
+
+}
+
+</script>
+<!-- // ================= SECURITY SETTINGS SCRIPTS ================= // -->
+<script>
+
+function updatePasswordPreview(){
+
+    const value =
+        document.getElementById(
+            "passwordLengthInput"
+        ).value;
+
+    document.getElementById(
+        "livePasswordLength"
+    ).innerText = value + " Char";
+
+}
+
+function updateAttemptPreview(){
+
+    const value =
+        document.getElementById(
+            "loginAttemptInput"
+        ).value;
+
+    document.getElementById(
+        "liveAttempts"
+    ).innerText = value;
+
+}
+
+function updateTimeoutPreview(){
+
+    const value =
+        document.getElementById(
+            "sessionTimeoutInput"
+        ).value;
+
+    document.getElementById(
+        "liveTimeout"
+    ).innerText = value + " Min";
+
+}
+
+</script>
+
+<!-- // ================= CERTIFICATE SETTINGS SCRIPTS ================= // -->
+ <script>
+
+function updateCertificatePreview(){
+
+    const tc =
+        document.getElementById(
+            "tcPrefixInput"
+        ).value.trim() || "TC";
+
+    const bon =
+        document.getElementById(
+            "bonafidePrefixInput"
+        ).value.trim() || "BON";
+
+    document.getElementById(
+        "liveTcPreview"
+    ).innerText = tc + "-1001";
+
+    document.getElementById(
+        "liveBonafidePreview"
+    ).innerText = bon + "-1001";
+}
+
+function updateAutoNumberingPreview(){
+
+    const value =
+        document.getElementById(
+            "autoNumberingSelect"
+        ).value;
+
+    document.getElementById(
+        "liveAutoNumbering"
+    ).innerText = value;
+}
+
+/* AUTO LOAD */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        updateCertificatePreview();
+        updateAutoNumberingPreview();
+    }
+);
+
+</script>
+
+<!-- ================= PAYMENT SETTINGS SCRIPTS ================= -->
+
+<script>
+
+function updatePaymentPreview(){
+
+    const gateway =
+        document.getElementById(
+            "paymentGatewaySelect"
+        ).value;
+
+    const mode =
+        document.getElementById(
+            "paymentModeSelect"
+        ).value;
+
+    const gst =
+        document.getElementById(
+            "gstInput"
+        ).value || 0;
+
+    document.getElementById(
+        "liveGatewayPreview"
+    ).innerText = gateway;
+
+    document.getElementById(
+        "liveModePreview"
+    ).innerText = mode;
+
+    document.getElementById(
+        "liveGstPreview"
+    ).innerText = gst + "%";
+}
+
+/* AUTO LOAD */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        updatePaymentPreview();
+
+    }
+);
+
+</script>
+
+<!-- ================= SMTP SETTINGS SCRIPTS ================= -->
+<script>
+
+function updateSmtpPreview(){
+
+    const server =
+        document.getElementById(
+            "smtpServerInput"
+        ).value || "smtp.gmail.com";
+
+    const port =
+        document.getElementById(
+            "smtpPortInput"
+        ).value || "587";
+
+    const tls =
+        document.getElementById(
+            "smtpTlsInput"
+        ).value;
+
+    document.getElementById(
+        "liveSmtpServer"
+    ).innerText = server;
+
+    document.getElementById(
+        "liveSmtpPort"
+    ).innerText = port;
+
+    document.getElementById(
+        "liveSmtpTls"
+    ).innerText = tls;
+}
+
+/* AUTO LOAD */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        updateSmtpPreview();
+
+    }
+);
+
+</script>
+
+
+<script>
+
+function updateBrandingPreview(){
+
+    const primary =
+    document.getElementById(
+        "primaryColor"
+    ).value;
+
+    const secondary =
+    document.getElementById(
+        "secondaryColor"
+    ).value;
+
+    const button =
+    document.getElementById(
+        "buttonColor"
+    ).value;
+
+    document.getElementById(
+        "primaryPreview"
+    ).style.background = primary;
+
+    document.getElementById(
+        "secondaryPreview"
+    ).style.background = secondary;
+
+    document.getElementById(
+        "buttonPreview"
+    ).style.background = button;
+}
+
+</script>
+{% endblock %}

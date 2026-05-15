@@ -1,0 +1,385 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/superadmin_users.css') }}">
+
+<div class="su-wrapper">
+
+    <!-- HEADER -->
+    <div class="su-header">
+        <div>
+            <h1>👥 Users Management</h1>
+            <p>Manage all ERP users, access, schools and subscriptions</p>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="su-stats-grid">
+
+        <div class="su-stat-card total-users">
+            <div>
+                <h4>Total Users</h4>
+                <h2>{{ total_users }}</h2>
+            </div>
+            <span>👤</span>
+        </div>
+
+        <div class="su-stat-card active-users">
+            <div>
+                <h4>Active Users</h4>
+                <h2>{{ active_users }}</h2>
+            </div>
+            <span>🟢</span>
+        </div>
+
+        <div class="su-stat-card clerk-users">
+            <div>
+                <h4>Clerk Accounts</h4>
+                <h2>{{ clerk_users }}</h2>
+            </div>
+            <span>🏫</span>
+        </div>
+
+        <div class="su-stat-card admin-users">
+            <div>
+                <h4>Admin Accounts</h4>
+                <h2>{{ admin_users }}</h2>
+            </div>
+            <span>🛡️</span>
+        </div>
+
+    </div>
+
+    <!-- FILTERS -->
+    <form method="GET" class="su-filter-box">
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Search by email, name, phone..."
+            value="{{ request.args.get('search','') }}"
+        >
+
+        <select name="role">
+            <option value="">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="clerk">Clerk</option>
+        </select>
+
+        <select name="status">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="blocked">Blocked</option>
+        </select>
+
+        <button type="submit">Search</button>
+        <a href="{{ url_for('superadmin_users') }}" class="su-clear-btn">Clear</a>
+
+    </form>
+
+    <!-- USERS TABLE -->
+    <div class="su-table-box">
+
+        <table class="su-users-table">
+
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>School</th>
+                    <th>Status</th>
+                    <th>Subscription</th>
+                    <th>Last Login</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for user in users %}
+                <tr>
+
+                    <td>{{ user.name or '-' }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.phone or '-' }}</td>
+
+                    <td>
+                        <span class="role-badge {{ user.role }}">
+                            {{ user.role }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ user.school_name or 'System Admin' }}
+                    </td>
+
+                    <td>
+                        <span class="status-badge {{ user.status }}">
+                            {{ user.status }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="plan-badge">
+                            Basic
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ user.last_login or '-' }}
+                    </td>
+
+                    <td>
+                        {{ user.created_at }}
+                    </td>
+                 
+                    <td class="su-actions">
+
+                    <button
+                        class="view-btn"
+                        data-user='{{ user|tojson|safe }}'
+                        onclick="openViewModal(this)">
+                        View
+                    </button>
+
+                    <button
+                        class="edit-btn"
+                        data-user='{{ user|tojson|safe }}'
+                        onclick="openEditModal(this)">
+                        Edit
+                    </button>
+
+                    <button
+                        class="status-btn"
+                        onclick="openStatusModal('{{ user.id }}')">
+                        Status
+                    </button>
+
+                    <button
+                        class="delete-btn"
+                        onclick="openDeleteModal('{{ user.id }}')">
+                        Delete
+                    </button>
+
+                </td>
+
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- VIEW MODAL -->
+<div id="viewModal" class="su-modal">
+    <div class="su-modal-box su-view-box">
+        <button class="su-close-btn" onclick="closeModal('viewModal')">×</button>
+
+        <div class="su-modal-header">
+            <h2>User Details</h2>
+            <p>Read-only information</p>
+        </div>
+
+        <div id="viewContent"></div>
+    </div>
+</div>
+
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="su-modal">
+    <div class="su-modal-box su-edit-box">
+        <button class="su-close-btn" onclick="closeModal('editModal')">×</button>
+
+        <div class="su-modal-header">
+            <h2>Edit User</h2>
+            <p>Update user information</p>
+        </div>
+
+        <form id="editForm" method="POST" class="su-edit-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="su-input-group">
+                <label>Full Name</label>
+                <input type="text" name="name" id="edit_name" required>
+            </div>
+
+            <div class="su-input-group">
+                <label>Email</label>
+                <input type="email" name="email" id="edit_email" required>
+            </div>
+
+            <div class="su-input-group">
+                <label>Phone</label>
+                <input type="text" name="phone" id="edit_phone">
+            </div>
+
+            <div class="su-input-group">
+                <label>Role</label>
+                <select name="role" id="edit_role">
+                    <option value="admin">Admin</option>
+                    <option value="clerk">Clerk</option>
+                </select>
+            </div>
+
+            <button type="submit" class="su-save-btn">
+                Update User
+            </button>
+
+        </form>
+    </div>
+</div>
+
+
+<!-- STATUS MODAL -->
+<div id="statusModal" class="su-modal">
+    <div class="su-modal-box su-small-box">
+        <button class="su-close-btn" onclick="closeModal('statusModal')">×</button>
+
+        <h2>Change Status</h2>
+        <p>Do you want to update user status?</p>
+
+        <form method="POST" action="/superadmin/user/status">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="user_id" id="statusUserId">
+
+            <button type="submit" class="su-confirm-btn">
+                Yes, Continue
+            </button>
+
+        </form>
+    </div>
+</div>
+
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="su-modal">
+    <div class="su-modal-box su-small-box su-danger-box">
+        <button class="su-close-btn" onclick="closeModal('deleteModal')">×</button>
+
+        <h2>Delete User</h2>
+        <p>This action cannot be undone.</p>
+
+        <form method="POST" action="/superadmin/user/delete">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="user_id" id="deleteUserId">
+
+            <button type="submit" class="su-delete-confirm-btn">
+                Yes, Delete
+            </button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+
+function openViewModal(btn){
+
+    const user = JSON.parse(btn.dataset.user);
+
+    document.getElementById("viewContent").innerHTML = `
+        <div class="su-view-grid">
+            <div class="su-view-card">
+                <span>Name</span>
+                <strong>${user.name || '-'}</strong>
+            </div>
+
+            <div class="su-view-card">
+                <span>Email</span>
+                <strong>${user.email}</strong>
+            </div>
+
+            <div class="su-view-card">
+                <span>Phone</span>
+                <strong>${user.phone || '-'}</strong>
+            </div>
+
+            <div class="su-view-card">
+                <span>Role</span>
+                <strong>${user.role}</strong>
+            </div>
+
+            <div class="su-view-card">
+                <span>Status</span>
+                <strong>${user.status}</strong>
+            </div>
+
+            <div class="su-view-card">
+                <span>School</span>
+                <strong>${user.school_name || 'System Admin'}</strong>
+            </div>
+
+            <div class="su-view-card">
+                <span>Last Login</span>
+                <strong>${user.last_login || '-'}</strong>
+            </div>
+
+            <div class="su-view-card">
+                <span>Created</span>
+                <strong>${user.created_at}</strong>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("viewModal").style.display = "flex";
+}
+
+
+function openEditModal(btn){
+
+    const user = JSON.parse(btn.dataset.user);
+
+    document.getElementById("edit_name").value = user.name || "";
+    document.getElementById("edit_email").value = user.email || "";
+    document.getElementById("edit_phone").value = user.phone || "";
+    document.getElementById("edit_role").value = user.role || "";
+
+    document.getElementById("editForm").action =
+        "/superadmin/user/edit/" + user.id;
+
+    document.getElementById("editModal").style.display = "flex";
+}
+
+
+function openStatusModal(id){
+
+    document.getElementById("statusUserId").value = id;
+
+    document.getElementById("statusModal").style.display = "flex";
+}
+
+
+function openDeleteModal(id){
+
+    document.getElementById("deleteUserId").value = id;
+
+    document.getElementById("deleteModal").style.display = "flex";
+}
+
+
+function closeModal(id){
+    document.getElementById(id).style.display = "none";
+}
+
+
+window.onclick = function(e){
+    document.querySelectorAll(".su-modal").forEach(modal=>{
+        if(e.target === modal){
+            modal.style.display = "none";
+        }
+    });
+}
+
+</script>
+
+{% endblock %}

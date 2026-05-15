@@ -1,0 +1,282 @@
+/* ================= HEADER ================= */
+.sa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.sa-header h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.sa-header p {
+    color: #64748b;
+}
+
+.sa-header-actions button {
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: none;
+    margin-left: 10px;
+    cursor: pointer;
+    background: #e2e8f0;
+}
+
+.sa-header-actions .primary {
+    background: linear-gradient(135deg, #0ea5a4, #22c55e);
+    color: white;
+}
+
+/* ================= STATS ================= */
+.sa-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.sa-stat-card {
+    background: linear-gradient(135deg, #0ea5a4, #22c55e);
+    color: white;
+    padding: 20px;
+    border-radius: 16px;
+    transition: 0.3s;
+}
+
+.sa-stat-card:hover {
+    transform: translateY(-6px);
+}
+
+.sa-stat-card h2 {
+    font-size: 28px;
+    margin-top: 10px;
+}
+
+/* ================= SEARCH ================= */
+.sa-search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.sa-search-bar input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.sa-search-bar button {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: none;
+    background: #0ea5a4;
+    color: white;
+    cursor: pointer;
+}
+
+.sa-search-bar .clear {
+    background: #64748b;
+}
+
+/* ================= TABLE ================= */
+.sa-table {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.sa-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sa-table th {
+    text-align: left;
+    padding: 14px;
+    background: #f1f5f9;
+}
+
+.sa-table td {
+    padding: 14px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.sa-table tr {
+    transition: 0.2s;
+}
+
+.sa-table tr:hover {
+    background: #f9fafb;
+    transform: scale(1.01);
+}
+
+/* ================= ACTION BUTTONS ================= */
+.actions {
+    display: flex;
+    gap: 6px;
+}
+
+.actions button {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.actions .view { background: #3b82f6; color: white; }
+.actions .edit { background: #f59e0b; color: white; }
+.actions .tc { background: #10b981; color: white; }
+.actions .delete { background: #ef4444; color: white; }
+
+/* ================= MODAL ================= */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    width: 300px;
+    text-align: center;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-actions button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.modal-actions .danger {
+    background: #ef4444;
+    color: white;
+}
+
+/* studnet modal  */
+
+
+/* OVERLAY */
+.sa-modal{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+/* CARD */
+.sa-modal-card{
+    width: 650px;
+    max-width: 95%;
+    padding: 25px;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(12px);
+
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+
+    animation: fadeScale 0.3s ease;
+}
+
+/* HEADER */
+.sa-modal-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.sa-modal-header h2{
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.sa-modal-header span{
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* SECTION */
+.sa-modal-section{
+    margin-top: 15px;
+}
+
+.sa-modal-section h3{
+    font-size: 14px;
+    color: #0ea5a4;
+    margin-bottom: 10px;
+}
+
+/* GRID */
+.sa-modal-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+/* ITEM */
+.sa-modal-grid div{
+    background: rgba(255,255,255,0.6);
+    padding: 10px 12px;
+    border-radius: 10px;
+}
+
+.sa-modal-grid span{
+    font-size: 11px;
+    color: #64748b;
+}
+
+.sa-modal-grid p{
+    font-weight: 600;
+    margin-top: 3px;
+    font-size: 14px;
+}
+
+.sa-close-btn{
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.sa-close-btn:hover{
+    background: rgba(0,0,0,0.1);
+}
+
+/* ANIMATION */
+@keyframes fadeScale{
+    from{
+        transform: scale(0.85);
+        opacity: 0;
+    }
+    to{
+        transform: scale(1);
+        opacity: 1;
+    }
+}
