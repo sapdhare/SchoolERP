@@ -6,326 +6,345 @@
 
 <div class="bonafide-page">
 
-    <!-- ================= HEADER ================= -->
+    <!-- ================= PREMIUM BONAFIDE HEADER ================= -->
+
     <div class="bonafide-header">
-        <h1>Bonafide Certificate Management</h1>
+
+        <div class="bonafide-header-left">
+
+            <span class="bonafide-page-badge">
+                🏅 Bonafide Certificate
+            </span>
+
+            <h1>
+                Bonafide Certificate Management
+            </h1>
+
+            <p>
+                Search students, generate bonafide certificates, and manage issued records.
+                <br>
+                <span>विद्यार्थी शोधा, बोनाफाईड प्रमाणपत्र तयार करा आणि नोंदी व्यवस्थापित करा</span>
+            </p>
+
+        </div>
+
+        <div class="bonafide-header-right">
+
+            <span class="bonafide-status-pill">
+                ● Bonafide Module Active
+            </span>
+
+        </div>
+
+    </div>
+
+    <!-- ================= BONAFIDE STATS ================= -->
+
+    <div class="bonafide-stats">
+
+        <div class="bonafide-stat-card total">
+            <div>
+                <span>Total Certificates</span>
+                <h3>{{ total_bonafide or 0 }}</h3>
+                <p>एकूण प्रमाणपत्रे</p>
+            </div>
+            <div class="bonafide-stat-icon">🏅</div>
+        </div>
+
+        <div class="bonafide-stat-card today">
+            <div>
+                <span>Today Issued</span>
+                <h3>{{ today_bonafide or 0 }}</h3>
+                <p>आज तयार</p>
+            </div>
+            <div class="bonafide-stat-icon">⚡</div>
+        </div>
+
+        <div class="bonafide-stat-card month">
+            <div>
+                <span>This Month</span>
+                <h3>{{ month_bonafide or 0 }}</h3>
+                <p>या महिन्यात</p>
+            </div>
+            <div class="bonafide-stat-icon">📅</div>
+        </div>
+
+    </div>
+
+    <!-- ================= BONAFIDE SEARCH ================= -->
+
+    <form method="GET"
+        action="{{ url_for('clerk_bonafide_page') }}"
+        class="bonafide-search">
+
+        <input type="text"
+            name="search"
+            value="{{ search or '' }}"
+            placeholder="Search by Name or Admission No">
+
+        <select name="class">
+            <option value="">Filter by Class</option>
+
+            {% for c in range(1, 11) %}
+                <option value="{{ c }}"
+                {% if class_filter == c|string %}selected{% endif %}>
+                    {{ c }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="year">
+            <option value="">Filter by Year</option>
+
+            {% for y in years %}
+                <option value="{{ y }}"
+                {% if year_filter == y|string %}selected{% endif %}>
+                    {{ y }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn-bonafide-search">
+            Search
+        </button>
+
+        <a href="{{ url_for('clerk_bonafide_page') }}"
+        class="btn-bonafide-clear">
+            Clear
+        </a>
+
+    </form>
+
+    <!-- ================= BONAFIDE NOTE ================= -->
+
+<div class="bonafide-info-note">
+
+    <div class="note-icon">ℹ️</div>
+
+    <div>
+        <h4>Where to generate Bonafide?</h4>
         <p>
-            Search students and generate bonafide certificates easily.
+            To generate a new bonafide certificate, go to Student List and click the Bonafide button for the student.
+            <br>
+            नवीन बोनाफाईड प्रमाणपत्र तयार करण्यासाठी Student List मध्ये जा आणि विद्यार्थ्याच्या Bonafide बटणावर क्लिक करा.
         </p>
     </div>
 
-    <!-- ================= STATS ================= -->
-    <div class="bonafide-stats">
+</div>
 
-        <div class="bonafide-card">
-            <h3>Total Certificates</h3>
-            <p>{{ total_bonafide or 0 }}</p>
-        </div>
 
-        <div class="bonafide-card">
-            <h3>Today</h3>
-            <p>{{ today_bonafide or 0 }}</p>
-        </div>
+<!-- ================= BONAFIDE TABLE ================= -->
 
-        <div class="bonafide-card">
-            <h3>This Month</h3>
-            <p>{{ month_bonafide or 0 }}</p>
-        </div>
+<div class="bonafide-table">
 
-    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Register No</th>
+                <th>Name</th>
+                <th>Admission No</th>
+                <th>Bonafide No</th>
+                <th>Purpose</th>
+                <th>Date</th>
+                <th>Class</th>
+                <th>Status</th>
+                <th class="action-cell">Action</th>
+            </tr>
+        </thead>
 
-    <!-- ================= SEARCH ================= -->
-    <div class="bonafide-search">
+        <tbody>
 
-        <input type="text" id="searchInput" placeholder="Search by Name or Admission No">
+            {% if bonafide_list %}
 
-        <select id="classFilter">
-            <option value="">Filter by Class</option>
-            <option>1</option><option>2</option><option>3</option>
-            <option>4</option><option>5</option><option>6</option>
-            <option>7</option><option>8</option><option>9</option><option>10</option>
-        </select>
+                {% for b in bonafide_list %}
 
-        <button class="btn-bonafide-search" onclick="applyFilter()">Search</button>
-        <button type="button" class="btn-bonafide-clear" onclick="clearFilter()">Clear</button>
-
-    </div>
-
-    <!-- ================= TABLE ================= -->
-    <div class="bonafide-table">
-
-        <table>
-            <thead>
                 <tr>
-                    <th>Register No</th>
-                    <th>Name</th>
-                    <th>Admission No</th>
-                    <th>Student ID</th>
-                    <th>APAAR ID</th>
-                    <th>Class</th>
-                    <th>Status</th>
-                    <th class="action-cell">Action</th>
-                </tr>
-            </thead>
+                    <td>{{ b.school_register_no or "-" }}</td>
 
-            <tbody id="bonafideTableBody">
-                {% for s in students %}
-                <tr>
-                    <td class="bf-register">{{ s.school_register_no or '-' }}</td>
-                    <td class="bf-name">{{ s.name }}</td>
-                    <td class="bf-admission">{{ s.admission_no }}</td>
-                    <td class="bf-uid">{{ s.student_uid or '-' }}</td>
-                    <td class="bf-apaar">{{ s.apaar_id or '-' }}</td>
-                    <td class="bf-class">{{ s.class }}</td>   
                     <td>
-                        <span class="status-badge">Active</span>
+                        <strong>{{ b.name or "-" }}</strong>
                     </td>
-                    
+
+                    <td>{{ b.admission_no or "-" }}</td>
+
+                    <td>{{ b.bonafide_number or "-" }}</td>
+
+                    <td>{{ b.purpose or "-" }}</td>
+
+                    <td>{{ b.date or "-" }}</td>
+
+                    <td>{{ b.class or "-" }}</td>
+
+                    <td>
+                        <span class="status-badge generated">
+                            Generated
+                        </span>
+                    </td>
+
                     <td class="action-cell">
 
-                        <!-- GENERATE -->
-                        <button 
+                        <a href="{{ url_for('view_bonafide', bid=b.id) }}"
+                        class="btn-bonafide view">
+                            View
+                        </a>
+
+                        <button
                             type="button"
-                            class="btn-bonafide"
-                            data-id="{{ s.id }}"
-                            data-name="{{ s.name }}"
-                            data-register="{{ s.school_register_no or '' }}"
-                            data-admission="{{ s.admission_no or '' }}"
-                            data-uid="{{ s.student_uid or '' }}"
-                            data-apaar="{{ s.apaar_id or '' }}"
-                            onclick="openBonafideModal(this)">
-                            Generate
+                            class="btn-bonafide wa"
+                            onclick="openWAModalTable(
+                                '{{ b.name }}',
+                                '{{ b.primary_mobile }}',
+                                '/clerk/bonafide/pdf/{{ b.id }}',
+                                '{{ school_name }}'
+                            )">
+                            WA
                         </button>
 
-                        {% for b in bonafide_list %}
-                            {% if b.student_id == s.id %}
-
-                                <!-- VIEW -->
-                                <a href="{{ url_for('view_bonafide', bid=b.id) }}" class="btn-bonafide">
-                                    View
-                                </a>
-
-                                <!-- WA -->
-                                <button 
-                                    class="btn-bonafide"
-                                    onclick="openWAModalTable(
-                                        '{{ s.name }}',
-                                        '{{ s.primary_mobile}}',
-                                        '/clerk/bonafide/pdf/{{ b.id }}',
-                                        '{{ school_name }}'
-                                    )">
-                                    WA
-                                </button>
-
-                            {% endif %}
-                        {% endfor %}
+                        <button
+                            type="button"
+                            class="btn-bonafide history"
+                            data-history='{{ bonafide_history_map.get(b.student_id, []) | tojson }}'
+                            onclick="openHistoryModal(this)">
+                            History
+                        </button>
 
                     </td>
                 </tr>
+
                 {% endfor %}
-            </tbody>
 
-        </table>
+            {% else %}
 
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-bonafide-state">
+                            <div>📭</div>
+                            <h3>No Bonafide Records Found</h3>
+                            <p>
+                                Generate bonafide certificates from Student List.
+                                <br>
+                                बोनाफाईड प्रमाणपत्र Student List मधून तयार करा.
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+
+            {% endif %}
+
+        </tbody>
+    </table>
+
+</div>
+
+
+<!-- ================= PAGINATION ================= -->
+
+{% if total_records > 0 %}
+
+<div class="bonafide-pagination">
+
+    <div>
+        Page {{ page }} of {{ total_pages }} • {{ total_records }} records
     </div>
 
-    <!-- ================= RECENT ================= -->
-    <div class="bonafide-recent">
+    <div class="bonafide-pagination-actions">
 
-        <h2>Recent Activity</h2>
+        {% if page > 1 %}
+        <a href="{{ url_for('clerk_bonafide_page', search=search, class=class_filter, year=year_filter, page=page-1) }}">
+            ← Previous
+        </a>
+        {% endif %}
 
-        <ul>
-            {% for item in recent_bonafide %}
-            <li>
-                {{ item.name }} - Bonafide Generated
-            </li>
-            {% endfor %}
-        </ul>
+        <span>{{ page }}</span>
+
+        {% if page < total_pages %}
+        <a href="{{ url_for('clerk_bonafide_page', search=search, class=class_filter, year=year_filter, page=page+1) }}">
+            Next →
+        </a>
+        {% endif %}
 
     </div>
 
 </div>
 
-<!-- ================= MODAL ================= -->
-<div id="bonafideModal" class="bonafide-modal">
-    <div class="bonafide-modal-content">
+{% endif %}
 
-        <h2>Generate Bonafide</h2>
 
-        <form method="POST"  action="{{ url_for('save_bonafide') }}" id="bonafideForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <input type="hidden" name="student_id" id="modalStudentId">
+<!-- ================= PREMIUM WHATSAPP MODAL ================= -->
 
-            <div class="form-group">
-                <label>School Register No</label>
-                <input type="text" id="modalRegister" disabled>
-            </div>
-            
-            <div class="form-group">
-                <label>Student Name</label>
-                <input type="text" id="modalStudentName" disabled>
-            </div>
-            <div class="form-group">
-                <label>Admission No</label>
-                <input type="text" id="modalAdmission" disabled>
+<div id="waModal" class="wa-modal">
+
+    <div class="wa-modal-box">
+
+        <div class="wa-modal-header">
+            <div>
+                <h2>📲 Send on WhatsApp</h2>
+                <p>Send bonafide certificate PDF link to parent/student.</p>
             </div>
 
-            <div class="form-group">
-                <label>Student ID</label>
-                <input type="text" id="modalStudentUid" disabled>
-            </div>
+            <button type="button" onclick="closeWAModal()">×</button>
+        </div>
 
-            <div class="form-group">
-                <label>APAAR ID</label>
-                <input type="text" id="modalApaar" disabled>
-            </div>
+        <div class="wa-info-card">
+            <strong id="waStudentName">Student Name</strong>
+            <span id="waSchoolName">School Name</span>
+        </div>
 
-            <div class="form-group">
-                <label>Purpose</label>
-                <input type="text" name="purpose" required>
-            </div>
+        <div class="wa-form-group">
+            <label>WhatsApp Number</label>
+            <input type="text"
+                   id="waNumber"
+                   maxlength="15"
+                   placeholder="Enter WhatsApp number">
+            <small>
+                Temporary number only. Student database mobile number will not change.
+            </small>
+        </div>
 
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date" name="date" required>
-            </div>
-
-            <div class="modal-actions">
-                <button type="button" onclick="closeBonafideModal()">Cancel</button>
-                <button type="submit">Generate</button>
-            </div>
-
-        </form>
-
-    </div>
-</div>
-
-<!-- ================= WHATSAPP MODAL ================= -->
-<div id="waModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999;">
-    <div style="background:white; width:350px; padding:20px; border-radius:10px;
-                position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-                box-shadow:0 10px 25px rgba(0,0,0,0.3);">
-
-        <h3>📲 Send WhatsApp</h3>
-
-        <input type="text" id="waNumber"
-               placeholder="Enter WhatsApp Number"
-               style="width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:6px;">
-
-        <small style="color:gray;">
-            Temporary number (DB will NOT change)
-        </small>
-
-        <div style="margin-top:15px; display:flex; gap:10px;">
-            <button onclick="sendWhatsAppTable()" 
-                    style="flex:1; background:#16a34a; color:white; border:none; padding:10px; border-radius:6px;">
-                Send
+        <div class="wa-actions">
+            <button type="button" class="wa-cancel-btn" onclick="closeWAModal()">
+                Cancel
             </button>
 
-            <button onclick="closeWAModal()" 
-                    style="flex:1; background:#ccc; border:none; padding:10px; border-radius:6px;">
-                Cancel
+            <button type="button" class="wa-send-btn" onclick="sendWhatsAppTable()">
+                Send WhatsApp
             </button>
         </div>
 
     </div>
+
 </div>
 
+
+<!-- ================= HISTORY MODAL ================= -->
+
+<div id="historyModal" class="history-modal">
+
+    <div class="history-modal-content">
+
+        <div class="history-header">
+            <h2>Bonafide History</h2>
+
+            <button class="history-close"
+                    onclick="closeHistoryModal()">
+                ✕
+            </button>
+        </div>
+
+        <div id="historyContent"></div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
 <script>
-
-// ================= SEARCH + FILTER =================
-function applyFilter() {
-
-    const searchInput = document.getElementById("searchInput");
-    const classInput = document.getElementById("classFilter");
-
-    const search = searchInput.value.trim().toLowerCase();
-    const classFilter = classInput.value.trim().toLowerCase();
-
-    const rows = document.querySelectorAll("#bonafideTableBody tr");
-
-    rows.forEach(row => {
-
-        const registerEl = row.querySelector(".bf-register");
-        const nameEl = row.querySelector(".bf-name");
-        const admissionEl = row.querySelector(".bf-admission");
-        const uidEl = row.querySelector(".bf-uid");
-        const apaarEl = row.querySelector(".bf-apaar");
-        const classEl = row.querySelector(".bf-class");
-
-        if (
-            !registerEl ||
-            !nameEl ||
-            !admissionEl ||
-            !uidEl ||
-            !apaarEl ||
-            !classEl
-        ) return;
-
-        const registerNo = registerEl.innerText.trim().toLowerCase();
-        const name = nameEl.innerText.trim().toLowerCase();
-        const admission = admissionEl.innerText.trim().toLowerCase();
-        const studentUid = uidEl.innerText.trim().toLowerCase();
-        const apaarId = apaarEl.innerText.trim().toLowerCase();
-        const studentClass = classEl.innerText.trim().toLowerCase();
-
-        let matchSearch = true;
-        let matchClass = true;
-
-        // SEARCH
-        if (search) {
-            matchSearch =
-                registerNo.includes(search) ||
-                name.includes(search) ||
-                admission.includes(search) ||
-                studentUid.includes(search) ||
-                apaarId.includes(search);
-        }
-
-        // CLASS FILTER
-        if (classFilter) {
-            matchClass = (studentClass === classFilter);
-        }
-
-        row.style.display =
-            (matchSearch && matchClass)
-                ? ""
-                : "none";
-    });
-}
-
-// ================= CLEAR FILTER =================
-function clearFilter() {
-    document.getElementById("searchInput").value = "";
-    document.getElementById("classFilter").value = "";
-    applyFilter();
-}
-
-// ================= SAFE EVENT BINDINGS =================
-const searchInput = document.getElementById("searchInput");
-const classInput = document.getElementById("classFilter");
-
-if (searchInput) {
-
-    searchInput.addEventListener("keyup", function () {
-        applyFilter();
-    });
-
-    searchInput.addEventListener("keypress", function (e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            applyFilter();
-        }
-    });
-}
-
-if (classInput) {
-    classInput.addEventListener("change", function () {
-        applyFilter();
-    });
-}
-
+ 
 // ================= BONAFIDE MODAL =================
 function openBonafideModal(btn) {
 
@@ -352,60 +371,80 @@ function closeBonafideModal() {
     document.getElementById("bonafideModal").style.display = "none";
 }
 
-// ================= WHATSAPP =================
+
+// WHATAPP MODAL JS 
 let tableWAData = {};
 
-function openWAModalTable(name, mobile, pdfUrl, schoolName) {
+function openWAModalTable(name, mobile, pdfUrl, schoolName){
 
     tableWAData = {
-        name,
-        mobile,
-        pdfUrl,
-        schoolName
+        name: name || "",
+        mobile: mobile || "",
+        pdfUrl: pdfUrl || "",
+        schoolName: schoolName || ""
     };
 
-    document.getElementById("waNumber").value = mobile || "";
-    document.getElementById("waModal").style.display = "block";
+    document.getElementById("waStudentName").innerText =
+        tableWAData.name || "Student";
+
+    document.getElementById("waSchoolName").innerText =
+        tableWAData.schoolName || "School";
+
+    document.getElementById("waNumber").value =
+        tableWAData.mobile || "";
+
+    document.getElementById("waModal").style.display = "flex";
+    document.body.style.overflow = "hidden";
 }
 
-function closeWAModal() {
+function closeWAModal(){
     document.getElementById("waModal").style.display = "none";
+    document.body.style.overflow = "";
 }
 
-function sendWhatsAppTable() {
+function sendWhatsAppTable(){
 
     let number = document.getElementById("waNumber").value.trim();
 
-    if (!number) {
-        alert("Enter WhatsApp Number ❌");
-        return;
-    }
-
     number = number.replace(/\D/g, "");
 
-    if (number.length < 10) {
-        alert("Enter valid number ❌");
+    if(!number){
+        alert("Enter WhatsApp number ❌");
         return;
     }
 
-    if (number.length === 10) {
+    if(number.length < 10){
+        alert("Enter valid WhatsApp number ❌");
+        return;
+    }
+
+    if(number.length === 10){
         number = "91" + number;
     }
 
+   const publicBaseUrl = window.location.origin; 
+//    const publicBaseUrl = "https://yourdomain.com"; with our real domain
+
     const pdfLink =
-        window.location.origin + tableWAData.pdfUrl;
+        publicBaseUrl + tableWAData.pdfUrl.replace(
+            "/clerk/bonafide/pdf/",
+            "/public/bonafide/pdf/"
+        );
 
-    const message = `
-🏫 ${tableWAData.schoolName}
+  const message =
+`🏫 ${tableWAData.schoolName}
 
-Student: ${tableWAData.name}
+Hello,
 
-📄 Bonafide Certificate
+The Bonafide Certificate for student ${tableWAData.name} has been generated successfully.
 
-Download here:
+📄 Download Certificate:
 ${pdfLink}
-    `;
 
+For any assistance, please contact the school office.
+
+Regards,
+${tableWAData.schoolName}`;
     const url =
         `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 
@@ -414,6 +453,79 @@ ${pdfLink}
     closeWAModal();
 }
 
+document.addEventListener("click", function(e){
+    const modal = document.getElementById("waModal");
+
+    if(e.target === modal){
+        closeWAModal();
+    }
+});
+
+
+// ================= HISTORY MODAL =================
+ 
+function openHistoryModal(btn){
+
+    const history = JSON.parse(
+        btn.getAttribute("data-history") || "[]"
+    );
+
+    const content = document.getElementById("historyContent");
+
+    if(!history.length){
+
+        content.innerHTML = `
+            <div class="history-empty">
+                No Bonafide History Found
+            </div>
+        `;
+
+    }else{
+
+        let rows = "";
+
+        history.forEach(item => {
+
+            rows += `
+                <tr>
+                    <td>${item.number || "-"}</td>
+                    <td>${item.date || "-"}</td>
+                    <td>${item.purpose || "-"}</td>
+                    <td>
+                        <a href="/clerk/bonafide/view/${item.id}"
+                           class="history-view-btn">
+                            View
+                        </a>
+                    </td>
+                </tr>
+            `;
+
+        });
+
+        content.innerHTML = `
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Bonafide No</th>
+                        <th>Date</th>
+                        <th>Purpose</th>
+                        <th>View</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        `;
+    }
+
+    document.getElementById("historyModal").style.display = "flex";
+}
+
+function closeHistoryModal(){
+    document.getElementById("historyModal").style.display = "none";
+}
+ 
 </script>
 
 {% endblock %}

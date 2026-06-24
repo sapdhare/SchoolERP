@@ -6,311 +6,442 @@
 
 <div class="ie-page">
 
-    <!-- ================= HEADER ================= -->
-    <div class="ie-header">
-        <div class="ie-header-left">
-            <h1>Import / Export Students</h1>
-            <p>Upload Excel file to add students or export existing data.</p>
-            <small>एक्सेल फाईल वापरून विद्यार्थी डेटा आयात किंवा निर्यात करा</small>
-        </div>
-    </div>
-    <!-- ================= TABS ================= -->
-    <div class="ie-tabs">
+<!-- ================= IMPORT EXPORT HEADER ================= -->
+<div class="ie-header">
 
-        <button class="ie-tab active" onclick="switchTab('import')">
-            📥 Import
-        </button>
+    <div class="ie-header-left">
 
-        <button class="ie-tab" onclick="switchTab('export')">
-            📤 Export
-        </button>
+        <span class="ie-page-badge">
+            📂 Student Data Tools
+        </span>
 
-    </div>
-      <!-- ================= IMPORT CARD CONTAINER ================= -->
-    <div id="importSection" class="ie-tab-content active"> 
+        <h1>Import / Export Students</h1>
 
-     <!-- IMPORT CARD  -->
-    <div class="ie-import-card">
-
-        <h2> Import Student Data</h2>
-        <p class="ie-sub">
-            Upload Excel file to add multiple students at once  
+        <p>
+            Upload Excel files to add students or export existing student records.
             <br>
-            <small>एक्सेल फाईल अपलोड करून अनेक विद्यार्थी एकाच वेळी जोडा</small>
+            <span>एक्सेल फाईल वापरून विद्यार्थी डेटा आयात किंवा निर्यात करा</span>
         </p>
 
-        <form method="POST" action="/clerk/import-students" enctype="multipart/form-data" id="importForm">
+    </div>
+
+    <div class="ie-header-status">
+        ● Import / Export Active
+    </div>
+
+</div>
+
+<!-- ================= IMPORT EXPORT OVERVIEW ================= -->
+
+<div class="ie-overview-row">
+
+    <div class="ie-overview-card">
+        <div class="ie-overview-icon">👨‍🎓</div>
+        <div>
+            <h3>{{ total_students or 0 }}</h3>
+            <p>Total Students</p>
+            <span>एकूण विद्यार्थी</span>
+        </div>
+    </div>
+
+    <div class="ie-overview-card">
+        <div class="ie-overview-icon">🆕</div>
+        <div>
+            <h3>{{ today_students or 0 }}</h3>
+            <p>Added Today</p>
+            <span>आज जोडलेले</span>
+        </div>
+    </div>
+
+    <div class="ie-overview-card note">
+        <div class="ie-overview-icon">📌</div>
+        <div>
+            <h3>Excel Format</h3>
+            <p>Use correct column names before import</p>
+            <span>आयात करण्यापूर्वी योग्य फॉरमॅट वापरा</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= PREMIUM TABS ================= -->
+<div class="ie-tabs">
+
+    <button type="button"
+            class="ie-tab active"
+            onclick="switchTab('import')">
+
+        <span class="tab-icon">📥</span>
+
+        <span>
+            Import Data
+            <small>डेटा आयात करा</small>
+        </span>
+
+    </button>
+
+    <button type="button"
+            class="ie-tab"
+            onclick="switchTab('export')">
+
+        <span class="tab-icon">📤</span>
+
+        <span>
+            Export Data
+            <small>डेटा निर्यात करा</small>
+        </span>
+
+    </button>
+
+</div>
+<!-- ================= IMPORT SECTION ================= -->
+<div id="importSection" class="ie-tab-content active">
+
+    <div class="ie-import-card">
+
+        <div class="ie-card-header">
+            <div>
+                <span class="ie-card-badge">📥 Excel Import</span>
+                <h2>Import Student Data</h2>
+                <p>
+                    Upload Excel file to add multiple students at once.
+                    <br>
+                    <small>एक्सेल फाईल अपलोड करून अनेक विद्यार्थी एकाच वेळी जोडा</small>
+                </p>
+            </div>
+        </div>
+
+        <div class="ie-import-note">
+            <strong>Before upload, check Excel format</strong>
+            <p>
+                Use correct column names. Do not change required headers. Only .xlsx files are allowed.
+                <br>
+                योग्य कॉलम नाव वापरा. आवश्यक हेडर बदलू नका. फक्त .xlsx फाईल अपलोड करा.
+            </p>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('import_students') }}"
+              enctype="multipart/form-data"
+              id="importForm">
+
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <!-- UPLOAD BOX -->
             <div class="ie-upload-box" onclick="triggerFileInput()">
 
-                <input type="file" name="file" id="fileInput" accept=".xlsx" hidden>
+                <input type="file"
+                       name="file"
+                       id="fileInput"
+                       accept=".xlsx"
+                       hidden>
 
                 <div class="ie-upload-content">
                     <div class="upload-icon">📂</div>
-                    <p>Click to upload or drag Excel file</p>
+                    <h3>Click to upload or drag Excel file</h3>
+                    <p>Only .xlsx file supported</p>
                     <span>फाईल निवडण्यासाठी येथे क्लिक करा</span>
                 </div>
 
             </div>
 
-            <!-- FILE PREVIEW -->
             <div id="filePreview" class="ie-file-preview hidden">
                 <span id="fileName"></span>
             </div>
 
-            <!-- BUTTON -->
-            <button type="button" class="btn-import" onclick="openImportConfirm()">
-                Upload Excel
-            </button>
+            <div class="ie-import-actions">
+                <button type="button"
+                        class="btn-import"
+                        onclick="openImportConfirm()">
+                    Upload Excel
+                </button>
+            </div>
 
         </form>
 
-      </div>
     </div>
-  <!-- ================= EXPORT CARD CONTAINER ================= -->
-    <div id="exportSection" class="ie-tab-content">
 
-  <!-- EXPORT CARD   -->
-<div class="ie-export-card">
+</div>
 
-    <h2>Export Students Data</h2>
-    <p class="ie-sub">
-        Download filtered student data in Excel format  
-        <br>
-        <small>फिल्टर वापरून विद्यार्थी डेटा डाउनलोड करा</small>
-    </p>
+<!-- ================= EXPORT SECTION ================= -->
+<div id="exportSection" class="ie-tab-content">
 
-    <!-- FILTERS -->
-   <div class="ie-export-filters">
+    <div class="ie-export-card">
 
-    <!-- SEARCH STYLE INPUT GROUP -->
-    <div class="ie-filter-group">
+        <div class="ie-card-header">
+            <span class="ie-card-badge export">📤 Excel Export</span>
 
-        <select id="exportClass" class="ie-select">
-            <option value="">Filter by Class</option>
-            {% for i in range(1, 11) %}
-            <option value="{{ i }}">Class {{ i }}</option>
-            {% endfor %}
-        </select>
+            <h2>Export Student Data</h2>
 
-        <select id="exportMonth" class="ie-select">
-            <option value="">Filter by Month</option>
-            <option value="1">Jan</option>
-            <option value="2">Feb</option>
-            <option value="3">Mar</option>
-            <option value="4">Apr</option>
-            <option value="5">May</option>
-            <option value="6">Jun</option>
-            <option value="7">Jul</option>
-            <option value="8">Aug</option>
-            <option value="9">Sep</option>
-            <option value="10">Oct</option>
-            <option value="11">Nov</option>
-            <option value="12">Dec</option>
-        </select>
+            <p>
+                Download student records using class, month and year filters.
+                <br>
+                <small>वर्ग, महिना आणि वर्षानुसार विद्यार्थी डेटा डाउनलोड करा</small>
+            </p>
+        </div>
 
-        <select id="exportYear" class="ie-select">
-            <option value="">Filter by Year</option>
-            <option>2024</option>
-            <option>2025</option>
-            <option>2026</option>
-        </select>
+        <div class="ie-export-note">
+            <strong>Export Tip</strong>
+            <p>
+                Leave all filters empty to export all student records.
+                <br>
+                सर्व विद्यार्थी डेटा डाउनलोड करण्यासाठी फिल्टर रिकामे ठेवा.
+            </p>
+        </div>
 
-        <button class="btn-export-main" onclick="downloadFilteredExcel()">
-            Export
+        <div class="ie-export-filters">
+
+            <select id="exportClass" class="ie-select">
+                <option value="">All Classes</option>
+                {% for i in range(1, 11) %}
+                    <option value="{{ i }}">Class {{ i }}</option>
+                {% endfor %}
+            </select>
+
+            <select id="exportMonth" class="ie-select">
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+
+            <select id="exportYear" class="ie-select">
+                <option value="">All Years</option>
+                {% for y in years %}
+                    <option value="{{ y }}">{{ y }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="button"
+                    class="btn-export-main"
+                    onclick="downloadFilteredExcel()">
+                Export Excel
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= CONFIRM IMPORT MODAL ================= -->
+<div id="importModal" class="ie-modal">
+
+    <div class="ie-modal-content">
+
+        <div class="ie-modal-icon">📤</div>
+
+        <h3>Confirm Excel Upload</h3>
+
+        <p>
+            Please confirm before uploading this Excel file.
+            <br>
+            <small>ही Excel फाईल अपलोड करण्यापूर्वी कृपया खात्री करा.</small>
+        </p>
+
+        <div class="ie-modal-warning">
+            Make sure column names are correct. Wrong format may skip records.
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeImportModal()">
+                Cancel
+            </button>
+
+            <button type="button" class="btn-confirm" onclick="submitImport()">
+                Yes, Upload
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= SUCCESS MODAL ================= -->
+
+<div id="successModal" class="ie-modal">
+
+    <div class="ie-modal-content success-box">
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+        <h3>Import Completed Successfully</h3>
+
+        <p id="successText">
+            Students imported successfully.
+            <br>
+            <small>विद्यार्थी डेटा यशस्वीरित्या आयात करण्यात आला.</small>
+        </p>
+
+        <button
+            type="button"
+            class="btn-success-ok"
+            onclick="closeSuccessModal()">
+
+            Continue
+
         </button>
 
     </div>
 
 </div>
-</div>
-</div>
 
-<!-- ================= CONFIRM MODAL ================= -->
-<div id="importModal" class="ie-modal">
-    <div class="ie-modal-content">
-
-        <h3>Confirm Upload</h3>
-
-        <p>
-            Are you sure you want to upload this Excel file?
-            <br>
-            <small>तुम्हाला ही फाईल अपलोड करायची आहे का?</small>
-        </p>
-
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeImportModal()">Cancel</button>
-            <button class="btn-confirm" onclick="submitImport()">Yes, Upload</button>
-        </div>
-
-    </div>
-</div>
-
-<!-- ================= SUCCESS MODAL ================= -->
-<div id="successModal" class="ie-modal">
-    <div class="ie-modal-content success-box">
-
-        <div class="success-icon">✔</div>
-
-        <h3>Upload Successful</h3>
-        <p id="successText"></p>
-
-        <button class="btn-confirm" onclick="closeSuccessModal()">OK</button>
-
-    </div>
-</div>
 <!-- ================= LOADING MODAL ================= -->
+
 <div id="loadingModal" class="ie-modal">
+
     <div class="ie-modal-content loading-box">
 
         <div class="loader"></div>
 
-        <h3>Processing Data...</h3>
-        <p>Please wait while we import students</p>
-        <small>डेटा प्रोसेस होत आहे, कृपया थांबा</small>
+        <h3>Importing Student Data</h3>
+
+        <p>
+            Please wait while student records are being processed.
+            <br>
+            <small>
+                विद्यार्थी डेटा प्रोसेस होत आहे, कृपया थांबा.
+            </small>
+        </p>
+
+        <div class="loading-note">
+            Do not close or refresh this page.
+        </div>
 
     </div>
+
 </div>
 
-
-<!-- ================= JS ================= -->
 <script>
+/* ================= TAB SWITCH ================= */
 
-// ================= TAB SWITCH =================
-function switchTab(tab) {
+function switchTab(tab){
 
-    const tabs = document.querySelectorAll(".ie-tab");
+    document.querySelectorAll(".ie-tab").forEach(btn => {
+        btn.classList.remove("active");
+    });
 
-    tabs.forEach(t => t.classList.remove("active"));
+    const importSection = document.getElementById("importSection");
+    const exportSection = document.getElementById("exportSection");
 
-    document.getElementById("importSection").classList.remove("active");
-    document.getElementById("exportSection").classList.remove("active");
+    if(importSection) importSection.classList.remove("active");
+    if(exportSection) exportSection.classList.remove("active");
 
-    if (tab === "import") {
-        tabs[0].classList.add("active");
-        document.getElementById("importSection").classList.add("active");
-    } else {
-        tabs[1].classList.add("active");
-        document.getElementById("exportSection").classList.add("active");
+    if(tab === "import"){
+        document.querySelectorAll(".ie-tab")[0]?.classList.add("active");
+        importSection?.classList.add("active");
+    }else{
+        document.querySelectorAll(".ie-tab")[1]?.classList.add("active");
+        exportSection?.classList.add("active");
     }
 }
 
 
-// ================= EXPORT =================
-function downloadFilteredExcel() {
+/* ================= EXPORT EXCEL ================= */
 
-    const cls = document.getElementById("exportClass").value;
-    const month = document.getElementById("exportMonth").value;
-    const year = document.getElementById("exportYear").value;
+function downloadFilteredExcel(){
+
+    const cls = document.getElementById("exportClass")?.value || "";
+    const month = document.getElementById("exportMonth")?.value || "";
+    const year = document.getElementById("exportYear")?.value || "";
 
     const params = new URLSearchParams();
 
-    if (cls) params.append("class", cls);
-    if (month) params.append("month", month);
-    if (year) params.append("year", year);
+    if(cls) params.append("class", cls);
+    if(month) params.append("month", month);
+    if(year) params.append("year", year);
 
-    window.location.href =
-        "/clerk/export-students?" + params.toString();
+    window.location.href = "/clerk/export-students?" + params.toString();
 }
 
 
-// ================= SAFE PAGE LOAD =================
-window.addEventListener("load", function () {
+/* ================= FILE INPUT ================= */
+
+function triggerFileInput(){
+    document.getElementById("fileInput")?.click();
+}
+
+function showSelectedFile(file){
+
+    const preview = document.getElementById("filePreview");
+    const fileName = document.getElementById("fileName");
+
+    if(!preview || !fileName) return;
+
+    preview.classList.remove("hidden");
+    fileName.innerText = "Selected: " + file.name;
+}
+
+function validateExcelFile(file){
+
+    if(!file){
+        alert("Please select a file first ⚠️");
+        return false;
+    }
+
+    if(!file.name.toLowerCase().endsWith(".xlsx")){
+        alert("Only Excel (.xlsx) file allowed ❌");
+        return false;
+    }
+
+    if(file.size > 5 * 1024 * 1024){
+        alert("File size must be under 5MB ❌");
+        return false;
+    }
+
+    return true;
+}
+
+
+/* ================= IMPORT CONFIRM ================= */
+
+function openImportConfirm(){
 
     const input = document.getElementById("fileInput");
+    const file = input?.files[0];
 
-    // FILE PREVIEW
-    if (input) {
-        input.addEventListener("change", function () {
-
-            const file = this.files[0];
-
-            if (file) {
-                document
-                    .getElementById("filePreview")
-                    .classList.remove("hidden");
-
-                document
-                    .getElementById("fileName")
-                    .innerText = "Selected: " + file.name;
-            }
-        });
-    }
-
-    // SUCCESS MODAL
-    const params = new URLSearchParams(window.location.search);
-    const success = params.get("success");
-
-    if (success !== null) {
-        document.getElementById("successModal").style.display = "flex";
-
-        document.getElementById("successText").innerText =
-            success + " students imported successfully 🎉";
-    }
-});
-
-
-// ================= FILE INPUT =================
-function triggerFileInput() {
-    document.getElementById("fileInput").click();
-}
-
-
-// ================= OPEN IMPORT MODAL =================
-function openImportConfirm() {
-
-    const file = document.getElementById("fileInput").files[0];
-
-    if (!file) {
-        alert("Please select a file first ⚠️");
-        return;
-    }
-   // SAFE SIZE CHECK (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-    alert("File size must be under 5MB ❌");
-    return;
-}
-
-    // SAFE EXTENSION CHECK
-    if (!file.name.toLowerCase().endsWith(".xlsx")) {
-        alert("Only Excel (.xlsx) file allowed ❌");
-        return;
-    }
+    if(!validateExcelFile(file)) return;
 
     document.getElementById("importModal").style.display = "flex";
 }
 
-
-// ================= CLOSE IMPORT MODAL =================
-function closeImportModal() {
+function closeImportModal(){
     document.getElementById("importModal").style.display = "none";
 }
 
+function submitImport(){
 
-// ================= SUBMIT IMPORT =================
-function submitImport() {
-
-    document.getElementById("importModal").style.display = "none";
-
-    document.getElementById("loadingModal").style.display = "flex";
-
-    // DISABLE ONLY IMPORT CONFIRM BUTTON
+    const form = document.getElementById("importForm");
     const btn = document.querySelector("#importModal .btn-confirm");
 
-    if (btn) {
+    if(btn){
         btn.disabled = true;
+        btn.innerText = "Uploading...";
     }
 
+    document.getElementById("importModal").style.display = "none";
+    document.getElementById("loadingModal").style.display = "flex";
+
     setTimeout(() => {
-        document.getElementById("importForm").submit();
-    }, 500);
+        form.submit();
+    }, 400);
 }
 
 
-// ================= CLOSE SUCCESS =================
-function closeSuccessModal() {
+/* ================= SUCCESS MODAL ================= */
+
+function closeSuccessModal(){
+
     document.getElementById("successModal").style.display = "none";
 
     window.history.replaceState(
@@ -321,47 +452,65 @@ function closeSuccessModal() {
 }
 
 
-// ================= DRAG AND DROP =================
-const uploadBox = document.querySelector(".ie-upload-box");
+/* ================= PAGE LOAD ================= */
 
-if (uploadBox) {
+document.addEventListener("DOMContentLoaded", function(){
 
-    uploadBox.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        uploadBox.classList.add("dragging");
-    });
+    const input = document.getElementById("fileInput");
+    const uploadBox = document.querySelector(".ie-upload-box");
 
-    uploadBox.addEventListener("dragleave", () => {
-        uploadBox.classList.remove("dragging");
-    });
+    if(input){
+        input.addEventListener("change", function(){
+            const file = this.files[0];
 
-    uploadBox.addEventListener("drop", (e) => {
-        e.preventDefault();
+            if(file && validateExcelFile(file)){
+                showSelectedFile(file);
+            }else{
+                this.value = "";
+            }
+        });
+    }
 
-        uploadBox.classList.remove("dragging");
+    if(uploadBox && input){
 
-        const file = e.dataTransfer.files[0];
+        uploadBox.addEventListener("dragover", function(e){
+            e.preventDefault();
+            uploadBox.classList.add("dragging");
+        });
 
-        if (!file) return;
+        uploadBox.addEventListener("dragleave", function(){
+            uploadBox.classList.remove("dragging");
+        });
 
-        // SAFE VALIDATION
-        if (!file.name.toLowerCase().endsWith(".xlsx")) {
-            alert("Only Excel (.xlsx) file allowed ❌");
-            return;
+        uploadBox.addEventListener("drop", function(e){
+            e.preventDefault();
+            uploadBox.classList.remove("dragging");
+
+            const file = e.dataTransfer.files[0];
+
+            if(!validateExcelFile(file)) return;
+
+            input.files = e.dataTransfer.files;
+            showSelectedFile(file);
+        });
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+
+    if(success !== null){
+
+        const successModal = document.getElementById("successModal");
+        const successText = document.getElementById("successText");
+
+        if(successModal && successText){
+            successText.innerText =
+                success + " students imported successfully 🎉";
+
+            successModal.style.display = "flex";
         }
+    }
 
-        document.getElementById("fileInput").files =
-            e.dataTransfer.files;
-
-        document
-            .getElementById("filePreview")
-            .classList.remove("hidden");
-
-        document
-            .getElementById("fileName")
-            .innerText = "Selected: " + file.name;
-    });
-}
-
+});
 </script>
 {% endblock %}

@@ -60,7 +60,7 @@
             type="text"
             name="search"
             placeholder="Search student / admission / TC number..."
-            value="{{ request.args.get('search','') }}"
+            value="{{ search }}"
         >
 
         <select name="school_id">
@@ -68,25 +68,27 @@
 
             {% for school in schools %}
             <option
-                value="{{ school[0] }}"
-                {% if request.args.get('school_id') == school[0]|string %}selected{% endif %}
+                value="{{ school.school_id }}"
+                {% if school_filter|string == school.school_id|string %}
+                selected
+                {% endif %}
             >
-                {{ school[1] }}
+                {{ school.name }}
             </option>
             {% endfor %}
         </select>
 
         <select name="class">
             <option value="">All Classes</option>
-
             {% for i in range(1,13) %}
             <option
                 value="{{ i }}"
-                {% if request.args.get('class') == i|string %}selected{% endif %}
+                {% if class_filter|string == i|string %}selected{% endif %}
             >
                 Class {{ i }}
             </option>
             {% endfor %}
+            
         </select>
 
         <button type="submit" class="satc-search-btn">
@@ -123,19 +125,19 @@
                     {% for tc in tc_records %}
                     <tr>
 
-                        <td>{{ tc[1] }}</td>
-                        <td>{{ tc[2] }}</td>
+                        <td>{{ tc.name }}</td>
+                        <td>{{ tc.admission_no }}</td>
 
                         <td>
                             <span class="satc-school-badge">
-                                {{ tc[4] }}
+                                {{ tc.school_name }}
                             </span>
                         </td>
 
-                        <td>{{ tc[5] }}</td>
-                        <td>{{ tc[6] }}</td>
-                        <td>{{ tc[7] }}</td>
-                        <td>{{ tc[8] }}</td>
+                        <td>{{ tc.tc_number }}</td>
+                        <td>{{ tc.leaving_date }}</td>
+                        <td>{{ tc.leaving_reason }}</td>
+                        <td>{{ tc.tc_date }}</td>
 
                         <td>
 
@@ -143,28 +145,28 @@
 
                                 <button
                                     class="satc-view-btn"
-                                    onclick="viewTC('{{ tc[0] }}')"
+                                    onclick="viewTC('{{ tc.id }}')"
                                 >
                                     View
                                 </button>
 
                                 <button
                                     class="satc-print-btn"
-                                    onclick="printTC('{{ tc[0] }}')"
+                                    onclick="printTC('{{ tc.id   }}')"
                                 >
                                     Print
                                 </button>
 
                                 <button
                                     class="satc-pdf-btn"
-                                    onclick="downloadPDF('{{ tc[0] }}')"
+                                    onclick="downloadPDF('{{ tc.id }}')"
                                 >
                                     PDF
                                 </button>
 
                                 <button
                                     class="satc-delete-btn"
-                                    onclick="deleteTC('{{ tc[0] }}')"
+                                    onclick="deleteTC('{{ tc.id }}')"
                                 >
                                     Delete
                                 </button>
@@ -193,20 +195,54 @@
     </div>
 
 </div>
+
+<!-- PAGINATION -->
+ 
+{% if total_pages > 1 %}
+
+<div class="satc-pagination">
+
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&search={{ search }}{% if school_filter %}&school_id={{ school_filter }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}">
+        ← Prev
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&search={{ search }}{% if school_filter %}&school_id={{ school_filter }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}">
+        Next →
+    </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
 <!-- DELETE TC MODAL -->
-<div id="deleteTcModal" class="satc-modal" style="display:none;">
+<div id="deleteTcModal" class="satc-modal">
 
     <div class="satc-modal-box">
 
         <h3>⚠️ Confirm Delete</h3>
 
-        <p>Are you sure you want to delete this TC?</p>
+        <p>
+            Are you sure you want to delete this TC?
+            This action cannot be undone.
+        </p>
 
-        <form method="POST" action="{{ url_for('delete_tc') }}">
+        <form method="POST"
+              action="{{ url_for('delete_tc') }}">
 
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
 
-            <input type="hidden" name="tc_id" id="deleteTcId">
+            <input type="hidden"
+                   name="tc_id"
+                   id="deleteTcId">
 
             <div class="satc-action-group">
 
@@ -259,6 +295,15 @@ function deleteTC(id){
 function closeDeleteTCModal(){
 
     document.getElementById("deleteTcModal").style.display = "none";
+}
+window.onclick = function(event){
+
+    let modal =
+        document.getElementById("deleteTcModal");
+
+    if(event.target === modal){
+        closeDeleteTCModal();
+    }
 }
 
 </script>

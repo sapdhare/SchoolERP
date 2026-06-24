@@ -29,7 +29,7 @@
         /* HEADER */
         .header{
             text-align:center;
-            padding:10px 80px 0 80px;
+            padding:40px 80px 0 80px;
         }
 
         /* SCHOOL NAME */
@@ -55,7 +55,7 @@
 
         /* TITLE */
         .title{
-            margin-top:20px;
+            margin-top:40px;
             display:inline-block;
             padding:8px 20px;
             font-size:18px;
@@ -75,14 +75,38 @@
         }
 
         .photo-box{
-        position:absolute;
-        right:40px;
-        top:30px;
-        width:70px;
-        height:80px;
-        border:2px solid #444;
-    }
+            position:absolute;
+            right:40px;
+            top:30px;
+            width:70px;
+            height:80px;
+            border:2px solid #444;
+            background:#fff;
+            object-fit:contain;
+            padding:4px;
+            box-sizing:border-box;
+            z-index:10;
+        }
 
+       .bf-watermark{
+        position:absolute;
+        top:50%;
+        left:50%;
+        width:260px;
+        height:auto;
+        transform:translate(-50%, -50%);
+        opacity:0.07;
+        z-index:1;
+        pointer-events:none;
+        filter:grayscale(100%);
+    }
+    .header,
+    .content,
+    .footer,
+    .bonafide-no{
+        position:relative;
+        z-index:5;
+    }
         .content {
             margin-top: 40px;
             font-size: 16px;
@@ -322,11 +346,48 @@
     <div class="bonafide-no">
         Bonafide No: {{ bonafide.bonafide_number }}
     </div>
-     <!-- <div class="bonafide-no" style="top:65px;">
-     Register No: {{ student.school_register_no }}
-     </div> -->
+ 
 
-   <div class="photo-box"></div>
+
+<!-- LOGO -->
+    {% if school.show_bonafide_logo == "Enabled" and school.logo_path %}
+        {% if is_pdf %}
+            <img src="{{ school.logo_path }}" class="photo-box">
+        {% else %}
+            <img
+                src="{{ url_for(
+                    'static',
+                    filename=school.logo_path.replace('static/', '')
+                ) }}"
+                class="photo-box"
+                alt="School Logo"
+            >
+        {% endif %}
+    {% else %}
+        <div class="photo-box"></div>
+    {% endif %}
+
+    <!-- WATERMARK -->
+        {% if school.show_bonafide_watermark == "Enabled" and school.watermark_path %}
+
+            {% if is_pdf %}
+                <img
+                    src="{{ school.watermark_path }}"
+                    class="bf-watermark"
+                    alt="Watermark"
+                >
+            {% else %}
+                <img
+                    src="{{ url_for(
+                        'static',
+                        filename=school.watermark_path.replace('static/', '')
+                    ) }}"
+                    class="bf-watermark"
+                    alt="Watermark"
+                >
+            {% endif %}
+
+        {% endif %}
 
     <div class="header">
 
@@ -342,9 +403,11 @@
             📞 {{ school.phone }} | ✉ {{ school.email }}
         </div>
 
+       {% if school.enable_certificate_labels == "Enabled" %}
         <div class="title" id="bf-title">
             बोनाफाईड सर्टिफिकेट
         </div>
+        {% endif %}
 
     </div>
 
@@ -484,7 +547,9 @@ function setBFLanguage(lang) {
 
     // ================= APPLY =================
 
-    document.getElementById("bf-title").innerText = t.title;
+    if (document.getElementById("bf-title")) {
+        document.getElementById("bf-title").innerText = t.title;
+    }
 
     if (lang === "mr") {
         document.getElementById("bf-line1").innerHTML = `

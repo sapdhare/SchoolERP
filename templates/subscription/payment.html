@@ -10,32 +10,76 @@
 </head>
 <body>
 
-<div class="pay-page">
+<div class="pay-wrapper">
 
-    <div class="pay-topbar">
+    <div class="pay-header">
 
         <a href="{{ url_for('renew_subscription') }}"
            class="pay-back-btn">
-
-            ← Back
-
+            ← Back to Plans
         </a>
 
-        <h2>Secure Payment</h2>
+        <div>
+            <h1>Secure Checkout</h1>
+            <p>
+                Complete your subscription payment securely.
+            </p>
+        </div>
 
     </div>
 
-    <div class="pay-container">
+    <div class="pay-grid">
 
-        <div class="pay-card">
+        <!-- LEFT -->
 
-            <div class="pay-badge">
-                Payment Summary
+        <div class="pay-plan-card">
+
+            <span class="pay-badge">
+                Selected Plan
+            </span>
+
+            <h2>{{ plan_name }}</h2>
+
+            <p class="pay-desc">
+                Your school subscription will be activated
+                immediately after successful payment.
+            </p>
+
+            <div class="pay-benefits">
+
+                <div>✓ Instant Activation</div>
+                <div>✓ Secure Razorpay Payment</div>
+                <div>✓ GST Invoice Included</div>
+                <div>✓ Email Receipt</div>
+
             </div>
 
-            <h1>{{ plan_name }}</h1>
+        </div>
 
-            <div class="pay-price-box">
+        <!-- RIGHT -->
+
+        <div class="pay-summary-card">
+
+            <h3>Order Summary</h3>
+
+            <div class="pay-row">
+                <span>Subscription Plan</span>
+                <strong>{{ plan_name }}</strong>
+            </div>
+
+            <div class="pay-row">
+                <span>Amount</span>
+                <strong>₹{{ amount }}</strong>
+            </div>
+
+            <div class="pay-row">
+                <span>Taxes</span>
+                <strong>Included</strong>
+            </div>
+
+            <div class="pay-divider"></div>
+
+            <div class="pay-total">
 
                 <span>Total Payable</span>
 
@@ -43,22 +87,10 @@
 
             </div>
 
-            <div class="pay-note">
-
-                <p>
-                    Complete payment securely to activate your subscription.
-                </p>
-
-                <p>
-                    सुरक्षित पेमेंट करून आपली योजना सक्रिय करा.
-                </p>
-
-            </div>
-
             <button id="rzp-button"
                     class="pay-btn">
 
-                Pay Now
+                🔒 Pay Securely
 
             </button>
 
@@ -134,10 +166,26 @@
 
     var rzp = new Razorpay(options);
 
-    document.getElementById("rzp-button").onclick = function(e){
+    rzp.on(
+        'payment.failed',
+        function(response){
+
+            window.location.href =
+            "/clerk/subscription/payment-failed";
+
+        }
+    );
+
+    document.getElementById("rzp-button").onclick =
+    function(e){
+
         rzp.open();
+
         e.preventDefault();
+
     };
+
+ 
 </script>
 
 </body>

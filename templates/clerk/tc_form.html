@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/add_student.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tc_form.css') }}">
 <!-- FLATPICKR -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
@@ -12,6 +12,7 @@
 
 <form id="tcForm" method="POST"
       action="{{ url_for('tc_form', id=student.id) }}">
+      
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
  
 
@@ -28,10 +29,14 @@
 </div>
 
 <!-- ================= NOTE ================= -->
-<div class="student-note">
+<div class="student-note tc-warning-note">
     <p>
-        कृपया खालील माहिती तपासा. चुकीची माहिती असल्यास आधी "Edit Student" मध्ये दुरुस्ती करा.
+        कृपया खालील माहिती तपासा. चुकीची माहिती असल्यास आधी विद्यार्थी माहिती दुरुस्त करा.
     </p>
+
+    <a href="{{ url_for('edit_student', id=student.id) }}">
+        Edit Student →
+    </a>
 </div>
 
 <!-- ================= STUDENT INFO (READ ONLY) ================= -->
@@ -125,7 +130,7 @@
             <small>Auto generated (स्वयंचलित तयार)</small>
         </div>
 
-        <div class="form-group">
+       <div class="form-group full-width">
             <label>Remark <span>शेरा</span></label>
             <textarea name="remark" rows="3" maxlength="200"></textarea>
         </div>

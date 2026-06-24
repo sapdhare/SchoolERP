@@ -46,22 +46,22 @@
             <input 
                 type="text" 
                 name="school_register_no" 
-                value="{{ student.school_register_no }}">
+                value="{{ student.school_register_no }}" required>
         </div>
 
         <div class="form-group">
             <label>Full Name</label>
-            <input type="text" name="name" value="{{ student.name }}">
+            <input type="text" name="name" value="{{ student.name }}" required>
         </div>
 
         <div class="form-group">
             <label>Father Name</label>
-            <input type="text" name="father_name" value="{{ student.father_name }}">
+            <input type="text" name="father_name" value="{{ student.father_name }}" required> 
         </div>
 
         <div class="form-group">
             <label>Mother Name</label>
-            <input type="text" name="mother_name" value="{{ student.mother_name }}">
+            <input type="text" name="mother_name" value="{{ student.mother_name }}" required>
         </div>
         
         <div class="form-group">
@@ -69,7 +69,7 @@
             <input 
                 type="text" 
                 name="student_uid" 
-                value="{{ student.student_uid }}">
+                value="{{ student.student_uid or '' }}">
         </div>
 
         <div class="form-group">
@@ -79,7 +79,7 @@
             name="aadhaar" 
             value="{{ student.aadhaar }}"
             maxlength="12"
-            oninput="this.value = this.value.replace(/\D/g,'')">
+            oninput="this.value = this.value.replace(/\D/g,'')" required>
         </div>
         
         <div class="form-group">
@@ -87,7 +87,7 @@
             <input 
                 type="text" 
                 name="apaar_id" 
-                value="{{ student.apaar_id }}"
+                value="{{ student.apaar_id or '' }}"
                 maxlength="20">
         </div>
 
@@ -117,27 +117,27 @@
 
         <div class="form-group">
             <label>Birth Place</label>
-            <input type="text" name="birth_place" value="{{ student.birth_place }}">
+            <input type="text" name="birth_place" value="{{ student.birth_place }}" required>
         </div>
 
         <div class="form-group">
             <label>Nationality</label>
-            <input type="text" name="nationality" value="{{ student.nationality }}">
+            <input type="text" name="nationality" value="{{ student.nationality }}" required>
         </div>
 
         <div class="form-group">
             <label>Mother Tongue</label>
-            <input type="text" name="mother_tongue" value="{{ student.mother_tongue }}">
+            <input type="text" name="mother_tongue" value="{{ student.mother_tongue }}" required>
         </div>
 
         <div class="form-group">
             <label>Religion</label>
-            <input type="text" name="religion" value="{{ student.religion }}">
+            <input type="text" name="religion" value="{{ student.religion }}" required>
         </div>
 
         <div class="form-group">
             <label>Caste</label>
-            <input type="text" name="caste" value="{{ student.caste }}">
+            <input type="text" name="caste" value="{{ student.caste }}" required>
         </div>
 
     </div>
@@ -153,22 +153,22 @@
 
       <div class="form-group">
     <label>City</label>
-    <input type="text" name="city" value="{{ student.city }}">
+    <input type="text" name="city" value="{{ student.city }}" required>
 </div>
 
 <div class="form-group">
     <label>Taluka</label>
-    <input type="text" name="taluka" value="{{ student.taluka }}">
+    <input type="text" name="taluka" value="{{ student.taluka }}" required>
 </div>
 
 <div class="form-group">
     <label>District</label>
-    <input type="text" name="district" value="{{ student.district }}">
+    <input type="text" name="district" value="{{ student.district }}" required>
 </div>
 
 <div class="form-group">
     <label>State</label>
-    <input type="text" name="state" value="{{ student.state }}">
+    <input type="text" name="state" value="{{ student.state }}" required>
 </div>
     </div>
 </div>
@@ -208,7 +208,7 @@
 
 <div class="form-group">
     <label>Class</label>
-    <select name="class">
+    <select name="class" required>
         {% for i in range(1,11) %}
         <option value="{{ i }}" {% if student.class == i|string %}selected{% endif %}>{{ i }}</option>
         {% endfor %}
@@ -225,7 +225,7 @@
 </div>
   <div class="form-group">
             <label>Last School</label>
-            <input type="text" name="previous_school" value="{{ student.previous_school }}" readonly>
+            <input type="text" name="previous_school" value="{{ student.previous_school }}"  >
         </div>
 
     </div>
@@ -247,14 +247,16 @@
 <div class="form-group">
     <label>Result</label>
     <select name="result_status">
-        <option {% if student.result_status=='Pass' %}selected{% endif %}>Pass</option>
-        <option {% if student.result_status=='Fail' %}selected{% endif %}>Fail</option>
+        <option value="">Select Status</option>
+        <option value="Pass" {% if student.result_status == 'Pass' %}selected{% endif %}>Pass</option>
+        <option value="Fail" {% if student.result_status == 'Fail' %}selected{% endif %}>Fail</option>
     </select>
 </div>
 
 <div class="form-group">
     <label>Progress</label>
     <select name="progress">
+        <option value="">Select Progress</option>
         <option {% if student.progress=='Excellent (85%+)' %}selected{% endif %}>Excellent (85%+)</option>
         <option {% if student.progress=='Good (60–85%)' %}selected{% endif %}>Good (60–85%)</option>
         <option {% if student.progress=='Average (40–60%)' %}selected{% endif %}>Average (40–60%)</option>
@@ -269,31 +271,7 @@
 
     </div>
 </div>
-<!-- ================= 6. Leaving Details ================= -->
-<!-- <div class="form-section">
-    <div class="section-title">
-        <h2>Leaving Details</h2>
-    </div>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Leaving Date</label>
-            <input type="date" name="leaving_date" value="{{ student.leaving_date }}">
-        </div>
-
-        <div class="form-group">
-            <label>Reason</label>
-            <input type="text" name="leaving_reason" value="{{ student.leaving_reason }}">
-        </div>
-
-        <div class="form-group">
-            <label>TC Date</label>
-            <input type="date" name="tc_date" value="{{ student.tc_date }}">
-        </div>
-
-    </div>
-</div> -->
+ 
 <!-- ================= 7. Parent details ================= -->
  <div class="form-section">
     <div class="section-title">
@@ -304,7 +282,7 @@
 
         <div class="form-group">
             <label>Primary Mobile</label>
-            <input type="tel" name="primary_mobile" value="{{ student.primary_mobile }}">
+            <input type="tel" name="primary_mobile" value="{{ student.primary_mobile }}" required>
         </div>
          
         <div class="form-group">
@@ -345,7 +323,7 @@
     </div>
 </div>
 <!-- ================= PHOTO ================= -->
-<div class="form-section">
+<!-- <div class="form-section">
     <div class="section-title">
         <h2>Student Photo</h2>
     </div>
@@ -358,7 +336,7 @@
     {% else %}
         <p style="color:gray;">No photo uploaded</p>
     {% endif %}
-</div>
+</div> -->
 
 <!-- ================= ACTION ================= -->
 <div class="form-actions">

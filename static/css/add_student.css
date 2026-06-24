@@ -71,29 +71,7 @@
         transform: translateY(0);
     }
 }
-  /* MOBILE   */
-@media(max-width: 768px) {
-
-    .header-content h1 {
-        font-size: 22px;
-    }
-
-    .marathi-title {
-        font-size: 13px;
-    }
-
-    .header-desc {
-        font-size: 13px;
-    }
-
-    .student-note {
-        padding: 12px;
-    }
-
-    .student-note p {
-        font-size: 12px;
-    }
-}
+  
 
 /* =================BASIC INFO CSS SECTION================= */
 
@@ -180,7 +158,8 @@
 
  /* INPUT  */
 .form-group input,
-.form-group select {
+.form-group select
+  {
     padding: 13px 14px;
 
     border-radius: 12px;
@@ -225,30 +204,7 @@
     }
 }
 
- /* MOBILE   */
-@media(max-width: 768px) {
-
-    .form-section {
-        padding: 20px;
-        border-radius: 16px;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-        gap: 18px;
-    }
-
-    .section-title h2 {
-        font-size: 18px;
-    }
-
-    .form-group input,
-    .form-group select {
-        padding: 12px;
-        font-size: 13px;
-    }
-}
-
+ 
 /* ================= PHOTO UPLOAD  CSS SECTION ================= */
 .photo-upload-wrapper {
     margin-top: 15px;
@@ -313,18 +269,7 @@
 
     display: none;
 }
-
-/* ================= MOBILE ================= */
-@media(max-width: 768px) {
-
-    .photo-box {
-        height: 180px;
-    }
-
-    .upload-text {
-        font-size: 14px;
-    }
-}
+ 
 
 
 /* ================= ACTION SECTION ================= */
@@ -390,23 +335,143 @@
     margin-left: auto;
 }
 
-/* ================= MOBILE ================= */
-@media(max-width: 768px) {
+ 
 
-    .form-actions {
-        flex-direction: column;
-        align-items: stretch;
+/* =====================================================
+   PREMIUM MOBILE ADD STUDENT FORM
+   Applies to all mobiles
+===================================================== */
+
+@media (max-width:576px){
+
+    .student-page-header{
+        margin-bottom:18px;
+    }
+
+    .header-content h1{
+        font-size:24px;
+        line-height:1.25;
+    }
+
+    .marathi-title{
+        font-size:13px;
+    }
+
+    .header-desc{
+        font-size:13px;
+        line-height:1.6;
+        max-width:100%;
+    }
+
+    .student-note{
+        padding:14px;
+        border-radius:16px;
+        margin-bottom:22px;
+    }
+
+    .student-note p{
+        font-size:12px;
+        line-height:1.7;
+    }
+
+    .form-section{
+        padding:20px;
+        border-radius:22px;
+        margin-top:22px;
+        box-shadow:0 12px 30px rgba(15,23,42,0.06);
+    }
+
+    .section-title{
+        margin-bottom:22px;
+    }
+
+    .section-title h2{
+        font-size:20px;
+        line-height:1.3;
+    }
+
+    .section-title p{
+        font-size:12px;
+        line-height:1.6;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+        gap:18px;
+    }
+
+    .form-group label{
+        font-size:13px;
+        margin-bottom:7px;
+    }
+
+    .form-group label span{
+        font-size:11px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea{
+        width:100%;
+        min-height:50px;
+        padding:13px 14px;
+        border-radius:14px;
+        font-size:14px;
+        background:#ffffff;
+    }
+
+    .form-group textarea{
+        min-height:110px;
+        resize:vertical;
+    }
+
+    .photo-upload-wrapper{
+        margin-top:10px;
+    }
+
+    .photo-box{
+        height:180px;
+        border-radius:18px;
+    }
+
+    .upload-text{
+        font-size:14px;
+    }
+
+    .upload-content span{
+        font-size:12px;
+    }
+
+    .upload-content small{
+        font-size:10px;
+    }
+
+    .form-actions{
+        flex-direction:column;
+        align-items:stretch;
+        gap:12px;
+        margin-top:26px;
     }
 
     .btn-save,
-    .btn-reset {
-        width: 100%;
-        text-align: center;
+    .btn-reset,
+    .btn-view{
+        width:100%;
+        height:52px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        border-radius:15px;
+        font-size:14px;
+        font-weight:700;
     }
 
-    .btn-view {
-        margin-left: 0;
-        text-align: center;
-        margin-top: 5px;
+    .btn-view{
+        margin-left:0;
+        background:#ecfeff;
+        border:1px solid #a5f3fc;
+        color:#0f766e;
+        text-decoration:none;
     }
 }

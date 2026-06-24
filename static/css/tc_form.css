@@ -1,0 +1,215 @@
+/* ================= TC FORM PREMIUM ================= */
+
+.student-page-header{
+    padding:28px 30px;
+    border-radius:28px;
+    background:linear-gradient(135deg,#ffffff,#f8fafc);
+    border:1px solid rgba(20,184,166,.18);
+    box-shadow:0 18px 45px rgba(15,23,42,.06);
+    margin-bottom:22px;
+}
+
+.header-content h1{
+    font-size:32px;
+    font-weight:900;
+    color:#0f172a;
+    margin:0;
+}
+
+.marathi-title{
+    display:inline-block;
+    margin-top:6px;
+    color:#14b8a6;
+    font-weight:800;
+}
+
+.header-desc{
+    margin-top:10px;
+    color:#64748b;
+    font-size:14px;
+}
+
+.student-note{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:16px 20px;
+    border-radius:18px;
+    background:#ecfeff;
+    border-left:5px solid #14b8a6;
+    margin-bottom:24px;
+}
+
+.student-note p{
+    margin:0;
+    color:#0f172a;
+    font-weight:700;
+    line-height:1.6;
+}
+
+.student-note a{
+    text-decoration:none;
+    padding:10px 16px;
+    border-radius:12px;
+    background:#0f172a;
+    color:#fff;
+    font-size:13px;
+    font-weight:900;
+    white-space:nowrap;
+}
+
+.form-section{
+    padding:28px;
+    border-radius:26px;
+    background:#ffffff;
+    border:1px solid rgba(20,184,166,.18);
+    box-shadow:0 18px 45px rgba(15,23,42,.06);
+    margin-bottom:24px;
+}
+
+.section-title h2{
+    margin:0;
+    font-size:24px;
+    font-weight:900;
+    color:#0f172a;
+}
+
+.section-title p{
+    margin-top:4px;
+    color:#64748b;
+    font-size:13px;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+    margin-top:24px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:8px;
+    font-size:13px;
+    font-weight:900;
+    color:#0f172a;
+}
+
+.form-group label span{
+    display:block;
+    margin-top:2px;
+    font-size:11px;
+    font-weight:600;
+    color:#64748b;
+}
+
+.form-group input,
+.form-group textarea{
+    width:100%;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1.5px solid #dbe5ef;
+    background:#f8fafc;
+    color:#0f172a;
+    font-size:14px;
+    outline:none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus{
+    background:#fff;
+    border-color:#14b8a6;
+    box-shadow:0 0 0 4px rgba(20,184,166,.12);
+}
+
+.form-group input[readonly]{
+    background:#f1f5f9;
+    color:#334155;
+    cursor:not-allowed;
+}
+
+.form-group small{
+    display:block;
+    margin-top:7px;
+    color:#64748b;
+    font-size:12px;
+}
+
+.full-width{
+    grid-column:1 / -1;
+}
+
+.form-actions{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin:26px 0;
+}
+
+.btn-save,
+.btn-reset{
+    min-width:150px;
+    height:50px;
+    border-radius:15px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    font-weight:900;
+    border:none;
+    cursor:pointer;
+}
+
+.btn-save{
+    background:linear-gradient(135deg,#14b8a6,#06b6d4);
+    color:#fff;
+    box-shadow:0 14px 30px rgba(20,184,166,.28);
+}
+
+.btn-reset{
+    background:#fff;
+    color:#475569;
+    border:1.5px solid #e2e8f0;
+}
+
+.btn-save:hover,
+.btn-reset:hover{
+    transform:translateY(-2px);
+}
+
+/* MOBILE */
+@media(max-width:576px){
+    .student-page-header,
+    .form-section{
+        padding:20px;
+        border-radius:22px;
+    }
+
+    .header-content h1{
+        font-size:26px;
+    }
+
+    .student-note{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .student-note a{
+        width:100%;
+        text-align:center;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .form-actions{
+        flex-direction:column;
+    }
+
+    .btn-save,
+    .btn-reset{
+        width:100%;
+    }
+}

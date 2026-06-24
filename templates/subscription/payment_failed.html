@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Payment Failed</title>
+
+<link rel="stylesheet"
+      href="{{ url_for(
+      'static',
+      filename='css/subscription/payment_failed.css'
+      ) }}">
+
+</head>
+
+<body>
+
+<div class="failed-wrapper">
+
+    <div class="failed-card">
+
+        <div class="failed-icon">
+
+            ✕
+
+        </div>
+
+        <h1>
+            Payment Failed
+        </h1>
+
+        <p class="failed-subtitle">
+
+            We couldn't complete your payment.
+
+            Please try again or choose a
+            different payment method.
+
+        </p>
+
+        <div class="failed-info">
+
+            <div class="info-item">
+
+                <span>Possible Reasons</span>
+
+                <ul>
+
+                    <li>Insufficient balance</li>
+
+                    <li>Payment cancelled</li>
+
+                    <li>Network interruption</li>
+
+                    <li>Bank declined transaction</li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+        <div class="failed-actions">
+
+            <a href="{{ url_for('renew_subscription') }}"
+               class="retry-btn">
+
+                Try Again
+
+            </a>
+
+            <a href="{{ url_for('clerk_dashboard') }}"
+               class="dashboard-btn">
+
+                Go To Dashboard
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

@@ -3,147 +3,213 @@
 {% block content %}
 
 <style>
-
-/* PAGE LAYOUT FIX */
-.coming-page {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;   /* 🔥 not center vertically */
-    padding: 40px 20px;
-    min-height: calc(100vh - 60px);
+.coming-page{
+    min-height:calc(100vh - 80px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:30px;
 }
 
-/* CARD (NOW BIG & PROPER WIDTH) */
-.coming-card {
-    width: 75%;                /* 🔥 MAIN FIX */
-    max-width: 900px;         /* prevent over stretch */
-    text-align: center;
-
-    background: linear-gradient(135deg, #f8fafc, #eef2ff);
-    padding: 50px 60px;
-    border-radius: 18px;
-    margin-top: 180px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.08);
-    position: relative;
-    overflow: hidden;
+.coming-card{
+    position:relative;
+    overflow:hidden;
+    width:100%;
+    max-width:760px;
+    padding:46px;
+    border-radius:30px;
+    background:rgba(255,255,255,.92);
+    border:1px solid rgba(20,184,166,.18);
+    box-shadow:0 25px 70px rgba(15,23,42,.10);
+    text-align:center;
 }
 
-/* TITLE */
-.coming-card h1 {
-    font-size: 30px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 10px;
+.coming-card::after{
+    content:"";
+    position:absolute;
+    width:220px;
+    height:220px;
+    right:-85px;
+    top:-90px;
+    border-radius:50%;
+    background:rgba(20,184,166,.10);
 }
 
-/* DESCRIPTION */
-.coming-card p {
-    font-size: 16px;
-    color: #64748b;
-    margin-bottom: 25px;
+.coming-badge-top{
+    display:inline-flex;
+    padding:8px 15px;
+    border-radius:999px;
+    background:#ecfeff;
+    color:#0f766e;
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:18px;
 }
 
-/* BADGE */
-.coming-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #14b8a6, #0d9488);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 600;
-    margin-top: 15px;
+.coming-icon{
+    width:82px;
+    height:82px;
+    margin:0 auto 18px;
+    border-radius:26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#14b8a6,#06b6d4);
+    color:#fff;
+    font-size:34px;
+    box-shadow:0 18px 35px rgba(20,184,166,.28);
 }
 
-/* SVG */
-.svg-container {
-    margin: 25px 0;
+.coming-card h1{
+    margin:0;
+    font-size:32px;
+    font-weight:900;
+    color:#0f172a;
 }
 
-svg {
-    width: 150px;
-    height: 70px;
+.coming-card p{
+    margin-top:12px;
+    color:#64748b;
+    font-size:15px;
+    line-height:1.7;
 }
 
-/* LINE ANIMATION */
-.line {
-    fill: none;
-    stroke: #14b8a6;
-    stroke-width: 3;
-    stroke-dasharray: 120;
-    stroke-dashoffset: 120;
-    animation: draw 2s infinite ease-in-out;
+.coming-card p span{
+    color:#94a3b8;
 }
 
-@keyframes draw {
-    0% { stroke-dashoffset: 120; }
-    50% { stroke-dashoffset: 0; }
-    100% { stroke-dashoffset: -120; }
+.coming-progress{
+    width:100%;
+    max-width:360px;
+    height:8px;
+    margin:28px auto 0;
+    background:#e2e8f0;
+    border-radius:999px;
+    overflow:hidden;
 }
 
-/* FLOAT CIRCLE */
-.coming-card::after {
-    content: "";
-    position: absolute;
-    width: 160px;
-    height: 160px;
-    background: rgba(20,184,166,0.1);
-    border-radius: 50%;
-    top: -40px;
-    right: -40px;
-}
- 
-
-/* PULSE DOT */
-.pulse-dot {
-    width: 12px;
-    height: 12px;
-    background: #14b8a6;
-    border-radius: 50%;
-    margin: 18px auto 0;
-    animation: pulse 1.5s infinite;
+.coming-progress span{
+    display:block;
+    width:55%;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(135deg,#14b8a6,#06b6d4);
+    animation:loadingMove 1.8s infinite ease-in-out;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 0.7; }
-    50% { transform: scale(1.7); opacity: 0.3; }
-    100% { transform: scale(1); opacity: 0.7; }
+.coming-status{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-top:24px;
+    padding:12px 20px;
+    border-radius:999px;
+    background:#0f172a;
+    color:#fff;
+    font-size:13px;
+    font-weight:900;
 }
 
-/* RESPONSIVE */
-@media (max-width: 768px) {
-    .coming-card {
-        width: 95%;
-        padding: 30px 20px;
+.coming-actions{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin-top:24px;
+}
+
+.coming-actions a{
+    text-decoration:none;
+    padding:12px 18px;
+    border-radius:14px;
+    font-size:13px;
+    font-weight:900;
+}
+
+.btn-back-dashboard{
+    background:#f1f5f9;
+    color:#475569;
+}
+
+.btn-contact-admin{
+    background:linear-gradient(135deg,#14b8a6,#0f766e);
+    color:#fff;
+}
+
+@keyframes loadingMove{
+    0%{width:25%;}
+    50%{width:70%;}
+    100%{width:25%;}
+}
+
+@media(max-width:576px){
+    .coming-page{
+        padding:18px;
+        align-items:flex-start;
+        padding-top:35px;
     }
 
-    .coming-card h1 {
-        font-size: 22px;
+    .coming-card{
+        padding:28px 20px;
+        border-radius:24px;
+    }
+
+    .coming-icon{
+        width:68px;
+        height:68px;
+        font-size:28px;
+    }
+
+    .coming-card h1{
+        font-size:24px;
+    }
+
+    .coming-card p{
+        font-size:13px;
+    }
+
+    .coming-actions{
+        flex-direction:column;
+    }
+
+    .coming-actions a{
+        width:100%;
     }
 }
-
 </style>
 
 <div class="coming-page">
 
     <div class="coming-card">
 
+        <div class="coming-badge-top">
+            🚧 Module Under Development
+        </div>
+
+        <div class="coming-icon">
+            ⚙️
+        </div>
+
         <h1>{{ feature }}</h1>
 
         <p>
-            This feature is under development and will be available soon.
+            This module is currently under development and will be available soon.
+            <br>
+            <span>हा module सध्या तयार होत आहे आणि लवकरच उपलब्ध होईल.</span>
         </p>
 
-        <!-- ANIMATED SVG -->
-        <div class="svg-container">
-            <svg viewBox="0 0 120 60">
-                <path class="line" d="M5 40 Q30 10, 60 40 T115 40"></path>
-            </svg>
+        <div class="coming-progress">
+            <span></span>
         </div>
 
-        <div class="coming-badge">🚀 Coming Soon</div>
+        <div class="coming-status">
+            🚀 Coming Soon
+        </div>
 
-        <div class="pulse-dot"></div>
+        <div class="coming-actions">
+            <a href="{{ url_for('clerk_dashboard') }}" class="btn-back-dashboard">
+                ← Back to Dashboard
+            </a>
+        </div>
 
     </div>
 

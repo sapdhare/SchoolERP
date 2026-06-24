@@ -1,0 +1,323 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet"
+href="{{ url_for('static',
+filename='css/superadmin/renewals_admin.css') }}">
+
+<div class="renew-admin-wrapper">
+
+    <!-- HEADER -->
+    <div class="renew-admin-header">
+
+        <div>
+            <h1>🔔 Renewal Center</h1>
+            <p>
+                Track expiring subscriptions and send renewal reminders.
+            </p>
+        </div>
+
+        <a href="/superadmin/subscriptions"
+           class="renew-admin-export-btn">
+            View Subscriptions
+        </a>
+
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="renew-admin-stats">
+
+        <div class="renew-admin-stat-card expired">
+            <div>
+                <h4>Expired</h4>
+                <h2>{{ expired_count }}</h2>
+            </div>
+            <span>⚠️</span>
+        </div>
+
+        <div class="renew-admin-stat-card today">
+            <div>
+                <h4>Expiring Today</h4>
+                <h2>{{ today_count }}</h2>
+            </div>
+            <span>⏰</span>
+        </div>
+
+        <div class="renew-admin-stat-card week">
+            <div>
+                <h4>Next 7 Days</h4>
+                <h2>{{ week_count }}</h2>
+            </div>
+            <span>📅</span>
+        </div>
+
+        <div class="renew-admin-stat-card month">
+            <div>
+                <h4>Next 30 Days</h4>
+                <h2>{{ month_count }}</h2>
+            </div>
+            <span>🔔</span>
+        </div>
+
+    </div>
+
+    <!-- FILTERS -->
+    <form method="GET"
+          class="renew-admin-filter-box">
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Search school name..."
+            value="{{ search }}">
+
+        <select name="status">
+            <option value="">All Status</option>
+
+            <option value="expired"
+            {% if status_filter == 'expired' %}selected{% endif %}>
+                Expired
+            </option>
+
+            <option value="today"
+            {% if status_filter == 'today' %}selected{% endif %}>
+                Expiring Today
+            </option>
+
+            <option value="7"
+            {% if status_filter == '7' %}selected{% endif %}>
+                Next 7 Days
+            </option>
+
+            <option value="30"
+            {% if status_filter == '30' %}selected{% endif %}>
+                Next 30 Days
+            </option>
+        </select>
+
+        <select name="plan">
+            <option value="">All Plans</option>
+
+            {% for plan in plans %}
+            <option value="{{ plan.plan_name }}"
+            {% if plan_filter == plan.plan_name %}selected{% endif %}>
+                {{ plan.plan_name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">
+            Search
+        </button>
+
+        <a href="/superadmin/renewals"
+           class="renew-admin-clear-btn">
+            Clear
+        </a>
+
+    </form>
+    
+    <div class="renew-filter-count">
+
+        Showing
+        <strong>{{ renewals|length }}</strong>
+
+        of
+
+        <strong>{{ total_records }}</strong>
+
+        matching renewals
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="renew-admin-table-box">
+
+        <table class="renew-admin-table">
+
+            <thead>
+                <tr>
+                    <th>School</th>
+                    <th>Plan</th>
+                    <th>Expiry Date</th>
+                    <th>Days Left</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            {% if renewals %}
+            <tbody>
+
+                {% for item in renewals %}
+
+                <tr class="renew-row {{ item.alert_type }}">
+                    <td>
+
+                        <div class="school-info">
+
+                            <a
+                            href="/superadmin/schools?search={{ item.school_name }}"
+                            class="renew-school-link">
+
+                                {{ item.school_name }}
+
+                            </a>
+
+                            <small>
+                                {{ item.school_email or 'No Email' }}
+                            </small>
+
+                        </div>
+
+                    </td>
+
+                    <td>
+                        <span class="renew-plan-pill">
+                            {{ item.plan_name }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ item.end_date }}
+                    </td>
+
+                    <td>
+                        {% if item.days_left < 0 %}
+                            <span class="days-pill expired">
+                                Expired
+                            </span>
+                        {% elif item.days_left == 0 %}
+                            <span class="days-pill today">
+                                Today
+                            </span>
+                        {% else %}
+                            <span class="days-pill active">
+                                {{ item.days_left }} days
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        ₹{{ "{:,.2f}".format(item.amount or 0) }}
+                    </td>
+
+                    <td>
+                        <span class="renew-status-pill {{ item.alert_type }}">
+                            {{ item.alert_label }}
+                        </span>
+                    </td>
+
+                    <td class="renew-actions">
+
+                        <form method="POST"
+                              action="/superadmin/renewals/email/{{ item.id }}"
+                              class="inline-action-form">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token() }}">
+
+                            <button type="submit"
+                                    class="renew-action-btn email">
+                                Email
+                            </button>
+
+                        </form>
+
+                        <a
+                        href="https://wa.me/{{ item.school_phone }}?text={{ item.whatsapp_message }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="renew-action-btn whatsapp">
+
+                            WhatsApp
+
+                        </a>
+
+                        <a href="/superadmin/subscriptions?search={{ item.school_name }}"
+                           class="renew-action-btn subscription">
+                            Subscription
+                        </a>
+
+                        <a href="/superadmin/payments?search={{ item.school_name }}"
+                           class="renew-action-btn payment">
+                            Payments
+                        </a>
+
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+            {% else %}
+
+                <tbody>
+
+                <tr>
+
+                <td colspan="7" class="renew-empty-state">
+
+                    No renewal records found.
+
+                </td>
+
+                </tr>
+
+                </tbody>
+
+                {% endif %}
+
+        </table>
+
+    </div>
+
+    <!-- PAGINATION -->
+   {% if total_pages > 1 %}
+
+    <div class="renew-pagination">
+
+        {% if page > 1 %}
+        <a href="?page=1&search={{ search }}&status={{ status_filter }}&plan={{ plan_filter }}">
+            First
+        </a>
+
+        <a href="?page={{ page-1 }}&search={{ search }}&status={{ status_filter }}&plan={{ plan_filter }}">
+            ← Prev
+        </a>
+        {% endif %}
+
+        <span>
+
+            Page {{ page }}
+            of
+            {{ total_pages }}
+
+            •
+
+            {{ total_records }}
+            records
+
+        </span>
+
+        {% if page < total_pages %}
+        <a href="?page={{ page+1 }}&search={{ search }}&status={{ status_filter }}&plan={{ plan_filter }}">
+            Next →
+        </a>
+
+        <a href="?page={{ total_pages }}&search={{ search }}&status={{ status_filter }}&plan={{ plan_filter }}">
+            Last
+        </a>
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

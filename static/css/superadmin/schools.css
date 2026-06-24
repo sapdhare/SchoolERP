@@ -91,7 +91,14 @@ body {
 }
 
 .clear-btn {
-    background: #64748b;
+    padding: 14px 22px;
+    border: none;
+    border-radius: 14px;
+    background:#fff;
+    color:black;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
 }
 
 /* ================= SECTION HEAD ================= */
@@ -135,14 +142,20 @@ body {
 /* ================= GRID ================= */
 .sa-grid {
     display: grid;
+    align-items:stretch;
     grid-template-columns: repeat(3, 1fr);
     gap: 22px;
 }
 
 /* ================= CARD ================= */
 .sa-card {
+   
     position: relative;
     overflow: hidden;
+
+     display:flex;
+    flex-direction:column;
+    justify-content:space-between;
 
     background: white;
     padding: 25px;
@@ -176,11 +189,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    
 }
 
 .sa-top h2 {
     font-size: 24px;
     margin-bottom: 5px;
+    line-height:1.3;
+    word-break:break-word;
 }
 
 .school-label {
@@ -225,10 +241,12 @@ body {
     display: flex;
     gap: 10px;
     margin-top: 20px;
+    flex-wrap:wrap;
 }
 
 .card-btn{
-    flex: 1;
+     flex:1 1 auto;
+    min-width:95px;
     border: none;
     padding: 12px;
     border-radius: 12px;
@@ -256,148 +274,7 @@ body {
     background: #dc2626;
     color: white;
 }
-
-/* ================= INSIGHT LAYOUT ================= */
-.sa-insight {
-    margin-top: 35px;
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 25px;
-}
-
-/* ================= GLASS CARD ================= */
-.insight-card {
-    position: relative;
-    overflow: hidden;
-
-    background: rgba(255,255,255,0.65);
-    backdrop-filter: blur(18px);
-
-    border: 1px solid rgba(255,255,255,0.3);
-
-    border-radius: 28px;
-    padding: 25px;
-
-    box-shadow: 
-        0 20px 50px rgba(0,0,0,0.06);
-}
-
-/* ================= HEAD ================= */
-.analytics-head {
-    margin-bottom: 20px;
-}
-
-.analytics-head h3 {
-    font-size: 22px;
-    font-weight: 700;
-}
-
-.analytics-head p {
-    margin-top: 8px;
-    color: #64748b;
-}
-
-/* ================= PIE CHART ================= */
-.chart-container {
-    height: 350px;
-    padding: 10px;
-}
-
-/* ================= STATUS ================= */
-.glass-status {
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255,255,255,0.75),
-            rgba(255,255,255,0.45)
-        );
-}
-
-/* ================= STATUS GRID ================= */
-.status-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-/* ================= GLASS BOX ================= */
-.glass-box {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    padding: 22px;
-
-    border-radius: 22px;
-
-    background: rgba(255,255,255,0.4);
-    backdrop-filter: blur(14px);
-
-    border: 1px solid rgba(255,255,255,0.25);
-
-    transition: 0.35s;
-}
-
-.glass-box:hover {
-    transform: translateY(-5px);
-}
-
-/* ================= STATUS TEXT ================= */
-.glass-box span {
-    font-size: 13px;
-    color: #64748b;
-}
-
-.glass-box h4 {
-    margin-top: 8px;
-    font-size: 28px;
-    font-weight: 700;
-    color: #0f172a;
-}
-
-/* ================= ICON ================= */
-.status-icon {
-    width: 58px;
-    height: 58px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 18px;
-
-    background: rgba(14,165,164,0.12);
-
-    font-size: 24px;
-}
-
  
-
-/* ================= RESPONSIVE ================= */
-@media (max-width: 1200px) {
-    .sa-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .sa-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .sa-insight{
-        grid-template-columns: 1fr;
-    }
-    .sa-hero {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .hero-stats {
-        width: 100%;
-    }
-}
-
 /* ================= SCHOOL MODAL ================= */
 
 .school-modal{
@@ -576,15 +453,324 @@ body {
 
     outline:none;
 }
+.sa-pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:14px;
+    margin:28px 0;
+}
 
-/* =========================================
-   RESPONSIVE
-========================================= */
+.sa-pagination a{
+    padding:12px 18px;
+    border-radius:12px;
+    background:#0ea5a4;
+    color:#fff;
+    font-weight:700;
+    text-decoration:none;
+}
 
-@media(max-width:768px){
+.sa-pagination span{
+    font-weight:700;
+    color:#334155;
+}
+ 
+
+/* =====================================================
+   SCHOOL MANAGEMENT - PREMIUM MOBILE RESPONSIVE 576px
+===================================================== */
+
+@media(max-width:576px){
+
+    html,
+    body{
+        width:100%;
+        overflow-x:hidden;
+        background:#f8fafc;
+    }
+
+    /* HERO */
+
+    .sa-hero{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:20px;
+
+        padding:22px;
+
+        border-radius:20px;
+
+        margin-bottom:22px;
+
+        box-shadow:
+        0 14px 35px rgba(14,165,164,.18);
+    }
+
+    .hero-left h1{
+        font-size:24px;
+        line-height:1.25;
+        margin-bottom:8px;
+    }
+
+    .hero-left p{
+        font-size:13px;
+        line-height:1.5;
+    }
+
+    .hero-stats{
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+    }
+
+    .hero-stat-card{
+        min-width:0;
+        width:100%;
+        padding:16px;
+        border-radius:16px;
+    }
+
+    .hero-stat-card span{
+        font-size:12px;
+    }
+
+    .hero-stat-card h3{
+        font-size:24px;
+        margin-top:8px;
+    }
+
+    /* SEARCH */
+
+    .sa-search-box{
+        flex-direction:column;
+        align-items:stretch;
+        gap:12px;
+        margin-bottom:22px;
+    }
+
+    .search-wrapper{
+        width:100%;
+    }
+
+    .sa-search-box input{
+        width:100%;
+        padding:14px 15px;
+        border-radius:13px;
+        font-size:13px;
+    }
+
+    .sa-search-box button,
+    .sa-search-box a,
+    .clear-btn{
+        width:100%;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        text-align:center;
+        padding:13px;
+        border-radius:13px;
+        font-size:13px;
+    }
+
+    /* SECTION HEAD */
+
+    .section-head{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:14px;
+        margin:20px 0 18px;
+    }
+
+    .section-head-left h2{
+        font-size:22px;
+        line-height:1.3;
+    }
+
+    .section-head-left p{
+        font-size:13px;
+        line-height:1.5;
+        color:#64748b;
+    }
+
+    .add-school-btn{
+        width:100%;
+        padding:13px;
+        border-radius:13px;
+    }
+
+    /* SCHOOL GRID */
+
+    .sa-grid{
+        grid-template-columns:1fr;
+        gap:18px;
+    }
+
+    /* SCHOOL CARD */
+
+    .sa-card{
+        padding:20px;
+        border-radius:20px;
+        min-height:auto;
+        box-shadow:
+        0 12px 28px rgba(15,23,42,.06);
+    }
+
+    .sa-card:hover{
+        transform:none;
+    }
+
+    .card-glow{
+        width:130px;
+        height:130px;
+        right:-55px;
+        top:-55px;
+    }
+
+    .sa-top{
+        gap:12px;
+    }
+
+    .sa-top h2{
+        font-size:20px;
+        line-height:1.35;
+        margin-bottom:6px;
+    }
+
+    .school-label{
+        font-size:12px;
+    }
+
+    .badge{
+        font-size:11px;
+        padding:6px 10px;
+        border-radius:999px;
+        white-space:nowrap;
+    }
+
+    .sa-middle{
+        margin:22px 0 18px;
+    }
+
+    .metric-box{
+        padding:16px;
+        border-radius:16px;
+    }
+
+    .metric-box span{
+        font-size:13px;
+    }
+
+    .metric-box h3{
+        font-size:28px;
+        margin-top:8px;
+    }
+
+    /* CARD BUTTONS */
+
+    .sa-bottom{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:18px;
+    }
+
+    .card-btn{
+        width:100%;
+        min-width:0;
+        padding:11px 8px;
+        border-radius:11px;
+        font-size:12px;
+        font-weight:700;
+    }
+
+    /* MODAL */
+
+    .school-modal{
+        padding:14px;
+        align-items:flex-start;
+        overflow-y:auto;
+    }
+
+    .school-modal-box{
+        width:100%;
+        max-width:100%;
+        max-height:92vh;
+        overflow-y:auto;
+        padding:20px;
+        border-radius:20px;
+        margin-top:20px;
+    }
+
+    .modal-head{
+        margin-bottom:18px;
+        gap:12px;
+    }
+
+    .modal-head h2{
+        font-size:20px;
+        line-height:1.3;
+    }
+
+    .modal-head span{
+        font-size:26px;
+        width:34px;
+        height:34px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:10px;
+        background:#f1f5f9;
+    }
+
+    .school-form-grid{
+        grid-template-columns:1fr;
+        gap:14px;
+    }
+
+    .school-form-group.full{
+        grid-column:span 1;
+    }
+
+    .school-form-group label{
+        font-size:13px;
+    }
+
+    .school-form-group input,
+    .feature-item select{
+        padding:13px;
+        border-radius:11px;
+        font-size:13px;
+    }
+
+    .school-modal-actions{
+        flex-direction:column;
+        gap:10px;
+        margin-top:20px;
+    }
+
+    .cancel-btn,
+    .save-btn{
+        width:100%;
+        padding:13px;
+        border-radius:12px;
+    }
+
+    /* FEATURE MODAL */
 
     .feature-grid{
         grid-template-columns:1fr;
+        gap:14px;
+        margin-top:16px;
     }
 
+    .feature-item{
+        padding:15px;
+        border-radius:15px;
+    }
+
+    .feature-item label{
+        font-size:13px;
+        margin-bottom:10px;
+    }
 }

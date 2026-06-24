@@ -1,0 +1,248 @@
+/* =======================================
+   SUBSCRIPTION HISTORY
+======================================= */
+
+.sh-container{
+    padding:30px;
+}
+
+/* =======================================
+   HEADER
+======================================= */
+
+.sh-header{
+    margin-bottom:25px;
+}
+
+.sh-header h1{
+    font-size:42px;
+    font-weight:800;
+    color:#0f172a;
+    margin-bottom:8px;
+}
+
+.sh-header p{
+    color:#64748b;
+    font-size:15px;
+}
+
+/* =======================================
+   STATS
+======================================= */
+
+.sh-stats-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.sh-stat-card{
+    padding:28px;
+    border-radius:22px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:#fff;
+    transition:.3s;
+}
+
+.sh-stat-card:hover{
+    transform:translateY(-4px);
+}
+
+.sh-card-blue{
+    background:
+    linear-gradient(
+    135deg,
+    #0ea5e9,
+    #2563eb
+    );
+}
+
+.sh-card-green{
+    background:
+    linear-gradient(
+    135deg,
+    #10b981,
+    #059669
+    );
+}
+
+.sh-stat-card span{
+    font-size:14px;
+    opacity:.95;
+}
+
+.sh-stat-card h2{
+    margin-top:8px;
+    font-size:36px;
+    font-weight:800;
+}
+
+.sh-icon{
+    font-size:42px;
+}
+
+/* =======================================
+   SEARCH
+======================================= */
+
+.sh-search-box{
+    background:#fff;
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:25px;
+    box-shadow:
+    0 4px 15px rgba(0,0,0,.05);
+}
+
+.sh-search-box input{
+    width:100%;
+    border:1px solid #dbe3ec;
+    border-radius:12px;
+    padding:14px 18px;
+    font-size:15px;
+    outline:none;
+}
+
+/* =======================================
+   TABLE CARD
+======================================= */
+
+.sh-table-card{
+    background:#fff;
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:
+    0 8px 30px rgba(0,0,0,.06);
+}
+
+.sh-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.sh-table thead{
+    background:#f8fafc;
+}
+
+.sh-table th{
+    padding:18px;
+    text-align:left;
+    font-size:14px;
+    font-weight:700;
+    color:#475569;
+}
+
+.sh-table td{
+    padding:18px;
+    border-top:1px solid #eef2f7;
+}
+
+.sh-table tr:hover{
+    background:#fafcff;
+}
+
+/* =======================================
+   PLAN BADGE
+======================================= */
+
+.sh-plan-badge{
+    background:#e0f2fe;
+    color:#0284c7;
+    padding:8px 14px;
+    border-radius:50px;
+    font-size:13px;
+    font-weight:700;
+}
+
+/* =======================================
+   STATUS
+======================================= */
+
+.sh-status{
+    padding:8px 15px;
+    border-radius:50px;
+    font-size:13px;
+    font-weight:700;
+}
+
+.sh-success{
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.sh-failed{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.sh-pending{
+    background:#fef3c7;
+    color:#d97706;
+}
+
+
+/* INVOICE BUTTON
+*/
+
+.sh-invoice-btn{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:8px 14px;
+
+    border-radius:10px;
+
+    background:#2563eb;
+
+    color:white;
+
+    text-decoration:none;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    transition:.3s;
+}
+
+.sh-invoice-btn:hover{
+
+    background:#1d4ed8;
+
+    transform:translateY(-2px);
+}
+
+/* =======================================
+   MOBILE
+======================================= */
+
+@media(max-width:576px){
+
+    .sh-container{
+        padding:15px;
+    }
+
+    .sh-header h1{
+        font-size:28px;
+    }
+
+    .sh-stats-grid{
+        grid-template-columns:1fr;
+    }
+
+    .sh-table-card{
+        overflow-x:auto;
+    }
+
+    .sh-table{
+        min-width:900px;
+    }
+
+}

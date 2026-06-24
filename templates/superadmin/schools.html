@@ -27,21 +27,24 @@
 
 </div>
 
-<!-- ================= SEARCH BAR ================= -->
-<div class="sa-search-box">
+<form method="GET" class="sa-search-box">
 
     <div class="search-wrapper">
         <input 
             type="text" 
-            id="schoolSearch" 
-            placeholder="Search school name..."
+            name="search"
+            value="{{ search }}"
+            placeholder="Search school name, code, email, phone..."
         >
     </div>
 
-    <button onclick="searchSchools()">Search</button>
-    <button class="clear-btn" onclick="clearSearch()">Clear</button>
+    <button type="submit">Search</button>
 
-</div>
+    <a href="/superadmin/schools" class="clear-btn">
+        Clear
+    </a>
+
+</form>
 
 <!-- ================= SECTION TITLE ================= -->
 <div class="section-head">
@@ -111,9 +114,21 @@
         <!-- FEATURES -->
         <button
             class="card-btn feature-btn"
-            onclick="event.stopPropagation(); openFeatureModal(
-                '{{ school.school_id }}'
-            )">
+
+            onclick="event.stopPropagation(); openFeatureModal(this)"
+
+            data-school-id="{{ school.school_id }}"
+
+            data-tc="{{ school.enable_tc_management }}"
+            data-bonafide="{{ school.enable_bonafide_management }}"
+            data-import-export="{{ school.enable_import_export }}"
+            data-attendance="{{ school.enable_attendance }}"
+            data-fee="{{ school.enable_fee_management }}"
+            data-teacher="{{ school.enable_teacher_management }}"
+            data-results="{{ school.enable_results }}"
+            data-timetable="{{ school.enable_timetable }}"
+            data-notice="{{ school.enable_notice_board }}"
+        >
             Features
         </button>
 
@@ -170,6 +185,32 @@
     {% endfor %}
 
 </div>
+
+{% if total_pages > 1 %}
+
+<div class="sa-pagination">
+
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&search={{ search }}">
+        ← Previous
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&search={{ search }}">
+        Next →
+    </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+
 <!-- ================= ADD SCHOOL MODAL ================= -->
 <div class="school-modal" id="schoolModal">
 
@@ -656,109 +697,8 @@
      </div>
 
   </div>
-
-                    
-<!-- ================= ANALYTICS SECTION ================= -->
-<div class="sa-insight">
-
-    <!-- LEFT : PIE CHART -->
-    <div class="insight-card analytics-card">
-
-        <div class="analytics-head">
-            <h3>📊 School Analytics</h3>
-            <p>Student distribution by school</p>
-        </div>
-
-        <div class="chart-container">
-            <canvas id="schoolPieChart"></canvas>
-        </div>
-
-    </div>
-
  
-    <!-- RIGHT : SYSTEM STATUS -->
-    <!-- <div class="insight-card status-card glass-status">
-
-        <div class="analytics-head">
-            <h3>📈 System Status</h3>
-            <p>Live platform overview</p>
-        </div>
-
-        <div class="status-grid">
-
-            <div class="status-box glass-box">
-                <div>
-                    <span>Total Schools</span>
-                    <h4>{{ schools|length }}</h4>
-                </div>
-                <div class="status-icon">🏫</div>
-            </div>
-
-            <div class="status-box glass-box">
-                <div>
-                    <span>System Status</span>
-                    <h4>Active</h4>
-                </div>
-                <div class="status-icon">🟢</div>
-            </div>
-
-            <div class="status-box glass-box">
-                <div>
-                    <span>Total Registered</span>
-                    <h4>{{ schools|length }}</h4>
-                </div>
-                <div class="status-icon">📚</div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div> -->
-
-<!-- CHART JS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-/* =========================================================
-   📊 SCHOOL ANALYTICS PIE CHART
-   Shows total student distribution school-wise
-========================================================= */
-
-const schoolLabels = [
-    {% for school in schools %}
-        "{{ school.name }}",
-    {% endfor %}
-];
-
-const schoolData = [
-    {% for school in schools %}
-        {{ school.total_students }},
-    {% endfor %}
-];
-
-// Chart canvas
-const chartCanvas = document.getElementById("schoolPieChart");
-
-// Create pie chart
-new Chart(chartCanvas, {
-    type: "pie",
-    data: {
-        labels: schoolLabels,
-        datasets: [{
-            data: schoolData,
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: "bottom"
-            }
-        }
-    }
-});
-
 
 /* =========================================================
    🏫 ADD SCHOOL MODAL
@@ -813,16 +753,87 @@ function closeEditSchoolModal() {
    ⚙ FEATURE MODAL
 ========================================================= */
 
-function openFeatureModal(id){
+function openFeatureModal(button){
+
+    // =========================================
+    // OPEN MODAL
+    // =========================================
 
     document.getElementById(
         "featureModal"
     ).style.display = "flex";
 
+    // =========================================
+    // SCHOOL ID
+    // =========================================
+
     document.getElementById(
         "featureSchoolId"
-    ).value = id;
+    ).value = button.dataset.schoolId;
+
+    // =========================================
+    // LOAD CURRENT VALUES
+    // =========================================
+
+    document.querySelector(
+        '[name="enable_tc_management"]'
+    ).value = (
+        button.dataset.tc || "Disabled"
+    ).trim();
+
+    document.querySelector(
+        '[name="enable_bonafide_management"]'
+    ).value = (
+        button.dataset.bonafide || "Disabled"
+    ).trim();
+
+    document.querySelector(
+        '[name="enable_import_export"]'
+    ).value = (
+        button.dataset.importExport || "Disabled"
+    ).trim();
+
+    document.querySelector(
+        '[name="enable_attendance"]'
+    ).value = (
+        button.dataset.attendance || "Disabled"
+    ).trim();
+
+    document.querySelector(
+        '[name="enable_fee_management"]'
+    ).value = (
+        button.dataset.fee || "Disabled"
+    ).trim();
+
+    document.querySelector(
+        '[name="enable_teacher_management"]'
+    ).value = (
+        button.dataset.teacher || "Disabled"
+    ).trim();
+
+    document.querySelector(
+        '[name="enable_results"]'
+    ).value = (
+        button.dataset.results || "Disabled"
+    ).trim();
+
+    document.querySelector(
+        '[name="enable_timetable"]'
+    ).value = (
+        button.dataset.timetable || "Disabled"
+    ).trim();
+
+    document.querySelector(
+        '[name="enable_notice_board"]'
+    ).value = (
+        button.dataset.notice || "Disabled"
+    ).trim();
 }
+
+
+/* =========================================================
+   CLOSE MODAL
+========================================================= */
 
 function closeFeatureModal(){
 
@@ -831,6 +842,7 @@ function closeFeatureModal(){
     ).style.display = "none";
 }
 
+ 
 /* =========================================================
    📜 CERTIFICATE MODAL
 ========================================================= */
@@ -938,42 +950,6 @@ function toggleSchoolStatus(id, currentStatus){
 function closeStatusModal() {
     document.getElementById("statusModal").style.display = "none";
 }
-
-
-/* =========================================================
-   🔍 SEARCH SCHOOLS
-   Search school cards by school name
-========================================================= */
-
-// Search function
-function searchSchools() {
-    const input = document
-        .getElementById("schoolSearch")
-        .value
-        .toLowerCase();
-
-    const cards = document.querySelectorAll(".sa-card");
-
-    cards.forEach(card => {
-        const schoolName = card.getAttribute("data-name");
-
-        if (schoolName.includes(input)) {
-            card.style.display = "block";
-        } else {
-            card.style.display = "none";
-        }
-    });
-}
-
-// Clear search input
-function clearSearch() {
-    document.getElementById("schoolSearch").value = "";
-    searchSchools();
-}
-
-// Live search while typing
-document.getElementById("schoolSearch")
-.addEventListener("keyup", searchSchools);
 
 
 /* =========================================================

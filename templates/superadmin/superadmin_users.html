@@ -8,10 +8,24 @@
 
     <!-- HEADER -->
     <div class="su-header">
+
         <div>
             <h1>👥 Users Management</h1>
-            <p>Manage all ERP users, access, schools and subscriptions</p>
+
+            <p>
+                Manage all ERP users, access control,
+                schools and permissions
+            </p>
         </div>
+
+        <button
+            class="su-add-user-btn"
+            onclick="openAddUserModal()">
+
+            + Add New User
+
+        </button>
+
     </div>
 
     <!-- STATS -->
@@ -58,19 +72,31 @@
             type="text"
             name="search"
             placeholder="Search by email, name, phone..."
-            value="{{ request.args.get('search','') }}"
+            value="{{ search }}"
         >
 
-        <select name="role">
+       <select name="role">
             <option value="">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="clerk">Clerk</option>
-        </select>
 
-        <select name="status">
+            <option value="admin" {% if role_filter == "admin" %}selected{% endif %}>
+                Admin
+            </option>
+
+            <option value="clerk" {% if role_filter == "clerk" %}selected{% endif %}>
+                Clerk
+            </option>
+       </select>
+
+       <select name="status">
             <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="blocked">Blocked</option>
+
+            <option value="active" {% if status_filter == "active" %}selected{% endif %}>
+                Active
+            </option>
+
+            <option value="blocked" {% if status_filter == "blocked" %}selected{% endif %}>
+                Blocked
+            </option>
         </select>
 
         <button type="submit">Search</button>
@@ -125,7 +151,7 @@
 
                     <td>
                         <span class="plan-badge">
-                            Basic
+                            {{ user.subscription_plan }}
                         </span>
                     </td>
 
@@ -178,6 +204,32 @@
 
 </div>
 
+<!-- PAGINATION -->
+
+{% if total_pages > 1 %}
+
+<div class="su-pagination">
+
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&search={{ search }}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+        ← Prev
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&search={{ search }}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+        Next →
+    </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
 <!-- VIEW MODAL -->
 <div id="viewModal" class="su-modal">
     <div class="su-modal-box su-view-box">
@@ -223,9 +275,34 @@
 
             <div class="su-input-group">
                 <label>Role</label>
-                <select name="role" id="edit_role">
+
+                <select
+                    name="role"
+                    id="edit_role"
+                    onchange="toggleEditSchool()">
+
                     <option value="admin">Admin</option>
                     <option value="clerk">Clerk</option>
+
+                </select>
+            </div>
+
+
+            <div class="su-input-group">
+                <label>School</label>
+
+                <select name="school_id" id="edit_school">
+
+                    <option value="">
+                        Select School
+                    </option>
+
+                    {% for school in schools %}
+                    <option value="{{ school.school_id }}">
+                        {{ school.name }}
+                    </option>
+                    {% endfor %}
+
                 </select>
             </div>
 
@@ -281,6 +358,183 @@
     </div>
 </div>
 
+<!-- ADD USER MODAL -->
+<div id="addUserModal" class="su-modal">
+
+    <div class="su-modal-box su-add-user-box">
+
+        <button
+            class="su-close-btn"
+            onclick="closeModal('addUserModal')">
+
+            ×
+
+        </button>
+
+        <div class="su-modal-header">
+
+            <h2>Create New User</h2>
+
+            <p>
+                Add new ERP account with school access
+            </p>
+
+        </div>
+
+        <form
+            method="POST"
+            action="/superadmin/add-user"
+            class="su-add-user-form">
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <!-- ROW 1 -->
+            <div class="su-form-grid">
+
+                <div class="su-input-group">
+                    <label>Full Name</label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        required
+                    >
+                </div>
+
+                <div class="su-input-group">
+                    <label>Email Address</label>
+
+                    <input
+                        type="email"
+                        name="email"
+                        required
+                    >
+                </div>
+
+            </div>
+
+            <!-- ROW 2 -->
+            <div class="su-form-grid">
+
+                <div class="su-input-group">
+                    <label>Phone Number</label>
+
+                    <input
+                        type="text"
+                        name="phone"
+                    >
+                </div>
+
+                <div class="su-input-group">
+                    <label>Password</label>
+
+                    <input
+                        type="password"
+                        name="password"
+                        required
+                    >
+                </div>
+
+            </div>
+
+            <!-- ROW 3 -->
+            <div class="su-form-grid">
+
+                <div class="su-input-group">
+                    <label>Role</label>
+
+                    <select
+                        name="role"
+                        id="userRole"
+                        onchange="toggleSchoolField()"
+                        required>
+
+                        <option value="">
+                            Select Role
+                        </option>
+
+                        <option value="admin">
+                            Admin
+                        </option>
+
+                        <option value="clerk">
+                            Clerk
+                        </option>
+
+                    </select>
+                </div>
+
+                <div
+                    class="su-input-group"
+                    id="schoolField">
+
+                    <label>School</label>
+
+                    <select name="school_id">
+
+                        <option value="">
+                            Select School
+                        </option>
+
+                        {% for school in schools %}
+
+                        <option
+                            value="{{ school.school_id }}">
+
+                            {{ school.name }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- ROW 4 -->
+            <div class="su-form-grid">
+
+                <div class="su-input-group">
+                    <label>Designation</label>
+
+                    <input
+                        type="text"
+                        name="designation"
+                    >
+                </div>
+
+                <div class="su-input-group">
+                    <label>Address</label>
+
+                    <input
+                        type="text"
+                        name="address"
+                    >
+                </div>
+
+            </div>
+
+            <!-- SUBMIT -->
+            <button
+                type="submit"
+                class="su-create-user-btn">
+
+                Create User
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
 <script>
 
 function openViewModal(btn){
@@ -289,51 +543,19 @@ function openViewModal(btn){
 
     document.getElementById("viewContent").innerHTML = `
         <div class="su-view-grid">
-            <div class="su-view-card">
-                <span>Name</span>
-                <strong>${user.name || '-'}</strong>
-            </div>
-
-            <div class="su-view-card">
-                <span>Email</span>
-                <strong>${user.email}</strong>
-            </div>
-
-            <div class="su-view-card">
-                <span>Phone</span>
-                <strong>${user.phone || '-'}</strong>
-            </div>
-
-            <div class="su-view-card">
-                <span>Role</span>
-                <strong>${user.role}</strong>
-            </div>
-
-            <div class="su-view-card">
-                <span>Status</span>
-                <strong>${user.status}</strong>
-            </div>
-
-            <div class="su-view-card">
-                <span>School</span>
-                <strong>${user.school_name || 'System Admin'}</strong>
-            </div>
-
-            <div class="su-view-card">
-                <span>Last Login</span>
-                <strong>${user.last_login || '-'}</strong>
-            </div>
-
-            <div class="su-view-card">
-                <span>Created</span>
-                <strong>${user.created_at}</strong>
-            </div>
+            <div class="su-view-card"><span>Name</span><strong>${user.name || '-'}</strong></div>
+            <div class="su-view-card"><span>Email</span><strong>${user.email || '-'}</strong></div>
+            <div class="su-view-card"><span>Phone</span><strong>${user.phone || '-'}</strong></div>
+            <div class="su-view-card"><span>Role</span><strong>${user.role || '-'}</strong></div>
+            <div class="su-view-card"><span>Status</span><strong>${user.status || '-'}</strong></div>
+            <div class="su-view-card"><span>School</span><strong>${user.school_name || 'System Admin'}</strong></div>
+            <div class="su-view-card"><span>Last Login</span><strong>${user.last_login || '-'}</strong></div>
+            <div class="su-view-card"><span>Created</span><strong>${user.created_at || '-'}</strong></div>
         </div>
     `;
 
     document.getElementById("viewModal").style.display = "flex";
 }
-
 
 function openEditModal(btn){
 
@@ -343,37 +565,65 @@ function openEditModal(btn){
     document.getElementById("edit_email").value = user.email || "";
     document.getElementById("edit_phone").value = user.phone || "";
     document.getElementById("edit_role").value = user.role || "";
+    document.getElementById("edit_school").value = user.school_id || "";
 
     document.getElementById("editForm").action =
         "/superadmin/user/edit/" + user.id;
 
+    toggleEditSchool();
+
     document.getElementById("editModal").style.display = "flex";
 }
 
+function toggleEditSchool(){
+
+    const role = document.getElementById("edit_role").value;
+    const school = document.getElementById("edit_school");
+    const schoolGroup = school.closest(".su-input-group");
+
+    if(role === "admin"){
+        schoolGroup.style.display = "none";
+        school.value = "";
+    }else{
+        schoolGroup.style.display = "block";
+    }
+}
 
 function openStatusModal(id){
-
     document.getElementById("statusUserId").value = id;
-
     document.getElementById("statusModal").style.display = "flex";
 }
 
-
 function openDeleteModal(id){
-
     document.getElementById("deleteUserId").value = id;
-
     document.getElementById("deleteModal").style.display = "flex";
 }
 
+function openAddUserModal(){
+    document.getElementById("addUserModal").style.display = "flex";
+    toggleSchoolField();
+}
+
+function toggleSchoolField(){
+
+    const role = document.getElementById("userRole").value;
+    const schoolField = document.getElementById("schoolField");
+    const schoolSelect = schoolField.querySelector("select");
+
+    if(role === "admin"){
+        schoolField.style.display = "none";
+        schoolSelect.value = "";
+    }else{
+        schoolField.style.display = "block";
+    }
+}
 
 function closeModal(id){
     document.getElementById(id).style.display = "none";
 }
 
-
 window.onclick = function(e){
-    document.querySelectorAll(".su-modal").forEach(modal=>{
+    document.querySelectorAll(".su-modal").forEach(modal => {
         if(e.target === modal){
             modal.style.display = "none";
         }

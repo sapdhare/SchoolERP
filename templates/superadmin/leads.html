@@ -1,0 +1,712 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet"
+href="{{ url_for('static',
+filename='css/superadmin/leads.css') }}">
+
+<div class="lead-wrapper">
+
+    <!-- HEADER -->
+
+    <div class="lead-header">
+
+        <div>
+
+            <h1>📞 Leads Management</h1>
+
+            <p>
+                Manage demo requests, pricing inquiries
+                and school onboarding leads
+            </p>
+
+        </div>
+
+        <div class="lead-header-actions">
+
+            <a href="/superadmin/export/excel/leads?search={{ search }}&status={{ status_filter }}&plan={{ plan_filter }}"
+               class="lead-export-btn">
+
+                Export Leads
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- STATS -->
+
+    <div class="lead-stats-grid">
+
+        <div class="lead-stat-card total">
+
+            <div>
+
+                <h4>Total Leads</h4>
+
+                <h2>{{ total_leads }}</h2>
+
+            </div>
+
+            <span>📞</span>
+
+        </div>
+
+        <div class="lead-stat-card new">
+
+            <div>
+
+                <h4>New Leads</h4>
+
+                <h2>{{ new_leads }}</h2>
+
+            </div>
+
+            <span>🆕</span>
+
+        </div>
+
+        <div class="lead-stat-card contacted">
+
+            <div>
+
+                <h4>Contacted</h4>
+
+                <h2>{{ contacted_leads }}</h2>
+
+            </div>
+
+            <span>☎️</span>
+
+        </div>
+
+        <div class="lead-stat-card demo">
+
+            <div>
+
+                <h4>Demo Scheduled</h4>
+
+                <h2>{{ demo_leads }}</h2>
+
+            </div>
+
+            <span>📅</span>
+
+        </div>
+
+        <div class="lead-stat-card converted">
+
+            <div>
+
+                <h4>Converted</h4>
+
+                <h2>{{ converted_leads }}</h2>
+
+            </div>
+
+            <span>🏫</span>
+
+        </div>
+
+    </div>
+
+    <!-- FILTERS -->
+
+    <form method="GET"
+          class="lead-filter-box">
+
+        <input
+        type="text"
+        name="search"
+        placeholder="Search school, person, mobile..."
+        value="{{ search }}">
+
+        <select name="status">
+
+            <option value="">
+                All Status
+            </option>
+            <option value="New" {% if status_filter == "New" %}selected{% endif %}>
+                New
+            </option>
+            <option value="Contacted" {% if status_filter == "Contacted" %}selected{% endif %}>
+                Contacted
+            </option>
+            <option value="Demo Scheduled" {% if status_filter == "Demo Scheduled" %}selected{% endif %}>
+                Demo Scheduled
+            </option>
+            <option value="Converted" {% if status_filter == "Converted" %}selected{% endif %}>
+                Converted
+            </option>
+
+        </select>
+
+        <select name="plan">
+
+            <option value="">
+                All Plans
+            </option>
+
+            {% for plan in available_plans %}
+            <option
+                value="{{ plan }}"
+                {% if plan_filter == plan %}
+                selected
+                {% endif %}
+            >
+                {{ plan }}
+            </option>
+            {% endfor %}
+
+        </select>
+
+        <select name="source">
+
+            <option value="">
+                All Sources
+            </option>
+
+            {% for source in available_sources %}
+            <option
+                value="{{ source }}"
+                {% if source_filter == source %}
+                selected
+                {% endif %}
+            >
+                {{ source }}
+            </option>
+            {% endfor %}
+
+        </select>
+
+        <button type="submit">
+
+            Search
+
+        </button>
+
+        <a href="/superadmin/leads"
+           class="lead-clear-btn">
+
+            Clear
+
+        </a>
+
+    </form>
+
+    <!-- TABLE -->
+
+    <div class="lead-table-box">
+
+        <table class="lead-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>School</th>
+                    <th>Contact</th>
+                    <th>Mobile</th>
+                    <th>Plan</th>
+                    <th>Students</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for lead in leads %}
+
+                <tr>
+
+                    <td>
+                        {{ lead.school_name }}
+                    </td>
+
+                    <td>
+                        {{ lead.contact_person }}
+                    </td>
+
+                    <td>
+                        {{ lead.mobile }}
+                    </td>
+
+                    <td>
+
+                        <span class="plan-badge">
+
+                            {{ lead.selected_plan }}
+
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        {{ lead.student_strength }}
+
+                    </td>
+
+                    <td>
+
+                        {{ lead.lead_source }}
+
+                    </td>
+
+                    <td>
+
+                        <span class="status-badge
+                        {{ lead.status|lower|replace(' ','-') }}">
+
+                            {{ lead.status }}
+
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        {{ lead.created_at }}
+
+                    </td>
+
+                    <td class="lead-actions">
+
+                        <button
+                        class="view-btn"
+                        data-lead='{{ lead|tojson|safe }}'
+                        onclick="openLeadModal(this)">
+
+                            View
+
+                        </button>
+
+                        <a href="https://wa.me/91{{ lead.mobile }}"
+                           target="_blank"
+                           class="whatsapp-btn">
+
+                            WhatsApp
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                {% if leads %}
+
+                    {% for lead in leads %}
+                        <!-- existing row -->
+                    {% endfor %}
+
+                {% else %}
+
+                <tr>
+                    <td colspan="9" style="text-align:center;padding:35px;color:#64748b;">
+                        No leads found
+                    </td>
+                </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- PAGINATION -->
+ 
+{% if total_pages > 1 %}
+
+<div class="lead-pagination">
+
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&search={{ search }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}">
+        ← Prev
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&search={{ search }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}">
+        Next →
+    </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+<!-- VIEW MODAL -->
+
+<div
+id="leadModal"
+class="lead-modal">
+
+    <div class="lead-modal-box">
+
+        <span
+        class="close-modal"
+        onclick="closeLeadModal()">
+
+            ×
+
+        </span>
+
+        <h2>
+
+            Lead Details
+
+        </h2>
+
+        <div id="leadContent">
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function openLeadModal(btn){
+
+    const lead =
+    JSON.parse(btn.dataset.lead);
+
+    document.getElementById(
+        "leadContent"
+    ).innerHTML = `
+
+        <div class="lead-detail-grid">
+
+            <div>
+                <label>School Name</label>
+                <strong>${lead.school_name}</strong>
+            </div>
+
+            <div>
+                <label>Contact Person</label>
+                <strong>${lead.contact_person}</strong>
+            </div>
+
+            <div>
+                <label>Mobile</label>
+                <strong>${lead.mobile}</strong>
+            </div>
+
+            <div>
+                <label>Email</label>
+                <strong>${lead.email || '-'}</strong>
+            </div>
+
+            <div>
+                <label>Students</label>
+                <strong>${lead.student_strength || '-'}</strong>
+            </div>
+
+            <div>
+                <label>Plan</label>
+                <strong>${lead.selected_plan || '-'}</strong>
+            </div>
+
+            <div>
+                <label>Source</label>
+                <strong>${lead.lead_source}</strong>
+            </div>
+
+            <div>
+                <label>Status</label>
+                <strong>${lead.status}</strong>
+            </div>
+
+        </div>
+
+        <div class="lead-message">
+
+            <label>Message</label>
+
+            <p>
+
+                ${lead.message || 'No message'}
+
+            </p>
+
+        </div>
+
+        <div class="lead-modal-actions">
+
+            <a
+            href="https://wa.me/91${lead.mobile}"
+            target="_blank"
+            class="whatsapp-btn">
+
+                WhatsApp
+
+            </a>
+
+           <button
+            class="status-btn"
+            onclick="markContacted(${lead.id})">
+
+                Mark Contacted
+
+            </button>
+
+            <button
+            class="demo-btn"
+            onclick="scheduleDemo(${lead.id})">
+
+                Schedule Demo
+
+            </button>
+
+            <button
+            class="convert-btn"
+            onclick="convertLead(${lead.id})">
+
+                Convert Lead
+
+            </button>
+
+
+
+        </div>
+
+    `;
+
+    document.getElementById(
+        "leadModal"
+    ).style.display="flex";
+}
+
+function closeLeadModal(){
+
+    document.getElementById(
+        "leadModal"
+    ).style.display="none";
+}
+
+window.onclick = function(e){
+
+    const modal =
+    document.getElementById(
+        "leadModal"
+    );
+
+    if(e.target === modal){
+
+        modal.style.display =
+        "none";
+
+    }
+
+}
+
+</script>
+<script>
+
+// =====================================================
+// 📞 MARK CONTACTED
+// =====================================================
+
+async function markContacted(leadId){
+
+    if(!confirm(
+        "Mark this lead as Contacted?"
+    )){
+        return;
+    }
+
+    try{
+
+        const response = await fetch(
+            `/superadmin/lead/contacted/${leadId}`,
+            {
+                method: "POST",
+
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }
+        );
+        console.log(response.status);
+
+        const result =
+        await response.json();
+
+        if(result.success){
+
+            alert(
+                "Lead marked as Contacted"
+            );
+
+            location.reload();
+
+        }
+
+        else{
+
+            alert(
+                result.message
+            );
+
+        }
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        alert(
+            "Something went wrong"
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// 📅 SCHEDULE DEMO
+// =====================================================
+
+async function scheduleDemo(leadId){
+
+    if(!confirm(
+        "Mark this lead as Demo Scheduled?"
+    )){
+        return;
+    }
+
+    try{
+
+        const response =
+        await fetch(
+
+            `/superadmin/lead/demo/${leadId}`,
+
+            {
+                method:"POST"
+            }
+
+        );
+
+        const result =
+        await response.json();
+
+        if(result.success){
+
+            alert(
+                "Demo Scheduled Successfully"
+            );
+
+            location.reload();
+
+        }
+
+        else{
+
+            alert(
+                result.message
+            );
+
+        }
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        alert(
+            "Something went wrong"
+        );
+
+    }
+
+}
+
+// =====================================================
+// 🏫 CONVERT LEAD
+// =====================================================
+
+async function convertLead(leadId){
+
+    if(!confirm(
+        "Convert this lead into customer?"
+    )){
+        return;
+    }
+
+    try{
+
+        const response =
+        await fetch(
+
+            `/superadmin/lead/converted/${leadId}`,
+
+            {
+                method:"POST",
+
+                headers:{
+                    "X-Requested-With":
+                    "XMLHttpRequest"
+                }
+            }
+
+        );
+
+        const result =
+        await response.json();
+
+        if(result.success){
+
+            alert(
+                "Lead Converted Successfully"
+            );
+
+            location.reload();
+
+        }
+
+        else{
+
+            alert(
+                result.message
+            );
+
+        }
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        alert(
+            "Something went wrong"
+        );
+
+    }
+
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,417 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet"
+href="{{ url_for('static',
+filename='css/superadmin/subscriptions_admin.css') }}">
+
+
+<div class="sub-admin-wrapper">
+
+
+<!-- HEADER -->
+
+<div class="sub-admin-header">
+
+    <div>
+
+        <h1>💳 Subscription Management</h1>
+
+        <p>
+            Manage school subscriptions, renewals,
+            payments and plan activity
+        </p>
+
+    </div>
+
+    <a href="/superadmin/export/excel/subscriptions?search={{ search }}&status={{ status_filter }}&plan={{ plan_filter }}"
+       class="sub-admin-export-btn">
+
+        Export Report
+
+    </a>
+
+</div>
+
+<!-- KPI CARDS -->
+
+<div class="sub-admin-stats">
+
+    <div class="sub-admin-stat-card total">
+
+        <div>
+
+            <h4>Total Subscriptions</h4>
+
+            <h2>{{ total_subscriptions }}</h2>
+
+        </div>
+
+        <span>🏫</span>
+
+    </div>
+
+    <div class="sub-admin-stat-card active">
+
+        <div>
+
+            <h4>Active</h4>
+
+            <h2>{{ active_subscriptions }}</h2>
+
+        </div>
+
+        <span>✅</span>
+
+    </div>
+
+    <div class="sub-admin-stat-card expired">
+
+        <div>
+
+            <h4>Expired</h4>
+
+            <h2>{{ expired_subscriptions }}</h2>
+
+        </div>
+
+        <span>⚠️</span>
+
+    </div>
+
+    <div class="sub-admin-stat-card renewal">
+
+        <div>
+
+            <h4>Renewals Due</h4>
+
+            <h2>{{ renewal_due }}</h2>
+
+        </div>
+
+        <span>🔔</span>
+
+    </div>
+
+    <div class="sub-admin-stat-card revenue">
+
+        <div>
+
+            <h4>Total Revenue</h4>
+
+            <h2>₹{{ "{:,.0f}".format(total_revenue) }}</h2>
+
+        </div>
+
+        <span>💰</span>
+
+    </div>
+
+</div>
+
+<!-- FILTERS -->
+
+<form method="GET"
+      class="sub-admin-filter-box">
+
+    <input
+        type="text"
+        name="search"
+        placeholder="Search school name..."
+        value="{{ search }}">
+
+    <select name="status">
+
+        <option value="">All Status</option>
+
+       <option value="Active"
+        {% if status_filter == 'Active' %}selected{% endif %}>
+            Active
+        </option>
+
+        <option value="Expired"
+        {% if status_filter == 'Expired' %}selected{% endif %}>
+            Expired
+        </option>
+
+    </select>
+
+    <select name="plan">
+
+        <option value="">
+            All Plans
+        </option>
+
+        {% for plan in plans %}
+
+        <option value="{{ plan.plan_name }}"
+        {% if plan_filter == plan.plan_name %}
+        selected
+        {% endif %}>
+
+            {{ plan.plan_name }}
+
+        </option>
+
+        {% endfor %}
+
+    </select>
+
+    <select name="expiry">
+
+        <option value="">
+            All Expiry
+        </option>
+
+        <option value="expiring_soon"
+            {% if expiry_filter == "expiring_soon" %}selected{% endif %}>
+            Expiring Soon
+        </option>
+
+        <option value="expired"
+            {% if expiry_filter == "expired" %}selected{% endif %}>
+            Expired by Date
+        </option>
+
+    </select>
+
+    <button type="submit">
+
+        Search
+
+    </button>
+
+    <a href="/superadmin/subscriptions"
+       class="sub-admin-clear-btn">
+
+        Clear
+
+    </a>
+
+</form>
+
+<!-- TABLE -->
+
+<div class="sub-admin-table-box">
+
+    <table class="sub-admin-table">
+
+        <thead>
+
+            <tr>
+
+                <th>School</th>
+                <th>Plan</th>
+                <th>Start Date</th>
+                <th>Expiry Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for sub in subscriptions %}
+
+            <tr>
+
+                <td>{{ sub.school_name }}</td>
+
+                <td>
+
+                    <span class="plan-pill">
+
+                        {{ sub.plan_name }}
+
+                    </span>
+
+                </td>
+
+                <td>{{ sub.start_date }}</td>
+
+                <td>{{ sub.end_date }}</td>
+
+                <td>₹{{ sub.amount }}</td>
+
+                <td>
+
+                    <span class="status-pill
+                    {{ sub.status|lower }}">
+
+                        {{ sub.status }}
+
+                    </span>
+
+                </td>
+
+                <td>
+
+                    <button
+                    class="sub-view-btn"
+                    data-sub='{{ sub|tojson|safe }}'
+                    onclick="openSubscriptionModal(this)">
+
+                        View
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+</div>
+
+<!-- PAGINATION -->
+
+{% if total_pages > 1 %}
+
+<div class="sub-admin-pagination">
+
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&search={{ search }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if expiry_filter %}&expiry={{ expiry_filter }}{% endif %}">
+        ← Prev
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&search={{ search }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if expiry_filter %}&expiry={{ expiry_filter }}{% endif %}">
+        Next →
+    </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+<!-- MODAL -->
+
+<div id="subscriptionModal"
+class="sub-modal">
+
+    <div class="sub-modal-box">
+
+        <span
+        class="sub-close"
+        onclick="closeSubscriptionModal()">
+
+            ×
+
+        </span>
+
+        <h2>Subscription Details</h2>
+
+        <div id="subModalContent"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+function openSubscriptionModal(btn){
+
+    const sub =
+    JSON.parse(btn.dataset.sub);
+
+    document.getElementById("subModalContent").innerHTML = `
+
+        <div class="sub-detail-grid">
+
+            <div>
+                <label>Subscription ID</label>
+                <strong>#${sub.id}</strong>
+            </div>
+
+            <div>
+                <label>School</label>
+                <strong>${sub.school_name || '-'}</strong>
+            </div>
+
+            <div>
+                <label>Plan</label>
+                <strong>${sub.plan_name || '-'}</strong>
+            </div>
+
+            <div>
+                <label>Start Date</label>
+                <strong>${sub.start_date || '-'}</strong>
+            </div>
+
+            <div>
+                <label>Expiry Date</label>
+                <strong>${sub.end_date || '-'}</strong>
+            </div>
+
+            <div>
+                <label>Days Remaining</label>
+                <strong>
+                    ${sub.days_remaining !== null ? sub.days_remaining : '-'}
+                </strong>
+            </div>
+
+            <div>
+                <label>Amount</label>
+                <strong>₹${sub.amount || 0}</strong>
+            </div>
+
+            <div>
+                <label>Status</label>
+                <strong>${sub.status || '-'}</strong>
+            </div>
+
+            <div>
+                <label>Created At</label>
+                <strong>${sub.created_at || '-'}</strong>
+            </div>
+
+        </div>
+
+    `;
+
+    document.getElementById(
+        "subscriptionModal"
+    ).style.display = "flex";
+}
+
+function closeSubscriptionModal(){
+
+    document.getElementById(
+        "subscriptionModal"
+    ).style.display = "none";
+}
+
+window.onclick = function(e){
+
+    const modal =
+    document.getElementById(
+        "subscriptionModal"
+    );
+
+    if(e.target === modal){
+
+        modal.style.display = "none";
+
+    }
+
+}
+
+</script>
+
+{% endblock %}

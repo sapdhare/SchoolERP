@@ -13,15 +13,26 @@
 
             <!-- TEXT -->
             <div class="left-content">
-                <h2>SchoolSphere</h2>
+
+                <h2>
+                    {{ global_settings.system_name or "SchoolSphere" }}
+                </h2>
+
                 <h1>Admin Control Panel</h1>
+
                 <p>
-                    Secure access to manage all schools, users, and system analytics.
+                    Secure access to manage all schools,
+                    users, and system analytics.
                 </p>
+
             </div>
 
             <!-- SVG IMAGE -->
-            <img src="{{ url_for('static', filename='images/student_login.png') }}" class="student-svg">
+            <img
+                src="{{ url_for('static', filename='images/student_login.png') }}"
+                class="student-svg"
+                alt="Admin ERP Login"
+            >
 
             <!-- DOT PATTERN -->
             <div class="dots1"></div>
@@ -35,17 +46,73 @@
             <div class="login-box">
 
                 <h2>Admin Access 🔐</h2>
-                <p class="login-sub">Restricted system login</p>
+
+                <p class="login-sub">
+                    Restricted system login
+                </p>
 
                 <!-- FORM -->
-                <form class="login-form" method="POST" action="{{ url_for('superadmin_login') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <form
+                    class="login-form"
+                    method="POST"
+                    action="{{ url_for('superadmin_login') }}"
+                >
 
-                    <input type="email" name="email" placeholder="Admin Email" required>
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
 
-                    <input type="password" name="password" placeholder="Password" required>
+                    <!-- EMAIL -->
 
-                    <button type="submit" class="btn-login">Login</button>
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="Admin Email"
+                        autocomplete="email"
+                        maxlength="120"
+                        required
+                    >
+
+                    <!-- PASSWORD -->
+
+                    <div class="password-field">
+
+                        <input
+                            type="password"
+                            name="password"
+                            id="adminPassword"
+                            placeholder="Password"
+                            autocomplete="current-password"
+                            maxlength="100"
+                            required
+                        >
+
+                        <span
+                            class="toggle-password"
+                            onclick="toggleAdminPassword()"
+                        >
+                            👁
+                        </span>
+
+                    </div>
+
+                    <!-- BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="btn-login"
+                        id="adminLoginBtn"
+                    >
+
+                        <span class="btn-text">
+                            Login
+                        </span>
+
+                        <span class="btn-loader"></span>
+
+                    </button>
 
                 </form>
 
@@ -56,5 +123,53 @@
     </div>
 
 </section>
+
+
+<!-- =====================================================
+     ADMIN LOGIN JS
+====================================================== -->
+
+<script>
+
+/* =====================================================
+   TOGGLE PASSWORD
+====================================================== */
+
+function toggleAdminPassword(){
+
+    const passwordInput = document.getElementById(
+        "adminPassword"
+    );
+
+    if(passwordInput.type === "password"){
+
+        passwordInput.type = "text";
+
+    }else{
+
+        passwordInput.type = "password";
+    }
+
+}
+
+
+/* =====================================================
+   LOGIN BUTTON LOADER
+====================================================== */
+
+document.querySelector(".login-form")
+.addEventListener("submit", function(){
+
+    const btn = document.getElementById(
+        "adminLoginBtn"
+    );
+
+    btn.disabled = true;
+
+    btn.classList.add("loading");
+
+});
+
+</script>
 
 {% endblock %}

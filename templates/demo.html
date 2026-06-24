@@ -1,0 +1,1151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- ==================================================
+     DEMO HERO SECTION
+================================================== -->
+
+<section class="demo-hero-section">
+
+    <div class="demo-hero-bg"></div>
+
+    <div class="demo-hero-container">
+
+        <!-- LEFT -->
+
+        <div class="demo-hero-content">
+
+            <!-- Breadcrumb -->
+
+            <div class="demo-breadcrumb">
+
+                <a href="/">Home</a>
+
+                <span>/</span>
+
+                <span>Book Demo</span>
+
+            </div>
+
+            <!-- Badge -->
+
+            <div class="demo-hero-badge">
+
+                🚀 Experience ShalaSarthi ERP Live
+
+            </div>
+
+            <!-- Heading -->
+
+            <h1>
+
+                शाळेचे संपूर्ण व्यवस्थापन
+                <span>आता प्रत्यक्ष पाहा!</span>
+
+            </h1>
+
+            <p>
+
+                Discover how admissions, attendance,
+                certificates, fee management and reports
+                work together in one powerful ERP platform.
+
+                <strong>
+                    Free Demo • Free Setup • Free Training
+                </strong>
+
+            </p>
+
+            <!-- Buttons -->
+
+            <div class="demo-hero-buttons">
+
+                <button
+                    onclick="scrollToDemoForm()"
+                    class="demo-primary-btn">
+
+                    Book Free Demo
+
+                </button>
+
+                <a href="tel:8888244176"
+                   class="demo-secondary-btn">
+
+                    Talk To ERP Expert
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+
+        <div class="demo-hero-image">
+
+            <div class="demo-dashboard-card">
+
+                <img
+                src="{{ url_for('static', filename='images/dashboard_preview.png') }}"
+                alt="ShalaSarthi ERP Dashboard">
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="demo-connect">
+
+    <div class="demo-connect-header">
+
+        <span class="demo-connect-badge">
+
+            🔗 Connected School Ecosystem
+
+        </span>
+
+        <h2>
+
+            One Platform.
+            <span>Every Department Connected.</span>
+
+        </h2>
+
+        <p>
+
+            Students, Teachers, Parents, Administration,
+            Academics and Operations stay connected through
+            one centralized ERP.
+
+        </p>
+
+        <p class="marathi">
+
+            शाळेतील प्रत्येक विभाग आता एका Smart ERP
+            प्रणालीद्वारे जोडला जातो.
+
+        </p>
+
+    </div>
+
+    <div class="school-network">
+
+   <svg class="network-lines"
+     viewBox="0 0 1000 850"
+     preserveAspectRatio="none">
+
+    <!-- Students -->
+    <line x1="500" y1="95"
+          x2="500" y2="320"/>
+
+    <!-- Teachers -->
+    <line x1="265" y1="160"
+          x2="450" y2="340"/>
+
+    <!-- Parents -->
+    <line x1="735" y1="160"
+          x2="550" y2="340"/>
+
+    <!-- Admission -->
+    <line x1="145" y1="305"
+          x2="430" y2="390"/>
+
+    <!-- Attendance -->
+    <line x1="205" y1="445"
+          x2="430" y2="430"/>
+
+    <!-- Library -->
+    <line x1="255" y1="650"
+          x2="440" y2="510"/>
+
+    <!-- Transport -->
+    <line x1="365" y1="770"
+          x2="470" y2="560"/>
+
+    <!-- Fees -->
+    <line x1="855" y1="305"
+          x2="570" y2="390"/>
+
+    <!-- Exams -->
+    <line x1="795" y1="445"
+          x2="570" y2="430"/>
+
+    <!-- Results -->
+    <line x1="745" y1="650"
+          x2="560" y2="510"/>
+
+    <!-- Timetable -->
+    <line x1="635" y1="770"
+          x2="530" y2="560"/>
+
+    <!-- Digital Content -->
+    <line x1="500" y1="835"
+          x2="500" y2="560"/>
+
+</svg>
+
+        <!-- CENTER -->
+
+        <div class="network-center">
+
+            <img
+            src="{{ url_for('static',
+            filename='images/connect_demo.png') }}"
+            alt="ERP Mobile App">
+
+        </div>
+
+        <!-- NODES -->
+
+        <div class="node student">
+            🎓 Students
+        </div>
+
+        <div class="node teacher">
+            👩‍🏫 Teachers
+        </div>
+
+        <div class="node parent">
+            👨‍👩‍👧 Parents
+        </div>
+
+        <div class="node admin">
+            🏢 Admin
+        </div>
+
+        <div class="node admissionn">
+            📝 Admission
+        </div>
+
+        <div class="node attendancee">
+            📅 Attendance
+        </div>
+
+        <div class="node library">
+            📚 Library
+        </div>
+
+        <div class="node transport">
+            🚌 Transport
+        </div>
+
+        <div class="node feess">
+            💰 Fees
+        </div>
+
+        <div class="node examss">
+            🧾 Exams
+        </div>
+
+        <div class="node resultss">
+            📊 Results
+        </div>
+
+        <div class="node timetable">
+            🕒 Timetable
+        </div>
+
+        <div class="node content">
+            💻 Digital Content
+        </div>
+
+    </div>
+
+</section>
+
+<section class="demo-day">
+
+    <div class="demo-day-header">
+
+        <span class="demo-day-badge">
+            ⚡ Smart Daily Workflow
+        </span>
+
+        <h2>
+
+            A Day In School
+            <span>With ShalaSarthi</span>
+
+        </h2>
+
+        <p>
+
+            Every school activity gets automatically updated
+            throughout the day.
+
+        </p>
+
+        <p class="marathi">
+
+            सकाळपासून दिवसाच्या शेवटपर्यंत,
+            प्रत्येक प्रक्रिया Smart ERP द्वारे
+            स्वयंचलित केली जाते.
+
+        </p>
+
+    </div>
+
+    <div class="timeline-wrapper">
+
+        <div class="timeline-line"></div>
+
+        <!-- STEP 1 -->
+
+        <div class="timeline-step left">
+
+            <div class="timeline-card">
+
+                <span class="timeline-time">
+                    8:00 AM
+                </span>
+
+                <h4>
+                    📅 Attendance Marked
+                </h4>
+
+                <p>
+                    Students attendance updated instantly.
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- STEP 2 -->
+
+        <div class="timeline-step right">
+
+            <div class="timeline-card">
+
+                <span class="timeline-time">
+                    10:00 AM
+                </span>
+
+                <h4>
+                    💰 Fee Collection Updated
+                </h4>
+
+                <p>
+                    Receipts generated automatically.
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- STEP 3 -->
+
+        <div class="timeline-step left">
+
+            <div class="timeline-card">
+
+                <span class="timeline-time">
+                    12:00 PM
+                </span>
+
+                <h4>
+                    📄 Certificates Generated
+                </h4>
+
+                <p>
+                    TC & Bonafide ready within seconds.
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- STEP 4 -->
+
+        <div class="timeline-step right">
+
+            <div class="timeline-card">
+
+                <span class="timeline-time">
+                    2:00 PM
+                </span>
+
+                <h4>
+                    📲 Parent Notifications Sent
+                </h4>
+
+                <p>
+                    SMS and alerts delivered instantly.
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- STEP 5 -->
+
+        <div class="timeline-step left">
+
+            <div class="timeline-card">
+
+                <span class="timeline-time">
+                    4:00 PM
+                </span>
+
+                <h4>
+                    📊 Reports Generated
+                </h4>
+
+                <p>
+                    Management reports ready automatically.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ==================================
+     WHY SCHOOLS SWITCH
+================================== -->
+
+<section class="demo-switch">
+
+    <div class="demo-switch-header">
+
+        <span class="demo-switch-badge">
+
+            🚀 School Transformation
+
+        </span>
+
+        <h2>
+
+            Why Schools Switch
+            <span>To ShalaSarthi</span>
+
+        </h2>
+
+        <p>
+
+            Schools don't switch software for more features.
+            They switch because they want less paperwork,
+            faster administration and better control.
+
+        </p>
+
+        <p class="demo-switch-marathi">
+
+            शाळा फक्त नवीन सॉफ्टवेअर घेत नाहीत,
+            तर अधिक कार्यक्षम आणि डिजिटल व्यवस्थापनाकडे वाटचाल करतात.
+
+        </p>
+
+    </div>
+
+    <div class="demo-switch-wrapper">
+
+        <!-- BEFORE -->
+
+        <div class="switch-card before-card">
+
+            <div class="switch-title">
+
+                ❌ Before ShalaSarthi
+
+            </div>
+
+            <ul>
+
+                <li>Manual Attendance Registers</li>
+
+                <li>Paper-Based Fee Tracking</li>
+
+                <li>Slow Certificate Generation</li>
+
+                <li>Multiple Excel Files</li>
+
+                <li>Delayed Parent Communication</li>
+
+                <li>Scattered School Records</li>
+
+            </ul>
+
+        </div>
+
+        <!-- CENTER -->
+
+        <div class="switch-center">
+
+            <div class="switch-circle">
+
+                <span>ShalaSarthi</span>
+
+            </div>
+
+            <div class="switch-arrow">
+
+                ➜
+
+            </div>
+
+        </div>
+
+        <!-- AFTER -->
+
+        <div class="switch-card after-card">
+
+            <div class="switch-title">
+
+                ✅ After ShalaSarthi
+
+            </div>
+
+            <ul>
+
+                <li>Instant Attendance Updates</li>
+
+                <li>Automatic Fee Reports</li>
+
+                <li>One-Click Certificates</li>
+
+                <li>Centralized School Data</li>
+
+                <li>Real-Time Parent Notifications</li>
+
+                <li>Secure Cloud Access Anywhere</li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    <!-- STATS -->
+
+    <div class="switch-stats">
+
+        <div class="switch-stat">
+
+            <h3>80%</h3>
+
+            <p>Less Paperwork</p>
+
+        </div>
+
+        <div class="switch-stat">
+
+            <h3>70%</h3>
+
+            <p>Faster Administration</p>
+
+        </div>
+
+        <div class="switch-stat">
+
+            <h3>90%</h3>
+
+            <p>Data Accuracy</p>
+
+        </div>
+
+        <div class="switch-stat">
+
+            <h3>24/7</h3>
+
+            <p>Cloud Access</p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="demo-booking">
+
+    <div class="demo-booking-container">
+
+        <!-- LEFT -->
+
+<div class="demo-form-card">
+
+    <div class="demo-form-header">
+
+        <span>
+            📅 Schedule Demo
+        </span>
+
+        <h2>
+            Book Your Free Demo
+        </h2>
+
+        <p>
+
+            Fill in your details and our ERP expert
+            will contact you shortly.
+
+        </p>
+
+    </div>
+
+    <form id="demoForm" class="demo-lead-form">
+
+    <input
+        type="text"
+        id="school_name"
+        name="school_name"
+        placeholder="School Name"
+        required>
+
+    <input
+        type="text"
+        id="contact_person"
+        name="contact_person"
+        placeholder="Contact Person"
+        required>
+
+    <input
+        type="tel"
+        id="mobile"
+        name="mobile"
+        placeholder="Mobile Number"
+        required>
+
+    <input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="Email Address">
+
+    <input
+        type="number"
+        id="student_strength"
+        name="student_strength"
+        placeholder="Total Students">
+
+    <!-- AUTO PLAN -->
+
+    <div class="demo-plan-display">
+
+        <label>
+
+            Selected Plan
+
+        </label>
+
+        <div class="demo-plan-box">
+
+            Free Demo Plan
+
+        </div>
+
+    </div>
+
+    <textarea
+        id="message"
+        name="message"
+        placeholder="Additional Requirements (Optional)">
+    </textarea>
+
+    <button
+        type="submit"
+        class="demo-submit-btn">
+
+        🚀 Submit Request
+
+    </button>
+
+</form>
+
+</div>
+
+        <!-- RIGHT -->
+
+        <div class="demo-info-side">
+
+            <div class="slot-card">
+
+                <h3>
+
+                    🚀 Book Your Slot
+
+                </h3>
+
+                <p>
+
+                    Experience ShalaSarthi ERP with a
+                    personalized live demo.
+
+                </p>
+
+            </div>
+
+            <!-- GOOGLE -->
+
+            <div class="meeting-card">
+
+                <div class="meeting-icon">
+
+                    <i class="fa-brands fa-google"></i>
+
+                </div>
+
+                <div>
+
+                    <h4>
+                        Google Meet
+                    </h4>
+
+                    <p>
+
+                        Live ERP Walkthrough
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- ZOOM -->
+
+            <div class="meeting-card">
+
+                <div class="meeting-icon">
+
+                    <i class="fa-solid fa-video"></i>
+
+                </div>
+
+                <div>
+
+                    <h4>
+                        Zoom Meeting
+                    </h4>
+
+                    <p>
+
+                        Personalized Demo Session
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- STEPS -->
+
+            <div class="demo-process">
+
+                <div class="process-item">
+
+                    <span>1</span>
+
+                    Submit Request
+
+                </div>
+
+                <div class="process-item">
+
+                    <span>2</span>
+
+                    Team Contacts You
+
+                </div>
+
+                <div class="process-item">
+
+                    <span>3</span>
+
+                    Meeting Scheduled
+
+                </div>
+
+                <div class="process-item">
+
+                    <span>4</span>
+
+                    Live ERP Demo
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ==================================
+     DEMO FAQ SECTION
+================================== -->
+
+<section class="demo-faq">
+
+    <div class="demo-faq-header">
+
+        <span class="demo-faq-badge">
+
+            ❓ Demo FAQ
+
+        </span>
+
+        <h2>
+
+            Frequently Asked
+            <span>Questions</span>
+
+        </h2>
+
+        <p>
+
+            Everything you need to know before booking your
+            ShalaSarthi ERP demo.
+
+        </p>
+
+        <p class="faq-marathi">
+
+            डेमो बुक करण्यापूर्वी तुम्हाला आवश्यक असलेली
+            सर्व माहिती येथे मिळेल.
+
+        </p>
+
+    </div>
+
+    <div class="demo-faq-container">
+
+        <!-- FAQ 1 -->
+
+        <div class="faq-item">
+
+            <button class="faq-question">
+
+                Is the demo completely free?
+
+                <i class="fa-solid fa-plus"></i>
+
+            </button>
+
+            <div class="faq-answer">
+
+                <p>
+
+                    Yes. ShalaSarthi ERP demo is completely
+                    free and includes a guided walkthrough
+                    of all major ERP modules.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- FAQ 2 -->
+
+        <div class="faq-item">
+
+            <button class="faq-question">
+
+                How long does the demo session take?
+
+                <i class="fa-solid fa-plus"></i>
+
+            </button>
+
+            <div class="faq-answer">
+
+                <p>
+
+                    A typical demo lasts between
+                    20–30 minutes depending on your
+                    school's requirements.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- FAQ 3 -->
+
+        <div class="faq-item">
+
+            <button class="faq-question">
+
+                How many students are allowed in the demo?
+
+                <i class="fa-solid fa-plus"></i>
+
+            </button>
+
+            <div class="faq-answer">
+
+                <p>
+
+                    The demo environment allows up to
+                    <strong>5 student records</strong>
+                    for testing purposes. After reaching
+                    the limit, additional entries are restricted.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- FAQ 4 -->
+
+        <div class="faq-item">
+
+            <button class="faq-question">
+
+                Will I get access to all ERP modules?
+
+                <i class="fa-solid fa-plus"></i>
+
+            </button>
+
+            <div class="faq-answer">
+
+                <p>
+
+                    Yes. Admissions, Attendance,
+                    Fees, Certificates, Reports,
+                    Staff Management and other
+                    major modules are included.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- FAQ 5 -->
+
+        <div class="faq-item">
+
+            <button class="faq-question">
+
+                Is installation required before the demo?
+
+                <i class="fa-solid fa-plus"></i>
+
+            </button>
+
+            <div class="faq-answer">
+
+                <p>
+
+                    No installation is required.
+                    The demo is conducted online
+                    through Google Meet or Zoom.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- FAQ 6 -->
+
+        <div class="faq-item">
+
+            <button class="faq-question">
+
+                What happens after the demo?
+
+                <i class="fa-solid fa-plus"></i>
+
+            </button>
+
+            <div class="faq-answer">
+
+                <p>
+
+                    Our ERP expert will discuss your
+                    requirements and help you choose
+                    the most suitable plan.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- FAQ 7 -->
+
+        <div class="faq-item">
+
+            <button class="faq-question">
+
+                Can multiple staff members attend?
+
+                <i class="fa-solid fa-plus"></i>
+
+            </button>
+
+            <div class="faq-answer">
+
+                <p>
+
+                    Yes. Principals, Teachers,
+                    Accountants and Management
+                    members can join the same session.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- FAQ 8 -->
+
+        <div class="faq-item">
+
+            <button class="faq-question">
+
+                Is my information safe?
+
+                <i class="fa-solid fa-plus"></i>
+
+            </button>
+
+            <div class="faq-answer">
+
+                <p>
+
+                    Absolutely. Your information is used
+                    only for demo scheduling and support.
+                    We never sell or share your data.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<script>
+
+const demoForm =
+document.getElementById("demoForm");
+
+if(demoForm){
+
+demoForm.addEventListener(
+"submit",
+
+async function(e){
+
+    e.preventDefault();
+
+    try{
+
+        const response =
+        await fetch(
+
+            "/submit-lead",
+
+            {
+
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                    "application/json"
+                },
+
+                body:JSON.stringify({
+
+                    lead_source:
+                    "Demo Page",
+
+                    school_name:
+                    document.getElementById(
+                    "school_name"
+                    ).value,
+
+                    contact_person:
+                    document.getElementById(
+                    "contact_person"
+                    ).value,
+
+                    mobile:
+                    document.getElementById(
+                    "mobile"
+                    ).value,
+
+                    email:
+                    document.getElementById(
+                    "email"
+                    ).value,
+
+                    student_strength:
+                    document.getElementById(
+                    "student_strength"
+                    ).value,
+
+                    selected_plan:
+                    "Free Demo Plan",
+
+                    message:
+                    document.getElementById(
+                    "message"
+                    ).value
+
+                })
+
+            }
+
+        );
+
+        const result =
+        await response.json();
+
+        if(result.success){
+
+            alert(
+                "Demo request submitted successfully."
+            );
+
+            demoForm.reset();
+
+        }
+
+        else{
+
+            alert(
+                result.message ||
+                "Failed to submit request."
+            );
+
+        }
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        alert(
+            "Something went wrong."
+        );
+
+    }
+
+});
+
+}
+
+</script>
+
+
+{% endblock %}

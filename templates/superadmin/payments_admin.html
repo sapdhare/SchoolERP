@@ -1,0 +1,475 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet"
+href="{{ url_for('static',
+filename='css/superadmin/payments_admin.css') }}">
+
+<div class="pay-admin-wrapper">
+
+
+<!-- HEADER -->
+
+<div class="pay-admin-header">
+
+    <div>
+
+        <h1>💰 Payment Management</h1>
+
+        <p>
+            Monitor transactions, revenue,
+            invoices and payment activity
+        </p>
+
+    </div>
+
+    <a href="/superadmin/export/excel/payments?search={{ search }}&status={{ status_filter }}&gateway={{ gateway_filter }}"
+       class="pay-admin-export-btn">
+
+        Export Report
+
+    </a>
+
+</div>
+
+<!-- KPI CARDS -->
+
+<div class="pay-admin-stats">
+
+    <div class="pay-admin-stat-card revenue">
+
+        <div>
+            <h4>Total Revenue</h4>
+            <h2>₹{{ "{:,.2f}".format(total_revenue or 0) }}</h2>
+        </div>
+
+        <span>💰</span>
+
+    </div>
+
+    <div class="pay-admin-stat-card success">
+
+        <div>
+            <h4>Successful</h4>
+            <h2>{{ successful_payments }}</h2>
+        </div>
+
+        <span>✅</span>
+
+    </div>
+
+    <div class="pay-admin-stat-card failed">
+
+        <div>
+            <h4>Failed</h4>
+            <h2>{{ failed_payments }}</h2>
+        </div>
+
+        <span>❌</span>
+
+    </div>
+
+    <div class="pay-admin-stat-card pending">
+
+        <div>
+            <h4>Pending</h4>
+            <h2>{{ pending_payments }}</h2>
+        </div>
+
+        <span>⏳</span>
+
+    </div>
+
+    <div class="pay-admin-stat-card total">
+
+        <div>
+            <h4>Total Transactions</h4>
+            <h2>{{ total_transactions }}</h2>
+        </div>
+
+        <span>📄</span>
+
+    </div>
+
+</div>
+
+<!-- FILTERS -->
+
+<form method="GET"
+      class="pay-admin-filter-box">
+
+    <input
+    type="text"
+    name="search"
+    placeholder="Search school, invoice..."
+    value="{{ search }}">
+
+    <select name="status">
+
+        <option value="">
+            All Status
+        </option>
+
+        <option value="success"
+        {% if status_filter == "success" %}selected{% endif %}>
+            Success
+        </option>
+
+        <option value="failed"
+        {% if status_filter == "failed" %}selected{% endif %}>
+            Failed
+        </option>
+
+        <option value="pending"
+        {% if status_filter == "pending" %}selected{% endif %}>
+            Pending
+        </option>
+
+    </select>
+
+    <select name="gateway">
+
+        <option value="">
+            All Gateways
+        </option>
+
+        {% for gateway in gateways %}
+
+        <option
+            value="{{ gateway.payment_gateway }}"
+            {% if gateway_filter == gateway.payment_gateway %}
+            selected
+            {% endif %}
+        >
+
+            {{ gateway.payment_gateway }}
+
+        </option>
+
+        {% endfor %}
+
+    </select>
+
+    <button type="submit">
+
+        Search
+
+    </button>
+
+    <a href="/superadmin/payments"
+       class="pay-admin-clear-btn">
+
+        Clear
+
+    </a>
+
+</form>
+
+<!-- TABLE -->
+
+<div class="pay-admin-table-box">
+
+    <table class="pay-admin-table">
+
+        <thead>
+
+            <tr>
+
+                <th>Invoice</th>
+                <th>School</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Gateway</th>
+                <th>Payment ID</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+        {% if payments %}
+
+            {% for payment in payments %}
+
+            <tr>
+
+                <td>
+                    {{ payment.invoice_number }}
+                </td>
+
+                <td>
+                    {{ payment.school_name }}
+                </td>
+
+                <td>
+
+                    <span class="plan-pill">
+
+                        {{ payment.plan_name }}
+
+                    </span>
+
+                </td>
+
+                <td>
+
+                    ₹{{ "{:,.2f}".format(payment.amount or 0) }}
+
+                </td>
+
+                <td>
+
+                    {{ payment.payment_gateway }}
+
+                </td>
+
+                <td>
+
+                    {{ payment.payment_id }}
+
+                </td>
+
+                <td>
+
+                    <span class="status-pill
+                    {{ payment.payment_status|lower }}">
+
+                        {{ payment.payment_status }}
+
+                    </span>
+
+                </td>
+
+                <td>
+
+                    {{ payment.created_at }}
+
+                </td>
+
+                <td>
+
+                    <button
+                    class="pay-view-btn"
+                    data-payment='{{ payment|tojson|safe }}'
+                    onclick="openPaymentModal(this)">
+
+                        View
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+           {% else %}
+
+                <tr>
+                    <td colspan="9" class="pay-empty-state">
+                        No payment records found
+                    </td>
+                </tr>
+
+            {% endif %}
+
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</div>
+
+<!-- PAGINATION -->
+
+{% if total_pages > 1 %}
+
+<div class="pay-pagination">
+
+    {% if page > 1 %}
+    <a href="?page=1&search={{ search }}&status={{ status_filter }}&gateway={{ gateway_filter }}"
+       class="page-btn">
+        First
+    </a>
+
+    <a href="?page={{ page-1 }}&search={{ search }}&status={{ status_filter }}&gateway={{ gateway_filter }}"
+       class="page-btn">
+        ← Prev
+    </a>
+    {% endif %}
+
+    <span class="page-number">
+        Page {{ page }} of {{ total_pages }} • {{ total_records }} records
+    </span>
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&search={{ search }}&status={{ status_filter }}&gateway={{ gateway_filter }}"
+       class="page-btn">
+        Next →
+    </a>
+
+    <a href="?page={{ total_pages }}&search={{ search }}&status={{ status_filter }}&gateway={{ gateway_filter }}"
+       class="page-btn">
+        Last
+    </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+<!-- PAYMENT MODAL -->
+
+<div
+id="paymentModal"
+class="pay-modal">
+
+    <div class="pay-modal-box">
+
+        <span
+        class="pay-close"
+        onclick="closePaymentModal()">
+
+            ×
+
+        </span>
+
+        <h2>Payment Details</h2>
+
+        <div id="paymentContent"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+function openPaymentModal(btn){
+
+    const payment =
+    JSON.parse(
+        btn.dataset.payment
+    );
+
+    document.getElementById(
+        "paymentContent"
+    ).innerHTML = `
+
+    <div class="pay-detail-grid">
+
+        <div>
+            <label>Invoice Number</label>
+            <strong>
+                ${payment.invoice_number || '-'}
+            </strong>
+        </div>
+
+        <div>
+            <label>School Name</label>
+            <strong>
+                ${payment.school_name || '-'}
+            </strong>
+        </div>
+
+        <div>
+            <label>Plan</label>
+            <strong>
+                ${payment.plan_name || '-'}
+            </strong>
+        </div>
+
+        <div>
+            <label>Amount</label>
+            <strong>
+                ₹${payment.amount || 0}
+            </strong>
+        </div>
+
+        <div>
+            <label>Payment Gateway</label>
+            <strong>
+                ${payment.payment_gateway || '-'}
+            </strong>
+        </div>
+
+        <div>
+            <label>Status</label>
+            <strong class="
+            ${payment.payment_status}">
+                ${payment.payment_status}
+            </strong>
+        </div>
+
+        <div>
+            <label>Payment ID</label>
+            <strong>
+                ${payment.payment_id || '-'}
+            </strong>
+        </div>
+
+        <div>
+            <label>Order ID</label>
+            <strong>
+                ${payment.order_id || '-'}
+            </strong>
+        </div>
+
+        <div>
+            <label>Transaction Type</label>
+            <strong>
+                ${payment.transaction_type || '-'}
+            </strong>
+        </div>
+
+        <div>
+            <label>Created At</label>
+            <strong>
+                ${payment.created_at || '-'}
+            </strong>
+        </div>
+
+    </div>
+
+    `;
+
+    document.getElementById("paymentModal").style.display = "flex";
+}
+
+function closePaymentModal(){
+
+    document.getElementById(
+        "paymentModal"
+    ).style.display =
+    "none";
+
+}
+
+window.addEventListener(
+    "click",
+    function(e){
+
+        const modal =
+        document.getElementById(
+            "paymentModal"
+        );
+
+        if(e.target === modal){
+
+            modal.style.display =
+            "none";
+
+        }
+
+    }
+);
+
+</script>
+
+{% endblock %}

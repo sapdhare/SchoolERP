@@ -1,136 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscription Renewal</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Subscription Management</title>
 
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/subscription/renew_subscription.css') }}">
+          href="{{ url_for('static',
+          filename='css/subscription/renew_subscription.css') }}">
+
 </head>
+
 <body>
 
-<div class="rs-page">
+<div class="rs-container">
 
-    <!-- TOPBAR -->
-    <div class="rs-topbar">
+{% if subscription.status == "expired" or days_left < 0 %}
 
-        <a href="{{ url_for('clerk_dashboard') }}" class="rs-back-btn">
-            ← Back
+<div class="rs-expired-banner">
+
+    <div class="rs-expired-icon">
+        ⚠️
+    </div>
+
+    <div>
+
+        <h3>
+            Subscription Expired
+        </h3>
+
+        <p>
+            Your ERP access has expired.
+            Renew now to continue using all modules.
+        </p>
+
+    </div>
+
+</div>
+
+{% elif days_left <= 7 %}
+
+<div class="rs-warning-banner">
+
+    <div class="rs-expired-icon">
+        ⏳
+    </div>
+
+    <div>
+
+        <h3>
+            Subscription Expiring Soon
+        </h3>
+
+        <p>
+            Your plan expires in
+            {{ days_left }} day(s).
+            Renew before expiry.
+        </p>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+    <!-- HEADER -->
+
+    <div class="rs-header">
+
+        <a href="{{ url_for('clerk_dashboard') }}"
+           class="rs-back-btn">
+
+            ← Dashboard
+
         </a>
 
-        <div class="rs-top-title">
-            Subscription Management
-        </div>
+        <div>
 
-    </div>
+            <h1>Subscription Management</h1>
 
-    <!-- ACTIVE PLAN -->
-    <div class="rs-current-wrapper">
-
-        <div class="rs-card">
-
-            <div class="rs-badge">
-                Current Active Plan
-            </div>
-
-            <h2 class="rs-plan-name">
-                {{ subscription.plan_name }}
-            </h2>
-
-            <div class="rs-price-box">
-                <p class="rs-label">Current Renewal Amount</p>
-                <h1 class="rs-price">
-                    ₹{{ subscription.amount }}
-                </h1>
-            </div>
-
-            <div class="rs-details">
-
-                <div class="rs-item">
-                    <span>Status</span>
-                    <strong>{{ subscription.status }}</strong>
-                </div>
-
-                <div class="rs-item">
-                    <span>Expiry Date</span>
-                    <strong>{{ subscription.end_date }}</strong>
-                </div>
-
-            </div>
-
-            <form method="POST"
-                  action="/clerk/subscription/payment">
-
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-
-                <input type="hidden"
-                       name="subscription_id"
-                       value="{{ subscription.id }}">
-
-                <input type="hidden"
-                       name="plan_id"
-                       value="{{ subscription.plan_id }}">
-
-                <button type="submit"
-                        class="rs-renew-btn">
-                    Renew Current Plan
-                </button>
-
-            </form>
+            <p>
+                Manage plans, renewals and upgrades
+            </p>
 
         </div>
 
     </div>
 
-    <!-- NOTICE -->
-    <div class="rs-note-box">
 
-        <h3>Important Note</h3>
+    <!-- CURRENT PLAN -->
 
-        <p>
-            Renew your current subscription or upgrade your school to a better plan.
-            After successful payment, your subscription will be activated immediately.
-        </p>
+    <div class="rs-current-card">
 
-        <p>
-            आपली सध्याची योजना नूतनीकरण करा किंवा अधिक चांगल्या योजनेत अपग्रेड करा.
-            पेमेंट यशस्वी झाल्यानंतर योजना त्वरित सक्रिय होईल.
-        </p>
+        <div class="rs-current-top">
+
+            <div>
+
+                {% if subscription.status == "active" %}
+                    <span class="rs-badge">
+                        Active Plan
+                    </span>
+                {% else %}
+                    <span class="rs-badge expired">
+                        Expired Plan
+                    </span>
+                {% endif %}
+
+                <h2>
+                    {{ subscription.plan_name }}
+                </h2>
+
+            </div>
+
+            <div class="rs-price">
+
+                ₹{{ subscription.amount }}
+
+                <span>/month</span>
+
+            </div>
+
+        </div>
+
+
+        <div class="rs-stats">
+
+            <div class="rs-stat">
+                <span>Status</span>
+                <strong>
+                    {{ subscription.status }}
+                </strong>
+            </div>
+
+            <div class="rs-stat">
+                <span>Expiry Date</span>
+                <strong>
+                    {{ subscription.end_date.strftime('%d %b %Y')
+                    if subscription.end_date else 'N/A' }}
+                </strong>
+            </div>
+
+            <div class="rs-stat">
+                <span>Days Left</span>
+
+                <strong>
+
+                    {% if days_left >= 0 %}
+                        {{ days_left }} Days
+                    {% else %}
+                        Expired
+                    {% endif %}
+
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="rs-feature-box">
+
+            <h3>Included Modules</h3>
+
+            <div class="rs-feature-grid">
+
+                {% if subscription.enable_tc_management == "Enabled" %}
+                <span>✔ TC Management</span>
+                {% endif %}
+
+                {% if subscription.enable_bonafide_management == "Enabled" %}
+                <span>✔ Bonafide</span>
+                {% endif %}
+
+                {% if subscription.enable_import_export == "Enabled" %}
+                <span>✔ Import Export</span>
+                {% endif %}
+
+                {% if subscription.enable_attendance == "Enabled" %}
+                <span>✔ Attendance</span>
+                {% endif %}
+
+                {% if subscription.enable_fee_management == "Enabled" %}
+                <span>✔ Fee Management</span>
+                {% endif %}
+
+                {% if subscription.enable_teacher_management == "Enabled" %}
+                <span>✔ Teacher Management</span>
+                {% endif %}
+
+                {% if subscription.enable_results == "Enabled" %}
+                <span>✔ Results</span>
+                {% endif %}
+
+                {% if subscription.enable_timetable == "Enabled" %}
+                <span>✔ Timetable</span>
+                {% endif %}
+
+                {% if subscription.enable_notice_board == "Enabled" %}
+                <span>✔ Notice Board</span>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <form method="POST"
+              action="{{ url_for('subscription_payment') }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <input type="hidden"
+                   name="subscription_id"
+                   value="{{ subscription.id }}">
+
+            <input type="hidden"
+                   name="plan_id"
+                   value="{{ subscription.plan_id }}">
+
+            <button class="rs-renew-btn">
+                Renew Current Plan
+            </button>
+
+        </form>
 
     </div>
+
 
     <!-- AVAILABLE PLANS -->
-    <div class="rs-plan-section">
 
-        <div class="rs-section-head">
-            Available Plans
-        </div>
+    <div class="rs-section-title">
 
-        <div class="rs-plan-grid">
+        Available Plans
 
-            {% for plan in plans %}
+    </div>
 
-            {% if plan[0] != subscription.plan_id %}
-            <div class="rs-plan-option">
+    <div class="rs-plan-grid">
 
-                <div class="rs-plan-top">
-                    <h4>{{ plan[1] }}</h4>
-                    <h2>₹{{ plan[2] }}</h2>
-                    <span>per month</span>
-                </div>
+        {% for plan in plans %}
 
-                <ul class="rs-feature-list">
-                    <li>✔ Student Management</li>
-                    <li>✔ TC Management</li>
-                    <li>✔ Bonafide Certificates</li>
-                    <li>✔ School Reports</li>
-                    <li>✔ Support Included</li>
-                </ul>
+        <div class="rs-plan-card">
+
+            {% if plan.plan_name == "Professional" %}
+            <span class="rs-popular">
+                Most Popular
+            </span>
+            {% endif %}
+
+            <h3>
+                {{ plan.plan_name }}
+            </h3>
+
+            <div class="rs-plan-price">
+
+                {% if plan.monthly_price > 0 %}
+                    ₹{{ plan.monthly_price }}
+                {% else %}
+                    Contact Sales
+                {% endif %}
+
+            </div>
+
+            <div class="rs-limits">
+
+                <p>
+                    👨‍🎓 Students :
+                    {{ plan.student_limit }}
+                </p>
+
+                <p>
+                    👨‍🏫 Staff :
+                    {{ plan.staff_limit }}
+                </p>
+
+                <p>
+                    ☁ Storage :
+                    {{ plan.storage_limit }}
+                </p>
+
+                <p>
+                    🎧 {{ plan.support_type }}
+                </p>
+
+            </div>
+
+            <ul class="rs-features">
+
+                <li>✔ Student Management</li>
+
+                {% if plan.enable_tc_management == "Enabled" %}
+                <li>✔ TC Management</li>
+                {% endif %}
+
+                {% if plan.enable_bonafide_management == "Enabled" %}
+                <li>✔ Bonafide</li>
+                {% endif %}
+
+                {% if plan.enable_import_export == "Enabled" %}
+                <li>✔ Import Export</li>
+                {% endif %}
+
+                {% if plan.enable_attendance == "Enabled" %}
+                <li>✔ Attendance</li>
+                {% endif %}
+
+                {% if plan.enable_fee_management == "Enabled" %}
+                <li>✔ Fee Management</li>
+                {% endif %}
+
+                {% if plan.enable_teacher_management == "Enabled" %}
+                <li>✔ Teacher Management</li>
+                {% endif %}
+
+                {% if plan.enable_results == "Enabled" %}
+                <li>✔ Results</li>
+                {% endif %}
+
+                {% if plan.enable_timetable == "Enabled" %}
+                <li>✔ Timetable</li>
+                {% endif %}
+
+                {% if plan.enable_notice_board == "Enabled" %}
+                <li>✔ Notice Board</li>
+                {% endif %}
+
+            </ul>
+
+            {% if plan.monthly_price == 0 %}
+
+                <a href="/contact-sales"
+                   class="rs-contact-btn">
+
+                    Contact Sales
+
+                </a>
+
+            {% else %}
 
                 <form method="POST"
-                      action="/clerk/subscription/payment">
+                      action="{{ url_for('subscription_payment') }}">
 
                     <input type="hidden"
                            name="csrf_token"
@@ -142,20 +355,22 @@
 
                     <input type="hidden"
                            name="plan_id"
-                           value="{{ plan[0] }}">
+                           value="{{ plan.id }}">
 
                     <button type="submit"
                             class="rs-plan-btn">
-                        Choose This Plan
+
+                        Choose Plan
+
                     </button>
 
                 </form>
 
-            </div>
-              {% endif %}
-            {% endfor %}
+            {% endif %}
 
         </div>
+
+        {% endfor %}
 
     </div>
 
@@ -163,3 +378,4 @@
 
 </body>
 </html>
+ 

@@ -1,0 +1,257 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet"
+href="{{ url_for(
+'static',
+filename='css/subscription/history.css'
+) }}">
+
+<div class="sh-container">
+
+    <!-- ===================================== -->
+    <!-- PAGE HEADER -->
+    <!-- ===================================== -->
+
+    <div class="sh-header">
+
+        <div>
+
+            <h1>
+                📜 Subscription History
+            </h1>
+
+            <p>
+                View all subscription payments,
+                renewals and billing transactions.
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- SUMMARY CARDS -->
+    <!-- ===================================== -->
+
+    <div class="sh-stats-grid">
+
+        <div class="sh-stat-card sh-card-blue">
+
+            <div>
+
+                <span>Total Transactions</span>
+
+                <h2>
+                    {{ summary.total_transactions }}
+                </h2>
+
+            </div>
+
+            <div class="sh-icon">
+                📄
+            </div>
+
+        </div>
+
+        <div class="sh-stat-card sh-card-green">
+
+            <div>
+
+                <span>Total Revenue</span>
+
+                <h2>
+                    ₹{{ summary.total_amount }}
+                </h2>
+
+            </div>
+
+            <div class="sh-icon">
+                💰
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- SEARCH BAR -->
+    <!-- ===================================== -->
+
+    <div class="sh-search-box">
+
+        <input
+            type="text"
+            id="historySearch"
+            placeholder="Search invoice number, payment id, plan..."
+        >
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- TABLE CARD -->
+    <!-- ===================================== -->
+
+    <div class="sh-table-card">
+
+        <table class="sh-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Date</th>
+                    <th>Invoice</th>
+                    <th>Plan</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Gateway</th>
+                    <th>Payment ID</th>
+                    <th>Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="historyTable">
+
+                {% for item in history %}
+
+                <tr>
+
+                    <td>
+                        {{ item.created_at.strftime('%d %b %Y') }}
+                    </td>
+
+                    <td>
+                        {{ item.invoice_number or '-' }}
+                    </td>
+
+                    <td>
+
+                        <span class="sh-plan-badge">
+
+                            {{ item.plan_name }}
+
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        ₹{{ item.amount }}
+
+                    </td>
+
+                    <td>
+
+                        {% if item.payment_status == "success" %}
+
+                            <span class="sh-status sh-success">
+
+                                Success
+
+                            </span>
+
+                        {% elif item.payment_status == "failed" %}
+
+                            <span class="sh-status sh-failed">
+
+                                Failed
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="sh-status sh-pending">
+
+                                Pending
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        {{ item.payment_gateway }}
+
+                    </td>
+
+                    <td>
+
+                        {{ item.payment_id or '-' }}
+
+                    </td>
+
+
+                    <td>
+                            {% if item.invoice_number %}
+
+                                <a href="{{ url_for(
+                                    'view_invoice',
+                                    payment_log_id=item.id
+                                ) }}"
+                                class="sh-invoice-btn">
+
+                                    View Invoice
+
+                                </a>
+
+                            {% else %}
+
+                                -
+
+                            {% endif %}
+
+                        </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+const searchInput =
+document.getElementById(
+"historySearch"
+);
+
+searchInput.addEventListener(
+"keyup",
+function(){
+
+let value =
+this.value.toLowerCase();
+
+let rows =
+document.querySelectorAll(
+"#historyTable tr"
+);
+
+rows.forEach(row=>{
+
+row.style.display =
+row.innerText
+.toLowerCase()
+.includes(value)
+? ""
+: "none";
+
+});
+
+});
+
+</script>
+
+{% endblock %}

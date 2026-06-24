@@ -1,0 +1,449 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet"
+href="{{ url_for('static',
+filename='css/superadmin/reports_admin.css') }}">
+
+<div class="report-admin-wrapper">
+
+    <!-- HEADER -->
+    <div class="report-admin-header">
+        <div>
+            <h1>📊 Reports & Analytics</h1>
+            <p>
+                Analyze revenue, subscriptions, leads and platform usage.
+            </p>
+        </div>
+
+        <div class="report-header-actions">
+           <a href="/superadmin/reports/export/pdf?from_date={{ from_date }}&to_date={{ to_date }}&report_type={{ report_type }}"
+            class="report-export-btn">
+                Export PDF
+            </a>
+
+           <a href="/superadmin/reports/export/excel?from_date={{ from_date }}&to_date={{ to_date }}&report_type={{ report_type }}"
+            class="report-excel-btn">
+                Export Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <form method="GET" class="report-filter-box">
+
+        <input type="date"
+               name="from_date"
+               value="{{ from_date or '' }}">
+
+        <input type="date"
+               name="to_date"
+               value="{{ to_date or '' }}">
+
+        <select name="report_type">
+
+            <option value=""
+                {% if report_type == "" %}selected{% endif %}>
+                All Reports
+            </option>
+
+            <option value="revenue"
+                {% if report_type == "revenue" %}selected{% endif %}>
+                Revenue
+            </option>
+
+            <option value="subscriptions"
+                {% if report_type == "subscriptions" %}selected{% endif %}>
+                Subscriptions
+            </option>
+
+            <option value="leads"
+                {% if report_type == "leads" %}selected{% endif %}>
+                Leads
+            </option>
+
+            <option value="certificates"
+                {% if report_type == "certificates" %}selected{% endif %}>
+                Certificates
+            </option>
+
+        </select>
+
+        <button type="submit">Apply Filter</button>
+
+        <a href="/superadmin/reports"
+           class="report-clear-btn">
+            Clear
+        </a>
+
+    </form>
+
+    <!-- KPI CARDS -->
+    <div class="report-stats-grid">
+
+        <div class="report-stat-card revenue">
+            <div>
+                <h4>Total Revenue</h4>
+                <h2>₹{{ total_revenue or 0 }}</h2>
+            </div>
+            <span>💰</span>
+        </div>
+
+        <div class="report-stat-card schools">
+            <div>
+                <h4>New Schools</h4>
+                <h2>{{ new_schools or 0 }}</h2>
+            </div>
+            <span>🏫</span>
+        </div>
+
+        <div class="report-stat-card subscriptions">
+            <div>
+                <h4>Active Subscriptions</h4>
+                <h2>{{ active_subscriptions or 0 }}</h2>
+            </div>
+            <span>✅</span>
+        </div>
+
+        <div class="report-stat-card leads">
+            <div>
+                <h4>Converted Leads</h4>
+                <h2>{{ converted_leads or 0 }}</h2>
+            </div>
+            <span>📞</span>
+        </div>
+
+        <div class="report-stat-card certificates">
+            <div>
+                <h4>Certificates</h4>
+                <h2>{{ total_certificates or 0 }}</h2>
+            </div>
+            <span>📄</span>
+        </div>
+
+    </div>
+
+    <!-- CHART DATA -->
+    <div id="reportChartData"
+        data-revenue-labels='{{ revenue_labels|tojson }}'
+        data-revenue-values='{{ revenue_values|tojson }}'
+        data-plan-labels='{{ plan_labels|tojson }}'
+        data-plan-values='{{ plan_values|tojson }}'
+        data-lead-labels='{{ lead_labels|tojson }}'
+        data-lead-values='{{ lead_values|tojson }}'
+        data-certificate-labels='{{ certificate_labels|tojson }}'
+        data-certificate-values='{{ certificate_values|tojson }}'>
+    </div>
+
+   <!-- CHART DATA -->
+<div id="reportChartData"
+     data-revenue-labels='{{ revenue_labels|tojson }}'
+     data-revenue-values='{{ revenue_values|tojson }}'
+     data-plan-labels='{{ plan_labels|tojson }}'
+     data-plan-values='{{ plan_values|tojson }}'
+     data-lead-labels='{{ lead_labels|tojson }}'
+     data-lead-values='{{ lead_values|tojson }}'
+     data-certificate-labels='{{ certificate_labels|tojson }}'
+     data-certificate-values='{{ certificate_values|tojson }}'>
+</div>
+
+    <!-- CHARTS -->
+    <div class="report-chart-grid">
+
+        {% if report_type == "" or report_type == "revenue" %}
+        <div class="report-chart-card">
+            <div class="report-card-header">
+                <div>
+                    <h3>Revenue Trend</h3>
+                    <p>Monthly successful payment revenue</p>
+                </div>
+                <span>Line Chart</span>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="revenueReportChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if report_type == "" or report_type == "subscriptions" %}
+        <div class="report-chart-card">
+            <div class="report-card-header">
+                <div>
+                    <h3>Plan Distribution</h3>
+                    <p>Subscription share by plan</p>
+                </div>
+                <span>Doughnut</span>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="planReportChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if report_type == "" or report_type == "leads" %}
+        <div class="report-chart-card">
+            <div class="report-card-header">
+                <div>
+                    <h3>Lead Funnel</h3>
+                    <p>Lead progress by status</p>
+                </div>
+                <span>Bar Chart</span>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="leadReportChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if report_type == "" or report_type == "certificates" %}
+        <div class="report-chart-card">
+            <div class="report-card-header">
+                <div>
+                    <h3>Certificate Usage</h3>
+                    <p>TC and Bonafide generation count</p>
+                </div>
+                <span>Bar Chart</span>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="certificateReportChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- TOP SCHOOLS TABLE -->
+    <div class="report-table-card">
+
+        <div class="report-card-header">
+            <div>
+                <h3>Top Schools</h3>
+                <p>Schools ranked by activity and revenue</p>
+            </div>
+        </div>
+
+        <div class="report-table-wrap">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>School</th>
+                        <th>Students</th>
+                        <th>Plan</th>
+                        <th>Revenue</th>
+                        <th>Certificates</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for school in top_schools %}
+                    <tr>
+                        <td>
+                            <strong>{{ school.school_name }}</strong>
+                            <small>{{ school.email or '-' }}</small>
+                        </td>
+
+                        <td>{{ school.total_students }}</td>
+
+                        <td>
+                            <span class="report-plan-pill">
+                                {{ school.plan_name or '-' }}
+                            </span>
+                        </td>
+
+                        <td>₹{{ school.revenue or 0 }}</td>
+
+                        <td>{{ school.certificates or 0 }}</td>
+
+                        <td>
+                            <span class="report-status-pill {{ school.status|lower }}">
+                                {{ school.status or '-' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    const dataBox = document.getElementById("reportChartData");
+
+    if(!dataBox){
+        console.error("reportChartData not found");
+        return;
+    }
+
+    function getJsonData(key){
+        try{
+            return JSON.parse(dataBox.dataset[key] || "[]");
+        }
+        catch(error){
+            console.error("Invalid chart data:", key, error);
+            return [];
+        }
+    }
+
+    const revenueLabels = getJsonData("revenueLabels");
+    const revenueValues = getJsonData("revenueValues");
+
+    const planLabels = getJsonData("planLabels");
+    const planValues = getJsonData("planValues");
+
+    const leadLabels = getJsonData("leadLabels");
+    const leadValues = getJsonData("leadValues");
+
+    const certificateLabels = getJsonData("certificateLabels");
+    const certificateValues = getJsonData("certificateValues");
+
+    // ================= REVENUE LINE CHART =================
+    const revenueCanvas = document.getElementById("revenueReportChart");
+
+    if(revenueCanvas){
+        new Chart(revenueCanvas, {
+            type: "line",
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: "Revenue",
+                    data: revenueValues,
+                    borderColor: "#0EA5A4",
+                    backgroundColor: "rgba(14,165,164,.12)",
+                    fill: true,
+                    tension: .4,
+                    borderWidth: 3,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // ================= PLAN DOUGHNUT CHART =================
+    const planCanvas = document.getElementById("planReportChart");
+
+    if(planCanvas){
+        new Chart(planCanvas, {
+            type: "doughnut",
+            data: {
+                labels: planLabels,
+                datasets: [{
+                    data: planValues,
+                    backgroundColor: [
+                        "#0EA5A4",
+                        "#2563EB",
+                        "#F59E0B",
+                        "#8B5CF6",
+                        "#EF4444"
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "75%",
+                radius: "85%",
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        });
+    }
+
+    // ================= LEAD FUNNEL BAR CHART =================
+    const leadCanvas = document.getElementById("leadReportChart");
+
+    if(leadCanvas){
+        new Chart(leadCanvas, {
+            type: "bar",
+            data: {
+                labels: leadLabels,
+                datasets: [{
+                    label: "Leads",
+                    data: leadValues,
+                    backgroundColor: "#2563EB",
+                    borderRadius: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // ================= CERTIFICATE USAGE BAR CHART =================
+    const certificateCanvas = document.getElementById("certificateReportChart");
+
+    if(certificateCanvas){
+        new Chart(certificateCanvas, {
+            type: "bar",
+            data: {
+                labels: certificateLabels,
+                datasets: [{
+                    label: "Certificates",
+                    data: certificateValues,
+                    backgroundColor: "#8B5CF6",
+                    borderRadius: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

@@ -263,59 +263,59 @@ html,body{
  
 <div class="tc-header">
 
-<!-- LEFT LOGO -->
-<div class="tc-logo-box">
+    <!-- LEFT LOGO -->
+    <div class="tc-logo-box">
 
-    {% if school.logo_path %}
+        {% if school.show_tc_logo == "Enabled" and school.logo_path %}
 
-        {% if is_pdf %}
-            <img src="{{ school.logo_path }}" class="school-logo">
-        {% else %}
-            <img 
-                src="{{ url_for(
-                    'static',
-                    filename=school.logo_path.replace('static/', '')
-                ) }}"
-                class="school-logo"
-                alt="School Logo"
-            >
+            {% if is_pdf %}
+                <img src="{{ school.logo_path }}" class="school-logo">
+            {% else %}
+                <img 
+                    src="{{ url_for(
+                        'static',
+                        filename=school.logo_path.replace('static/', '')
+                    ) }}"
+                    class="school-logo"
+                    alt="School Logo"
+                >
+            {% endif %}
+
         {% endif %}
 
-    {% endif %}
-
-</div>
+    </div>
 
     <!-- CENTER HEADER -->
     <div class="tc-header-center">
 
-        <h1 id="schoolTitle">{{ school.name }}</h1>
+            <h1 id="schoolTitle">{{ school.name }}</h1>
 
-        <p class="school-address" id="schoolAddress">
-            {{ school.address }}
-        </p>
-
-       <div class="header-row">
-            <span id="headPhone">फोन : {{ school.phone }}</span>
-            <span id="headEmail">ई-मेल : {{ school.email }}</span>
-       </div>
+            <p class="school-address" id="schoolAddress">
+                {{ school.address }}
+            </p>
 
         <div class="header-row">
-            <span id="headRecognitionNo">शाळा मान्यता क्र. : {{ school.recognition_no }}</span>
-            <span id="headMedium">माध्यम : {{ school.medium }}</span>
+                <span id="headPhone">फोन : {{ school.phone }}</span>
+                <span id="headEmail">ई-मेल : {{ school.email }}</span>
         </div>
 
-        <div class="header-row">
-            <span id="headUdise">यु डायस क्र. : {{ school.udise_no }}</span>
-            <span id="headBoard">बोर्ड : {{ school.board_name }}</span>
-            <span id="headSchoolIndexNo">शाळा संकेतांक : {{ school.school_index_no }}</span>
+            <div class="header-row">
+                <span id="headRecognitionNo">शाळा मान्यता क्र. : {{ school.recognition_no }}</span>
+                <span id="headMedium">माध्यम : {{ school.medium }}</span>
+            </div>
+
+            <div class="header-row">
+                <span id="headUdise">यु डायस क्र. : {{ school.udise_no }}</span>
+                <span id="headBoard">बोर्ड : {{ school.board_name }}</span>
+                <span id="headSchoolIndexNo">शाळा संकेतांक : {{ school.school_index_no }}</span>
+            </div>
+
         </div>
 
     </div>
 
-</div>
-
     <!-- WATERMARK -->
-    {% if school.watermark_path %}
+    {% if school.show_tc_watermark == "Enabled" and school.watermark_path %}
 
         {% if is_pdf %}
             <img
@@ -338,12 +338,16 @@ html,body{
 
 
     <!-- ================= TITLE ================= -->
+
+    {% if school.enable_certificate_labels == "Enabled" %}
     <div class="tc-title">
         <h2 id="tcTitle">शाळा सोडल्याचे प्रमाणपत्र</h2>
     </div>
+    {% endif %}
 
 
     <!-- ================= BODY ================= -->
+     
    <div class="tc-body">
 
     <!-- SCHOOL REGISTER NO -->

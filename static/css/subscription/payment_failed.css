@@ -1,0 +1,263 @@
+:root{
+
+    --primary:#00C389;
+
+    --primary-dark:#00A676;
+
+    --accent:#14B8A6;
+
+    --danger:#EF4444;
+
+    --danger-bg:#FEF2F2;
+
+    --white:#FFFFFF;
+
+    --dark:#111827;
+
+    --text:#6B7280;
+
+    --border:#E5E7EB;
+
+    --shadow:
+    0 20px 60px rgba(0,0,0,.08);
+
+}
+
+*{
+
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+
+}
+
+body{
+
+    font-family:
+    Inter,
+    Segoe UI,
+    sans-serif;
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:20px;
+
+    background:
+
+    linear-gradient(
+        180deg,
+        #FFF5F5 0%,
+        #F8FAFC 100%
+    );
+
+}
+
+.failed-wrapper{
+
+    width:100%;
+    max-width:700px;
+
+}
+
+.failed-card{
+
+    background:var(--white);
+
+    border-radius:28px;
+
+    padding:50px;
+
+    text-align:center;
+
+    border:1px solid var(--border);
+
+    box-shadow:var(--shadow);
+
+}
+
+.failed-icon{
+
+    width:110px;
+
+    height:110px;
+
+    margin:auto;
+
+    border-radius:50%;
+
+    background:var(--danger-bg);
+
+    border:3px solid #FECACA;
+
+    color:var(--danger);
+
+    font-size:55px;
+
+    font-weight:700;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
+}
+
+.failed-card h1{
+
+    font-size:38px;
+
+    color:var(--dark);
+
+    margin-bottom:10px;
+
+}
+
+.failed-subtitle{
+
+    color:var(--text);
+
+    line-height:1.8;
+
+    margin-bottom:30px;
+
+}
+
+.failed-info{
+
+    background:#F9FAFB;
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:25px;
+
+    text-align:left;
+
+    margin-bottom:30px;
+
+}
+
+.failed-info span{
+
+    font-weight:700;
+
+    display:block;
+
+    margin-bottom:15px;
+
+}
+
+.failed-info ul{
+
+    padding-left:18px;
+
+}
+
+.failed-info li{
+
+    margin-bottom:10px;
+
+    color:var(--text);
+
+}
+
+.failed-actions{
+
+    display:flex;
+
+    gap:15px;
+
+}
+
+.retry-btn{
+
+    flex:1;
+
+    text-decoration:none;
+
+    text-align:center;
+
+    padding:16px;
+
+    border-radius:14px;
+
+    color:white;
+
+    font-weight:700;
+
+    background:
+
+    linear-gradient(
+        135deg,
+        var(--primary),
+        var(--accent)
+    );
+
+}
+
+.dashboard-btn{
+
+    flex:1;
+
+    text-decoration:none;
+
+    text-align:center;
+
+    padding:16px;
+
+    border-radius:14px;
+
+    font-weight:700;
+
+    color:var(--dark);
+
+    background:#F3F4F6;
+
+}
+
+.retry-btn:hover,
+.dashboard-btn:hover{
+
+    transform:translateY(-2px);
+
+}
+
+@media(max-width:576px){
+
+    .failed-card{
+
+        padding:30px 20px;
+
+    }
+
+    .failed-card h1{
+
+        font-size:30px;
+
+    }
+
+    .failed-icon{
+
+        width:90px;
+        height:90px;
+        font-size:42px;
+
+    }
+
+    .failed-actions{
+
+        flex-direction:column;
+
+    }
+
+}

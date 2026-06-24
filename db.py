@@ -1,10 +1,30 @@
-import pyodbc
+import os
+import mysql.connector
+from mysql.connector import Error
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
+
 
 def get_connection():
-    conn = pyodbc.connect(
-        "DRIVER={ODBC Driver 17 for SQL Server};"
-        "SERVER=localhost\\SQLEXPRESS;"
-        "DATABASE=SchoolERP;"
-        "Trusted_Connection=yes;"
-    )
-    return conn
+
+    try:
+
+        conn = mysql.connector.connect(
+
+            host=os.getenv("MYSQL_HOST"),
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            database=os.getenv("MYSQL_DATABASE"),
+
+            autocommit=False
+
+        )
+
+        return conn
+
+    except Error as e:
+
+        print("❌ DATABASE CONNECTION ERROR:", e)
+
+        return None

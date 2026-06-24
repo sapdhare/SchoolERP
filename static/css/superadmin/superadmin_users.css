@@ -9,7 +9,11 @@
 /* HEADER */
 
 .su-header{
-    margin-bottom: 30px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
 }
 
 .su-header h1{
@@ -226,6 +230,34 @@
     background: rgba(59,130,246,.12);
     color: #2563eb;
 }
+/* PAGINATION  */
+
+.su-pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:14px;
+    margin:24px 0;
+}
+
+.su-pagination a{
+    padding:12px 18px;
+    border-radius:12px;
+    background:#0ea5a4;
+    color:#fff;
+    text-decoration:none;
+    font-weight:700;
+}
+
+.su-pagination span{
+    padding:12px 16px;
+    border-radius:12px;
+    background:#fff;
+    border:1px solid #e2e8f0;
+    color:#334155;
+    font-weight:700;
+}
+
 
 /* ACTIONS */
 
@@ -365,6 +397,9 @@
     text-decoration:none;
     color:white;
     margin-top:20px;
+    border:none;
+    cursor:pointer;
+    font-weight:700;
 }
 
 .su-confirm-btn{
@@ -374,32 +409,428 @@
 .su-delete-confirm-btn{
     background:#ef4444;
 }
-/* RESPONSIVE */
+ 
 
-@media(max-width:1200px){
+
+/* ADD USER MODAL CSS */
+ 
+/* =========================================
+   ADD USER BUTTON
+========================================= */
+
+.su-add-user-btn{
+
+    border:none;
+
+    background:
+    linear-gradient(
+        135deg,
+        #0ea5a4,
+        #22c55e
+    );
+
+    color:white;
+
+    padding:16px 24px;
+
+    border-radius:16px;
+
+    font-size:14px;
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.3s ease;
+
+    box-shadow:
+    0 12px 25px
+    rgba(16,185,129,.25);
+}
+
+.su-add-user-btn:hover{
+
+    transform:
+    translateY(-3px);
+
+    box-shadow:
+    0 18px 35px
+    rgba(16,185,129,.35);
+}
+
+/* =========================================
+   ADD USER MODAL
+========================================= */
+
+.su-add-user-box{
+
+    width:850px;
+    max-width:95%;
+}
+
+/* =========================================
+   FORM GRID
+========================================= */
+
+.su-form-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(2,1fr);
+
+    gap:18px;
+
+    margin-bottom:18px;
+}
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.su-add-user-form input,
+.su-add-user-form select{
+
+    width:100%;
+
+    padding:15px 16px;
+
+    border-radius:14px;
+
+    border:1px solid #dbe2ea;
+
+    background:#f8fafc;
+
+    transition:.3s;
+}
+
+.su-add-user-form input:focus,
+.su-add-user-form select:focus{
+
+    border-color:#0ea5a4;
+
+    background:white;
+
+    outline:none;
+
+    box-shadow:
+    0 0 0 4px
+    rgba(20,184,166,.08);
+}
+
+/* =========================================
+   SUBMIT BUTTON
+========================================= */
+
+.su-create-user-btn{
+
+    width:100%;
+
+    margin-top:10px;
+
+    border:none;
+
+    background:
+    linear-gradient(
+        135deg,
+        #14b8a6,
+        #22c55e
+    );
+
+    color:white;
+
+    padding:18px;
+
+    border-radius:16px;
+
+    font-size:15px;
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.3s ease;
+}
+
+.su-create-user-btn:hover{
+
+    transform:
+    translateY(-2px);
+}
+
+ /* =====================================================
+   SUPER ADMIN USERS - PREMIUM MOBILE RESPONSIVE
+===================================================== */
+
+@media(max-width:576px){
+
+    html,
+    body{
+        width:100%;
+        overflow-x:hidden;
+        background:#f8fafc;
+    }
+
+    .su-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:16px;
+        margin-bottom:22px;
+    }
+
+    .su-header h1{
+        font-size:25px;
+        line-height:1.3;
+    }
+
+    .su-header p{
+        font-size:13px;
+        line-height:1.5;
+    }
+
+    .su-add-user-btn{
+        width:100%;
+        padding:14px;
+        border-radius:14px;
+        font-size:13px;
+    }
 
     .su-stats-grid{
-        grid-template-columns: repeat(2,1fr);
+        grid-template-columns:1fr;
+        gap:14px;
+        margin-bottom:22px;
+    }
+
+    .su-stat-card{
+        min-height:110px;
+        padding:20px;
+        border-radius:18px;
+    }
+
+    .su-stat-card:hover{
+        transform:none;
+    }
+
+    .su-stat-card h4{
+        font-size:13px;
+        margin-bottom:8px;
+    }
+
+    .su-stat-card h2{
+        font-size:30px;
+    }
+
+    .su-stat-card span{
+        width:48px;
+        height:48px;
+        border-radius:14px;
+        font-size:24px;
     }
 
     .su-filter-box{
-        flex-wrap: wrap;
+        flex-direction:column;
+        gap:10px;
+        padding:14px;
+        border-radius:18px;
+        margin-bottom:18px;
     }
 
-}
-
-@media(max-width:768px){
-
-    .su-stats-grid{
-        grid-template-columns: 1fr;
+    .su-filter-box input,
+    .su-filter-box select{
+        width:100%;
+        flex:none;
+        padding:13px 14px;
+        border-radius:12px;
+        font-size:13px;
     }
 
-    .su-wrapper{
-        padding: 18px;
+    .su-filter-box button,
+    .su-clear-btn{
+        width:100%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        padding:12px;
+        border-radius:12px;
+        font-size:13px;
+        font-weight:700;
     }
 
     .su-table-box{
-        overflow-x: auto;
+        padding:0;
+        border-radius:18px;
+        overflow-x:auto;
+        background:#ffffff;
+        border:1px solid #e2e8f0;
+        box-shadow:0 12px 30px rgba(15,23,42,.06);
     }
 
+    .su-users-table{
+        min-width:1150px;
+        width:1150px;
+    }
+
+    .su-users-table thead th{
+        padding:13px;
+        font-size:12px;
+        white-space:nowrap;
+    }
+
+    .su-users-table tbody td{
+        padding:13px;
+        font-size:13px;
+        white-space:nowrap;
+    }
+
+    .su-users-table tbody tr:hover{
+        background:transparent;
+    }
+
+    .role-badge,
+    .status-badge,
+    .plan-badge{
+        padding:6px 10px;
+        font-size:11px;
+    }
+
+    .su-actions{
+        flex-wrap:nowrap;
+        gap:6px;
+    }
+
+    .su-actions button{
+        padding:8px 10px;
+        border-radius:9px;
+        font-size:11px;
+    }
+
+    .su-pagination{
+        flex-direction:column;
+        gap:10px;
+        margin:22px 0;
+    }
+
+    .su-pagination a,
+    .su-pagination span{
+        width:100%;
+        text-align:center;
+        padding:12px;
+        border-radius:12px;
+        font-size:13px;
+    }
+
+    .su-modal{
+        align-items:flex-start;
+        padding:14px;
+        overflow-y:auto;
+        z-index:9999;
+    }
+
+    .su-modal-box{
+        width:100%;
+        max-width:100%;
+        margin-top:18px;
+        padding:20px;
+        border-radius:20px;
+        max-height:90vh;
+        overflow-y:auto;
+    }
+
+    .su-small-box{
+        margin-top:80px;
+    }
+
+    .su-close-btn{
+        top:14px;
+        right:14px;
+        width:36px;
+        height:36px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:10px;
+        background:#f1f5f9;
+        font-size:24px;
+    }
+
+    .su-modal-header h2{
+        font-size:22px;
+        padding-right:42px;
+    }
+
+    .su-modal-header p{
+        font-size:13px;
+        line-height:1.5;
+        margin-bottom:18px;
+    }
+
+    .su-view-grid{
+        grid-template-columns:1fr;
+        gap:10px;
+    }
+
+    .su-view-card{
+        padding:14px;
+        border-radius:12px;
+        border:1px solid #e2e8f0;
+    }
+
+    .su-view-card span{
+        font-size:11px;
+    }
+
+    .su-view-card strong{
+        font-size:13px;
+        word-break:break-word;
+    }
+
+    .su-edit-form{
+        gap:14px;
+    }
+
+    .su-input-group label{
+        font-size:13px;
+    }
+
+    .su-input-group input,
+    .su-input-group select{
+        padding:13px 14px;
+        border-radius:12px;
+        font-size:13px;
+    }
+
+    .su-save-btn,
+    .su-confirm-btn,
+    .su-delete-confirm-btn{
+        width:100%;
+        padding:13px;
+        border-radius:12px;
+        font-size:13px;
+        border:none;
+        cursor:pointer;
+        font-weight:700;
+    }
+
+    .su-form-grid{
+        grid-template-columns:1fr;
+        gap:12px;
+        margin-bottom:12px;
+    }
+
+    .su-add-user-box{
+        width:100%;
+        max-width:100%;
+    }
+
+    .su-add-user-form input,
+    .su-add-user-form select{
+        padding:13px 14px;
+        border-radius:12px;
+        font-size:13px;
+    }
+
+    .su-create-user-btn{
+        padding:14px;
+        border-radius:13px;
+        font-size:13px;
+    }
 }

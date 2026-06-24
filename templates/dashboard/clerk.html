@@ -8,7 +8,18 @@
 <div class="clerk-top-header">
 
     <div class="clerk-header-left">
-        <h1>{{ school_name }}</h1>
+
+        <div class="clerk-title-row">
+
+            <h1>
+                {{ school_name }}
+            </h1>
+
+            <span class="school-status-badge">
+                ● School Active
+            </span>
+
+        </div>
 
         <p class="clerk-sub">
             Clerk Panel • Manage Students, TC & Certificates
@@ -17,72 +28,100 @@
                 कार्यालय पॅनेल • विद्यार्थी, टीसी व प्रमाणपत्र व्यवस्थापन
             </span>
         </p>
+
     </div>
 
     <!-- PROFILE ICON -->
-    <div class="profile-avatar-box" onclick="openProfileModal()">
+
+    <div class="profile-avatar-box"
+         onclick="openProfileModal()">
+
+        <div class="profile-info">
+            <strong>
+                {{ user_profile.name if user_profile and user_profile.name else "Clerk User" }}
+            </strong>
+            <span>
+                Clerk Account
+            </span>
+        </div>
+
         <div class="profile-avatar">
             {{ user_profile.name[0] if user_profile and user_profile.name else "U" }}
         </div>
+
     </div>
 
 </div>
+
 <!-- ================= SUBSCRIPTION ALERT ================= -->
+
 {% if subscription_alert %}
 <div class="subscription-alert {{ subscription_alert.type }}">
 
-    <div class="subscription-alert-left">
-        {% if subscription_alert.type == "danger" %}
-            ⚠️
-        {% elif subscription_alert.type == "warning" %}
-            ⏳
+    <div class="subscription-icon">
+
+        {% if subscription_alert.type == "expired" %}
+            ❌
+        {% elif subscription_alert.type == "danger" %}
+            🚨
         {% else %}
-            ℹ️
+            ⏳
         {% endif %}
+
     </div>
 
-    <div class="subscription-alert-content">
+    <div class="subscription-content">
+
+        <h4>{{ subscription_alert.title }}</h4>
+
         <p>{{ subscription_alert.message }}</p>
+
         <span>
             कृपया वेळेत सदस्यता नूतनीकरण करा.
         </span>
+
     </div>
 
-    <div class="subscription-alert-action">
-       <a href="/clerk/subscription/renew" class="btn-renew">
-            Renew Plan
-        </a>
+    <div class="subscription-action">
+
+        {% if subscription_alert.type == "expired" %}
+
+            <a href="{{ url_for('renew_subscription') }}"
+               class="subscription-renew-btn expired-btn">
+
+                Renew Now →
+
+            </a>
+
+        {% elif subscription_alert.type == "danger" %}
+
+            <a href="{{ url_for('renew_subscription') }}"
+               class="subscription-renew-btn danger-btn">
+
+                Renew Now →
+
+            </a>
+
+        {% else %}
+
+            <a href="{{ url_for('renew_subscription') }}"
+               class="subscription-renew-btn warning-btn">
+
+                Renew Before Expiry →
+
+            </a>
+
+        {% endif %}
+
     </div>
 
 </div>
 {% endif %}
 
 
-<!-- ================= WELCOME CARD ================= -->
-<!-- <div class="clerk-welcome-card">
-
-    <div class="clerk-welcome-content">
-        <h2>
-            Welcome back 👋
-        </h2>
-
-        <h3 class="clerk-highlight">
-            Smart & Easy School Management
-        </h3>
-
-        <p>
-            Add students, update records, and generate Transfer Certificates in seconds.
-            Everything is designed to be simple, fast, and error-free.
-        </p>
-    </div> -->
-
-    <!-- FLOATING DECOR -->
-    <!-- <div class="clerk-glow"></div>
-    <div class="clerk-welcome-shape"></div>
-
-</div>  -->
-<!-- ================= CLERK STATS SECTION ================= -->
  
+<!-- ================= CLERK STATS SECTION ================= -->
+
 <div class="clerk-stats-row">
 
     <div class="clerk-stat-box teal">
@@ -114,161 +153,463 @@
 
     <div class="clerk-stat-box purple">
         <div class="stat-text">
-            <h2 class="counter">{{ total_students or 0 }}</h2>
-            <p class="label-en">Total Admissions</p>
-            <span class="label-mr">एकूण प्रवेश</span>
+            <h2 class="counter">{{ today_students or 0 }}</h2>
+            <p class="label-en">Today Admissions</p>
+            <span class="label-mr">आजचे प्रवेश</span>
         </div>
         <div class="stat-icon">➕</div>
     </div>
 
 </div>
-
  
 
 <!-- ================= ACTION CARDS ================= -->
+
 <div class="clerk-actions">
 
-    <!-- ADD STUDENT -->
-    <div class="action-card" onclick="window.location.href='/clerk/add-student'">
+    <div class="action-card"
+         onclick="window.location.href='/clerk/add-student'">
+
         <div class="action-icon">➕</div>
         <h3>Add Student</h3>
         <p>नवीन विद्यार्थी नोंदणी करा</p>
+
     </div>
 
-    <!-- VIEW STUDENTS -->
-    <div class="action-card" onclick="window.location.href='/clerk/students'">
+    <div class="action-card"
+         onclick="window.location.href='/clerk/students'">
+
         <div class="action-icon">👥</div>
         <h3>View Students</h3>
         <p>विद्यार्थ्यांची यादी पहा</p>
+
     </div>
 
-    <!-- TC MANAGEMENT -->
-    <div class="action-card" onclick="window.location.href='/clerk/tc'">
+    {% if features.tc == "Enabled" %}
+
+    <div class="action-card"
+         onclick="window.location.href='/clerk/tc'">
+
         <div class="action-icon">📋</div>
         <h3>TC Management</h3>
         <p>स्थानांतरण प्रमाणपत्र व्यवस्थापन</p>
+
     </div>
-    <!-- BONAFIDE MANAGEMENT-->
-      <div class="action-card" onclick="window.location.href='/clerk/bonafide'">
-        <div class="action-icon">🏅</div>
-        <h3>Bonafide Management</h3>
-        <p>प्रमाणपत्र व्यवस्थापन (बोनाफाईड)</p>
-    </div>
-
-</div>
-
-<!-- ================= PREMIUM OVERVIEW ================= -->
-<div class="clerk-main-grid">
-
-<div class="clerk-overview-card">
-
-    <!-- HEADER -->
-    <div class="overview-header">
-        <div>
-            <h3>School Overview</h3>
-            <span>शाळेचा आढावा</span>
-        </div>
-        <a href="#">View Report →</a>
-    </div>
-
-    <!-- TOP STATS CARDS -->
-        <div class="overview-top">
-
-            <!-- STUDENT GROWTH -->
-            <div class="overview-stat">
-                <p>Student Growth<br><span>विद्यार्थी वाढ</span></p>
-                <h2>{{ growth_percent or 0 }}%</h2>
-                <canvas id="chartGrowth"></canvas>
-            </div>
-
-            <!-- TC GENERATED -->
-            <div class="overview-stat">
-                <p>TC Generated<br><span>टीसी तयार</span></p>
-                <h2>{{ total_tc or 0 }}</h2>
-                <canvas id="chartTC"></canvas>
-            </div>
-
-            <!-- BONAFIDE -->
-            <div class="overview-stat">
-                <p>Bonafide Issued<br><span>बोनाफाईड दिले</span></p>
-                <h2>{{ total_bonafide or 0 }}</h2>
-                <canvas id="chartBonafide"></canvas>
-            </div>
-
-        </div>
-
-</div>
-
-<!-- RIGHT: RECENT ACTIVITY -->
-<div class="clerk-activity">
-
-    <div class="section-header">
-        <h3>Recent Activity</h3>
-        <span>अलीकडील अपडेट</span>
-    </div>
-
-     {% if activities and activities|length > 0 %}
-
-        {% for act in activities %}
-
-        <div class="activity-item">
-
-            <span class="dot {{ act.type }}"></span>
-
-              <div class="activity-content">
-                <p>{{ act.title }}</p>
-                <span>{{ act.title_mr }}</span>
-                <small>{{ act.time }}</small>
-            </div>
-            
-        </div>
-        {% endfor %}
 
     {% else %}
 
-        <!-- EMPTY STATE -->
-        <div class="activity-empty">
-            <p>No recent activity</p>
-            <span>अलीकडील माहिती उपलब्ध नाही</span>
-        </div>
+    <div class="action-card locked-card">
+
+        <div class="action-icon">🔒</div>
+        <h3>TC Management</h3>
+        <p>हे module disabled आहे</p>
+        <span class="locked-badge">Locked</span>
+
+    </div>
+
+    {% endif %}
+
+    {% if features.bonafide == "Enabled" %}
+
+    <div class="action-card"
+         onclick="window.location.href='/clerk/bonafide'">
+
+        <div class="action-icon">🏅</div>
+        <h3>Bonafide Management</h3>
+        <p>प्रमाणपत्र व्यवस्थापन (बोनाफाईड)</p>
+
+    </div>
+
+    {% else %}
+
+    <div class="action-card locked-card">
+
+        <div class="action-icon">🔒</div>
+        <h3>Bonafide Management</h3>
+        <p>हे module disabled आहे</p>
+        <span class="locked-badge">Locked</span>
+
+    </div>
 
     {% endif %}
 
 </div>
 
+
+<!-- ================= TODAY SUMMARY + RECENT ACTIVITY ================= -->
+
+<div class="dashboard-workspace-row">
+
+    <!-- TODAY SUMMARY -->
+    <section class="today-summary-card">
+
+        <div class="workspace-section-header">
+
+            <div>
+                <h2>Today's Summary</h2>
+                <p>आजच्या कामाचा जलद आढावा</p>
+            </div>
+
+            <span class="today-date-pill">
+                {{ current_date or "" }}
+            </span>
+
+        </div>
+
+        <div class="today-summary-list">
+
+            <div class="today-summary-item accent-student">
+
+                <div class="summary-icon">👨‍🎓</div>
+
+                <div class="summary-text">
+                    <h4>New Admissions</h4>
+                    <span>नवीन विद्यार्थी</span>
+                </div>
+
+                <strong>{{ today_students or 0 }}</strong>
+
+            </div>
+
+            <div class="today-summary-item accent-tc">
+
+                <div class="summary-icon">📤</div>
+
+                <div class="summary-text">
+                    <h4>TC Generated</h4>
+                    <span>आज तयार केलेले TC</span>
+                </div>
+
+                <strong>{{ today_tc or 0 }}</strong>
+
+            </div>
+
+            <div class="today-summary-item accent-bonafide">
+
+                <div class="summary-icon">🏅</div>
+
+                <div class="summary-text">
+                    <h4>Bonafide Issued</h4>
+                    <span>आज दिलेले बोनाफाईड</span>
+                </div>
+
+                <strong>{{ today_bonafide or 0 }}</strong>
+
+            </div>
+
+            <div class="today-summary-item accent-pending">
+
+                <div class="summary-icon">⏳</div>
+
+                <div class="summary-text">
+                    <h4>Pending Tasks</h4>
+                    <span>प्रलंबित कामे</span>
+                </div>
+
+                <strong>{{ pending_tasks or 0 }}</strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- RECENT ACTIVITY -->
+    <section class="recent-activity-card">
+
+        <div class="workspace-section-header">
+
+            <div>
+                <h2>Recent Activity</h2>
+                <p>अलीकडील अपडेट</p>
+            </div>
+
+            <span class="activity-live-pill">
+                Live
+            </span>
+
+        </div>
+
+        <div class="activity-timeline">
+
+            {% if activities %}
+
+                {% for activity in activities[:6] %}
+
+                <div class="activity-item">
+
+                    <span class="activity-dot {{ activity.type }}"></span>
+
+                    <div class="activity-content">
+
+                        <h4>
+                            {{ activity.title }}
+                        </h4>
+
+                        <p>
+                            {{ activity.title_mr }}
+                            <span>Recently</span>
+                        </p>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty-activity-box">
+
+                    <div>📭</div>
+
+                    <h4>No recent activity</h4>
+
+                    <p>आज कोणतीही नवीन activity नाही.</p>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
 </div>
 
-<!-- PROFILE MODAL -->
+<!-- ================= PENDING DATA CHECKLIST ================= -->
+
+<section class="pending-checklist-card">
+
+    <div class="workspace-section-header">
+
+        <div>
+            <h2>Pending Data Checklist</h2>
+            <p>अपूर्ण विद्यार्थी माहिती तपासा</p>
+        </div>
+
+        <span class="pending-count-pill">
+            {{ pending_tasks or 0 }} Students Pending 
+        </span>
+        <span class="pending-fields-pill">
+            {{ pending_fields }} Missing Fields
+        </span>
+
+    </div>
+
+    <div class="pending-list">
+
+        {% if pending_students %}
+
+            {% for student in pending_students %}
+
+            <div class="pending-student-item">
+
+                <div class="pending-avatar">
+                    {{ student[2][0] if student[2] else "S" }}
+                </div>
+
+                <div class="pending-info">
+
+                    <h4>{{ student[2] }}</h4>
+
+                    <p>
+                        {{ student[1] or "No Admission No" }}
+                        • Class {{ student[3] or "-" }}
+                        {{ student[4] or "" }}
+                    </p>
+
+                    <div class="pending-missing-tags">
+
+                        {% for reason in student[5].split(', ') %}
+
+                            <span>{{ reason }}</span>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+               <a href="{{ url_for('edit_student', id=student[0]) }}"
+                class="pending-fix-btn">
+                    Fix →
+                </a>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty-activity-box">
+
+                <div>✅</div>
+
+                <h4>All student records complete</h4>
+
+                <p>कोणतीही अपूर्ण माहिती नाही.</p>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+<!-- ================= SCHOOL OVERVIEW & ANALYTICS ================= -->
+
+<section class="school-analytics-card">
+
+    <!-- HEADER -->
+    <div class="analytics-header">
+
+        <div>
+            <span class="analytics-tag">
+                📊 School Analytics
+            </span>
+
+            <h2>
+                School Overview
+            </h2>
+
+            <p>
+                Live academic summary, monthly admissions and certificate activity.
+                <br>
+                <span>शाळेचा अचूक डेटा आढावा</span>
+            </p>
+        </div>
+
+        <a href="javascript:void(0)"
+            class="analytics-report-btn disabled-report-btn">
+            Report Coming Soon
+        </a>
+
+    </div>
+
+
+    <div class="analytics-note-strip">
+
+        <span>✅ Live Data</span>
+        <p>
+            Charts are generated from student, TC and bonafide records.
+        </p>
+
+    </div>
+
+
+    <!-- CHARTS -->
+    <div class="analytics-chart-grid">
+
+        <!-- STUDENT GROWTH -->
+        <div class="analytics-chart-card large-chart">
+
+            <div class="chart-card-header">
+                <div>
+                    <h3>Student Growth</h3>
+                    <p>Last 5 months admission trend</p>
+                </div>
+
+                <span class="chart-chip success">
+                    {{ growth_percent or 0 }}% Growth
+                </span>
+            </div>
+
+            <div class="chart-box">
+                <canvas id="chartGrowth"></canvas>
+            </div>
+
+        </div>
+
+        <!-- TC GENERATED -->
+        <div class="analytics-chart-card">
+
+            <div class="chart-card-header">
+                <div>
+                    <h3>TC Generated</h3>
+                    <p>Last 5 active days</p>
+                </div>
+
+                <span class="chart-chip blue">
+                    {{ total_tc or 0 }} Total
+                </span>
+            </div>
+
+            <div class="chart-box small">
+                <canvas id="chartTC"></canvas>
+            </div>
+
+        </div>
+
+        <!-- BONAFIDE -->
+        <div class="analytics-chart-card">
+
+            <div class="chart-card-header">
+                <div>
+                    <h3>Bonafide Coverage</h3>
+                    <p>Issued vs remaining students</p>
+                </div>
+
+                <span class="chart-chip purple">
+                    {{ total_bonafide or 0 }} Issued
+                </span>
+            </div>
+
+            <div class="chart-box small doughnut-box">
+                <canvas id="chartBonafide"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+ 
+
+<!-- ================= PREMIUM PROFILE MODAL ================= -->
+
 <div id="profileModal" class="profile-modal">
 
     <div class="profile-modal-box">
 
         <!-- HEADER -->
-        <div class="profile-modal-header">
-            <h2>My Profile</h2>
-            <button onclick="closeProfileModal()">×</button>
-        </div>
+        <div class="profile-modal-top">
 
-        <!-- AVATAR -->
-        <div class="profile-avatar-large">
-            {{ user_profile.name[0] if user_profile and user_profile.name else "U" }}
+            <div class="profile-modal-user">
+
+                <div class="profile-avatar-large">
+                    {{ user_profile.name[0] if user_profile and user_profile.name else "U" }}
+                </div>
+
+                <div>
+                    <h2>My Profile</h2>
+                    <p>Clerk Account • {{ user_profile.school_name or "School" }}</p>
+                </div>
+
+            </div>
+
+            <button class="profile-close-btn"
+                    onclick="closeProfileModal()">
+                ×
+            </button>
+
         </div>
 
         <!-- TABS -->
         <div class="profile-tabs">
 
-            <button
-                class="profile-tab-btn active"
-                id="profileTabBtn"
-                onclick="showProfileTab('profile')">
-                Profile
+            <button class="profile-tab-btn active"
+                    id="profileTabBtn"
+                    onclick="showProfileTab('profile')">
+                👤 Profile
             </button>
 
-            <button
-                class="profile-tab-btn"
-                id="passwordTabBtn"
-                onclick="showProfileTab('password')">
-                Reset Password
+            <button class="profile-tab-btn"
+                    id="passwordTabBtn"
+                    onclick="showProfileTab('password')">
+                🔐 Reset Password
             </button>
 
         </div>
@@ -276,68 +617,75 @@
         <!-- PROFILE TAB -->
         <div id="profile-tab">
 
+            <div class="profile-info-strip">
+
+                <span>✅ Active Clerk Profile</span>
+
+                <p>
+                    Update only editable details. Email, school and subscription are system controlled.
+                </p>
+
+            </div>
+
             <div class="profile-grid">
 
-                <div>
+                <div class="profile-input-group">
                     <label>Name</label>
-                    <input
-                        id="profile_name"
-                        value="{{ user_profile.name }}">
+                    <input id="profile_name"
+                           maxlength="150"
+                           value="{{ user_profile.name or '' }}">
                 </div>
 
-                <div>
+                <div class="profile-input-group readonly">
                     <label>Email</label>
-                    <input
-                        value="{{ user_profile.email }}"
-                        disabled>
+                    <input value="{{ user_profile.email or '' }}"
+                           disabled>
                 </div>
 
-                <div>
+                <div class="profile-input-group">
                     <label>Phone</label>
-                    <input
-                        id="profile_phone"
-                        value="{{ user_profile.phone }}">
+                    <input id="profile_phone"
+                           maxlength="10"
+                           value="{{ user_profile.phone or '' }}">
                 </div>
 
-                <div>
-                    <label>Address</label>
-                    <input
-                        id="profile_address"
-                        value="{{ user_profile.address or '' }}">
-                </div>
-
-                <div>
+                <div class="profile-input-group">
                     <label>Designation</label>
-                    <input
-                        id="profile_designation"
-                        value="{{ user_profile.designation or '' }}">
+                    <input id="profile_designation"
+                           maxlength="100"
+                           value="{{ user_profile.designation or '' }}">
                 </div>
 
-                <div>
+                <div class="profile-input-group full">
+                    <label>Address</label>
+                    <input id="profile_address"
+                           maxlength="255"
+                           value="{{ user_profile.address or '' }}">
+                </div>
+
+                <div class="profile-input-group readonly">
                     <label>School</label>
-                    <input
-                        value="{{ user_profile.school_name }}"
-                        disabled>
+                    <input value="{{ user_profile.school_name or '' }}"
+                           disabled>
                 </div>
 
-                <div>
+                <div class="profile-input-group readonly">
                     <label>Subscription</label>
-                    <input
-                        value="{{ user_profile.plan_name or 'No Plan' }}"
-                        disabled>
+                    <input value="{{ user_profile.plan_name or 'No Plan' }}"
+                           disabled>
                 </div>
 
-                <div>
+                <div class="profile-input-group readonly">
                     <label>Days Remaining</label>
-                    <input
-                        value="{{ user_profile.remaining_days }}"
-                        disabled>
+                    <input value="{{ user_profile.remaining_days or 0 }}"
+                           disabled>
                 </div>
 
             </div>
 
             <div class="profile-actions">
-                <button onclick="saveProfile()">
+                <button onclick="saveProfile()"
+                        id="profileSaveBtn">
                     Save Changes
                 </button>
             </div>
@@ -345,119 +693,105 @@
         </div>
 
         <!-- PASSWORD TAB -->
-<div id="password-tab" style="display:none;">
+        <div id="password-tab" style="display:none;">
 
-    <div class="profile-password-wrapper">
+            <div class="password-progress">
 
-        <!-- STEP 1 -->
-        <div id="password-step-1" class="password-step">
-
-            <div class="password-step-title">
-                Password Reset Verification
-            </div>
-
-            <div class="password-step-note">
-
-                <p>
-                    Enter your registered email to receive OTP for password reset.
-                </p>
-
-                <p>
-                    पासवर्ड बदलण्यासाठी आपल्या नोंदणीकृत ईमेलवर OTP पाठविला जाईल.
-                </p>
-
-                <p>
-                    OTP validity: 5 Minutes / OTP वैधता: ५ मिनिटे
-                </p>
+                <div class="password-step-dot active" id="otpDot1">1</div>
+                <span></span>
+                <div class="password-step-dot" id="otpDot2">2</div>
+                <span></span>
+                <div class="password-step-dot" id="otpDot3">3</div>
 
             </div>
 
-            <div class="password-input-group">
-                <label>Registered Email</label>
-                <input
-                    id="reset_email"
-                    type="email"
-                    value="{{ user_profile.email }}"
-                    placeholder="Enter Email">
+            <div class="profile-password-wrapper">
+
+                <!-- STEP 1 -->
+                <div id="password-step-1" class="password-step">
+
+                    <h3>Password Reset Verification</h3>
+
+                    <p>
+                        OTP will be sent to your registered email.
+                        <br>
+                        <span>OTP वैधता: ५ मिनिटे</span>
+                    </p>
+
+                    <div class="profile-input-group">
+                        <label>Registered Email</label>
+                        <input id="reset_email"
+                               type="email"
+                               value="{{ user_profile.email or '' }}"
+                               readonly>
+                    </div>
+
+                    <button class="password-main-btn"
+                            onclick="sendPasswordOTP()">
+                        Send OTP
+                    </button>
+
+                </div>
+
+                <!-- STEP 2 -->
+                <div id="password-step-2"
+                     class="password-step"
+                     style="display:none;">
+
+                    <h3>Verify OTP</h3>
+
+                    <p>
+                        Enter 6 digit OTP sent to your email.
+                    </p>
+
+                    <div class="profile-input-group">
+                        <label>Enter OTP</label>
+                        <input id="profile_otp"
+                               type="text"
+                               maxlength="6"
+                               placeholder="Enter OTP">
+                    </div>
+
+                    <button class="password-main-btn"
+                            onclick="verifyOTPOnly()">
+                        Verify OTP
+                    </button>
+
+                </div>
+
+                <!-- STEP 3 -->
+                <div id="password-step-3"
+                     class="password-step"
+                     style="display:none;">
+
+                    <h3>Create New Password</h3>
+
+                    <p>
+                        Use uppercase, lowercase, number and special character.
+                    </p>
+
+                    <div class="profile-input-group">
+                        <label>New Password</label>
+                        <input id="new_password"
+                               type="password"
+                               placeholder="Enter New Password">
+                    </div>
+
+                    <div class="profile-input-group">
+                        <label>Confirm Password</label>
+                        <input id="confirm_password"
+                               type="password"
+                               placeholder="Repeat Password">
+                    </div>
+
+                    <button class="password-main-btn"
+                            onclick="updatePasswordFinal()">
+                        Update Password
+                    </button>
+
+                </div>
+
             </div>
-
-            <button
-                class="password-main-btn"
-                onclick="sendPasswordOTP()">
-                Send OTP
-            </button>
-
-        </div>
-
-        <!-- STEP 2 -->
-        <div
-            id="password-step-2"
-            class="password-step"
-            style="display:none;">
-
-            <div class="password-step-title">
-                OTP Verification
-            </div>
-
-            <div class="password-step-note">
-                Enter the OTP sent to your email.
-                <br>
-                आपल्या ईमेलवर आलेला OTP टाका.
-            </div>
-
-            <div class="password-input-group">
-                <label>Enter OTP</label>
-                <input
-                    id="profile_otp"
-                    type="text"
-                    placeholder="Enter OTP">
-            </div>
-
-            <button
-                class="password-main-btn"
-                onclick="verifyOTPOnly()">
-                Proceed
-            </button>
-
-        </div>
-
-        <!-- STEP 3 -->
-        <div
-            id="password-step-3"
-            class="password-step"
-            style="display:none;">
-
-            <div class="password-step-title">
-                Create New Password
-            </div>
-
-            <div class="password-step-note">
-                Create a strong password.
-                <br>
-                मजबूत पासवर्ड तयार करा.
-            </div>
-
-            <div class="password-input-group">
-                <label>New Password</label>
-                <input
-                    id="new_password"
-                    type="password"
-                    placeholder="Enter New Password">
-            </div>
-
-            <div class="password-input-group">
-                <label>Confirm Password</label>
-                <input
-                    id="confirm_password"
-                    type="password"
-                    placeholder="Repeat Password">
-            </div>
-
-            <button
-                class="password-main-btn"
-                onclick="updatePasswordFinal()">
-                Update Password
-            </button>
 
         </div>
 
@@ -465,108 +799,129 @@
 
 </div>
 
-</div>
-
 <!-- JS for profile modal and charts is included at the end of the file for better performance. -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- ================= SAFE DATA FROM FLASK ================= -->
 <script id="chart-data" type="application/json">
 {
+    "growth_labels": {{ (growth_labels or ["M1","M2","M3","M4","M5"]) | tojson }},
     "growth": {{ (growth_data or [0,0,0,0,0]) | tojson }},
+    "tc_labels": {{ (tc_labels or ["D1","D2","D3","D4","D5"]) | tojson }},
     "tc": {{ (tc_data or [0,0,0,0,0]) | tojson }},
-    "bonafide": {{ (bonafide_data or [0,0]) | tojson }}
+    "bonafide": {{ (bonafide_data or [0,1]) | tojson }}
 }
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function(){
 
-    // ================= GET DATA =================
-    const chartData = JSON.parse(document.getElementById("chart-data").textContent);
+    const chartData = JSON.parse(
+        document.getElementById("chart-data").textContent
+    );
 
-    const growthData = chartData.growth.length ? chartData.growth : [0,0,0,0,0];
-    const tcData = chartData.tc.length ? chartData.tc : [0,0,0,0,0];
-    const bonafideData = chartData.bonafide.length ? chartData.bonafide : [0,1];
+    const gridColor = "rgba(148,163,184,0.16)";
+    const textColor = "#64748b";
 
-    // ================= COMMON OPTIONS =================
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false }, // ✅ REMOVE "undefined"
-            tooltip: { enabled: true }
+    new Chart(document.getElementById("chartGrowth"), {
+        type: "line",
+        data: {
+            labels: chartData.growth_labels,
+            datasets: [{
+                label: "Students",
+                data: chartData.growth,
+                borderColor: "#14b8a6",
+                backgroundColor: "rgba(20,184,166,0.12)",
+                fill: true,
+                tension: 0.42,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
         },
-        scales: {
-            x: { display: false },
-            y: { display: false }
-        }
-    };
-
-    // ================= STUDENT GROWTH (LINE) =================
-    const growthCanvas = document.getElementById("chartGrowth");
-    if (growthCanvas) {
-        new Chart(growthCanvas, {
-            type: "line",
-            data: {
-                labels: ["Jan","Feb","Mar","Apr","May"],
-                datasets: [{
-                    data: growthData,
-                    borderColor: "#0EA5A4",
-                    backgroundColor: "rgba(14,165,164,0.15)",
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 3
-                }]
+        options: {
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false}
             },
-            options: commonOptions
-        });
-    }
-
-    // ================= TC GENERATED (BAR) =================
-    const tcCanvas = document.getElementById("chartTC");
-    if (tcCanvas) {
-        new Chart(tcCanvas, {
-            type: "bar",
-            data: {
-                labels: ["Mon","Tue","Wed","Thu","Fri"],
-                datasets: [{
-                    data: tcData,
-                    backgroundColor: "#3B82F6",
-                    borderRadius: 6
-                }]
-            },
-            options: commonOptions
-        });
-    }
-
-    // ================= BONAFIDE (DOUGHNUT) =================
-    const bonafideCanvas = document.getElementById("chartBonafide");
-    if (bonafideCanvas) {
-        new Chart(bonafideCanvas, {
-            type: "doughnut",
-            data: {
-                datasets: [{
-                    data: bonafideData[0] === 0 ? [1,1] : bonafideData,
-                    backgroundColor: ["#8B5CF6", "#E5E7EB"],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+            scales:{
+                x:{
+                    ticks:{color:textColor},
+                    grid:{display:false}
                 },
-                cutout: "70%"
+                y:{
+                    beginAtZero:true,
+                    ticks:{color:textColor, precision:0},
+                    grid:{color:gridColor}
+                }
             }
-        });
-    }
+        }
+    });
+
+    new Chart(document.getElementById("chartTC"), {
+        type: "bar",
+        data: {
+            labels: chartData.tc_labels,
+            datasets: [{
+                label: "TC",
+                data: chartData.tc,
+                backgroundColor: "#3b82f6",
+                borderRadius: 10,
+                maxBarThickness: 42
+            }]
+        },
+        options: {
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false}
+            },
+            scales:{
+                x:{
+                    ticks:{color:textColor},
+                    grid:{display:false}
+                },
+                y:{
+                    beginAtZero:true,
+                    ticks:{color:textColor, precision:0},
+                    grid:{color:gridColor}
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("chartBonafide"), {
+        type: "doughnut",
+        data: {
+            labels:["Issued", "Remaining"],
+            datasets: [{
+                data: chartData.bonafide,
+                backgroundColor:["#8b5cf6", "#e5e7eb"],
+                borderWidth:0
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            cutout:"72%",
+            plugins:{
+                legend:{
+                    position:"bottom",
+                    labels:{
+                        color:textColor,
+                        usePointStyle:true,
+                        boxWidth:8
+                    }
+                }
+            }
+        }
+    });
 
 });
 </script>
+
 <!-- ================= LIVE COUNTER JS ================= -->
+
 <script>
 document.querySelectorAll('.counter').forEach(counter => {
 
@@ -594,6 +949,7 @@ document.querySelectorAll('.counter').forEach(counter => {
 <!-- PROFILE + PASSWORD JS -->
 
 <script>
+
 function openProfileModal(){
     document.getElementById("profileModal").style.display = "flex";
 }
@@ -603,6 +959,7 @@ function closeProfileModal(){
 }
 
 /* TAB SWITCH */
+
 function showProfileTab(tab){
 
     document.getElementById("profile-tab").style.display = "none";
@@ -621,74 +978,94 @@ function showProfileTab(tab){
 }
 
 /* SAVE PROFILE */
+
 function saveProfile(){
+
+    const name = document.getElementById("profile_name").value.trim();
+    const phone = document.getElementById("profile_phone").value.trim();
+
+    if(!name){
+        alert("Name required");
+        return;
+    }
+
+    if(phone && !/^[0-9]{10}$/.test(phone)){
+        alert("Enter valid 10 digit phone number");
+        return;
+    }
+
+    const btn = document.getElementById("profileSaveBtn");
+    btn.disabled = true;
+    btn.innerText = "Saving...";
 
     const formData = new FormData();
 
-    formData.append(
-        "name",
-        document.getElementById("profile_name").value
-    );
-
-    formData.append(
-        "phone",
-        document.getElementById("profile_phone").value
-    );
-
-    formData.append(
-        "address",
-        document.getElementById("profile_address").value
-    );
-
-    formData.append(
-        "designation",
-        document.getElementById("profile_designation").value
-    );
+    formData.append("name", name);
+    formData.append("phone", phone);
+    formData.append("address", document.getElementById("profile_address").value.trim());
+    formData.append("designation", document.getElementById("profile_designation").value.trim());
 
     fetch("/clerk/profile/update",{
         method:"POST",
-
         headers:{
             "X-CSRFToken": csrfToken
         },
-
         body:formData
-    }) 
-
+    })
     .then(res=>res.json())
     .then(data=>{
         alert(data.message);
-        location.reload();
+
+        if(data.status === "success"){
+            location.reload();
+        }
+    })
+    .catch(()=>{
+        alert("Something went wrong");
+    })
+    .finally(()=>{
+        btn.disabled = false;
+        btn.innerText = "Save Changes";
     });
+}
+
+
+
+function setPasswordStep(step){
+
+    document.getElementById("password-step-1").style.display = "none";
+    document.getElementById("password-step-2").style.display = "none";
+    document.getElementById("password-step-3").style.display = "none";
+
+    document.getElementById("password-step-" + step).style.display = "block";
+
+    document.getElementById("otpDot1").classList.toggle("active", step >= 1);
+    document.getElementById("otpDot2").classList.toggle("active", step >= 2);
+    document.getElementById("otpDot3").classList.toggle("active", step >= 3);
 }
 
 /* STEP 1 */
 function sendPasswordOTP(){
 
-    const email = document.getElementById("reset_email").value;
+    const email = document.getElementById("reset_email").value.trim();
 
     fetch("/clerk/profile/send-otp",{
-    method:"POST",
-
-    headers:{
-        "Content-Type":"application/json",
-        "X-CSRFToken": csrfToken
-    },
-
-    body:JSON.stringify({
-        email:email
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRFToken": csrfToken
+        },
+        body:JSON.stringify({
+            email:email
+        })
     })
-})
-
-
     .then(res=>res.json())
     .then(data=>{
 
         alert(data.message);
 
-        if(data.message.includes("OTP")){
-            document.getElementById("password-step-1").style.display="none";
-            document.getElementById("password-step-2").style.display="block";
+        if(data.status === "success"){
+            setPasswordStep(2);
         }
     });
 }
@@ -696,42 +1073,40 @@ function sendPasswordOTP(){
 /* STEP 2 */
 function verifyOTPOnly(){
 
-    const otp = document.getElementById("profile_otp").value;
+    const otp = document.getElementById("profile_otp").value.trim();
+
+    if(!/^[0-9]{6}$/.test(otp)){
+        alert("Enter valid 6 digit OTP");
+        return;
+    }
 
     fetch("/clerk/profile/check-otp",{
         method:"POST",
-
         headers:{
             "Content-Type":"application/json",
             "X-CSRFToken": csrfToken
         },
-
         body:JSON.stringify({
             otp:otp
         })
     })
-
-
     .then(res=>res.json())
     .then(data=>{
 
         alert(data.message);
 
-        if(data.message==="OTP Verified"){
-            document.getElementById("password-step-2").style.display="none";
-            document.getElementById("password-step-3").style.display="block";
+        if(data.status === "success"){
+            setPasswordStep(3);
         }
     });
 }
 
+
 /* STEP 3 */
 function updatePasswordFinal(){
 
-    const newPassword =
-        document.getElementById("new_password").value;
-
-    const confirmPassword =
-        document.getElementById("confirm_password").value;
+    const newPassword = document.getElementById("new_password").value;
+    const confirmPassword = document.getElementById("confirm_password").value;
 
     if(newPassword !== confirmPassword){
         alert("Passwords do not match");
@@ -740,27 +1115,26 @@ function updatePasswordFinal(){
 
     fetch("/clerk/profile/update-password",{
         method:"POST",
-
         headers:{
             "Content-Type":"application/json",
             "X-CSRFToken": csrfToken
         },
-
         body:JSON.stringify({
             password:newPassword
         })
     })
-    
     .then(res=>res.json())
     .then(data=>{
 
         alert(data.message);
 
-        if(data.message==="Password updated successfully"){
+        if(data.status === "success"){
             closeProfileModal();
+            location.reload();
         }
     });
 }
+
 </script>
 
 

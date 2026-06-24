@@ -13,7 +13,9 @@
 
     <!-- TEXT -->
     <div class="left-content">
-        <h2>SchoolSphere</h2>
+        <h2>
+        {{ global_settings.system_name or "SchoolSphere" }}
+        </h2>
         <h1>Smart School ERP</h1>
         <p>
             Manage TC, marksheets and complete school operations with ease.
@@ -21,7 +23,7 @@
     </div>
 
     <!-- SVG IMAGE -->
-    <img src="{{ url_for('static', filename='images/student_login.png') }}" class="student-svg">
+    <img src="{{ url_for('static', filename='images/student_login.png') }}" class="student-svg" alt="School ERP Login">
 
     <!-- DOT PATTERN -->
     <div class="dots1"></div>
@@ -59,19 +61,46 @@
                         name="email" 
                         placeholder="Enter Email (ईमेल)" 
                         autocomplete="email"
+                        maxlength="120"
                         required
                     >
 
                     <!-- PASSWORD -->
-                    <input 
-                        type="password" 
-                        name="password" 
-                        placeholder="Enter Password (पासवर्ड)" 
-                        autocomplete="current-password"
-                        required
+                    <div class="password-field">
+
+                        <input 
+                            type="password"
+                            name="password"
+                            id="password"
+                            placeholder="Enter Password (पासवर्ड)"
+                            autocomplete="current-password"
+                            maxlength="100"
+                            required
+                        >
+
+                        <span
+                            class="toggle-password"
+                            onclick="togglePassword()">
+
+                            👁
+
+                        </span>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn-login"
+                        id="loginBtn"
                     >
 
-                    <button type="submit" class="btn-login">Login</button>
+                        <span class="btn-text">
+                            Login
+                        </span>
+
+                        <span class="btn-loader"></span>
+
+                    </button>
 
                 </form>
 
@@ -82,6 +111,49 @@
     </div>
 
 </section>
+
+<!-- JavaScript -->
+
+<script>
+
+/* =========================================
+   PASSWORD TOGGLE
+========================================= */
+
+function togglePassword(){
+
+    const passwordInput =
+        document.getElementById("password");
+
+    if(passwordInput.type === "password"){
+
+        passwordInput.type = "text";
+
+    }else{
+
+        passwordInput.type = "password";
+    }
+
+}
+
+
+/* =========================================
+   LOGIN LOADER
+========================================= */
+
+document.querySelector(".login-form")
+.addEventListener("submit", function(){
+
+    const btn =
+        document.getElementById("loginBtn");
+     
+
+    btn.disabled = true;
+    btn.classList.add("loading");
+
+});
+
+</script>
 
 <!-- // ROLE TAB SWITCH -->
 <!-- <script> 

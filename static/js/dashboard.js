@@ -1,81 +1,171 @@
-// TOGGLE SIDEBAR
+/* =========================================
+   SIDEBAR TOGGLE
+========================================= */
+
 function toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+    const overlay =
+        document.getElementById("sidebarOverlay");
+
     sidebar.classList.toggle("active");
+
+    overlay.classList.toggle("active");
 }
 
-// CLOSE SIDEBAR WHEN CLICK OUTSIDE (MOBILE UX 🔥)
-document.addEventListener("click", function (e) {
-    const sidebar = document.getElementById("sidebar");
-    const toggle = document.querySelector(".menu-toggle");
 
-    if (
-        sidebar &&
-        !sidebar.contains(e.target) &&
-        !toggle.contains(e.target)
-    ) {
-        sidebar.classList.remove("active");
+/* =========================================
+   CLOSE SIDEBAR
+========================================= */
+
+function closeSidebar() {
+
+    document.getElementById(
+        "sidebar"
+    ).classList.remove("active");
+
+    document.getElementById(
+        "sidebarOverlay"
+    ).classList.remove("active");
+}
+
+
+/* =========================================
+   AUTO CLOSE MOBILE SIDEBAR
+========================================= */
+
+document.querySelectorAll(".menu-link")
+.forEach(link => {
+
+    link.addEventListener("click", () => {
+
+        if (window.innerWidth <= 768) {
+
+            closeSidebar();
+        }
+    });
+
+});
+
+
+/* =========================================
+   CLOSE SIDEBAR ON RESIZE
+========================================= */
+
+window.addEventListener("resize", () => {
+
+    if (window.innerWidth > 768) {
+
+        closeSidebar();
     }
 });
 
-// LOGOUT BUTTON
-document.querySelector(".logout-btn").addEventListener("click", function () {
-    window.location.href = "/login";
-});
 
-// STATS SECTION JS
+/* =========================================
+   FUTURE NAVIGATION
+========================================= */
+
 function goTo(section) {
-    console.log("Navigate to:", section);
 
-    // future routes
-    // window.location.href = "/" + section;
+    console.log(
+        "Navigate to:",
+        section
+    );
 }
 
-// ===== CHART (DYNAMIC) =====
-document.addEventListener("DOMContentLoaded", function () {
 
-    const ctx = document.getElementById('overviewChart');
+/* =========================================
+   CHART JS
+========================================= */
 
-    if (ctx && typeof chartData !== "undefined") {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartData.labels,
+        const ctx =
+            document.getElementById(
+                "overviewChart"
+            );
 
-                datasets: [{
-                    label: 'Students Growth',
+        if (
+            ctx &&
+            typeof chartData !== "undefined"
+        ) {
 
-                    data: chartData.students,
+            new Chart(ctx, {
 
-                    borderColor: '#0EA5A4',
-                    backgroundColor: 'rgba(14,165,164,0.1)',
+                type: "line",
 
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#0EA5A4'
-                }]
-            },
+                data: {
 
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                    labels:
+                        chartData.labels,
 
-                plugins: {
-                    legend: { display: false }
+                    datasets: [{
+
+                        label:
+                            "Students Growth",
+
+                        data:
+                            chartData.students,
+
+                        borderColor:
+                            "#0EA5A4",
+
+                        backgroundColor:
+                            "rgba(14,165,164,0.1)",
+
+                        fill: true,
+
+                        tension: 0.4,
+
+                        pointRadius: 4,
+
+                        pointBackgroundColor:
+                            "#0EA5A4"
+                    }]
                 },
 
-                scales: {
-                    x: { grid: { display: false } },
-                    y: { grid: { color: 'rgba(0,0,0,0.05)' } }
-                },
+                options: {
 
-                animation: {
-                    duration: 1500,
-                    easing: 'easeInOutQuart'
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        }
+                    },
+
+                    scales: {
+
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+
+                        y: {
+                            grid: {
+                                color:
+                                "rgba(0,0,0,0.05)"
+                            }
+                        }
+                    },
+
+                    animation: {
+
+                        duration: 1500,
+
+                        easing:
+                            "easeInOutQuart"
+                    }
                 }
-            }
-        });
+            });
+        }
     }
-});
+);

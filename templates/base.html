@@ -2,64 +2,420 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ global_settings.system_name or "SchoolSphere" }}</title>
+    <title>{{ global_settings.system_name or "ShalaSarthi ERP" }}</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- CSRF TOKEN -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
+
+      <!-- DEMO CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/demo.css') }}">
+
+
+    <!-- favicorn -->
+    {% if global_settings.favicon %}
+    <link rel="icon"
+        type="image/png"
+        href="{{ url_for('static', filename=global_settings.favicon) }}?v={{ global_settings.updated_at.timestamp() if global_settings.updated_at else 1 }}">
+    {% endif %}
+
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
- 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet">
+
+
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+     
 </head>
 
 <body>
 
-<!-- ================= NAVBAR ================= -->
-<header class="navbar">
+<header class="navbar" id="navbar">
+
+    <!-- =========================
+         LOGO
+    ========================== -->
 
     <div class="logo-area">
 
-    {% if global_settings.system_logo %}
+        {% if global_settings.system_logo %}
+        <img
+            src="{{ url_for('static',
+            filename=global_settings.system_logo) }}"
+            class="navbar-logo"
+            alt="ShalaSarthi Logo">
+        {% endif %}
 
-        <img src="{{ url_for('static',
-        filename=global_settings.system_logo) }}"
-        class="navbar-logo">
+        <span class="brand-text">
+            {{ global_settings.system_name or "ShalaSarthi ERP" }}
+        </span>
 
-    {% endif %}
+    </div>
 
-    <span>
-        {{ global_settings.system_name or "SchoolSphere" }}
-    </span>
+    <!-- =========================
+         DESKTOP NAVIGATION
+    ========================== -->
 
-</div>
+    <nav class="nav-links desktop-nav">
 
-    <nav class="nav-links" id="navLinks">
         <a href="/">Home</a>
-        <a href="#features">Features</a>
-        <a href="#plans">Plans</a>
-        <a href="#demo">Demo</a>
-        <a href="#how">How It Works</a>
-        <a href="#contact">Contact</a>
-        <a href="/login" class="btn-primary">Login</a>
+
+        <a href="#features">
+            Features
+        </a>
+
+        <a href="#plans">
+            Plans
+        </a>
+
+        <a href="{{ url_for('demo') }}">
+            Demo
+        </a>
+
+        <a href="#how">
+            How It Works
+        </a>
+
+        <a href="#faq">
+            FAQ
+        </a>
+
+        <a href="#contact">
+            Contact
+        </a>
+
+        <div class="nav-buttons">
+
+            <button
+                class="nav-demo-btn"
+                onclick="openPlanModal('Free Demo')">
+
+                Book Demo
+
+            </button>
+
+            <a href="/login"
+               class="nav-login-btn">
+
+                Login
+
+            </a>
+
+        </div>
+
     </nav>
-    <div class="menu-toggle">☰</div>
+
+    <!-- =========================
+         MOBILE SIDEBAR
+    ========================== -->
+
+    <nav class="mobile-nav-links"
+         id="navLinks">
+
+        <div class="mobile-menu-header">
+
+            <div class="sidebar-brand">
+
+                {% if global_settings.system_logo %}
+                <img
+                    src="{{ url_for('static',
+                    filename=global_settings.system_logo) }}"
+                    class="sidebar-logo"
+                    alt="Logo">
+                {% endif %}
+
+                <div class="sidebar-text">
+
+                    <h4>
+                        {{ global_settings.system_name or "ShalaSarthi ERP" }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+            <div class="close-menu"
+                 id="closeMenu">
+
+                <span></span>
+                <span></span>
+
+            </div>
+
+        </div>
+
+        <!-- MOBILE LINKS -->
+
+        <a href="/">
+            Home
+        </a>
+
+        <a href="#features">
+            Features
+        </a>
+
+        <a href="#plans">
+            Plans
+        </a>
+
+        <a href="#contact">
+            Contact
+        </a>
+
+        <!-- MOBILE BUTTONS -->
+
+        <div class="nav-buttons">
+
+            <button
+                class="mob-nav-demo-btn"
+                onclick="openPlanModal('Free Demo')">
+
+                Book Demo
+
+            </button>
+
+            <a href="/login"
+               class="mob-nav-login-btn">
+
+                Login
+
+            </a>
+
+        </div>
+
+    </nav>
+
+    <!-- =========================
+         MOBILE OVERLAY
+    ========================== -->
+
+    <div class="mobile-overlay"
+         id="mobileOverlay"></div>
+
+    <!-- =========================
+         MOBILE HAMBURGER
+    ========================== -->
+
+    <div class="menu-toggle"
+        id="menuToggle">
+
+        <span></span>
+        <span></span>
+        <span></span>
+
+    </div>
+
 </header>
 
 <!-- ================= PAGE CONTENT ================= -->
 {% block content %}{% endblock %}
 
-<!-- ================= FOOTER ================= -->
+<!-- ==================================
+     PREMIUM FOOTER
+================================== -->
+
 <footer class="footer">
-    <h3>
-{{ global_settings.system_name or "SchoolSphere" }}
-</h3>
-    <p>All-in-One School ERP System</p>
-    <p>© 2026 All rights reserved</p>
+
+    <div class="footer-glow"></div>
+
+    <div class="footer-container">
+
+        <!-- BRAND -->
+
+        <div class="footer-brand">
+
+            <div class="footer-logo-box">
+
+               {% if global_settings.system_logo %}
+                <img
+                src="{{ url_for('static', filename=global_settings.system_logo) }}"
+                alt="{{ global_settings.system_name or 'ShalaSarthi ERP' }}">
+                {% endif %}
+
+                <h3>{{ global_settings.system_name or "ShalaSarthi ERP" }}</h3>
+
+            </div>
+
+            <p>
+
+                Modern School ERP platform designed to simplify
+                admissions, attendance, certificates, fee management,
+                analytics and administration.
+
+            </p>
+
+            <div class="footer-social">
+
+                <a href="https://in.linkedin.com/company/shriprabhusoftlink">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+
+                <a href="https://in.linkedin.com/company/shriprabhusoftlink">
+                    <i class="fab fa-instagram"></i>
+                </a>
+
+                <a href="https://in.linkedin.com/company/shriprabhusoftlink">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+
+                <a href="https://in.linkedin.com/company/shriprabhusoftlink">
+                    <i class="fab fa-youtube"></i>
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- QUICK LINKS -->
+
+        <div class="footer-column">
+
+            <h4>Quick Links</h4>
+
+            <a href="#home">Home</a>
+
+            <a href="#features">Features</a>
+
+            <a href="#plans">Pricing</a>
+
+            <a href="#how">How It Works</a>
+
+            <a href="#contact">Contact</a>
+
+        </div>
+
+        <!-- PRODUCT -->
+
+        <div class="footer-column">
+
+            <h4>Modules</h4>
+
+            <a href="#">Admissions</a>
+
+            <a href="#">Student Management</a>
+
+            <a href="#">Certificates</a>
+
+            <a href="#">Fee Management</a>
+
+            <a href="#">Reports & Analytics</a>
+
+        </div>
+
+        <!-- CONTACT -->
+
+        <div class="footer-column">
+
+            <h4>Contact</h4>
+
+            <p>
+                📍 SPL 3rd Floor,Shri Prabhu Krupa,Dhanwantari nagar, Dastur Nagar Rd, Amravati, Maharashtra 444606
+            </p>
+
+            <p>
+                📞 {{ global_settings.support_phone or "+91 8888244176" }}
+            </p>
+
+            <p>
+                ✉ {{ global_settings.support_email or "support@schoolsphere.com" }}
+            </p>
+
+            <a href="{{ url_for('demo') }}"
+            class="footer-demo-btn">
+
+                Book Free Demo
+
+            </a>
+
+        </div>
+
+    </div>
+
+ <!-- FOOTER BOTTOM -->
+
+<div class="footer-bottom">
+
+    <!-- LEFT -->
+
+    <div class="footer-bottom-left">
+
+        <p>
+
+            {{ global_settings.footer_text
+               or ('© ' ~ current_year ~ ' ShalaSarthi ERP. All Rights Reserved.') }}
+
+        </p>
+
+    </div>
+
+    <!-- CENTER -->
+
+    <div class="footer-bottom-center">
+
+        <span>Developed By</span>
+
+        {% if global_settings.website_url %}
+
+            <a href="{{ global_settings.website_url }}"
+               target="_blank">
+
+                {{ global_settings.powered_by or "Pranex Labs" }}
+
+            </a>
+
+        {% else %}
+
+            <span>
+
+                {{ global_settings.powered_by or "Pranex Labs" }}
+
+            </span>
+
+        {% endif %}
+
+    </div>
+
+    <!-- RIGHT -->
+
+    <div class="footer-bottom-right">
+
+        <span class="footer-version">
+
+            ERP v{{ global_settings.erp_version or "1.0" }}
+
+        </span>
+
+        <a href="/privacy-policy">
+            Privacy Policy
+        </a>
+
+        <a href="/terms-and-conditions">
+            Terms & Conditions
+        </a>
+
+        <a href="https://wa.me/{{ (global_settings.support_phone or '918888244176')|replace('+','')|replace(' ','')|replace('-','') }}"
+           target="_blank">
+
+            WhatsApp Support
+
+        </a>
+
+    </div>
+
+</div>
+
 </footer>
 
 <!-- JS -->

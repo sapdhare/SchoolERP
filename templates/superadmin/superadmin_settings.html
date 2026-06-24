@@ -69,25 +69,39 @@
 
     <!-- STATUS BLOCK -->
     <div class="erp-settings-stats">
-      <div class="erp-stat-card stat-green">
-        <h4>System Status</h4>
-        <h2>Running</h2>
-      </div>
 
-      <div class="erp-stat-card stat-blue">
-        <h4>Active Schools</h4>
-        <h2>{{ total_schools }}</h2>
-      </div>
+        <div class="erp-stat-card stat-green">
+            <h4>ERP Status</h4>
+           <h2>
+            {% if settings.maintenance_mode == "ON" %}
+            Live
+            {% else %}
+            Running
+            {% endif %}
+            </h2>
+        </div>
 
-      <div class="erp-stat-card stat-orange">
-        <h4>Alerts</h4>
-        <h2>3</h2>
-      </div>
+        <div class="erp-stat-card stat-blue">
+            <h4>Active Schools</h4>
+            <h2>{{ total_schools }}</h2>
+        </div>
 
-      <div class="erp-stat-card stat-purple">
-        <h4>Backup</h4>
-        <h2>Safe</h2>
-      </div>
+        <div class="erp-stat-card stat-orange">
+            <h4>Pending Alerts</h4>
+            <h2>{{ pending_alerts }}</h2>
+        </div>
+
+        <div class="erp-stat-card stat-purple">
+            <h4>Backup Status</h4>
+           <h2>
+            {% if settings.backup_status == "Enabled" %}
+            Safe
+            {% else %}
+            Disabled
+            {% endif %}
+            </h2>
+        </div>
+
     </div>
 
     <!-- ================= GENERAL SETTINGS ================= -->
@@ -179,16 +193,11 @@
             <div class="erp-input-group">
                 <label>Timezone</label>
 
-                <select name="timezone">
-
-                    <option value="Asia/Kolkata"
-                    {% if settings.timezone == "Asia/Kolkata" %}
-                    selected
-                    {% endif %}>
-                        Asia/Kolkata
-                    </option>
-
-                </select>
+                    <select name="timezone">
+                        <option value="Asia/Kolkata">
+                            India Standard Time (IST)
+                        </option>
+                    </select>
             </div>
 
             <!-- LOGO -->
@@ -198,6 +207,14 @@
                 <input type="file"
                        name="system_logo"
                        accept="image/*">
+
+                       {% if settings.system_logo %}
+                        <div class="erp-logo-preview">
+                            <span>Current Logo</span>
+                            <img src="{{ url_for('static', filename=settings.system_logo) }}"
+                                alt="Current System Logo">
+                        </div>
+                        {% endif %}
             </div>
 
         </div>
@@ -226,7 +243,7 @@
 
 </form>
 
-    <!-- ================= SUBSCRIPTION SETTINGS ================= -->
+   <!-- ================= SUBSCRIPTION SETTINGS ================= -->
 
 <form method="POST"
       action="{{ url_for('save_subscription_settings') }}">
@@ -291,7 +308,7 @@
                 </div>
 
                 <div class="preview-stat">
-                    <span>Grace</span>
+                     <span>Grace</span>
                     <h4 id="liveGraceDays">
                         {{ settings.grace_period or 7 }} Days
                     </h4>
@@ -315,13 +332,19 @@
                         id="defaultPlanSelect"
                         onchange="updatePlanPreview()">
 
+                        {% if not plans %}
+                        <option value="">
+                            No active plans available
+                        </option>
+                        {% endif %}
+
                     {% for plan in plans %}
 
                     <option
                         value="{{ plan.id }}"
                         data-name="{{ plan.plan_name }}"
                         data-price="{{ plan.monthly_price }}"
-                        {% if settings.default_plan_id == plan.id %}
+                        {% if settings.default_plan_id|int == plan.id|int %}
                         selected
                         {% endif %}
                     >
@@ -353,6 +376,7 @@
                        id="trialDaysInput"
                        value="{{ settings.trial_days or 15 }}"
                        min="0"
+                       max="365"
                        oninput="updateTrialPreview()">
 
                 <small>
@@ -373,6 +397,7 @@
                        id="graceDaysInput"
                        value="{{ settings.grace_period or 7 }}"
                        min="0"
+                       max="365"
                        oninput="updateGracePreview()">
 
                 <small>
@@ -404,6 +429,8 @@
     </section>
 
 </form>
+
+
 <!-- ================= SECURITY SETTINGS ================= -->
 
 <form method="POST"
@@ -686,6 +713,7 @@
                        name="tc_prefix"
                        id="tcPrefixInput"
                        maxlength="10"
+                       required
                        value="{{ settings.tc_prefix or 'TC' }}"
                        oninput="updateCertificatePreview()">
 
@@ -706,6 +734,7 @@
                        name="bonafide_prefix"
                        id="bonafidePrefixInput"
                        maxlength="10"
+                       required
                        value="{{ settings.bonafide_prefix or 'BON' }}"
                        oninput="updateCertificatePreview()">
 
@@ -977,9 +1006,7 @@
 
                     <span>TC</span>
 
-                    <h4>
-                        {{ settings.enable_tc_management }}
-                    </h4>
+                   <h4 id="liveModuleTc">{{ settings.enable_tc_management }}</h4>
 
                 </div>
 
@@ -988,9 +1015,7 @@
 
                     <span>Bonafide</span>
 
-                    <h4>
-                        {{ settings.enable_bonafide_management }}
-                    </h4>
+                    <h4 id="liveModuleBonafide">{{ settings.enable_bonafide_management }}</h4>
 
                 </div>
 
@@ -999,9 +1024,7 @@
 
                     <span>Attendance</span>
 
-                    <h4>
-                        {{ settings.enable_attendance }}
-                    </h4>
+                   <h4 id="liveModuleAttendance">{{ settings.enable_attendance }}</h4>
 
                 </div>
 
@@ -1019,7 +1042,7 @@
                     TC Management
                 </label>
 
-                <select name="enable_tc_management">
+                <select name="enable_tc_management" id="moduleTcSelect" onchange="updateModulePreview()">
 
                     <option value="Enabled"
                     {% if settings.enable_tc_management == "Enabled" %}
@@ -1046,7 +1069,7 @@
                     Bonafide Management
                 </label>
 
-                <select name="enable_bonafide_management">
+                <select name="enable_bonafide_management" id="moduleBonafideSelect" onchange="updateModulePreview()">
 
                     <option value="Enabled"
                     {% if settings.enable_bonafide_management == "Enabled" %}
@@ -1073,7 +1096,7 @@
                     Attendance Module
                 </label>
 
-                <select name="enable_attendance">
+                <select name="enable_attendance" id="moduleAttendanceSelect" onchange="updateModulePreview()">
 
                     <option value="Enabled"
                     {% if settings.enable_attendance == "Enabled" %}
@@ -1393,25 +1416,11 @@
                         id="paymentGatewaySelect"
                         onchange="updatePaymentPreview()">
 
-                    <option value="Razorpay"
+                   <option value="Razorpay"
                     {% if settings.payment_gateway == "Razorpay" %}
                     selected
                     {% endif %}>
                         Razorpay
-                    </option>
-
-                    <option value="Stripe"
-                    {% if settings.payment_gateway == "Stripe" %}
-                    selected
-                    {% endif %}>
-                        Stripe
-                    </option>
-
-                    <option value="PayPal"
-                    {% if settings.payment_gateway == "PayPal" %}
-                    selected
-                    {% endif %}>
-                        PayPal
                     </option>
 
                     <option value="Disabled"
@@ -1661,10 +1670,9 @@
                     SMTP App Password
                 </label>
 
-                <input type="password"
-                       name="smtp_password"
-                       placeholder="Enter App Password"
-                       value="{{ settings.smtp_password or '' }}">
+            <input type="password"
+                name="smtp_password"
+                placeholder="Leave blank to keep existing password">
 
                 <small>
                     Use Gmail App Password for secure login.
@@ -1756,8 +1764,7 @@
 </form>
 <!-- ================= BACKUP SETTINGS ================= -->
 
-<form method="POST"
-      action="{{ url_for('create_backup') }}">
+    <form>
 
     <input type="hidden"
            name="csrf_token"
@@ -1861,11 +1868,18 @@
         <!-- ACTIONS -->
         <div class="erp-backup-actions">
 
-            <button type="submit"
+            <!-- <button type="submit"
                     class="erp-backup-btn">
 
                 💾 Create Backup
 
+            </button> -->
+            <button
+                type="button"
+                class="erp-backup-btn"
+                disabled
+            >
+                Coming Soon
             </button>
 
         </div>
@@ -1945,26 +1959,25 @@
                             >
                                 Download
                             </a>
+ 
 
-                            <!-- RESTORE -->
-                            <a
-                                href="{{ url_for('restore_backup', filename=log.backup_file) }}"
+                            <button
+                                type="button"
                                 class="erp-restore-btn"
-                                onclick="return confirm(
-                                    'Restore this backup? Current database will be replaced.'
-                                )"
+                                disabled
                             >
-                                Restore
-                            </a>
+                                Restore Disabled
+                            </button>
 
-                            <!-- DELETE -->
-                            <a
-                                href="{{ url_for('delete_backup', backup_id=log.id) }}"
+ 
+
+                            <button
+                                type="button"
                                 class="erp-delete-btn"
-                                onclick="return confirm('Delete this backup permanently?')"
+                                disabled
                             >
-                                Delete
-                            </a>
+                                Delete Disabled
+                            </button>
 
                         </div>
 
@@ -2113,7 +2126,9 @@
                 Maintenance Mode
             </label>
 
-            <select name="maintenance_mode">
+            <select name="maintenance_mode"
+                    id="maintenanceModeSelect"
+                    onchange="updateMaintenancePreview()">
 
                 <option
                     value="OFF"
@@ -2147,10 +2162,11 @@
             <input
                 type="text"
                 name="maintenance_message"
+                id="maintenanceMessageInput"
                 value="{{ settings.maintenance_message or '' }}"
                 placeholder="ERP is under scheduled maintenance..."
+                oninput="updateMaintenancePreview()"
             />
-
         </div>
 
     </div>
@@ -2344,6 +2360,19 @@
 
             <div class="erp-input-group">
 
+                <label>Footer Text</label>
+
+                <input
+                    type="text"
+                    name="footer_text"
+                    placeholder="© 2026 SchoolSphere ERP"
+                    value="{{ settings.footer_text or '' }}"
+                >
+
+            </div>
+
+            <div class="erp-input-group">
+
                 <label>Powered By</label>
 
                 <input type="text"
@@ -2370,9 +2399,15 @@
 
                 <input type="file"
                        name="favicon"
-                       accept="image/*">
-
+                       accept=".ico,.png,.jpg,.jpeg,.webp,image/*">
             </div>
+            {% if settings.favicon %}
+                <div class="erp-logo-preview">
+                    <span>Current Favicon</span>
+                    <img src="{{ url_for('static', filename=settings.favicon) }}"
+                        alt="Current Favicon">
+                </div>
+                {% endif %}
 
         </div>
 
@@ -2410,189 +2445,121 @@
 <!-- // ================= SUBSCRIPTION SETTINGS SCRIPTS ================= // -->
 
 <script>
+function updatePlanPreview(){
 
-function updatePlanPreview() {
+    const select = document.getElementById("defaultPlanSelect");
+    const selected = select.options[select.selectedIndex];
 
-    const select =
-        document.getElementById("defaultPlanSelect");
+    const planName = selected.getAttribute("data-name") || selected.textContent;
 
-    const selectedOption =
-        select.options[select.selectedIndex];
-
-    const planName =
-        selectedOption.dataset.name;
-
-    document.getElementById(
-        "livePlanName"
-    ).innerText = planName;
-
+    document.getElementById("livePlanName").innerText = planName;
 }
 
-function updateTrialPreview() {
+function updateTrialPreview(){
 
-    const days =
-        document.getElementById(
-            "trialDaysInput"
-        ).value;
+    const value = document.getElementById("trialDaysInput").value || 0;
 
-    document.getElementById(
-        "liveTrialDays"
-    ).innerText = days + " Days";
-
+    document.getElementById("liveTrialDays").innerText = value + " Days";
 }
 
-function updateGracePreview() {
+function updateGracePreview(){
 
-    const days =
-        document.getElementById(
-            "graceDaysInput"
-        ).value;
+    const value = document.getElementById("graceDaysInput").value || 0;
 
-    document.getElementById(
-        "liveGraceDays"
-    ).innerText = days + " Days";
-
+    document.getElementById("liveGraceDays").innerText = value + " Days";
 }
-
 </script>
+
 <!-- // ================= SECURITY SETTINGS SCRIPTS ================= // -->
 <script>
-
 function updatePasswordPreview(){
-
-    const value =
-        document.getElementById(
-            "passwordLengthInput"
-        ).value;
-
-    document.getElementById(
-        "livePasswordLength"
-    ).innerText = value + " Char";
-
+    const value = document.getElementById("passwordLengthInput").value || 0;
+    document.getElementById("livePasswordLength").innerText = value + " Char";
 }
 
 function updateAttemptPreview(){
-
-    const value =
-        document.getElementById(
-            "loginAttemptInput"
-        ).value;
-
-    document.getElementById(
-        "liveAttempts"
-    ).innerText = value;
-
+    const value = document.getElementById("loginAttemptInput").value || 0;
+    document.getElementById("liveAttempts").innerText = value;
 }
 
 function updateTimeoutPreview(){
-
-    const value =
-        document.getElementById(
-            "sessionTimeoutInput"
-        ).value;
-
-    document.getElementById(
-        "liveTimeout"
-    ).innerText = value + " Min";
-
+    const value = document.getElementById("sessionTimeoutInput").value || 0;
+    document.getElementById("liveTimeout").innerText = value + " Min";
 }
-
 </script>
 
 <!-- // ================= CERTIFICATE SETTINGS SCRIPTS ================= // -->
  <script>
-
 function updateCertificatePreview(){
 
-    const tc =
-        document.getElementById(
-            "tcPrefixInput"
-        ).value.trim() || "TC";
+    const tcInput =
+        document.getElementById("tcPrefixInput");
 
-    const bon =
-        document.getElementById(
-            "bonafidePrefixInput"
-        ).value.trim() || "BON";
+    const bonInput =
+        document.getElementById("bonafidePrefixInput");
 
-    document.getElementById(
-        "liveTcPreview"
-    ).innerText = tc + "-1001";
+    let tc =
+        tcInput.value.trim().toUpperCase() || "TC";
 
-    document.getElementById(
-        "liveBonafidePreview"
-    ).innerText = bon + "-1001";
+    let bon =
+        bonInput.value.trim().toUpperCase() || "BON";
+
+    tcInput.value = tc;
+    bonInput.value = bon;
+
+    document.getElementById("liveTcPreview").innerText =
+        tc + "-1001";
+
+    document.getElementById("liveBonafidePreview").innerText =
+        bon + "-1001";
 }
 
 function updateAutoNumberingPreview(){
 
     const value =
-        document.getElementById(
-            "autoNumberingSelect"
-        ).value;
+        document.getElementById("autoNumberingSelect").value;
 
-    document.getElementById(
-        "liveAutoNumbering"
-    ).innerText = value;
+    document.getElementById("liveAutoNumbering").innerText =
+        value;
 }
 
-/* AUTO LOAD */
+document.addEventListener("DOMContentLoaded", function(){
+    updateCertificatePreview();
+    updateAutoNumberingPreview();
+});
+</script>
+<!-- ================= FEATURE SCRIPTS ================= -->
+<script>
+function updateModulePreview(){
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function(){
+    document.getElementById("liveModuleTc").innerText =
+        document.getElementById("moduleTcSelect").value;
 
-        updateCertificatePreview();
-        updateAutoNumberingPreview();
-    }
-);
+    document.getElementById("liveModuleBonafide").innerText =
+        document.getElementById("moduleBonafideSelect").value;
 
+    document.getElementById("liveModuleAttendance").innerText =
+        document.getElementById("moduleAttendanceSelect").value;
+}
 </script>
 
 <!-- ================= PAYMENT SETTINGS SCRIPTS ================= -->
 
 <script>
-
 function updatePaymentPreview(){
 
-    const gateway =
-        document.getElementById(
-            "paymentGatewaySelect"
-        ).value;
+    const gateway = document.getElementById("paymentGatewaySelect").value;
+    const mode = document.getElementById("paymentModeSelect").value;
+    const gst = document.getElementById("gstInput").value || 0;
 
-    const mode =
-        document.getElementById(
-            "paymentModeSelect"
-        ).value;
-
-    const gst =
-        document.getElementById(
-            "gstInput"
-        ).value || 0;
-
-    document.getElementById(
-        "liveGatewayPreview"
-    ).innerText = gateway;
-
-    document.getElementById(
-        "liveModePreview"
-    ).innerText = mode;
-
-    document.getElementById(
-        "liveGstPreview"
-    ).innerText = gst + "%";
+    document.getElementById("liveGatewayPreview").innerText = gateway;
+    document.getElementById("liveModePreview").innerText = mode;
+    document.getElementById("liveGstPreview").innerText = gst + "%";
 }
 
-/* AUTO LOAD */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function(){
-
-        updatePaymentPreview();
-
-    }
-);
-
+document.addEventListener("DOMContentLoaded", function(){
+    updatePaymentPreview();
+});
 </script>
 
 <!-- ================= SMTP SETTINGS SCRIPTS ================= -->
@@ -2641,6 +2608,22 @@ document.addEventListener(
 
 </script>
 
+<!-- ================= MAINTENANCE SETTINGS SCRIPTS ================= -->
+<script>
+function updateMaintenancePreview(){
+
+    const mode =
+        document.getElementById("maintenanceModeSelect").value;
+
+    const message =
+        document.getElementById("maintenanceMessageInput").value;
+
+    console.log("Maintenance Mode:", mode);
+    console.log("Maintenance Message:", message);
+}
+</script>
+
+<!-- ================= BRANDING SETTINGS SCRIPTS ================= -->
 
 <script>
 
@@ -2674,5 +2657,8 @@ function updateBrandingPreview(){
     ).style.background = button;
 }
 
+document.addEventListener("DOMContentLoaded", function(){
+    updateBrandingPreview();
+});
 </script>
 {% endblock %}

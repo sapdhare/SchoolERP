@@ -1,0 +1,477 @@
+.report-admin-wrapper{
+    padding:35px;
+    min-height:100vh;
+    background:#f8fafc;
+}
+
+/* HEADER */
+
+.report-admin-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    margin-bottom:30px;
+}
+
+.report-admin-header h1{
+    font-size:34px;
+    font-weight:800;
+    color:#0f172a;
+    margin-bottom:6px;
+}
+
+.report-admin-header p{
+    color:#64748b;
+    font-size:15px;
+}
+
+.report-header-actions{
+    display:flex;
+    gap:12px;
+}
+
+.report-export-btn,
+.report-excel-btn{
+    padding:14px 22px;
+    border-radius:14px;
+    text-decoration:none;
+    font-weight:800;
+    color:white;
+    transition:.25s;
+}
+
+.report-export-btn{
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+}
+
+.report-excel-btn{
+    background:linear-gradient(135deg,#0ea5a4,#14b8a6);
+}
+
+.report-export-btn:hover,
+.report-excel-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* FILTERS */
+
+.report-filter-box{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    background:#fff;
+    padding:22px;
+    border-radius:24px;
+    border:1px solid #e2e8f0;
+    margin-bottom:28px;
+    box-shadow:0 12px 35px rgba(15,23,42,.05);
+}
+
+.report-filter-box input,
+.report-filter-box select{
+    padding:13px 16px;
+    border:1px solid #dbe3ee;
+    border-radius:14px;
+    min-width:210px;
+    font-size:14px;
+}
+
+.report-filter-box input:focus,
+.report-filter-box select:focus{
+    outline:none;
+    border-color:#0ea5a4;
+    box-shadow:0 0 0 4px rgba(14,165,164,.13);
+}
+
+.report-filter-box button{
+    background:#0ea5a4;
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:13px 22px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.report-clear-btn{
+    background:#f1f5f9;
+    padding:13px 18px;
+    border-radius:14px;
+    text-decoration:none;
+    color:#334155;
+    font-weight:800;
+}
+
+/* KPI CARDS */
+
+.report-stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:22px;
+    margin-bottom:30px;
+}
+
+.report-stat-card{
+    border-radius:26px;
+    padding:22px 24px;
+    min-height: 115px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:white;
+    box-shadow:0 20px 40px rgba(15,23,42,.08);
+    transition:.25s;
+}
+
+.report-stat-card:hover{
+    transform:translateY(-4px);
+}
+
+.report-stat-card h4{
+    font-size:14px;
+    margin-bottom:8px;
+    color:white;
+    opacity:.9;
+}
+
+.report-stat-card h2{
+    font-size:28px;
+    font-weight:800;
+    color:white;
+}
+
+.report-stat-card span{
+    font-size:46px;
+}
+
+.report-stat-card.revenue{
+    background:linear-gradient(135deg,#10b981,#059669);
+}
+
+.report-stat-card.schools{
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+}
+
+.report-stat-card.subscriptions{
+    background:linear-gradient(135deg,#0ea5a4,#14b8a6);
+}
+
+.report-stat-card.leads{
+    background:linear-gradient(135deg,#f59e0b,#d97706);
+}
+
+.report-stat-card.certificates{
+    background:linear-gradient(135deg,#8b5cf6,#7c3aed);
+}
+
+
+
+.chart-wrapper{
+
+    position:relative;
+
+    width:100%;
+
+    height:340px;
+
+}
+/* CHART CARDS */
+
+.report-chart-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    minmax(0,1.4fr)
+    minmax(0,1fr);
+
+    gap:24px;
+
+    margin-bottom:24px;
+
+    align-items:stretch;
+
+}
+
+.report-chart-card,
+.report-table-card{
+    background:#fff;
+    border-radius:28px;
+    padding:26px;
+    border:1px solid #e2e8f0;
+    box-shadow:0 20px 45px rgba(15,23,42,.06);
+}
+
+.report-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:22px;
+    gap:20px;
+    overflow:hidden;
+}
+
+.report-card-header h3{
+    font-size:21px;
+    font-weight:800;
+    color:#0f172a;
+    margin-bottom:4px;
+}
+
+.report-card-header p{
+    color:#64748b;
+    font-size:14px;
+}
+
+.report-card-header span{
+    background:#ecfeff;
+    color:#0f766e;
+    padding:7px 13px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+/* TABLE */
+
+.report-table-card{
+    margin-bottom:30px;
+}
+
+.report-table-wrap{
+    overflow-x:auto;
+}
+
+.report-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.report-table thead{
+    background:#f8fafc;
+}
+
+.report-table th{
+    padding:17px;
+    text-align:left;
+    color:#475569;
+    font-size:14px;
+    font-weight:800;
+}
+
+.report-table td{
+    padding:17px;
+    border-top:1px solid #eef2f7;
+    color:#334155;
+}
+
+.report-table tbody tr:hover{
+    background:#f8fafc;
+}
+
+.report-table td strong{
+    display:block;
+    color:#0f172a;
+}
+
+.report-table td small{
+    display:block;
+    color:#94a3b8;
+    margin-top:4px;
+}
+
+.report-plan-pill{
+    background:#eff6ff;
+    color:#2563eb;
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:800;
+}
+
+.report-status-pill{
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:800;
+}
+
+.report-status-pill.active{
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.report-status-pill.expired{
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+ /* =====================================================
+   REPORTS & ANALYTICS - PREMIUM MOBILE CSS 576px
+===================================================== */
+
+@media(max-width:576px){
+
+    .report-admin-wrapper{
+        padding:14px;
+        min-height:100vh;
+        background:#f8fafc;
+        overflow-x:hidden;
+    }
+
+    /* HEADER */
+    .report-admin-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:16px;
+        margin-bottom:22px;
+    }
+
+    .report-admin-header h1{
+        font-size:24px;
+        line-height:1.25;
+        letter-spacing:-.3px;
+    }
+
+    .report-admin-header p{
+        font-size:13px;
+        line-height:1.5;
+    }
+
+    .report-header-actions{
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+    }
+
+    .report-export-btn,
+    .report-excel-btn{
+        width:100%;
+        text-align:center;
+        padding:14px 12px;
+        border-radius:14px;
+        font-size:13px;
+    }
+
+    /* FILTER */
+    .report-filter-box{
+        padding:15px;
+        border-radius:22px;
+        gap:11px;
+        margin-bottom:22px;
+    }
+
+    .report-filter-box input,
+    .report-filter-box select,
+    .report-filter-box button,
+    .report-clear-btn{
+        width:100%;
+        min-width:100%;
+        height:50px;
+        border-radius:14px;
+        font-size:13px;
+    }
+
+    .report-clear-btn{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+
+    /* KPI */
+    .report-stats-grid{
+        grid-template-columns:1fr;
+        gap:14px;
+        margin-bottom:22px;
+    }
+
+    .report-stat-card{
+        min-height:96px;
+        padding:18px;
+        border-radius:22px;
+    }
+
+    .report-stat-card h4{
+        font-size:13px;
+    }
+
+    .report-stat-card h2{
+        font-size:25px;
+    }
+
+    .report-stat-card span{
+        font-size:36px;
+    }
+
+    /* CHARTS */
+    .report-chart-grid{
+        grid-template-columns:1fr;
+        gap:16px;
+        margin-bottom:16px;
+    }
+
+    .report-chart-card,
+    .report-table-card{
+        padding:16px;
+        border-radius:22px;
+    }
+
+    .report-card-header{
+        flex-direction:column;
+        gap:9px;
+        margin-bottom:16px;
+    }
+
+    .report-card-header h3{
+        font-size:18px;
+    }
+
+    .report-card-header p{
+        font-size:13px;
+    }
+
+    .report-card-header span{
+        width:max-content;
+        padding:6px 11px;
+        font-size:11px;
+    }
+
+    .chart-wrapper{
+        height:245px;
+    }
+
+    /* TABLE */
+    .report-table-wrap{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        border-radius:16px;
+    }
+
+    .report-table{
+        min-width:760px;
+    }
+
+    .report-table th,
+    .report-table td{
+        padding:13px;
+        font-size:12px;
+        white-space:nowrap;
+    }
+
+    .report-table td strong{
+        font-size:13px;
+    }
+
+    .report-table td small{
+        font-size:11px;
+    }
+
+    .report-plan-pill,
+    .report-status-pill{
+        padding:6px 10px;
+        font-size:11px;
+    }
+}

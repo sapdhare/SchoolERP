@@ -25,7 +25,7 @@
     <div class="sa2-stat-card blue">
         <div>
             <p>Total Schools</p>
-            <h2>{{ schools|length }}</h2>
+            <h2>{{ total_schools }}</h2>
         </div>
         <span>🏫</span>
     </div>
@@ -43,12 +43,24 @@
     >
 
     <select name="school_id">
-        <option value="">All Schools</option>
-        {% for sc in schools %}
-        <option value="{{ sc[0] }}" {% if selected_school == sc[0] %}selected{% endif %}>
-            {{ sc[1] }}
+
+        <option value="">
+            All Schools
         </option>
+
+        {% for sc in schools %}
+
+        <option
+            value="{{ sc.school_id }}"
+            {% if selected_school == sc.school_id %}
+            selected
+            {% endif %}
+        >
+            {{ sc.name }}
+        </option>
+
         {% endfor %}
+
     </select>
 
     <button type="submit">Search</button>
@@ -74,35 +86,58 @@
         <tbody>
             {% for s in students %}
             <tr>
-                <td>{{ s[1] }}</td>
-                <td>{{ s[2] }}</td>
-                <td>{{ s[3] }}</td>
-                <td>{{ s[4] or '-' }}</td>
-                <td><span class="school-badge">{{ s[5] }}</span></td>
+                <td>{{ s.name }}</td>
+                <td>{{ s.class }}</td>
+                <td>{{ s.admission_no }}</td>
+                <td>{{ s.primary_mobile or '-' }}</td>
+                <td>
+                    <span class="school-badge">
+                        {{ s.school_name }}
+                    </span>
+                </td>
 
                 <td class="actions">
-                    <button class="view" onclick="viewStudent('{{ s[0] }}')">View</button>
-                    <button class="edit" onclick="editStudent('{{ s[0] }}')">Edit</button>
-                    <button class="tc" onclick="generateTC('{{ s[0] }}')">TC</button>
-                    <button class="delete" onclick="openDeleteModal('{{ s[0] }}')">Delete</button>
+                    <button class="view" onclick="openStudentModal('{{ s.id }}')">View</button>
+                    <button class="edit" onclick="editStudent('{{ s.id }}')">Edit</button>
+                    <button class="tc" onclick="generateTC('{{ s.id }}')">TC</button>
+                    <button class="delete" onclick="openDeleteModal('{{ s.id }}')">Delete</button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-<div class="sa2-pagination">
 
-    {% if page > 1 %}
-    <a href="?page={{ page-1 }}&search={{ search }}&school_id={{ selected_school }}">← Prev</a>
-    {% endif %}
+    <div class="sa2-pagination">
 
-    <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page > 1 %}
+        <a href="?page={{ page-1 }}&search={{ search }}{% if selected_school %}&school_id={{ selected_school }}{% endif %}">
+            ← Prev
+        </a>
+        {% endif %}
 
-    {% if page < total_pages %}
-    <a href="?page={{ page+1 }}&search={{ search }}&school_id={{ selected_school }}">Next →</a>
-    {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
 
+        {% if page < total_pages %}
+        <a href="?page={{ page+1 }}&search={{ search }}{% if selected_school %}&school_id={{ selected_school }}{% endif %}">
+            Next →
+        </a>
+        {% endif %}
+
+    </div>
+
+<!-- ================= STUDENT MODAL ================= -->
+<div id="studentModal" class="student-view-modal">
+    <div class="student-view-modal-card">
+
+        <div class="student-view-modal-header">
+            <h2>🎓 Student Details</h2>
+            <button class="sa-close-btn"  onclick="closeStudentModal()">✖</button>
+        </div>
+
+        <div id="studentData"></div>
+
+    </div>
 </div>
 
 <!-- DELETE MODAL -->
@@ -130,58 +165,82 @@
 
 <!-- JS -->
 <script>
-function applyFilter() {
-
-    let search = document.getElementById("searchInput").value.toLowerCase();
-    let school = document.getElementById("schoolFilter").value.toLowerCase();
-
-    let rows = document.querySelectorAll("#studentTable tbody tr");
-
-    rows.forEach(row => {
-
-        let text = row.innerText.toLowerCase();
-        let schoolCell = row.children[4].innerText.toLowerCase();
-
-        let matchSearch = text.includes(search);
-        let matchSchool = school === "" || schoolCell.includes(school);
-
-        row.style.display = (matchSearch && matchSchool) ? "" : "none";
-    });
-}
-
-function clearFilter(){
-    document.getElementById("searchInput").value = "";
-    document.getElementById("schoolFilter").value = "";
-    applyFilter();
-}
 
 // button js
 function viewStudent(id){
-    window.location.href = "/view_student/" + id + "?mode=admin";
+    window.location.href = "/clerk/view-student/" + id + "?mode=admin";
 }
 
+
 function editStudent(id){
-    window.location.href = "/edit_student/" + id + "?mode=admin";
+
+    window.location.href =
+        "/clerk/edit-student/" + id + "?mode=admin";
+
 }
 
 function generateTC(id){
     window.location.href = "/clerk/tc-form/" + id + "?mode=admin";
 }
 
-// SEARCH
-function searchStudent() {
-    let input = document.getElementById("searchInput").value.toLowerCase();
-    let rows = document.querySelectorAll("#studentTable tbody tr");
+// Student Modal 
+function openStudentModal(id){
 
-    rows.forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+    fetch("/get-student/" + id)
+    .then(res => res.json())
+    .then(data => {
+
+        let html = `
+
+        <div class="student-view-modal-section">
+            <h3>👤 Personal Information</h3>
+
+            <div class="student-view-modal-grid">
+                <div><span>Name</span><p>${data.name}</p></div>
+                <div><span>Class</span><p>${data.class}</p></div>
+                <div><span>Admission No</span><p>${data.admission_no}</p></div>
+                <div><span>Mobile</span><p>${data.primary_mobile || '-'}</p></div>
+                <div><span>Father</span><p>${data.father_name || '-'}</p></div>
+                <div><span>Mother</span><p>${data.mother_name || '-'}</p></div>
+                <div><span>DOB</span><p>${formatDate(data.dob)}</p></div>
+                <div><span>Nationality</span><p>${data.nationality || '-'}</p></div>
+            </div>
+        </div>
+
+        <div class="student-view-modal-section">
+            <h3>📚 Academic Information</h3>
+
+            <div class="student-view-modal-grid">
+                <div><span>Previous School</span><p>${data.previous_school || '-'}</p></div>
+                <div><span>Admission Date</span><p>${formatDate(data.admission_date)}</p></div>
+                <div><span>Progress</span><p>${data.progress || '-'}</p></div>
+                <div><span>Conduct</span><p>${data.conduct || '-'}</p></div>
+                <div><span>Aadhaar</span><p>${data.aadhaar || '-'}</p></div>
+            </div>
+        </div>
+
+        `;
+
+        document.getElementById("studentData").innerHTML = html;
+        document.getElementById("studentModal").style.display = "flex";
+        document.body.style.overflow = "hidden";
     });
 }
 
-function clearSearch(){
-    document.getElementById("searchInput").value = "";
-    searchStudent();
+// STUDENT MODAL CLOSE
+function closeStudentModal(){
+    const modal = document.getElementById("studentModal");
+    modal.style.display = "none";
+
+    document.body.style.overflow = "auto";
 }
+
+function formatDate(date){
+    if(!date) return '-';
+    return new Date(date).toLocaleDateString("en-IN");
+}
+
+ 
 
 // DELETE MODAL
 function openDeleteModal(id){

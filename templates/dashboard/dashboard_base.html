@@ -11,16 +11,50 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
+ <!-- favicorn -->
+ {% if global_settings.favicon %}
+    <link rel="icon"
+        type="image/png"
+        href="{{ url_for('static', filename=global_settings.favicon) }}?v={{ global_settings.updated_at.timestamp() if global_settings.updated_at else 1 }}">
+ {% endif %}
+
+
 </head>
+
 <body>
 
 <!-- MOBILE TOP -->
 <div class="mobile-top">
-    <div class="logo">SchoolSphere</div>
-    <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+
+    <div class="logo">
+
+        {{ global_settings.system_name or "SchoolSphere" }}
+
+    </div>
+
+    <div
+        class="menu-toggle"
+        onclick="toggleSidebar()"
+        aria-label="Toggle Sidebar"
+    >
+
+        ☰
+
+    </div>
+
 </div>
 
-<!-- ================= SIDEBAR ================= -->
+<!-- SIDEBAR OVERLAY -->
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+    onclick="closeSidebar()">
+</div>
+
+
+ <!-- ===================================================== -->
+<!-- SIDEBAR -->
+<!-- ===================================================== -->
 <div class="sidebar" id="sidebar">
 
     <!-- TOP -->
@@ -42,299 +76,415 @@
 </div>
     </div>
 
-    <div class="divider"></div>
+ <!-- ===================================================== -->
+<!-- SIDEBAR MENU -->
+<!-- ===================================================== -->
 
-    <!-- MENU -->
+ <div class="divider"></div>
+
+
 <ul class="menu">
+ 
+    <!-- ===================================================== -->
+<!-- ADMIN SIDEBAR MENU -->
+<!-- ===================================================== -->
 
-{% if role == "admin" %}
+    {% if role == "admin" %}
 
-<!-- DASHBOARD -->
-<li>
-    <a href="{{ url_for('superadmin_dashboard') }}"
-       class="menu-link {{ 'active' if active_page=='dashboard' }}">
-        <span class="icon">🏠</span>
-        <span>
-            Dashboard
-            <small>System Overview</small>
-        </span>
-    </a>
-</li>
-
-<!-- SCHOOLS -->
-<li>
-    <a href="/superadmin/schools"
-       class="menu-link {{ 'active' if active_page=='schools' }}">
-        <span class="icon">🏫</span>
-        <span>
-            School Management
-            <small>All Registered Schools</small>
-        </span>
-    </a>
-</li>
-
-<!-- STUDENTS -->
-<li>
-    <a href="/superadmin/all-students"
-       class="menu-link {{ 'active' if active_page=='all-students' }}">
-        <span class="icon">👨‍🎓</span>
-        <span>
-            Students
-            <small>Manage Students</small>
-        </span>
-    </a>
-</li>
-
-<!-- TC -->
-<li>
-    <a href="/superadmin/tc-management"
-       class="menu-link {{ 'active' if active_page=='tc-management' }}">
-        <span class="icon">📄</span>
-        <span>
-            TC Records
-            <small>All Schools TC</small>
-        </span>
-    </a>
-</li>
-
-<!-- BONAFIDE -->
-<li>
-    <a href="/superadmin/bonafide-management"
-       class="menu-link {{ 'active' if active_page=='bonafide-management' }}">
-        <span class="icon">🏅</span>
-        <span>
-            Bonafide Records
-            <small>Certificates</small>
-        </span>
-    </a>
-</li>
-
-<!-- USERS -->
-<li>
-    <a href="/superadmin/users"
-       class="menu-link {{ 'active' if active_page=='users' }}">
-        <span class="icon">👥</span>
-        <span>
-            Users
-            <small>Login Accounts</small>
-        </span>
-    </a>
-</li>
-
-<!-- SETTINGS -->
-<li>
-    <a href="/superadmin/settings"
-       class="menu-link {{ 'active' if active_page=='settings' }}">
-        <span class="icon">⚙️</span>
-        <span>
-            System Settings
-            <small>Global Config</small>
-        </span>
-    </a>
-</li>
-
-{% endif %}
-
-  {% if role == "clerk" %}
+    <!-- ================= MAIN ================= -->
+    <li class="menu-section">Main</li>
 
     <!-- DASHBOARD -->
     <li>
-        <a href="{{ url_for('clerk_dashboard') }}" class="menu-link {{ 'active' if active_page=='dashboard' }}">
+        <a href="{{ url_for('superadmin_dashboard') }}"
+        class="menu-link {{ 'active' if active_page=='dashboard' }}">
             <span class="icon">🏠</span>
             <span>
                 Dashboard
-                <small>डॅशबोर्ड</small>
+                <small>System Overview</small>
             </span>
         </a>
     </li>
 
-    <!-- ADD STUDENT -->
+    <!-- ================= SCHOOLS ================= -->
+    <li class="menu-section">Schools</li>
+
+    <!-- SCHOOL MANAGEMENT -->
     <li>
-        <a href="{{ url_for('add_student') }}" class="menu-link {{ 'active' if active_page=='add_student' }}">
-            <span class="icon">➕</span>
+        <a href="/superadmin/schools"
+        class="menu-link {{ 'active' if active_page=='schools' }}">
+            <span class="icon">🏫</span>
             <span>
-                Add Student
-                <small>विद्यार्थी नोंदणी करा</small>
+                Schools
+                <small>Registered Schools</small>
             </span>
         </a>
     </li>
 
-    <!-- VIEW STUDENTS -->
+    <!-- STUDENTS -->
     <li>
-        <a href="{{ url_for('clerk_students') }}" class="menu-link {{ 'active' if active_page=='students' }}">
-            <span class="icon">📋</span>
+        <a href="/superadmin/all-students"
+        class="menu-link {{ 'active' if active_page=='all-students' }}">
+            <span class="icon">👨‍🎓</span>
             <span>
-                View Students
-                <small>विद्यार्थ्यांची यादी</small>
+                Students
+                <small>All Student Records</small>
             </span>
         </a>
     </li>
 
-    <!-- TC MANAGEMENT -->
-    {% if feature_modules.get('tc', 'Disabled')|trim == "Enabled" %}
+    <!-- USERS -->
     <li>
-        <a href="{{ url_for('clerk_tc_page') }}"
-        class="menu-link {{ 'active' if active_page=='tc' }}">
+        <a href="/superadmin/users"
+        class="menu-link {{ 'active' if active_page=='users' }}">
+            <span class="icon">👥</span>
+            <span>
+                Users
+                <small>Clerk Accounts</small>
+            </span>
+        </a>
+    </li>
 
+    <!-- ================= CERTIFICATES ================= -->
+    <li class="menu-section">Certificates</li>
+
+    <!-- TC RECORDS -->
+    <li>
+        <a href="/superadmin/tc-management"
+        class="menu-link {{ 'active' if active_page=='tc-management' }}">
             <span class="icon">📄</span>
-
             <span>
-                TC Management
-                <small>स्थानांतरण प्रमाणपत्र व्यवस्थापन</small>
+                TC Records
+                <small>Transfer Certificates</small>
             </span>
-
         </a>
     </li>
-    {% endif %}
-    <!-- BONAFIDE MANAGEMENT -->
-    {% if feature_modules.get('bonafide', 'Disabled')|trim == "Enabled" %}
-    <li>
-        <a href="{{ url_for('clerk_bonafide_page') }}"
-        class="menu-link {{ 'active' if active_page=='bonafide' }}">
 
+    <!-- BONAFIDE RECORDS -->
+    <li>
+        <a href="/superadmin/bonafide-management"
+        class="menu-link {{ 'active' if active_page=='bonafide-management' }}">
             <span class="icon">🏅</span>
-
             <span>
-                Bonafide Management
-                <small>बोनाफाईड प्रमाणपत्र व्यवस्थापन</small>
+                Bonafide Records
+                <small>Bonafide Certificates</small>
             </span>
-
         </a>
     </li>
-    {% endif %}
-    <!-- IMPORT / EXPORT  -->
-            {% if feature_modules.get('import_export', 'Disabled')|trim == "Enabled" %}
-            <li>
-                <a href="/clerk/import-export"
-                class="menu-link {{ 'active' if active_page=='import_export' }}">
 
-                    <span class="icon">📂</span>
+    <!-- ================= BUSINESS ================= -->
+    <li class="menu-section">Business</li>
 
-                    <span>
-                        Import / Export
-                        <small>डेटा आयात / निर्यात</small>
-                    </span>
+    <!-- LEADS -->
+    <li>
+        <a href="/superadmin/leads"
+        class="menu-link {{ 'active' if active_page=='leads' }}">
+            <span class="icon">📞</span>
+            <span>
+                Leads
+                <small>Demo Requests</small>
+            </span>
 
-                </a>
-            </li>
+            {% if new_leads_count|default(0) > 0 %}
+            <span class="menu-badge">
+                {{ new_leads_count }}
+            </span>
             {% endif %}
-
-    <!-- ================= NEW FEATURES (COMING SOON) ================= -->
-
-    <!-- ATTENDANCE -->
-    {% if feature_modules.get('attendance', 'Disabled')|trim == "Enabled" %}
-    <li>
-        <a href="{{ url_for('attendance_dashboard') }}"
-        class="menu-link {{ 'active' if active_page=='attendance' }}">
-
-            <span class="icon">📊</span>
-
-            <span>
-                Attendance
-                <small>हजेरी व्यवस्थापन</small>
-            </span>
-
         </a>
     </li>
-    {% endif %}
 
-    <!-- MARKS -->
-    {% if feature_modules.get('results', 'Disabled')|trim == "Enabled" %}
+    <!-- SUBSCRIPTIONS -->
     <li>
-        <a href="/clerk/results"
-        class="menu-link {{ 'active' if active_page=='results' }}">
-
-            <span class="icon">📝</span>
-
+        <a href="/superadmin/subscriptions"
+        class="menu-link {{ 'active' if active_page=='subscriptions' }}">
+            <span class="icon">💳</span>
             <span>
-                Marks & Results
-                <small>गुणपत्रिका</small>
+                Subscriptions
+                <small>Plans & Billing</small>
             </span>
-
         </a>
     </li>
-    {% endif %}
 
-    <!-- TEACHERS -->
-   {% if feature_modules.get('teachers', 'Disabled')|trim == "Enabled" %}
+    <!-- RENEWAL CENTER -->
     <li>
-        <a href="/clerk/teachers"
-        class="menu-link {{ 'active' if active_page=='teachers' }}">
-
-            <span class="icon">👨‍🏫</span>
-
+        <a href="/superadmin/renewals"
+        class="menu-link {{ 'active' if active_page=='renewals' }}">
+            <span class="icon">🔔</span>
             <span>
-                Teacher Management
-                <small>शिक्षक व्यवस्थापन</small>
+                Renewal Center
+                <small>Expiring Plans</small>
             </span>
-
         </a>
     </li>
-    {% endif %}
 
-
-    <!-- FEES -->
-    {% if feature_modules.get('fees', 'Disabled')|trim == "Enabled" %}
+    <!-- PAYMENTS -->
     <li>
-        <a href="{{ url_for('fee_dashboard') }}"
-        class="menu-link {{ 'active' if active_page=='fees' }}">
-
+        <a href="/superadmin/payments"
+        class="menu-link {{ 'active' if active_page=='payments' }}">
             <span class="icon">💰</span>
-
             <span>
-                Fee Management
-                <small>फी व्यवस्थापन</small>
+                Payments
+                <small>Transactions</small>
             </span>
-
         </a>
     </li>
-    {% endif %}
-    <!-- TIMETABLE -->
-    {% if feature_modules.get('timetable', 'Disabled')|trim == "Enabled" %}
+
+    <!-- ================= INSIGHTS ================= -->
+    <li class="menu-section">Insights</li>
+
+    <!-- REPORTS -->
     <li>
-        <a href="/clerk/timetable"
-        class="menu-link {{ 'active' if active_page=='timetable' }}">
-
-            <span class="icon">📅</span>
-
+        <a href="/superadmin/reports"
+        class="menu-link {{ 'active' if active_page=='reports' }}">
+            <span class="icon">📊</span>
             <span>
-                Timetable
-                <small>वेळापत्रक</small>
+                Reports
+                <small>Analytics & Revenue</small>
             </span>
-
         </a>
     </li>
-    {% endif %}
 
-    <!-- NOTICE -->
-{% if feature_modules.get('notice-board', 'Disabled')|trim == "Enabled" %}
-<li>
-    <a href="/clerk/notice-board"
-       class="menu-link {{ 'active' if active_page=='notice' }}">
+    <!-- ================= SETTINGS ================= -->
+    <li class="menu-section">Settings</li>
 
-        <span class="icon">📢</span>
-
-        <span>
-            Notice Board
-            <small>सूचना फलक</small>
-        </span>
-
-    </a>
-</li>
-{% endif %}
+    <!-- SYSTEM SETTINGS -->
+    <li>
+        <a href="/superadmin/settings"
+        class="menu-link {{ 'active' if active_page=='settings' }}">
+            <span class="icon">⚙️</span>
+            <span>
+                System Settings
+                <small>Global Configuration</small>
+            </span>
+        </a>
+    </li>
 
     {% endif %}
+
+
+<!-- ===================================================== -->
+<!-- CLERK SIDEBAR MENU -->
+<!-- ===================================================== -->
+
+        {% if role == "clerk" %}
+
+        <!-- ===================================================== -->
+        <!-- MAIN -->
+        <!-- ===================================================== -->
+
+        <li class="menu-section">Main</li>
+
+        <!-- DASHBOARD -->
+        <li>
+            <a href="{{ url_for('clerk_dashboard') }}"
+            class="menu-link {{ 'active' if active_page=='dashboard' }}">
+                <span class="icon">🏠</span>
+                <span>
+                    Dashboard
+                    <small>डॅशबोर्ड</small>
+                </span>
+            </a>
+        </li>
+
+        <!-- ===================================================== -->
+        <!-- STUDENT MANAGEMENT -->
+        <!-- ===================================================== -->
+
+        <li class="menu-section">Students</li>
+
+        <!-- ADD STUDENT -->
+        <li>
+            <a href="{{ url_for('add_student') }}"
+            class="menu-link {{ 'active' if active_page=='add_student' }}">
+                <span class="icon">➕</span>
+                <span>
+                    Add Student
+                    <small>विद्यार्थी नोंदणी</small>
+                </span>
+            </a>
+        </li>
+
+        <!-- STUDENT RECORDS -->
+        <li>
+            <a href="{{ url_for('clerk_students') }}"
+            class="menu-link {{ 'active' if active_page=='students' }}">
+                <span class="icon">👨‍🎓</span>
+                <span>
+                    Student Records
+                    <small>विद्यार्थ्यांची यादी</small>
+                </span>
+            </a>
+        </li>
+
+        <!-- ===================================================== -->
+        <!-- CERTIFICATE MANAGEMENT -->
+        <!-- ===================================================== -->
+
+        <li class="menu-section">Certificates</li>
+
+        <!-- TRANSFER CERTIFICATE -->
+        {% if feature_modules.tc %}
+        <li>
+            <a href="{{ url_for('clerk_tc_page') }}"
+            class="menu-link {{ 'active' if active_page=='tc' }}">
+                <span class="icon">📄</span>
+                <span>
+                    Transfer Certificate
+                    <small>टीसी व्यवस्थापन</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- BONAFIDE CERTIFICATE -->
+        {% if feature_modules.bonafide %}
+        <li>
+            <a href="{{ url_for('clerk_bonafide_page') }}"
+            class="menu-link {{ 'active' if active_page=='bonafide' }}">
+                <span class="icon">🏅</span>
+                <span>
+                    Bonafide Certificate
+                    <small>बोनाफाईड व्यवस्थापन</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- IMPORT EXPORT -->
+        {% if feature_modules.import_export %}
+        <li>
+            <a href="{{ url_for('import_export_page') }}"
+            class="menu-link {{ 'active' if active_page=='import_export' }}">
+                <span class="icon">📂</span>
+                <span>
+                    Import / Export
+                    <small>डेटा आयात / निर्यात</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- ===================================================== -->
+        <!-- ACADEMIC MODULES -->
+        <!-- ===================================================== -->
+
+        <li class="menu-section">Academic Modules</li>
+
+        <!-- ATTENDANCE -->
+        {% if feature_modules.attendance %}
+        <li>
+            <a href="{{ url_for('attendance_dashboard') }}"
+            class="menu-link {{ 'active' if active_page=='attendance' }}">
+                <span class="icon">📊</span>
+                <span>
+                    Attendance
+                    <small>हजेरी व्यवस्थापन</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- MARKS & RESULTS -->
+        {% if feature_modules.results %}
+        <li>
+            <a href="{{ url_for('results_dashboard') }}"
+            class="menu-link {{ 'active' if active_page=='marks' }}">
+                <span class="icon">📝</span>
+                <span>
+                    Marks & Results
+                    <small>गुणपत्रिका</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- TEACHERS -->
+        {% if feature_modules.teachers %}
+        <li>
+            <a href="{{ url_for('teachers_dashboard') }}"
+            class="menu-link {{ 'active' if active_page=='teachers' }}">
+                <span class="icon">👨‍🏫</span>
+                <span>
+                    Teachers
+                    <small>शिक्षक व्यवस्थापन</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- FEES -->
+        {% if feature_modules.fees %}
+        <li>
+            <a href="{{ url_for('fee_dashboard') }}"
+            class="menu-link {{ 'active' if active_page=='fees' }}">
+                <span class="icon">💰</span>
+                <span>
+                    Fee Management
+                    <small>फी व्यवस्थापन</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- TIMETABLE -->
+        {% if feature_modules.timetable %}
+        <li>
+            <a href="{{ url_for('timetable_dashboard') }}"
+            class="menu-link {{ 'active' if active_page=='timetable' }}">
+                <span class="icon">📅</span>
+                <span>
+                    Timetable
+                    <small>वेळापत्रक</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- NOTICE BOARD -->
+        {% if feature_modules.notice_board %}
+        <li>
+            <a href="{{ url_for('notice_board_dashboard') }}"
+            class="menu-link {{ 'active' if active_page=='notice-board' }}">
+                <span class="icon">📢</span>
+                <span>
+                    Notice Board
+                    <small>सूचना फलक</small>
+                </span>
+            </a>
+        </li>
+        {% endif %}
+
+        <!-- ===================================================== -->
+        <!-- ACCOUNT -->
+        <!-- ===================================================== -->
+
+        <li class="menu-section">Account</li>
+
+        <!-- SUBSCRIPTION HISTORY -->
+        <li>
+            <a href="{{ url_for('subscription_history') }}"
+            class="menu-link {{ 'active' if active_page=='subscription_history' }}">
+                <span class="icon">📜</span>
+                <span>
+                    Subscription History
+                    <small>पेमेंट इतिहास</small>
+                </span>
+            </a>
+        </li>
+
+        {% endif %}
 
 </ul>
 
-    <div class="divider"></div>
+
+<div class="divider"></div>
 
     <!-- BOTTOM -->
     <div class="sidebar-bottom">
 
         <div class="user-card">
             <div class="avatar">
-                {{ school_name[0] }}
+                {{ school_name[0] if school_name else "S" }}
             </div>
             <div>
                 <p>{{ school_name }}</p>
@@ -354,18 +504,28 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="role" value="clerk">
 
-            <button type="submit" class="logout-btn">
+            <button
+                type="submit"
+                class="logout-btn"
+                onclick="this.disabled=true; this.form.submit();"
+            >
                 Logout
             </button>
         </form>
         {% endif %}
+
+
         <!-- LOGOUT FOR ADMIN  -->
         {% if role == "admin" %}
         <form method="POST" action="/logout">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="role" value="admin">
 
-            <button type="submit" class="logout-btn">
+            <button
+                type="submit"
+                class="logout-btn"
+                onclick="this.disabled=true; this.form.submit();"
+            >
                 Logout
             </button>
         </form>
@@ -374,6 +534,8 @@
     </div>
 
 </div>
+
+
 
 <!-- MAIN -->
 <div class="main">

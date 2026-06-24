@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Payment Successful</title>
+
+<link rel="stylesheet"
+      href="{{ url_for(
+      'static',
+      filename='css/subscription/success.css'
+      ) }}">
+
+<meta http-equiv="refresh"
+      content="5;url={{ url_for('clerk_dashboard') }}">
+
+</head>
+
+<body>
+
+<div class="success-wrapper">
+
+    <div class="success-card">
+
+        <div class="success-icon">
+
+            ✓
+
+        </div>
+
+        <h1>
+            Payment Successful
+        </h1>
+
+        <p class="success-subtitle">
+
+            Your subscription has been activated successfully.
+
+        </p>
+
+        <div class="success-details">
+
+            <div class="detail-row">
+
+                <span>Plan</span>
+
+                <strong>
+                    {{ plan }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Amount Paid</span>
+
+                <strong>
+                    ₹{{ amount }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Status</span>
+
+                <strong class="status-success">
+                    Active
+                </strong>
+
+            </div>
+
+        </div>
+
+        <div class="success-message">
+
+            Redirecting to Dashboard in
+            <span id="countdown">5</span>
+            seconds...
+
+        </div>
+
+        <a href="{{ url_for('clerk_dashboard') }}"
+           class="dashboard-btn">
+
+            Go To Dashboard
+
+        </a>
+
+    </div>
+
+</div>
+
+<script>
+
+let seconds = 5;
+
+const counter =
+document.getElementById(
+    "countdown"
+);
+
+setInterval(() => {
+
+    seconds--;
+
+    if(seconds >= 0){
+
+        counter.innerText =
+        seconds;
+
+    }
+
+},1000);
+
+</script>
+
+</body>
+</html>

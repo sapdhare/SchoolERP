@@ -1,250 +1,736 @@
 /* =========================
-   SUBSCRIPTION PAGE
+   ROOT VARIABLES
+========================= */
+
+:root{
+
+    --primary:#00C389;
+    --primary-dark:#00A676;
+    --secondary:#0EA5A4;
+    --accent:#14B8A6;
+
+    --white:#ffffff;
+    --dark:#111827;
+    --text:#4B5563;
+    --light:#F9FAFB;
+    --border:#E5E7EB;
+
+    --shadow:
+    0 10px 40px rgba(0,0,0,0.08);
+
+}
+
+/* =========================
+   RESET
 ========================= */
 
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
+    font-family:"Segoe UI",sans-serif;
 }
 
 body{
-    font-family:'Poppins',sans-serif;
-    background:#f8fafc;
+
+    background:
+    linear-gradient(
+        135deg,
+        #F8FFFD,
+        #F5F7FB
+    );
+
+    min-height:100vh;
+
+    color:var(--dark);
 }
 
-.rs-page{
-    padding:40px;
-    max-width:1400px;
+/* =========================
+   CONTAINER
+========================= */
+
+.rs-container{
+
+    width:95%;
+    max-width:1450px;
+
     margin:auto;
+
+    padding:40px 0 80px;
+}
+/* =========================
+   ALERTS
+========================= */
+.rs-expired-banner{
+    display:flex;
+    align-items:center;
+    gap:15px;
+
+    background:#fef2f2;
+    border:1px solid #fecaca;
+
+    padding:20px;
+    border-radius:16px;
+
+    margin-bottom:25px;
 }
 
-/* TOPBAR */
-
-.rs-topbar{
+.rs-warning-banner{
     display:flex;
-    justify-content:space-between;
     align-items:center;
-    margin-bottom:40px;
+    gap:15px;
+
+    background:#fff7ed;
+    border:1px solid #fdba74;
+
+    padding:20px;
+    border-radius:16px;
+
+    margin-bottom:25px;
+}
+
+.rs-expired-icon{
+    font-size:28px;
+}
+
+.rs-expired-banner h3,
+.rs-warning-banner h3{
+    margin-bottom:5px;
+}
+
+.rs-alert{
+    padding:14px 18px;
+    border-radius:12px;
+    margin-bottom:15px;
+    font-weight:600;
+}
+
+.rs-alert.danger{
+    background:#fef2f2;
+    color:#dc2626;
+    border:1px solid #fecaca;
+}
+
+.rs-alert.success{
+    background:#ecfdf5;
+    color:#059669;
+    border:1px solid #a7f3d0;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.rs-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:35px;
+
+    gap:20px;
+}
+
+.rs-header h1{
+
+    font-size:34px;
+    font-weight:700;
+}
+
+.rs-header p{
+
+    color:var(--text);
+    margin-top:5px;
 }
 
 .rs-back-btn{
-    text-decoration:none;
+
+    background:var(--white);
+
+    border:1px solid var(--border);
+
     padding:14px 22px;
-    background:white;
+
     border-radius:14px;
-    color:#111827;
+
+    text-decoration:none;
+
+    color:var(--dark);
+
     font-weight:600;
-    box-shadow:0 10px 30px rgba(0,0,0,.05);
-}
 
-.rs-top-title{
-    font-size:30px;
-    font-weight:700;
-    color:#111827;
-}
-
-/* ACTIVE PLAN */
-
-.rs-current-wrapper{
-    display:flex;
-    justify-content:center;
-    margin-bottom:40px;
-}
-
-.rs-card{
-    width:600px;
-    background:white;
-    padding:40px;
-    border-radius:25px;
-    box-shadow:0 20px 50px rgba(0,0,0,.08);
-    border:1px solid #eef2f7;
-}
-
-.rs-badge{
-    display:inline-block;
-    padding:10px 18px;
-    background:#ecfeff;
-    color:#0891b2;
-    border-radius:50px;
-    font-size:14px;
-    font-weight:600;
-    margin-bottom:20px;
-}
-
-.rs-plan-name{
-    font-size:35px;
-    margin-bottom:25px;
-    color:#111827;
-}
-
-.rs-price-box{
-    background:linear-gradient(
-        135deg,
-        #14b8a6,
-        #06b6d4
-    );
-    padding:30px;
-    border-radius:20px;
-    color:white;
-    margin-bottom:25px;
-}
-
-.rs-label{
-    font-size:15px;
-    opacity:.9;
-}
-
-.rs-price{
-    font-size:52px;
-    margin-top:10px;
-}
-
-/* DETAILS */
-
-.rs-details{
-    margin-bottom:30px;
-}
-
-.rs-item{
-    display:flex;
-    justify-content:space-between;
-    padding:18px 0;
-    border-bottom:1px solid #f1f5f9;
-}
-
-.rs-item span{
-    color:#64748b;
-}
-
-/* BUTTON */
-
-.rs-renew-btn{
-    width:100%;
-    padding:18px;
-    border:none;
-    border-radius:16px;
-    background:linear-gradient(
-        135deg,
-        #14b8a6,
-        #06b6d4
-    );
-    color:white;
-    font-weight:700;
-    cursor:pointer;
-}
-
-/* NOTE */
-
-.rs-note-box{
-    background:white;
-    padding:30px;
-    border-radius:20px;
-    margin-bottom:40px;
-    border-left:5px solid #14b8a6;
-    box-shadow:0 10px 30px rgba(0,0,0,.05);
-}
-
-.rs-note-box h3{
-    margin-bottom:15px;
-}
-
-.rs-note-box p{
-    margin-bottom:12px;
-    color:#475569;
-    line-height:1.7;
-}
-
-/* PLAN SECTION */
-
-.rs-section-head{
-    font-size:28px;
-    font-weight:700;
-    margin-bottom:25px;
-}
-
-/* GRID */
-
-.rs-plan-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:25px;
-}
-
-/* PLAN CARD */
-
-.rs-plan-option{
-    background:white;
-    border-radius:25px;
-    padding:30px;
-    box-shadow:0 15px 35px rgba(0,0,0,.06);
     transition:.3s;
 }
 
-.rs-plan-option:hover{
-    transform:translateY(-8px);
+.rs-back-btn:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:var(--shadow);
 }
 
-.rs-plan-top{
-    text-align:center;
-    margin-bottom:25px;
+/* =========================
+   CURRENT PLAN CARD
+========================= */
+
+.rs-current-card{
+
+    background:var(--white);
+
+    border-radius:25px;
+
+    padding:35px;
+
+    box-shadow:var(--shadow);
+
+    border:1px solid var(--border);
+
+    margin-bottom:45px;
 }
 
-.rs-plan-top h4{
-    font-size:24px;
+.rs-current-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:25px;
+}
+
+.rs-badge{
+
+    display:inline-block;
+
+    background:
+    linear-gradient(
+        135deg,
+        var(--primary),
+        var(--accent)
+    );
+
+    color:white;
+
+    padding:8px 16px;
+
+    border-radius:30px;
+
+    font-size:13px;
+
+    margin-bottom:12px;
+}
+
+.rs-current-top h2{
+
+    font-size:34px;
+}
+
+.rs-price{
+
+    font-size:50px;
+
+    font-weight:700;
+
+    color:var(--primary);
+}
+
+.rs-price span{
+
+    font-size:15px;
+
+    color:var(--text);
+}
+
+/* =========================
+   STATS
+========================= */
+
+.rs-stats{
+
+    margin-top:30px;
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(3,1fr);
+
+    gap:20px;
+}
+
+.rs-stat{
+
+    background:var(--light);
+
+    border:1px solid var(--border);
+
+    border-radius:16px;
+
+    padding:22px;
+}
+
+.rs-stat span{
+
+    display:block;
+
+    color:var(--text);
+
     margin-bottom:10px;
 }
 
-.rs-plan-top h2{
-    font-size:40px;
-    color:#14b8a6;
+.rs-stat strong{
+
+    font-size:20px;
 }
 
-.rs-plan-top span{
-    color:#64748b;
+/* =========================
+   FEATURE BOX
+========================= */
+
+.rs-feature-box{
+
+    margin-top:35px;
 }
 
-/* FEATURES */
+.rs-feature-box h3{
 
-.rs-feature-list{
-    list-style:none;
+    margin-bottom:15px;
+}
+
+.rs-feature-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:15px;
+}
+
+.rs-feature-grid span{
+
+    background:
+    rgba(0,195,137,.08);
+
+    border:
+    1px solid rgba(0,195,137,.15);
+
+    color:var(--dark);
+
+    padding:14px;
+
+    border-radius:12px;
+
+    font-weight:600;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.rs-renew-btn,
+.rs-plan-btn{
+
+    width:100%;
+
+    border:none;
+
+    cursor:pointer;
+
+    color:white;
+
+    font-weight:700;
+
+    padding:16px;
+
+    border-radius:14px;
+
+    margin-top:25px;
+
+    background:
+    linear-gradient(
+        135deg,
+        var(--primary),
+        var(--secondary)
+    );
+
+    transition:.3s;
+}
+
+.rs-renew-btn:hover,
+.rs-plan-btn:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 12px 25px rgba(0,195,137,.25);
+}
+
+/* =========================
+   SECTION TITLE
+========================= */
+
+.rs-section-title{
+
+    font-size:30px;
+
+    font-weight:700;
+
     margin-bottom:25px;
 }
 
-.rs-feature-list li{
-    padding:10px 0;
-    color:#334155;
-    border-bottom:1px solid #f1f5f9;
+/* =========================
+   PLAN GRID
+========================= */
+
+.rs-plan-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(340px,1fr));
+
+    gap:25px;
 }
 
-/* BUTTON */
+/* =========================
+   PLAN CARD
+========================= */
 
-.rs-plan-btn{
-    width:100%;
-    padding:16px;
-    border:none;
-    border-radius:14px;
-    background:#111827;
+.rs-plan-card{
+
+    background:var(--white);
+
+    border-radius:22px;
+
+    padding:30px;
+
+    border:1px solid var(--border);
+
+    box-shadow:var(--shadow);
+
+    position:relative;
+
+    transition:.35s;
+}
+
+.rs-plan-card:hover{
+
+    transform:translateY(-8px);
+
+    border-color:var(--primary);
+}
+
+/* =========================
+   MOST POPULAR
+========================= */
+
+.rs-popular{
+
+    position:absolute;
+
+    right:18px;
+    top:18px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #F59E0B,
+        #F97316
+    );
+
     color:white;
-    font-weight:600;
-    cursor:pointer;
+
+    padding:8px 14px;
+
+    border-radius:20px;
+
+    font-size:12px;
+
+    font-weight:700;
 }
 
-/* MOBILE */
+/* =========================
+   PLAN TITLE
+========================= */
 
-@media(max-width:991px){
+.rs-plan-card h3{
+
+    font-size:30px;
+
+    margin-bottom:15px;
+}
+
+.rs-plan-price{
+
+    font-size:42px;
+
+    font-weight:700;
+
+    color:var(--primary);
+
+    margin-bottom:25px;
+}
+
+/* =========================
+   LIMITS
+========================= */
+
+.rs-limits{
+
+    margin-bottom:20px;
+}
+
+.rs-limits p{
+
+    margin-bottom:10px;
+
+    color:var(--text);
+
+    font-size:15px;
+}
+
+/* =========================
+   FEATURES
+========================= */
+
+.rs-features{
+
+    list-style:none;
+
+    margin-top:20px;
+
+    min-height:280px;
+}
+
+.rs-features li{
+
+    padding:10px 0;
+
+    border-bottom:
+    1px dashed var(--border);
+
+    color:var(--dark);
+}
+
+/* =========================
+   CONTACT SALES
+========================= */
+
+.rs-contact-btn{
+
+    width:100%;
+
+    display:block;
+
+    text-align:center;
+
+    text-decoration:none;
+
+    padding:16px;
+
+    border-radius:14px;
+
+    color:white;
+
+    font-weight:700;
+
+    background:
+    linear-gradient(
+        135deg,
+        #111827,
+        #374151
+    );
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:992px){
+
+    .rs-current-top{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+    }
+
+    .rs-stats{
+
+        grid-template-columns:1fr;
+    }
+}
+
+/* ==================================
+   MOBILE PREMIUM (576px)
+================================== */
+
+@media (max-width:576px){
+
+    .rs-container{
+        width:94%;
+        padding:20px 0 50px;
+    }
+
+    /* Header */
+
+    .rs-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:15px;
+        margin-bottom:20px;
+    }
+
+    .rs-header h1{
+        font-size:24px;
+        line-height:1.3;
+    }
+
+    .rs-header p{
+        font-size:14px;
+    }
+
+    .rs-back-btn{
+        width:100%;
+        text-align:center;
+        padding:12px;
+        border-radius:12px;
+    }
+
+    /* Current Plan Card */
+
+    .rs-current-card{
+        padding:20px;
+        border-radius:18px;
+    }
+
+    .rs-current-top{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:15px;
+    }
+
+    .rs-current-top h2{
+        font-size:26px;
+    }
+
+    .rs-price{
+        font-size:34px;
+        width:100%;
+        text-align:left;
+    }
+
+    .rs-price span{
+        display:block;
+        margin-top:4px;
+    }
+
+    /* Stats */
+
+    .rs-stats{
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+
+    .rs-stat{
+        padding:16px;
+    }
+
+    .rs-stat strong{
+        font-size:18px;
+    }
+
+    /* Features */
+
+    .rs-feature-box{
+        margin-top:25px;
+    }
+
+    .rs-feature-box h3{
+        font-size:18px;
+    }
+
+    .rs-feature-grid{
+        grid-template-columns:1fr;
+        gap:10px;
+    }
+
+    .rs-feature-grid span{
+        padding:12px;
+        font-size:14px;
+    }
+
+    /* Buttons */
+
+    .rs-renew-btn,
+    .rs-plan-btn,
+    .rs-contact-btn{
+
+        padding:14px;
+        font-size:15px;
+        border-radius:12px;
+    }
+
+    /* Section */
+
+    .rs-section-title{
+        font-size:24px;
+        margin-bottom:18px;
+    }
+
+    /* Plan Cards */
 
     .rs-plan-grid{
         grid-template-columns:1fr;
+        gap:18px;
     }
 
-    .rs-card{
-        width:100%;
+    .rs-plan-card{
+        padding:20px;
+        border-radius:18px;
     }
 
-    .rs-topbar{
-        flex-direction:column;
-        gap:20px;
+    .rs-plan-card h3{
+        font-size:24px;
+    }
+
+    .rs-plan-price{
+        font-size:32px;
+        margin-bottom:18px;
+    }
+
+    .rs-popular{
+        top:12px;
+        right:12px;
+        font-size:11px;
+        padding:6px 10px;
+    }
+
+    .rs-limits p{
+        font-size:14px;
+    }
+
+    .rs-features{
+        min-height:auto;
+    }
+
+    .rs-features li{
+        font-size:14px;
+        padding:8px 0;
+    }
+
+    /* Better touch spacing */
+
+    form{
+        margin-top:10px;
+    }
+
+    button{
+        min-height:48px;
     }
 
 }

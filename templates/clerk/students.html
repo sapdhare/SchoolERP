@@ -7,71 +7,108 @@
 
 
 <!-- ================= STUDENTS HEADER ================= -->
+
 <div class="students-header">
 
     <div class="students-header-left">
-        <h1>Students List</h1>
-        <span class="marathi-title">विद्यार्थी यादी</span>
+
+        <span class="students-page-badge">
+            🎓 Student Records
+        </span>
+
+        <h1>
+            Students List
+        </h1>
 
         <p class="students-desc">
-            View and manage all student records in your school.
+            View, search and manage all student records in your school.
+            <br>
+            <span>विद्यार्थी नोंदी पाहा, शोधा आणि व्यवस्थापित करा</span>
         </p>
+
     </div>
 
     <div class="students-header-right">
-        <a href="{{ url_for('add_student') }}" class="btn-add">
-            + Add Student
+
+        <a href="{{ url_for('add_student') }}"
+           class="btn-add">
+            <span>+</span>
+            Add Student
         </a>
+
     </div>
 
 </div>
 
 
 <!-- ================= SEARCH + FILTER ================= -->
-<div class="students-filter">
 
-    <div class="filter-title">
-        <h3>Search & Filter</h3>
-        <span>शोध आणि निवड</span>
+<form method="GET"
+      action="{{ url_for('clerk_students') }}"
+      class="students-filter">
+
+    <div class="filter-top">
+
+        <div class="filter-title">
+            <span class="filter-badge">🔎 Smart Search</span>
+            <h3>Search & Filter</h3>
+            <p>विद्यार्थी नाव, प्रवेश क्रमांक, मोबाईल किंवा रजिस्टर नंबरने शोधा</p>
+        </div>
+
+        {% if search or class_filter %}
+        <a href="{{ url_for('clerk_students') }}"
+           class="filter-clear-top">
+            Clear Filters
+        </a>
+        {% endif %}
+
     </div>
 
     <div class="filter-controls">
 
-        <!-- SEARCH -->
-        <div class="filter-group">
+        <div class="filter-group search-wide">
             <label>Search Student <span>विद्यार्थी शोधा</span></label>
-            <input type="text" id="searchInput" placeholder="Enter name or admission no">
+
+            <input type="text"
+                   name="search"
+                   value="{{ search or '' }}"
+                   placeholder="Name, admission no, mobile, register no">
         </div>
 
-        <!-- CLASS FILTER -->
         <div class="filter-group">
             <label>Class <span>इयत्ता</span></label>
-            <select id="classFilter">
+
+            <select name="class">
                 <option value="">All Classes</option>
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-                <option>4</option>
-                <option>5</option>
-                <option>6</option>
-                <option>7</option>
-                <option>8</option>
-                <option>9</option>
-                <option>10</option>
+
+                {% for c in range(1, 11) %}
+                    <option value="{{ c }}"
+                    {% if class_filter == c|string %}
+                    selected
+                    {% endif %}>
+                        Class {{ c }}
+                    </option>
+                {% endfor %}
             </select>
         </div>
 
-        <!-- RESET -->
-        <div class="filter-group btn-group">
-            <button id="resetFilter" class="btn-filter-reset">
-             Clear
+        <div class="filter-buttons">
+
+            <button type="submit"
+                    class="btn-search">
+                Search
             </button>
+
+            <a href="{{ url_for('clerk_students') }}"
+               class="btn-filter-reset">
+                Reset
+            </a>
+
         </div>
 
     </div>
 
-</div>
-
+</form>
 
 
 <!-- ================= STUDENTS TABLE ================= -->
@@ -101,95 +138,256 @@
                 </tr>
             </thead>
 
-            <!-- MODAL DATA -->
-<tbody>
-        {% for student in students %}
-        <tr>
-            <td>{{ student.school_register_no }}</td>
-            <td>{{ student.name }}</td>
-            <td>{{ student.class }}</td>
-            <td>{{ student.admission_no }}</td>
-            <td>{{ student.student_uid or "-" }}</td>
-            <td>{{ student.primary_mobile }}</td>
+        
+            <tbody>
 
-            <td>
-                <span class="status active">Active</span>
-            </td>
-        {% set dob_formatted = student.dob.strftime('%d-%m-%Y') if student.dob and student.dob.__class__.__name__ != 'str' else (student.dob or '') %}
-            <td class="actions-cell">
+            {% if students %}
 
-<button
-    class="btn-action view"
-    data-register="{{ student.school_register_no or '' }}"
-    data-name="{{ student.name or '' }}"
-    data-class="{{ student.class or '' }}"
-    data-admission="{{ student.admission_no or '' }}"
-    data-mobile="{{ student.primary_mobile or '' }}"
-    data-father="{{ student.father_name or '' }}"
-    data-mother="{{ student.mother_name or '' }}"
-    data-uid="{{ student.student_uid or '' }}"
-    data-apaar="{{ student.apaar_id or '' }}"
-    data-aadhaar="{{ student.aadhaar or '' }}"
-    data-dob="{{ dob_formatted or '' }}"
-    data-progress="{{ student.progress or '' }}"
-    data-conduct="{{ student.conduct or '' }}"
-    onclick="openModal(this)"
->
-    👁 View
-</button>
+                {% for student in students %}
 
-    <!-- EDIT -->
-   <a href="{{ url_for('edit_student', id=student.id) }}" class="btn-action edit">
-        ✏ Edit
-    </a>
+                {% set dob_formatted = student.dob.strftime('%d-%m-%Y') if student.dob and student.dob.__class__.__name__ != 'str' else (student.dob or '') %}
 
-    <!-- TC -->
-   <a href="{{ url_for('tc_form', id=student.id) }}" class="btn-action tc">
-        📄 TC
-    </a>
+                <tr>
 
+                    <td>{{ student.school_register_no or "-" }}</td>
 
-    </td>
-</tr>
-{% endfor %}
+                    <td>
+                        <strong>{{ student.name or "-" }}</strong>
+                    </td>
 
-</tbody>
+                    <td>
+                        {{ student.class or "-" }}
+                        {{ student.section or "" }}
+                    </td>
+
+                    <td>{{ student.admission_no or "-" }}</td>
+
+                    <td>{{ student.student_uid or "-" }}</td>
+
+                    <td>{{ student.primary_mobile or "-" }}</td>
+
+                    <td>
+                        <span class="status active">Active</span>
+                    </td>
+
+                    <td class="actions-cell">
+
+                        <button
+                            type="button"
+                            class="btn-action view"
+                            data-register="{{ student.school_register_no or '' }}"
+                            data-name="{{ student.name or '' }}"
+                            data-class="{{ student.class or '' }} {{ student.section or '' }}"
+                            data-admission="{{ student.admission_no or '' }}"
+                            data-mobile="{{ student.primary_mobile or '' }}"
+                            data-father="{{ student.father_name or '' }}"
+                            data-mother="{{ student.mother_name or '' }}"
+                            data-uid="{{ student.student_uid or '' }}"
+                            data-apaar="{{ student.apaar_id or '' }}"
+                            data-aadhaar="{{ student.aadhaar or '' }}"
+                            data-dob="{{ dob_formatted or '' }}"
+                            data-progress="{{ student.progress or '' }}"
+                            data-conduct="{{ student.conduct or '' }}"
+                            onclick="openModal(this)">
+                            👁 View
+                        </button>
+
+                        <a href="{{ url_for('edit_student', id=student.id) }}"
+                        class="btn-action edit">
+                            ✏ Edit
+                        </a>
+
+                        {% if feature_modules.tc %}
+
+                            <a href="{{ url_for('tc_form', id=student.id) }}"
+                            class="btn-action tc">
+                                📄 TC
+                            </a>
+
+                        {% else %}
+
+                            <span class="btn-action locked">
+                                🔒 TC
+                            </span>
+
+                        {% endif %}
+
+                        {% if feature_modules.bonafide %}
+
+                            <button
+                                type="button"
+                                class="btn-action bonafide"
+                                data-id="{{ student.id }}"
+                                data-name="{{ student.name or '' }}"
+                                data-register="{{ student.school_register_no or '' }}"
+                                data-admission="{{ student.admission_no or '' }}"
+                                data-uid="{{ student.student_uid or '' }}"
+                                data-apaar="{{ student.apaar_id or '' }}"
+                                onclick="openBonafideModal(this)">
+                                🏅 Bonafide
+                            </button>
+
+                            {% else %}
+
+                            <span class="btn-action locked">
+                                🔒 Bonafide
+                            </span>
+
+                            {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            {% else %}
+
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-student-state">
+                            <div>📭</div>
+                            <h3>No students found</h3>
+                            <p>No student records match your search.</p>
+                        </div>
+                    </td>
+                </tr>
+
+            {% endif %}
+
+            </tbody>
 
         </table>
 
     </div>
 
 </div>
+<!-- ================= PAGINATION ================= -->
 
-<!-- ================= VIEW STUDENT MODAL ================= -->
-<div class="modal" id="studentModal">
+{% if total_records > 0 %}
 
-    <div class="modal-content large">
+<div class="student-pagination">
 
-        <div class="modal-header">
-            <h3>Student Details</h3>
-            <span onclick="closeModal()" class="close-btn">&times;</span>
+    <div class="pagination-info">
+        Showing page {{ page }} of {{ total_pages }}
+        • {{ total_records }} records
+    </div>
+
+    <div class="pagination-actions">
+
+        {% if page > 1 %}
+        <a href="{{ url_for('clerk_students', search=search, class=class_filter, page=page-1) }}">
+            ← Previous
+        </a>
+        {% endif %}
+
+        <span>
+            {{ page }}
+        </span>
+
+        {% if page < total_pages %}
+        <a href="{{ url_for('clerk_students', search=search, class=class_filter, page=page+1) }}">
+            Next →
+        </a>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endif %}
+
+<!-- ================= PREMIUM VIEW STUDENT MODAL ================= -->
+
+<div class="student-modal" id="studentModal">
+
+    <div class="student-modal-box">
+
+        <div class="student-modal-header">
+
+            <div class="student-modal-title">
+                <div class="student-modal-avatar" id="mAvatar">S</div>
+
+                <div>
+                    <h3 id="mNameTitle">Student Details</h3>
+                    <p id="mAdmissionTitle">Admission Record</p>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="student-modal-close"
+                    onclick="closeModal()">
+                ×
+            </button>
+
         </div>
 
-        <div class="modal-body grid">
+        <div class="student-modal-body">
 
-            <div><strong>Register No:</strong> <span id="mRegister"></span></div>
-            <div><strong>Name:</strong> <span id="mName"></span></div>
-            <div><strong>Class:</strong> <span id="mClass"></span></div>
-            <div><strong>Admission No:</strong> <span id="mAdmission"></span></div>
-            <div><strong>Mobile:</strong> <span id="mMobile"></span></div>
+            <div class="detail-group">
+                <span>Register No</span>
+                <strong id="mRegister"></strong>
+            </div>
 
-            <div><strong>Father Name:</strong> <span id="mFather"></span></div>
-            <div><strong>Mother Name:</strong> <span id="mMother"></span></div>
-            <div><strong>Student ID:</strong> <span id="mStudentUid"></span></div>
+            <div class="detail-group">
+                <span>Full Name</span>
+                <strong id="mName"></strong>
+            </div>
 
-            <div><strong>DOB:</strong> <span id="mDob"></span></div>
+            <div class="detail-group">
+                <span>Class</span>
+                <strong id="mClass"></strong>
+            </div>
 
-            <div><strong>APAAR ID:</strong> <span id="mApaar"></span></div>
-            <div><strong>Aadhaar:</strong> <span id="mAadhaar"></span></div>
+            <div class="detail-group">
+                <span>Admission No</span>
+                <strong id="mAdmission"></strong>
+            </div>
 
-            <div><strong>Progress:</strong> <span id="mProgress"></span></div>
-            <div><strong>Conduct:</strong> <span id="mConduct"></span></div>
+            <div class="detail-group">
+                <span>Mobile</span>
+                <strong id="mMobile"></strong>
+            </div>
+
+            <div class="detail-group">
+                <span>Date of Birth</span>
+                <strong id="mDob"></strong>
+            </div>
+
+            <div class="detail-group">
+                <span>Father Name</span>
+                <strong id="mFather"></strong>
+            </div>
+
+            <div class="detail-group">
+                <span>Mother Name</span>
+                <strong id="mMother"></strong>
+            </div>
+
+            <div class="detail-group">
+                <span>Student ID</span>
+                <strong id="mStudentUid"></strong>
+            </div>
+
+            <div class="detail-group">
+                <span>APAAR ID</span>
+                <strong id="mApaar"></strong>
+            </div>
+
+            <div class="detail-group">
+                <span>Aadhaar</span>
+                <strong id="mAadhaar"></strong>
+            </div>
+
+            <div class="detail-group">
+                <span>Progress</span>
+                <strong id="mProgress"></strong>
+            </div>
+
+            <div class="detail-group full">
+                <span>Conduct</span>
+                <strong id="mConduct"></strong>
+            </div>
 
         </div>
 
@@ -199,13 +397,245 @@
 
 
 
+<!-- BONAFIDE MODAL -->
 
+<div id="bonafideModal" class="bonafide-modal"> 
 
+    <div class="bonafide-modal-content">
 
+        <!-- HEADER -->
 
+        <div class="bonafide-modal-header">
 
+            <div>
+                <h2>📜 Generate Bonafide Certificate</h2>
 
+                <p class="bonafide-subtitle">
+                    Create bonafide certificate for selected student
+                    <br>
+                    विद्यार्थ्याचे बोनाफाईड प्रमाणपत्र तयार करा
+                </p>
+            </div>
 
+            <button type="button"
+                    onclick="closeBonafideModal()">
+                ×
+            </button>
 
-<script src="{{ url_for('static', filename='js/student.js') }}"></script>
+        </div>
+
+        <!-- NOTE -->
+
+        <div class="bonafide-note">
+
+            <div class="note-icon">
+                ℹ️
+            </div>
+
+            <div>
+
+                <strong>
+                    Verify Student Information Before Generating
+                </strong>
+
+                <p>
+                    Please verify all student details carefully before generating the certificate.
+                    If any information is incorrect, click the <b>Edit</b> button from Student List and update the student record first.
+                </p>
+
+                <p class="marathi-note">
+                    कृपया प्रमाणपत्र तयार करण्यापूर्वी विद्यार्थ्याची माहिती तपासा.
+                    माहिती चुकीची असल्यास प्रथम Student List मधील Edit बटण वापरून माहिती दुरुस्त करा.
+                </p>
+
+            </div>
+
+        </div>
+
+        <form method="POST"
+            action="{{ url_for('save_bonafide') }}"
+            id="bonafideForm">
+
+            <input type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}">
+
+            <input type="hidden"
+                name="student_id"
+                id="modalStudentId">
+
+            <!-- STUDENT INFO -->
+
+            <div class="bonafide-section-title">
+                Student Information
+            </div>
+
+            <div class="bonafide-modal-grid">
+
+                <div class="form-group">
+                    <label>Register No</label>
+                    <input type="text" id="modalRegister" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Student Name</label>
+                    <input type="text" id="modalStudentName" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Admission No</label>
+                    <input type="text" id="modalAdmission" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Student ID</label>
+                    <input type="text" id="modalStudentUid" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>APAAR ID</label>
+                    <input type="text" id="modalApaar" disabled>
+                </div>
+
+            </div>
+
+            <!-- CERTIFICATE INFO -->
+
+            <div class="bonafide-section-title">
+                Certificate Information
+            </div>
+
+            <div class="bonafide-modal-grid">
+
+                <div class="form-group">
+                    <label>Certificate Date</label>
+
+                    <input type="date"
+                        name="date"
+                        required>
+                </div>
+
+                <div class="form-group full">
+                    <label>Purpose</label>
+
+                    <input type="text"
+                        name="purpose"
+                        maxlength="255"
+                        placeholder="Scholarship / Passport / Government Form / Bank / Education"
+                        required>
+                </div>
+
+            </div>
+
+            <div class="modal-actions">
+
+                <button type="button"
+                        class="btn-cancel"
+                        onclick="closeBonafideModal()">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="bonafideSubmitBtn"
+                        class="btn-generate">
+
+                    Generate Certificate
+
+                </button>
+
+            </div>
+
+        </form>
+
+</div>
+
+<!-- MODAL JS -->
+
+<script>
+function openModal(button){
+
+    const val = (v) => {
+        return v && v.trim() !== "" ? v : "-";
+    };
+
+    const name = val(button.dataset.name);
+    const admission = val(button.dataset.admission);
+
+    document.getElementById("studentModal").style.display = "flex";
+
+    document.getElementById("mAvatar").innerText =
+        name !== "-" ? name.charAt(0).toUpperCase() : "S";
+
+    document.getElementById("mNameTitle").innerText = name;
+    document.getElementById("mAdmissionTitle").innerText = admission;
+
+    document.getElementById("mRegister").innerText = val(button.dataset.register);
+    document.getElementById("mName").innerText = name;
+    document.getElementById("mClass").innerText = val(button.dataset.class);
+    document.getElementById("mAdmission").innerText = admission;
+    document.getElementById("mMobile").innerText = val(button.dataset.mobile);
+    document.getElementById("mFather").innerText = val(button.dataset.father);
+    document.getElementById("mMother").innerText = val(button.dataset.mother);
+    document.getElementById("mStudentUid").innerText = val(button.dataset.uid);
+    document.getElementById("mApaar").innerText = val(button.dataset.apaar);
+    document.getElementById("mAadhaar").innerText = val(button.dataset.aadhaar);
+    document.getElementById("mDob").innerText = val(button.dataset.dob);
+    document.getElementById("mProgress").innerText = val(button.dataset.progress);
+    document.getElementById("mConduct").innerText = val(button.dataset.conduct);
+
+    document.body.style.overflow = "hidden";
+}
+
+function closeModal(){
+    document.getElementById("studentModal").style.display = "none";
+    document.body.style.overflow = "";
+}
+
+document.addEventListener("click", function(e){
+    const modal = document.getElementById("studentModal");
+
+    if(e.target === modal){
+        closeModal();
+    }
+});
+
+document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){
+        closeModal();
+    }
+});
+</script>
+
+<script>
+function openBonafideModal(btn){
+
+    const val = (v) => v && v.trim() !== "" ? v : "-";
+
+    document.getElementById("bonafideModal").style.display = "flex";
+
+    document.getElementById("modalStudentId").value = btn.dataset.id;
+    document.getElementById("modalStudentName").value = val(btn.dataset.name);
+    document.getElementById("modalRegister").value = val(btn.dataset.register);
+    document.getElementById("modalAdmission").value = val(btn.dataset.admission);
+    document.getElementById("modalStudentUid").value = val(btn.dataset.uid);
+    document.getElementById("modalApaar").value = val(btn.dataset.apaar);
+
+    document.body.style.overflow = "hidden";
+}
+
+document.querySelector('#bonafideForm input[name="date"]').valueAsDate = new Date();
+
+function closeBonafideModal(){
+    document.getElementById("bonafideModal").style.display = "none";
+    document.body.style.overflow = "";
+}
+
+document.getElementById("bonafideForm").addEventListener("submit", function(){
+    const btn = document.getElementById("bonafideSubmitBtn");
+    btn.disabled = true;
+    btn.innerText = "Generating...";
+});
+</script>
 {% endblock %}

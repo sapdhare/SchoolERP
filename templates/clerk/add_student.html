@@ -10,6 +10,8 @@
 <!-- FLATPICKR JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+
+
 <form method="POST" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -31,6 +33,7 @@
         कृपया माहिती अचूक भरा. हीच माहिती टीसी व इतर कागदपत्रांसाठी वापरली जाईल.
     </p>
 </div>
+
 
 <!-- ================= 1. STUDENT IDENTITY ================= -->
 <div class="form-section">
@@ -89,6 +92,7 @@
     </div>
 </div>
  
+
 <!-- ================= 2. PERSONAL ================= -->
 <div class="form-section">
     <div class="section-title">
@@ -105,12 +109,12 @@
 
         <div class="form-group">
             <label>Birth Place <span>जन्मस्थान</span></label>
-            <input type="text" name="birth_place" placeholder="Enter Birth Place">
+            <input type="text" name="birth_place" placeholder="Enter Birth Place" required>
         </div>
 
         <div class="form-group">
             <label>Nationality <span>राष्ट्रीयत्व</span></label>
-            <input type="text" name="nationality" placeholder="Enter Your Nationality">
+            <input type="text" name="nationality" placeholder="Enter Your Nationality" required>
         </div>
 
         <div class="form-group">
@@ -130,6 +134,7 @@
 
     </div>
 </div>
+
 
 <!-- ================= 3. ADDRESS ================= -->
 <div class="form-section">
@@ -162,6 +167,7 @@
 
     </div>
 </div>
+
 
 <!-- ================= 4. ADMISSION ================= -->
 
@@ -238,6 +244,8 @@
         
     </p>
 </div>
+
+
 <!-- ================= 5. Previous ACADEMIC PROGRESS ================= -->
 <div class="form-section">
     <div class="section-title">
@@ -254,7 +262,7 @@
 
         <div class="form-group">
             <label>Result <span>निकाल</span></label>
-            <select name="result_status" required>
+            <select name="result_status" >
                 <option value="">Select Status</option>
                 <option>Pass</option>
                 <option>Fail</option>
@@ -263,7 +271,7 @@
 
         <div class="form-group">
             <label>Progress <span>प्रगती</span></label>
-            <select name="progress" required>
+            <select name="progress" >
                 <option value="">Select Academic Progress</option>
                 <option>Excellent (85%+)</option>
                 <option>Good (60–85%)</option>
@@ -282,57 +290,7 @@
 
     </div>
 </div>
-
-<!-- ================= 6. LEAVING =================
-<div class="form-section">
-    <div class="section-title">
-        <h2>Leaving Details</h2>
-        <p>शाळा सोडण्याची माहिती</p>
-    </div> 
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Leaving Date <span>सोडल्याची तारीख</span></label>
-            <input 
-                type="date" 
-                name="leaving_date" 
-                title="Date when student officially left the school" required>
-        </div>
-
-        <div class="form-group">
-            <label>Reason for Leaving <span>कारण</span></label>
-            <select name="leaving_reason">
-                <option value="">Select Reason</option>
-                <option>Transfer to another school</option>
-                <option>Completed schooling</option>
-                <option>Family relocation</option>
-                <option>Personal reasons</option>
-                <option>Other</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>TC Issue Date <span>टीसी दिनांक</span></label>
-            <input 
-                type="date" 
-                name="tc_date" 
-                title="Date when Transfer Certificate is issued" required> 
-        </div> -->
-
-        <!-- Optional but VERY useful -->
-        <!-- <div class="form-group">
-            <label>TC Number <span>टीसी क्रमांक</span></label>
-            <input 
-                type="text" 
-                name="tc_number" 
-                placeholder="e.g. TC/2026/045"
-                required
-            >
-        </div>
-
-    </div>
-</div> -->
+ 
 
 <!-- ================= 6. PARENT DETAILS ================= -->
 <div class="form-section">
@@ -432,6 +390,7 @@
     </div>
 </div>
 
+
 <!-- ================= 7. PHOTO ================= -->
 <div class="form-section">
     <div class="section-title">
@@ -446,7 +405,7 @@
             type="file" 
             name="photo" 
             accept="image/*"
-            onchange="previewImage(event)" required
+            onchange="previewImage(event)"  
         >
 
         <!-- Helper Text -->
@@ -541,9 +500,7 @@ form.addEventListener("input", () => {
 /* ================= 3. FORM SUBMIT LOADING ================= */
 
 form.addEventListener("submit", function() {
-
-    // Clear saved data after successful submit
-    localStorage.removeItem("studentForm_{{ school_udise }}");
+ 
 
     btn.innerText = "Saving...";
     btn.disabled = true;

@@ -1,277 +1,135 @@
 {% extends 'base.html' %}
 
+
+
 {% block content %}
 
+ <!-- ================= HERO SECTION ================= -->
  
-<section class="hero">
 
-    <!-- LEFT -->
-    <div class="hero-left">
+<section class="hero" id="home">
 
-        <span class="hero-tag">● School ERP Platform</span>
-
-        <h1 class="fade-in">
-            Powerful ERP for  
-            <span>Schools & Colleges</span>
-        </h1>
-
-        <p class="fade-in delay">
-           Manage admissions, student records, attendance, fees, TC, bonafide certificates, reports and subscriptions — all in one powerful ERP platform.
-        </p>
-
-        <div class="hero-buttons fade-in delay2">
-            <a href="/login" class="btn-primary">Start Now</a>
-
-            <a href="#how" class="btn-play">
-                ▶ How it Works
-            </a>
-        </div>
-
+    <!-- BACKGROUND IMAGE -->
+    <div class="hero-bg">
+         
     </div>
 
-    <!-- RIGHT -->
-    <div class="hero-right">
+    <!-- OVERLAY -->
+    <div class="hero-overlay"></div>
 
-      <img src="{{ url_for('static', filename='images/hero.png') }}" alt="student">
-
-        <!-- INTERACTIVE CARD -->
-       <div class="floating-msg">
-    
-    <div class="msg-avatar">
-        👨‍🎓
-    </div>
-
-    <div class="msg-content">
-        <p>TC Ready / Fee Collected / Attendance Updated</p>
-        <span>Generated in 2 sec ⚡</span>
-    </div>
-
-</div>
-
-        <!-- FLOATING SHAPES -->
-        <div class="circle one"></div>
-        <div class="circle two"></div>
-        <div class="circle three"></div>
-
-    </div>
-
-</section>
-
- <section class="trusted">
-
-    <div class="trusted-header">
-        <p class="trusted-tag">Trusted by Schools</p>
-        <h2>Growing School Management Ecosystem</h2>
-
-        <p class="trusted-subtitle">
-            Helping schools simplify operations, automate certificates,
-            manage fees, attendance and student records seamlessly.
-        </p>
-    </div>
-
-    <!-- GLASS STATS -->
-    <div class="stats-grid">
-
-        <!-- CARD 1 -->
-        <div class="stat-card">
-            <div class="stat-glow"></div>
-            <h3>50+</h3>
-            <p>Schools Connected</p>
-        </div>
-
-        <!-- CARD 2 -->
-        <div class="stat-card">
-            <div class="stat-glow"></div>
-            <h3>10,000+</h3>
-            <p>Students Managed</p>
-        </div>
-
-        <!-- CARD 3 -->
-        <div class="stat-card">
-            <div class="stat-glow"></div>
-            <h3>25,000+</h3>
-            <p>Certificates Generated</p>
-        </div>
-
-        <!-- CARD 4 -->
-        <div class="stat-card">
-            <div class="stat-glow"></div>
-            <h3>99.9%</h3>
-            <p>System Uptime</p>
-        </div>
-
-    </div>
-
-</section>
-<!-- // ================= FEATURES SECTION =================  -->
-<section class="features" id="features">
-
-    <div class="bg-blob one"></div>
-    <div class="bg-blob two"></div>
-
-    <div class="features-header">
-        <p class="section-tag">Powerful Features</p>
-        <h2>Complete Digital Ecosystem for Schools</h2>
-
-        <p class="features-subtitle">
-            From admissions to certificates, attendance to fees —
-            everything managed in one smart platform.
-        </p>
-    </div>
-
-    <div class="features-grid">
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">👨‍🎓</div></div>
-            <h3>Student Management</h3>
-            <p>Complete student profiles, admissions and academic history.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">📄</div></div>
-            <h3>TC Management</h3>
-            <p>Generate transfer certificates instantly with custom formats.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">🏅</div></div>
-            <h3>Bonafide Certificates</h3>
-            <p>Generate bonafide certificates in one click.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">📅</div></div>
-            <h3>Attendance System</h3>
-            <p>Track and manage daily attendance digitally.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">💰</div></div>
-            <h3>Fee Management</h3>
-            <p>Collect, track and manage fee records efficiently.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">👨‍🏫</div></div>
-            <h3>Teacher Management</h3>
-            <p>Manage teacher records, responsibilities and data.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">📊</div></div>
-            <h3>Marks & Results</h3>
-            <p>Manage marksheets, exam records and results.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">📈</div></div>
-            <h3>Reports & Analytics</h3>
-            <p>Visual insights and school performance analytics.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">📂</div></div>
-            <h3>Import / Export</h3>
-            <p>Bulk import and export school data easily.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">💳</div></div>
-            <h3>Subscription Plans</h3>
-            <p>Flexible plan-based subscription model for schools.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">🏫</div></div>
-            <h3>Multi-School ERP</h3>
-            <p>Manage multiple schools with isolated secure data.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-wrapper"><div class="icon">🔐</div></div>
-            <h3>Role-Based Security</h3>
-            <p>Secure access for admins, clerks and staff.</p>
-        </div>
-
-    </div>
-
-</section>
-
-<!-- SCHOOL AUTOMATION SECTION -->
- <section class="school-automation">
-
-    <div class="sa-container">
+    <div class="hero-container">
 
         <!-- LEFT CONTENT -->
-        <div class="sa-left">
+        <div class="hero-left">
 
-            <span class="section-tag">
-                School Automation
+            <span class="hero-tag">
+                🚀 Smart School ERP • शाळा व्यवस्थापन प्रणाली
             </span>
 
-            <h2>
-                Automate Your Entire School Operations
-            </h2>
+            <div class="hero-slider">
 
-            <p class="sa-desc">
-                From student records to certificates, fees, attendance and reports —
-                manage everything digitally in one secure ERP platform.
-            </p>
+                <!-- SLIDE 1 -->
+                <div class="hero-slide active">
 
-            <ul class="sa-points">
+                    <h1>
+                        Simplify School Operations.
+                        <span>Empower Every Classroom.</span>
+                    </h1>
 
-                <li>
-                    <span class="point-icon">⚡</span>
-                    <div>
-                        <strong>Instant Certificate Generation</strong>
-                        <p>Generate TC & Bonafide in seconds.</p>
-                    </div>
-                </li>
+                    <p>
+                        Admissions, Students, Attendance,
+                        TC, Bonafide, Fees & Reports —
+                        सर्व शालेय कामकाज एका स्मार्ट ERP मध्ये.
+                    </p>
 
-                <li>
-                    <span class="point-icon">📚</span>
-                    <div>
-                        <strong>Student Record Management</strong>
-                        <p>Manage admissions and records easily.</p>
-                    </div>
-                </li>
+                </div>
 
-                <li>
-                    <span class="point-icon">💰</span>
-                    <div>
-                        <strong>Fee & Subscription Management</strong>
-                        <p>Track payments and renew plans smoothly.</p>
-                    </div>
-                </li>
+                <!-- SLIDE 2 -->
+                <div class="hero-slide">
 
-                <li>
-                    <span class="point-icon">📊</span>
-                    <div>
-                        <strong>Reports & Analytics</strong>
-                        <p>Visual dashboards and smart school insights.</p>
-                    </div>
-                </li>
+                    <h1>
+                        Faster Administration.
+                        <span>Smarter Decisions.</span>
+                    </h1>
 
-            </ul>
+                    <p>
+                        Manage certificates, records,
+                        subscriptions and analytics from
+                        one centralized platform.
+                    </p>
 
-            <button class="btn-primary sa-btn"
-                    onclick="openDemoModal()">
+                </div>
 
-                Request Live Demo
+                <!-- SLIDE 3 -->
+                <div class="hero-slide">
 
-            </button>
+                    <h1>
+                        Digital School.
+                        <span>Future Ready Campus.</span>
+                    </h1>
+
+                    <p>
+                        Modernize your school with
+                        automation, real-time insights
+                        and cloud-based management.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="hero-buttons">
+
+                <a href="/demo" class="btn-primary">
+                    Book Free Demo
+                </a>
+
+                <a href="/login" class="btn-secondary">
+                    Login Portal
+                </a>
+
+            </div>
 
         </div>
 
-        <!-- RIGHT SIDE -->
-        <div class="sa-right">
+        <!-- TRUST BADGES -->
 
-            <img src="https://i.pinimg.com/736x/0a/b4/e5/0ab4e50251fcd965b936f6a194c7a2d7.jpg"
-                 class="sa-main-img">
+        <div class="hero-awards">
 
-            <div class="sa-float-card">
-                <span>⚡</span>
-                <p>ERP Active</p>
+            <div class="award-badge">
+                <div class="award-ring"></div>
+
+                <div class="award-content">
+                    <h4>Trusted ERP</h4>
+                    <span>School Management Platform</span>
+                </div>
+            </div>
+
+            <div class="award-badge">
+                <div class="award-ring"></div>
+
+                <div class="award-content">
+                    <h4>Cloud Ready</h4>
+                    <span>24×7 Secure Access</span>
+                </div>
+            </div>
+
+            <div class="award-badge">
+                <div class="award-ring"></div>
+
+                <div class="award-content">
+                    <h4>Paperless Campus</h4>
+                    <span>Digital School Operations</span>
+                </div>
+            </div>
+
+            <div class="award-badge">
+                <div class="award-ring"></div>
+
+                <div class="award-content">
+                    <h4>Smart Analytics</h4>
+                    <span>Reports & Insights</span>
+                </div>
             </div>
 
         </div>
@@ -280,434 +138,1325 @@
 
 </section>
 
+<!-- // ================= ERP ECOSYSTEM SECTION ================= -->
 
-<!-- PLAN AND PRICING SECTION -->
- <section class="pricing-section" id="plans">
+<section class="erp-ecosystem" id="features">
 
-    <div class="pricing-header">
+    <div class="section-header">
 
-        <p class="pricing-tag">Pricing Plans</p>
+        <span class="section-tag">
+            🚀 ERP Ecosystem
+        </span>
 
-        <h2>Simple, Transparent Pricing</h2>
+        <h2>
+            Everything Your School Needs
+            <span>In One Smart ERP</span>
+        </h2>
 
         <p>
-            Choose monthly or yearly billing for your school ERP.
+            From admissions to certificates, ShalaSarthi connects
+            every school operation into a single digital platform.
         </p>
 
     </div>
 
-    <!-- TOGGLE -->
+    <div class="orbit-wrapper">
+
+        <div class="connection-lines">
+
+            <span class="line line-1"></span>
+            <span class="line line-2"></span>
+            <span class="line line-3"></span>
+            <span class="line line-4"></span>
+
+            <span class="line line-5"></span>
+            <span class="line line-6"></span>
+            <span class="line line-7"></span>
+            <span class="line line-8"></span>
+
+        </div>
+
+        <!-- CENTER HUB -->
+
+        <div class="erp-core">
+
+            <div class="core-ring ring-1"></div>
+            <div class="core-ring ring-2"></div>
+
+            <div class="core-content">
+
+                <img
+                    src="{{ url_for('static', filename='images/ecosystem_hero.png') }}"
+                    alt="ShalaSarthi"
+                >
+
+                <!-- <h3>ShalaSarthi ERP</h3>
+
+                <span>
+                    School Management Platform
+                </span> -->
+
+            </div>
+
+        </div>
+
+        <!-- MODULES -->
+
+        <div class="orbit-card admission">
+            <div class="orbit-icon">🎓</div>
+            <h4>Admissions</h4>
+            <p>Digital Student Onboarding</p>
+        </div>
+
+        <div class="orbit-card attendance">
+            <div class="orbit-icon">📅</div>
+            <h4>Attendance</h4>
+            <p>Real-Time Tracking</p>
+        </div>
+
+        <div class="orbit-card fees">
+            <div class="orbit-icon">💰</div>
+            <h4>Fee Management</h4>
+            <p>Receipts & Collections</p>
+        </div>
+
+        <div class="orbit-card students">
+            <div class="orbit-icon">👨‍🎓</div>
+            <h4>Students</h4>
+            <p>Complete Student Records</p>
+        </div>
+
+        <div class="orbit-card tc">
+            <div class="orbit-icon">📜</div>
+            <h4>TC & Bonafide</h4>
+            <p>Instant Certificates</p>
+        </div>
+
+        <div class="orbit-card reports">
+            <div class="orbit-icon">📊</div>
+            <h4>Reports</h4>
+            <p>Smart Analytics</p>
+        </div>
+
+        <div class="orbit-card staff">
+            <div class="orbit-icon">👩‍🏫</div>
+            <h4>Staff</h4>
+            <p>Teacher Management</p>
+        </div>
+
+        <div class="orbit-card notices">
+            <div class="orbit-icon">📢</div>
+            <h4>Notices</h4>
+            <p>School Communication</p>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- // ================= TRANSFORMATION SECTION =================  -->
+<section class="transformation" id="transformation">
+
+    <div class="section-header">
+
+        <span class="section-tag">
+            ⚡ School Transformation
+        </span>
+
+        <h2>
+            From School Challenges
+            <span>To Smart Operations</span>
+        </h2>
+
+        <p>
+            Replace manual processes with automation,
+            accuracy and real-time management.
+        </p>
+
+    </div>
+
+    <div class="transform-wrapper">
+
+        <!-- ROW 1 -->
+
+        <div class="transform-row">
+
+            <div class="problem-card">
+                <span>❌</span>
+                <h4>Manual Attendance Registers</h4>
+            </div>
+
+            <div class="transform-center">
+                <div class="pulse-dot"></div>
+                <div class="flow-line"></div>
+            </div>
+
+            <div class="solution-card">
+                <span>✅</span>
+                <h4>One Click Digital Attendance</h4>
+            </div>
+
+        </div>
+
+        <!-- ROW 2 -->
+
+        <div class="transform-row">
+
+            <div class="problem-card">
+                <span>❌</span>
+                <h4>Certificate Preparation Delays</h4>
+            </div>
+
+            <div class="transform-center">
+                <div class="pulse-dot"></div>
+                <div class="flow-line"></div>
+            </div>
+
+            <div class="solution-card">
+                <span>✅</span>
+                <h4>Instant TC & Bonafide Generation</h4>
+            </div>
+
+        </div>
+
+        <!-- ROW 3 -->
+
+        <div class="transform-row">
+
+            <div class="problem-card">
+                <span>❌</span>
+                <h4>Fee Collection Confusion</h4>
+            </div>
+
+            <div class="transform-center">
+                <div class="pulse-dot"></div>
+                <div class="flow-line"></div>
+            </div>
+
+            <div class="solution-card">
+                <span>✅</span>
+                <h4>Automated Fee Tracking & Receipts</h4>
+            </div>
+
+        </div>
+
+        <!-- ROW 4 -->
+
+        <div class="transform-row">
+
+            <div class="problem-card">
+                <span>❌</span>
+                <h4>Scattered Student Records</h4>
+            </div>
+
+            <div class="transform-center">
+                <div class="pulse-dot"></div>
+                <div class="flow-line"></div>
+            </div>
+
+            <div class="solution-card">
+                <span>✅</span>
+                <h4>Centralized Student Lifecycle</h4>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+<!-- ==================================
+ WHY SHALASARTHI SECTION
+================================== -->
+
+<section class="why-shalasarthi" id="why-shalasarthi">
+
+    <div class="why-container">
+
+        <!-- LEFT CONTENT -->
+
+        <div class="why-left">
+
+            <span class="section-tag">
+                ⭐ Why Schools Choose Us
+            </span>
+
+            <h2>
+                Built For Modern Schools.
+                <span>Designed For Growth.</span>
+            </h2>
+
+            <p class="why-desc">
+                ShalaSarthi simplifies school administration,
+                automates repetitive work and helps institutions
+                manage students, staff, fees and certificates
+                from a single intelligent platform.
+            </p>
+
+            <div class="why-features">
+
+                <div class="why-card">
+
+                    <div class="why-icon">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+
+                    <div>
+                        <h4>Smart Automation</h4>
+
+                        <p>
+                            Automate admissions, attendance,
+                            certificates and daily operations.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="why-card">
+
+                    <div class="why-icon">
+                        <i class="fa-solid fa-cloud"></i>
+                    </div>
+
+                    <div>
+                        <h4>Cloud Accessibility</h4>
+
+                        <p>
+                            Access school records securely
+                            from anywhere at any time.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="why-card">
+
+                    <div class="why-icon">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                    </div>
+
+                    <div>
+                        <h4>Instant Certificates</h4>
+
+                        <p>
+                            Generate TC, Bonafide and
+                            certificates within seconds.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="why-card">
+
+                    <div class="why-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+
+                    <div>
+                        <h4>Management Insights</h4>
+
+                        <p>
+                            Powerful reports and analytics
+                            for better school decisions.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT IMAGE -->
+
+        <div class="why-right">
+
+            <div class="image-glow"></div>
+
+            <img
+                src="{{ url_for('static', filename='images/hero.png') }}"
+                alt="Student"
+                class="student-img"
+            >
+
+            <!-- FLOATING CARDS -->
+
+            <div class="floating-card card-1">
+                🏫
+                <h5>Board Ready</h5>
+                <span>State • CBSE • ICSE</span>
+            </div>
+
+            <div class="floating-card card-2">
+                ☁️
+                <h5>Cloud Ready</h5>
+                <span>24×7 Secure Access</span>
+            </div>
+
+            <div class="floating-card card-3">
+                🔒
+                <h5>Protected Records</h5>
+                <span>Role Based Security</span>
+            </div>
+
+            <div class="floating-card card-4">
+                📜
+                <h5>Instant Documents</h5>
+                <span>TC & Bonafide</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- // ================= ERP PREVIEW SECTION =================   -->
+
+<section class="erp-preview" id="erp-preview">
+
+    <div class="preview-header">
+
+        <span class="preview-tag">
+            🚀 Product Preview
+        </span>
+
+        <h2>
+            Explore The
+            <span>ShalaSarthi Platform</span>
+        </h2>
+
+        <p>
+            Every school operation connected inside one
+            intelligent ERP ecosystem.
+        </p>
+
+    </div>
+
+    <div class="preview-wrapper">
+
+        <!-- LEFT MENU -->
+
+        <div class="preview-sidebar">
+
+            <div class="preview-tab active" data-tab="dashboard">
+                📊 Dashboard
+            </div>
+
+            <div class="preview-tab" data-tab="students">
+                👨‍🎓 Students
+            </div>
+
+            <div class="preview-tab" data-tab="fees">
+                💰 Fees
+            </div>
+
+            <div class="preview-tab" data-tab="certificates">
+                📜 Certificates
+            </div>
+
+            <div class="preview-tab" data-tab="reports">
+                📈 Reports
+            </div>
+
+            <div class="preview-tab" data-tab="staff">
+                👩‍🏫 Staff
+            </div>
+
+        </div>
+
+        <!-- SCREEN -->
+
+       <div class="preview-screen">
+
+    <img
+        id="previewImage"
+        src="{{ url_for('static', filename='images/dashboard_preview.png') }}"
+        alt="ERP Preview">
+
+    <div class="preview-floating-card card-top">
+        <span id="badge1">
+            📊 Live Dashboard
+        </span>
+    </div>
+
+    <div class="preview-floating-card card-left">
+        <span id="badge2">
+            ☁ Cloud Based
+        </span>
+    </div>
+
+    <div class="preview-floating-card card-bottom">
+        <span id="badge3">
+            ⚡ Real Time Data
+        </span>
+    </div>
+
+</div>
+
+    </div>
+
+</section>
+
+<!-- // ================= HOW IT WORKS SECTION =================    -->
+<section class="how-works" id="how">
+
+    <div class="section-header">
+
+        <span class="section-tag">
+            ⚙ How ShalaSarthi Works
+        </span>
+
+        <h2>
+            Start Today.
+            <span>Go Digital Tomorrow.</span>
+        </h2>
+
+        <p>
+            A simple onboarding process designed for schools.
+        </p>
+
+    </div>
+
+    <div class="workflow">
+
+        <div class="workflow-line"></div>
+
+        <div class="workflow-step">
+
+            <div class="step-icon">🏫</div>
+
+            <div class="step-card">
+
+                <span class="step-no">01</span>
+
+                <h3>School Registration</h3>
+
+                <p>
+                    Register your school and activate ERP access.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="workflow-step">
+
+            <div class="step-icon">📂</div>
+
+            <div class="step-card">
+
+                <span class="step-no">02</span>
+
+                <h3>Data Setup</h3>
+
+                <p>
+                    Import student, staff and school records.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="workflow-step">
+
+            <div class="step-icon">🎓</div>
+
+            <div class="step-card">
+
+                <span class="step-no">03</span>
+
+                <h3>Staff Training</h3>
+
+                <p>
+                    Train administrators and teachers.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="workflow-step">
+
+            <div class="step-icon">🚀</div>
+
+            <div class="step-card">
+
+                <span class="step-no">04</span>
+
+                <h3>Go Live</h3>
+
+                <p>
+                    Start attendance, certificates and reporting.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+  <!-- // ================= PRICING SECTION =================    -->
+<section class="pricing-section" id="plans">
+
+    <div class="pricing-header">
+
+        <span class="pricing-tag">
+            💎 Pricing Plans
+        </span>
+
+        <h2>
+            Choose The Perfect Plan
+            <span>For Your School</span>
+        </h2>
+
+        <p>
+            Transparent pricing designed for schools of every size.
+            Scale your ERP as your institution grows.
+        </p>
+
+    </div>
+
+    <!-- BILLING TOGGLE -->
+
     <div class="billing-toggle">
 
         <button class="billing-btn active"
-                onclick="toggleBilling('monthly')">
+                onclick="toggleBilling('monthly',this)">
             Monthly
         </button>
 
         <button class="billing-btn"
-                onclick="toggleBilling('yearly')">
+                onclick="toggleBilling('yearly',this)">
             Yearly
         </button>
 
     </div>
 
-    <!-- PRICING CARDS -->
-    <div class="pricing-wrapper">
+    <!-- PRICING GRID -->
+
+    <div class="pricing-grid">
 
         <!-- STARTER -->
-        <div class="pricing-card side-card">
 
-            <div class="price amount"
-                 data-month="499"
-                  >
+        <div class="pricing-card">
 
-                ₹499
+            <div class="plan-label">
+                Starter
             </div>
 
-            <span>/month</span>
+            <div class="student-badge">
+                Up To 200 Students
+            </div>
+            <div class="student-note">
+            Perfect for new schools & small institutes
+            </div>
 
-            <h3>Starter</h3>
+            <div class="price-area">
 
-            <p>
-                Best for small schools starting with digital transformation.
-            </p>
+                <span class="amount"
+                      data-month="999"
+                      data-year="9999">
 
-            <ul>
+                    ₹999
+
+                </span>
+
+                <span class="duration">
+                    /month
+                </span>
+
+            </div>
+
+            <div class="gst-note">
+                + GST Extra
+            </div>
+
+            <ul class="feature-list">
+
                 <li>✔ Student Management</li>
+                <li>✔ Admission Register</li>
+                <li>✔ Student Profiles</li>
                 <li>✔ TC Generation</li>
                 <li>✔ Bonafide Certificates</li>
-                <li>✔ Reports</li>
+                <li>✔ Basic Reports</li>
                 <li>✔ Email Support</li>
+
             </ul>
 
-           <a href="#contact">Request Demo</a>
+            <button
+            class="plan-btn"
+            onclick="openPlanModal('Starter')">
+
+                Book Free Consultation
+
+            </button>
 
         </div>
 
-        <!-- GROWTH (CENTER) -->
-        <div class="pricing-card featured-card">
+        <!-- ESSENTIAL -->
 
-            <div class="popular-badge">
-                Most Popular
+        <div class="pricing-card featured">
+
+            <div class="popular-tag">
+                MOST POPULAR
             </div>
 
-            <div class="price amount"
-                 data-month="999"
-                 >
-
-                ₹999
+            <div class="plan-label">
+                Essential
             </div>
 
-            <span>/month</span>
+            <div class="student-badge">
+                Up To 500 Students
+            </div>
+            <div class="student-note">
+                Best for growing schools with daily operations
+            </div>
 
-            <h3>Growth</h3>
+            <div class="price-area">
 
-            <p>
-                Perfect for growing schools needing automation and analytics.
-            </p>
+                <span class="amount"
+                      data-month="2499"
+                      data-year="24999">
 
-            <ul>
-                <li>✔ Everything in Starter</li>
-                <li>✔ Attendance</li>
-                <li>✔ Fee Management</li>
-                <li>✔ Analytics Dashboard</li>
-                <li>✔ Priority Support</li>
+                    ₹2499
+
+                </span>
+
+                <span class="duration">
+                    /month
+                </span>
+
+            </div>
+
+            <div class="gst-note">
+                + GST Extra
+            </div>
+
+            <ul class="feature-list">
+
+                <li>✔ Everything In Starter</li>
+                <li>✔ Attendance Management</li>
+                <li>✔ Staff Management</li>
+                <li>✔ Notice Board</li>
+                <li>✔ Dashboard Analytics</li>
+                <li>✔ Export Reports</li>
+                <li>✔ WhatsApp Support</li>
+
             </ul>
 
-           <a href="#contact">Upgrade</a>
+            <button
+            class="plan-btn"
+            onclick="openPlanModal('Essential')">
+
+                Schedule Demo
+
+            </button>
+
+        </div>
+
+        <!-- PROFESSIONAL -->
+
+        <div class="pricing-card">
+
+            <div class="plan-label">
+                Professional
+            </div>
+
+            <div class="student-badge">
+                Up To 1000 Students
+            </div>
+            <div class="student-note">
+            Ideal for large schools needing full automation
+            </div>
+
+            <div class="price-area">
+
+                <span class="amount"
+                      data-month="4999"
+                      data-year="49999">
+
+                    ₹4999
+
+                </span>
+
+                <span class="duration">
+                    /month
+                </span>
+
+            </div>
+
+            <div class="gst-note">
+                + GST Extra
+            </div>
+
+            <ul class="feature-list">
+
+                <li>✔ Everything In Essential</li>
+                <li>✔ Fee Management</li>
+                <li>✔ Advanced Reports</li>
+                <li>✔ Student Promotion</li>
+                <li>✔ Custom Certificates</li>
+                <li>✔ Priority Support</li>
+                <li>✔ Role Permissions</li>
+
+            </ul>
+
+            <button
+            class="plan-btn"
+            onclick="openPlanModal('Professional')">
+
+                Book Demo
+
+            </button>
 
         </div>
 
         <!-- ENTERPRISE -->
-        <div class="pricing-card side-card">
 
-            <div class="price amount"
-                 data-month="1999">
+        <div class="pricing-card">
 
-                ₹1999
+            <div class="plan-label">
+                Enterprise
             </div>
 
-            <span>/month</span>
+            <div class="student-badge">
+                1000+ Students
+            </div>
+            <div class="student-note">
+            For groups, trusts & multi-campus institutions
+            </div>
 
-            <h3>Enterprise</h3>
+            <div class="price-area">
 
-            <p>
-                For institutions managing multiple schools and branches.
-            </p>
+                <span class="custom-price">
+                    Custom Quote
+                </span>
 
-            <ul>
-                <li>✔ Everything in Growth</li>
+            </div>
+
+            <div class="gst-note">
+                Contact Sales Team
+            </div>
+
+            <ul class="feature-list">
+
                 <li>✔ Multi School ERP</li>
-                <li>✔ Advanced Reports</li>
-                <li>✔ Dedicated Support</li>
-                <li>✔ Custom Integrations</li>
+                <li>✔ Branch Management</li>
+                <li>✔ Dedicated Manager</li>
+                <li>✔ API Integrations</li>
+                <li>✔ Custom Branding</li>
+                <li>✔ Training & Deployment</li>
+                <li>✔ Premium Support</li>
+
             </ul>
 
-           <a href="#contact">Contact Sales</a>
+            <button
+            class="plan-btn"
+            onclick="openPlanModal('Enterprise')">
 
+                Request Custom Quote
+
+            </button>
+
+        </div>
+
+        </div>
+
+        <div class="pricing-trust">
+
+        <div class="trust-item">
+            🚀 Free Setup
+        </div>
+
+        <div class="trust-item">
+            📦 Free Data Migration
+        </div>
+
+        <div class="trust-item">
+            🎓 Free Training
+        </div>
+
+        <div class="trust-item">
+            ☁ Secure Cloud Hosting
+        </div>
+
+        <div class="trust-item">
+            💬 WhatsApp Support
+        </div>
+
+        <div class="trust-item">
+            ⚡ 99.9% Uptime
         </div>
 
     </div>
 
 </section>
 
+<!-- ==================================
+     FINAL CTA SECTION
+================================== -->
+
+<section class="contact-cta" id="contact">
+
+    <div class="contact-bg"></div>
+
+    <div class="contact-wrapper">
+
+        <!-- LEFT -->
+
+        <div class="contact-left">
+
+            <span class="contact-tag">
+                📞 Get In Touch
+            </span>
+
+            <h2>
+
+                Ready To Transform
+                <span>Your School Digitally?</span>
+
+            </h2>
+
+            <p>
+
+                Join schools that are simplifying admissions,
+                student records, certificates, attendance and
+                administration through ShalaSarthi ERP.
+
+            </p>
+
+            <div class="contact-info">
+
+                <div class="contact-item">
+
+                    <div class="contact-icon">
+                        📍
+                    </div>
+
+                    <div>
+
+                        <h4>Office Address</h4>
+
+                        <p>
+
+                            SPL 3rd Floor, Shri Prabhu Krupa, Dhanwantari nagar, Dastur Nagar Rd, Amravati, Maharashtra 444606
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="contact-item">
+
+                    <div class="contact-icon">
+                        📞
+                    </div>
+
+                    <div>
+
+                        <h4>Phone Number</h4>
+
+                        <p>
+
+                            +91 8888244176
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="contact-item">
+
+                    <div class="contact-icon">
+                        ✉️
+                    </div>
+
+                    <div>
+
+                        <h4>Email Address</h4>
+
+                        <p>
+
+                            support@shalasarthi.com
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="contact-buttons">
+
+                <button
+                class="contact-demo-btn"
+                onclick="openPlanModal('Free Demo')">
+
+                    Book Free Demo
+
+                </button>
+
+                <a href="tel:+918888244176"
+                   class="contact-call-btn">
+
+                    Call Now
+
+                </a>
+
+            </div>
+
+           <div class="contact-social">
+
+                <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
+
+                    <i class="fab fa-facebook-f"></i>
+
+                </a>
+
+                <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
+
+                    <i class="fab fa-instagram"></i>
+
+                </a>
+
+                <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
+
+                    <i class="fab fa-linkedin-in"></i>
+
+                </a>
+
+                <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
+
+                    <i class="fab fa-youtube"></i>
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+
+<div class="contact-right">
+
+    <!-- MAP CARD -->
+
+    <a href="https://maps.app.goo.gl/BcWTZfQJDR88YVUA8"
+       target="_blank"
+       class="contact-map-card">
+
+        <div class="contact-map-content">
+
+            <span class="contact-map-badge">
+
+                SPL Office
+
+            </span>
+
+            <h3>
+
+                Visit Our Office
+
+            </h3>
+
+            <p>
+
+                SPL 3rd Floor, Dhanwantari Nagar,
+                Amravati, Maharashtra, India
+
+            </p>
+
+            <span class="contact-map-link">
+
+                Open In Google Maps
+
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+
+            </span>
+
+        </div>
+
+        <div class="contact-map-image">
+
+            <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4581.207336815283!2d77.76483979999999!3d20.9089425!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bd6a54ddbe17d1f%3A0x121708717e71c25f!2sShri%20Prabhu%20Softlink%20Pvt%20Ltd!5e1!3m2!1sen!2sin!4v1779451794872!5m2!1sen!2sin"
+            loading="lazy">
+            </iframe>
+
+        </div>
+
+    </a>
+
+    <!-- QUICK INFO -->
+
+    <div class="contact-info-box">
+
+        <div class="contact-info-item">
+
+            <i class="fa-solid fa-clock"></i>
+
+            <span>
+
+                Mon - Sat : 10 AM - 7 PM
+
+            </span>
+
+        </div>
+
+        <div class="contact-info-item">
+
+            <i class="fa-solid fa-location-dot"></i>
+
+            <span>
+
+                Maharashtra, India
+
+            </span>
+
+        </div>
+
+        <div class="contact-info-item">
+
+            <i class="fa-solid fa-headset"></i>
+
+            <span>
+
+                Dedicated ERP Support
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+    </div>
+
+</section>
+
+<!-- ==================================
+     FAQ SECTION
+================================== -->
+
+<section class="faq-section" id="faq">
+
+    <div class="faq-container">
+
+        <!-- LEFT -->
+
+        <div class="faq-left">
+
+            <span class="faq-tag">
+
+                ❓ Frequently Asked Questions
+
+            </span>
+
+            <h2>
+
+                Everything You Need To Know
+                <span>About ShalaSarthi ERP</span>
+
+            </h2>
+
+            <!-- FAQ ITEM -->
+
+            <div class="faq-item active">
+
+                <button class="faq-question">
+
+                    Is ShalaSarthi suitable for small schools?
+
+                    <span>+</span>
+
+                </button>
+
+                <div class="faq-answer">
+
+                    Yes. ShalaSarthi is designed for schools of all sizes,
+                    from small institutions to multi-campus organizations.
+
+                </div>
+
+            </div>
+
+            <div class="faq-item">
+
+                <button class="faq-question">
+
+                    How long does implementation take?
+
+                    <span>+</span>
+
+                </button>
+
+                <div class="faq-answer">
+
+                    Most schools are fully onboarded within
+                    3–7 business days including training.
+
+                </div>
+
+            </div>
+
+            <div class="faq-item">
+
+                <button class="faq-question">
+
+                    Can we import existing student records?
+
+                    <span>+</span>
+
+                </button>
+
+                <div class="faq-answer">
+
+                    Yes. We provide free migration support for
+                    student, staff and academic records.
+
+                </div>
+
+            </div>
+
+            <div class="faq-item">
+
+                <button class="faq-question">
+
+                    Do you provide training?
+
+                    <span>+</span>
+
+                </button>
+
+                <div class="faq-answer">
+
+                    Absolutely. Every plan includes staff training
+                    and onboarding support.
+
+                </div>
+
+            </div>
+
+            <div class="faq-item">
+
+                <button class="faq-question">
+
+                    Is my data secure?
+
+                    <span>+</span>
+
+                </button>
+
+                <div class="faq-answer">
+
+                    Yes. We use secure cloud infrastructure,
+                    backups and role-based access controls.
+
+                </div>
+
+            </div>
+
+        </div>
+
+       <!-- RIGHT -->
+
+<div class="faq-right">
+
+    <div class="faq-image-card">
+
+        <img
+        src="{{ url_for('static', filename='images/faq_section.png') }}"
+        alt="ShalaSarthi ERP">
+
+    </div>
+
+</div>
+
+    </div>
+
+</section>
  
-<!-- HOW IT WORKS SECTION -->
+  <!-- ================= DEMO REQUEST MODAL =================     -->
 
-<section class="how-it-works" id="how">
+  <div class="plan-modal" id="planModal">
 
-    <div class="how-header">
+    <div class="modal-box">
 
-        <p class="section-tag">
-            How It Works
-        </p>
+        <span
+        class="close-modal"
+        onclick="closePlanModal()">
 
-        <h2>
-            Smart Workflow For Complete School Management
-        </h2>
+            &times;
 
-        <p class="how-subtext">
-            From secure login to student management, certificates, reports and subscription renewals — everything in one place.
-        </p>
-
-    </div>
-
-    <div class="steps-row">
-
-        <!-- STEP 1 -->
-        <div class="step-card">
-
-            <div class="step-number">01</div>
-
-            <h3>Secure Login</h3>
-
-            <p>
-                Login securely and access your school dashboard instantly.
-            </p>
-
-        </div>
-
-        <div class="arrow">→</div>
-
-        <!-- STEP 2 -->
-        <div class="step-card">
-
-            <div class="step-number">02</div>
-
-            <h3>Manage Students</h3>
-
-            <p>
-                Add, update and maintain complete student records.
-            </p>
-
-        </div>
-
-        <div class="arrow">→</div>
-
-        <!-- STEP 3 -->
-        <div class="step-card highlight">
-
-            <div class="step-number">03</div>
-
-            <h3>Generate Documents</h3>
-
-            <p>
-                Generate TC, Bonafide and official certificates instantly.
-            </p>
-
-        </div>
-
-        <div class="arrow">→</div>
-
-        <!-- STEP 4 -->
-        <div class="step-card">
-
-            <div class="step-number">04</div>
-
-            <h3>Reports & Analytics</h3>
-
-            <p>
-                Track admissions, reports and performance analytics.
-            </p>
-
-        </div>
-
-        <div class="arrow">→</div>
-
-        <!-- STEP 5 -->
-        <div class="step-card">
-
-            <div class="step-number">05</div>
-
-            <h3>Renew Subscription</h3>
-
-            <p>
-                Renew plans securely and continue uninterrupted services.
-            </p>
-
-        </div>
-
-    </div>
-
-</section>
-<!-- DEMO SECTION -->
-
-<section class="demo-section" id="demo">
-
-    <!-- HEADER -->
-    <div class="demo-header">
-
-        <p class="demo-tag">
-            Product Demo
-        </p>
-
-        <h2>
-            See SchoolSphere in Action
-        </h2>
-
-        <p class="demo-subtitle">
-            Explore our ERP dashboard, student management, certificates and reports system.
-        </p>
-
-    </div>
-
-    <!-- DEMO GRID -->
-    <div class="demo-grid">
-
-        <!-- CARD 1 -->
-        <div class="demo-card">
-
-            <div class="demo-image">
-                <img src="{{ url_for('static', filename='images/dashboard.png') }}"
-                     alt="Dashboard">
-            </div>
-
-            <div class="demo-content">
-                <h3>Admin Dashboard</h3>
-                <p>
-                    Monitor school operations, subscriptions and performance analytics.
-                </p>
-            </div>
-
-        </div>
-
-        <!-- CARD 2 -->
-        <div class="demo-card">
-
-            <div class="demo-image">
-                <img src="{{ url_for('static', filename='images/student.png') }}"
-                     alt="Student Management">
-            </div>
-
-            <div class="demo-content">
-                <h3>Student Management</h3>
-                <p>
-                    Add, update and manage student records efficiently.
-                </p>
-            </div>
-
-        </div>
-
-        <!-- CARD 3 -->
-        <div class="demo-card">
-
-            <div class="demo-image">
-                <img src="{{ url_for('static', filename='images/certificate.png') }}"
-                     alt="Certificates">
-            </div>
-
-            <div class="demo-content">
-                <h3>Certificates System</h3>
-                <p>
-                    Generate TC and Bonafide certificates instantly.
-                </p>
-            </div>
-
-        </div>
-
-        <!-- CARD 4 -->
-        <div class="demo-card">
-
-            <div class="demo-image">
-                <img src="{{ url_for('static', filename='images/analytics.png') }}"
-                     alt="Reports">
-            </div>
-
-            <div class="demo-content">
-                <h3>Reports & Analytics</h3>
-                <p>
-                    Smart reporting and data insights for school growth.
-                </p>
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- CTA -->
-    <div class="demo-cta">
-
-       <button class="demo-btn"
-        onclick="openDemoModal()">
-
-            Request Live Demo
-
-        </button>
-
-    </div>
-
-</section>
-
-<!-- CONTACT / FINAL CTA SECTION -->
-
-<section class="cta" id="contact">
-
-    <div class="cta-box">
-
-        <!-- FLOAT ELEMENTS -->
-        <div class="cta-blob one"></div>
-        <div class="cta-blob two"></div>
-
-        <span class="cta-tag">
-            Get Started Today
         </span>
 
-        <h2>
-            Transform Your School Management with {{ global_settings.system_name or "SchoolSphere" }}
-        </h2>
+        <h2>Book Free Demo</h2>
 
         <p>
-            Simplify admissions, student records, certificates, attendance,
-            fees, reports and subscriptions — all in one secure and powerful platform.
-        </p>
-
-        <div class="cta-buttons">
-
-            <a href="/login"
-               class="btn-primary">
-
-                Start Your Journey
-
-            </a>
-
-            <a href="#features"
-               class="btn-secondary">
-
-                Explore Features
-
-            </a>
-
-        </div>
-
-        <div class="cta-bottom-text">
-
-            <span>✔ Secure Access</span>
-            <span>✔ Fast Setup</span>
-            <span>✔ Multi-School Support</span>
-
-        </div>
-
-    </div>
-
-</section>
-
-<!-- DEMO MODAL -->
-<div id="demoModal" class="demo-modal">
-
-    <div class="demo-modal-box">
-
-        <button class="demo-close"
-                onclick="closeDemoModal()">
-            ×
-        </button>
-
-        <h2>Request Live Demo</h2>
-
-        <p>
-            Fill your details and connect with us on WhatsApp.
+            Fill details and our ERP expert will contact you.
         </p>
 
         <form id="demoForm">
 
-            <input type="text"
-                   id="schoolName"
-                   placeholder="School Name"
-                   required>
+            <input
+            type="text"
+            id="schoolName"
+            placeholder="School Name"
+            required>
 
-            <input type="text"
-                   id="personName"
-                   placeholder="Your Name"
-                   required>
+            <input
+            type="text"
+            id="personName"
+            placeholder="Contact Person"
+            required>
 
-            <input type="tel"
-                   id="phoneNumber"
-                   placeholder="Phone Number"
-                   required>
+            <input
+            type="tel"
+            id="mobile"
+            placeholder="Mobile Number"
+            required>
 
-            <button type="submit"
-                    class="demo-submit-btn">
+            <input
+            type="email"
+            id="email"
+            placeholder="Email Address">
 
-                Continue to WhatsApp
+            <input
+            type="number"
+            id="students"
+            placeholder="Total Students">
+
+            <div class="selected-plan-box">
+
+                <label>Selected Plan</label>
+
+                <input
+                type="text"
+                id="selectedPlanDisplay"
+                readonly>
+
+                <input
+                type="hidden"
+                id="selectedPlan">
+
+            </div>
+
+            <textarea
+            id="message"
+            placeholder="Additional Requirements (Optional)"
+            rows="4"></textarea>
+
+            <button
+            type="submit"
+            class="submit-btn">
+
+                Submit Request
 
             </button>
 
@@ -718,92 +1467,210 @@
 </div>
 
 <script>
+
+/* =========================================================
+   BILLING TOGGLE
+========================================================= */
+
 function toggleBilling(type){
 
     const buttons = document.querySelectorAll(".billing-btn");
-    buttons.forEach(btn => btn.classList.remove("active"));
+
+    buttons.forEach(btn =>
+        btn.classList.remove("active")
+    );
 
     if(type === "monthly"){
+
         buttons[0].classList.add("active");
+
     }else{
+
         buttons[1].classList.add("active");
     }
 
-    document.querySelectorAll(".amount").forEach(item => {
+    document.querySelectorAll(".amount")
+    .forEach(item => {
 
-        const monthlyPrice = parseFloat(item.dataset.month);
+        const monthlyPrice = parseFloat(
+            item.dataset.month
+        );
 
         if(type === "monthly"){
 
-            item.innerText = "₹" + monthlyPrice;
+            item.innerText =
+                "₹" + monthlyPrice;
 
-            item.nextElementSibling.innerText = "/month";
+            item.nextElementSibling.innerText =
+                "/month";
 
         }else{
 
-            // yearly total = 12 months
-            let yearlyPrice = monthlyPrice * 12;
+            let yearlyPrice =
+                monthlyPrice * 12;
 
-            // apply 10% discount
-            yearlyPrice = yearlyPrice - (yearlyPrice * 0.10);
+            yearlyPrice =
+                yearlyPrice -
+                (yearlyPrice * 0.10);
 
-            // round price
-            yearlyPrice = Math.round(yearlyPrice);
+            yearlyPrice =
+                Math.round(yearlyPrice);
 
-            item.innerText = "₹" + yearlyPrice;
+            item.innerText =
+                "₹" + yearlyPrice;
 
-            item.nextElementSibling.innerText = "/year";
-
+            item.nextElementSibling.innerText =
+                "/year";
         }
 
     });
 
 }
-// DEMO MODAL FUNCTIONS
+
+
+/* =========================================================
+   OPEN DEMO MODAL
+========================================================= */
+
 function openDemoModal(){
+
     document
         .getElementById("demoModal")
         .classList.add("active");
 }
 
+
+/* =========================================================
+   CLOSE DEMO MODAL
+========================================================= */
+
 function closeDemoModal(){
+
     document
         .getElementById("demoModal")
         .classList.remove("active");
 }
 
+
+/* =========================================================
+   CLOSE MODAL ON ESC KEY
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function(e){
+
+        if(e.key === "Escape"){
+
+            closeDemoModal();
+        }
+
+    }
+);
+
+
+/* =========================================================
+   CLOSE MODAL ON OUTSIDE CLICK
+========================================================= */
+
+window.addEventListener(
+    "click",
+    function(e){
+
+        const modal =
+            document.getElementById(
+                "demoModal"
+            );
+
+        if(e.target === modal){
+
+            closeDemoModal();
+        }
+
+    }
+);
+
+
+/* =========================================================
+   DEMO FORM SUBMIT
+========================================================= */
+
 document
 .getElementById("demoForm")
-.addEventListener("submit", function(e){
+.addEventListener(
+    "submit",
+    function(e){
 
-    e.preventDefault();
+        e.preventDefault();
 
-    const school =
-        document.getElementById("schoolName").value;
+        const school =
+            document
+            .getElementById("schoolName")
+            .value
+            .trim();
 
-    const person =
-        document.getElementById("personName").value;
+        const person =
+            document
+            .getElementById("personName")
+            .value
+            .trim();
 
-    const phone =
-        document.getElementById("phoneNumber").value;
+        const phone =
+            document
+            .getElementById("phoneNumber")
+            .value
+            .trim();
 
-    const message =
+        /* =========================
+           PHONE VALIDATION
+        ========================= */
+
+        const phoneRegex =
+            /^[0-9]{10}$/;
+
+        if(!phoneRegex.test(phone)){
+
+            alert(
+                "Enter valid 10 digit phone number"
+            );
+
+            return;
+        }
+
+        /* =========================
+           WHATSAPP MESSAGE
+        ========================= */
+
+        const message =
+
 `Hello, I want a live demo of ShalaSync ERP.
 
 School Name: ${school}
 Contact Person: ${person}
 Phone: ${phone}`;
 
-    const whatsappUrl =
-        `https://wa.me/918308452931?text=${encodeURIComponent(message)}`;
+        const whatsappUrl =
 
-    window.open(
-        whatsappUrl,
-        "_blank"
-    );
+`https://wa.me/918308452931?text=${encodeURIComponent(message)}`;
 
-});
+        window.open(
+            whatsappUrl,
+            "_blank"
+        );
+
+        /* =========================
+           RESET FORM
+        ========================= */
+
+        document
+            .getElementById("demoForm")
+            .reset();
+
+        closeDemoModal();
+
+    }
+);
+
 </script>
-
  
 {% endblock %}

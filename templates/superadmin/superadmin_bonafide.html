@@ -58,24 +58,28 @@
             type="text"
             name="search"
             placeholder="Search student / admission / bonafide number..."
-            value="{{ request.args.get('search','') }}"
+            value="{{ search }}"
         >
 
         <select name="school_id">
             <option value="">All Schools</option>
             {% for school in schools %}
-                <option value="{{ school[0] }}"
-                    {% if request.args.get('school_id') == school[0]|string %}selected{% endif %}>
-                    {{ school[1] }}
+                <option
+                    value="{{ school.school_id }}"
+                    {% if school_filter|string == school.school_id|string %}
+                    selected
+                    {% endif %}
+                >
+                    {{ school.name }}
                 </option>
-            {% endfor %}
+                {% endfor %}
         </select>
 
         <select name="class">
             <option value="">All Classes</option>
             {% for i in range(1,13) %}
                 <option value="{{ i }}"
-                    {% if request.args.get('class') == i|string %}selected{% endif %}>
+                    {% if class_filter|string == i|string %}selected{% endif %}>
                     Class {{ i }}
                 </option>
             {% endfor %}
@@ -112,35 +116,36 @@
                 {% for b in bonafides %}
                 <tr>
 
-                    <td>{{ b[1] }}</td>
-                    <td>{{ b[2] }}</td>
+                    <td>{{ b.name }}</td>
+                    <td>{{ b.admission_no }}</td>
                     <td>
                         <span class="sab-school-badge">
-                            {{ b[4] }}
+                            {{ b.school_name }}
                         </span>
                     </td>
-                    <td>{{ b[3] }}</td>
-                    <td>{{ b[5] }}</td>
-                    <td>{{ b[6] }}</td>
-                    <td>{{ b[7] }}</td>
+                    <td>{{ b.class }}</td>
+                    <td>{{ b.bonafide_number }}</td>
+                    <td>{{ b.purpose }}</td>
+                    <td>{{ b.date }}</td>
 
                     <td>
                         <div class="sab-action-buttons">
 
-                            <a href="/clerk/bonafide/view/{{ b[0] }}?mode=admin" class="sab-btn-view">
+                            
+                            <a href="/clerk/bonafide/view/{{ b.id }}?mode=admin" class="sab-btn-view">
                                 View
                             </a>
-
-                            <a href="/clerk/bonafide/print/{{ b[0] }}?mode=admin" class="sab-btn-print">
+                            
+                            <a href="/clerk/bonafide/view/{{ b.id }}?mode=admin&print=true" class="sab-btn-print">
                                 Print
                             </a>
 
-                            <a href="/clerk/bonafide/pdf/{{ b[0] }}?mode=admin" class="sab-btn-pdf">
+                            <a href="/clerk/bonafide/pdf/{{ b.id }}?mode=admin" class="sab-btn-pdf">
                                 PDF
                             </a>
                             <button
                                 type="button"
-                                onclick="openDeleteBonafideModal('{{ b[0] }}')"
+                                onclick="openDeleteBonafideModal('{{ b.id }}')"
                                 class="sab-btn-delete">
                                 Delete
                             </button>
@@ -159,7 +164,36 @@
 
 </div>
 
-<div id="deleteBonafideModal" class="sab-modal" style="display:none;">
+<!-- PAGINATION -->
+
+{% if total_pages > 1 %}
+
+<div class="sab-pagination">
+
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&search={{ search }}{% if school_filter %}&school_id={{ school_filter }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}">
+        ← Prev
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&search={{ search }}{% if school_filter %}&school_id={{ school_filter }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}">
+        Next →
+    </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+
+<!-- DELETE MODAL -->
+
+<div id="deleteBonafideModal" class="sab-modal">
 
     <div class="sab-modal-box">
 

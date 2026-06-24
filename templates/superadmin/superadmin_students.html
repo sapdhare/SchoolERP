@@ -24,27 +24,55 @@
 
     <div class="sa-stat-card">
         <p>Total Students</p>
-        <h2>{{ students|length }}</h2>
+        <h2>{{ total_students }}</h2>
     </div>
 
     <div class="sa-stat-card">
         <p>Classes</p>
-        <h2>{{ students|map(attribute=2)|unique|list|length }}</h2>
+        <h2>{{ total_classes }}</h2>
     </div>
 
     <div class="sa-stat-card">
         <p>Active</p>
-        <h2>{{ students|length }}</h2>
+        <h2>{{ total_students }}</h2>
     </div>
 
 </div>
 
 <!-- ================= SEARCH ================= -->
-<div class="sa-search-bar">
-    <input type="text" id="searchInput" placeholder="🔍 Search by name or admission no...">
-    <button onclick="searchStudent()">Search</button>
-    <button class="clear" onclick="clearSearch()">Clear</button>
-</div>
+    <form method="GET" class="sa-search-bar">
+
+        <input
+            type="hidden"
+            name="school_id"
+            value="{{ school_id }}"
+        >
+
+        <input
+            type="text"
+            name="search"
+            value="{{ search }}"
+            placeholder="🔍 Search by name or admission no..."
+        >
+
+        <button type="submit">
+            Search
+        </button>
+
+        <a
+            href="/superadmin/superadmin_students?school_id={{ school_id }}"
+            class="clear"
+        >
+            Clear
+        </a>
+
+    </form>
+
+    {% if search %}
+    <p class="sa-filter-count">
+        Showing {{ total_filtered }} result(s) for "{{ search }}"
+    </p>
+    {% endif %}
 
 <!-- ================= TABLE ================= -->
 <div class="sa-table">
@@ -82,6 +110,31 @@
     </table>
 
 </div>
+    <!-- ================= PAGINATION ================= -->
+    {% if total_pages > 1 %}
+
+    <div class="sa-pagination">
+
+        {% if page > 1 %}
+        <a href="/superadmin/superadmin_students?school_id={{ school_id }}&search={{ search }}&page={{ page - 1 }}">
+            ← Previous
+        </a>
+        {% endif %}
+
+        <span>
+            Page {{ page }} of {{ total_pages }}
+        </span>
+
+        {% if page < total_pages %}
+        <a href="/superadmin/superadmin_students?school_id={{ school_id }}&search={{ search }}&page={{ page + 1 }}">
+            Next →
+        </a>
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
 
 <!-- ================= STUDENT MODAL ================= -->
 <div id="studentModal" class="sa-modal">
@@ -129,8 +182,11 @@
 
 </div>
 
+
 <!-- ================= JS ================= -->
 <script>
+
+    const currentSchoolId = "{{ school_id }}";
 
 // delete handled via hidden input in form for better security (POST request with CSRF token)
 
@@ -141,23 +197,7 @@ function goBack(){
 function goAllStudents(){
     window.location.href = "/superadmin/all-students";
 }
-
-// SEARCH
-function searchStudent() {
-    let input = document.getElementById("searchInput").value.toLowerCase();
-    let rows = document.querySelectorAll("#studentTable tbody tr");
-
-    rows.forEach(row => {
-        let text = row.innerText.toLowerCase();
-        row.style.display = text.includes(input) ? "" : "none";
-    });
-}
-
-function clearSearch(){
-    document.getElementById("searchInput").value = "";
-    searchStudent();
-}
-
+ 
 function viewStudent(id){
     window.location.href = "/clerk/view-student/" + id + "?mode=admin";
 }
