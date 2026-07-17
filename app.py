@@ -27,7 +27,7 @@ from openpyxl.utils import get_column_letter
 # =========================================================
 # THIRD PARTY PACKAGES
 # =========================================================
-
+import secrets
 import pandas as pd
 import pdfkit
 import razorpay
@@ -105,7 +105,7 @@ pdf_config = pdfkit.configuration(
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 
 # Use True in production with HTTPS
-app.config["SESSION_COOKIE_SECURE"] = False  #LAter make it True
+app.config["SESSION_COOKIE_SECURE"] = True  #False
 
 # Protect against CSRF-like cross-site behavior
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -201,7 +201,7 @@ def inject_system_settings():
 
     conn = None
     cursor = None
-
+    row = None  
     try:
 
         conn = get_connection()
@@ -423,11 +423,20 @@ def send_email(
 
             encoders.encode_base64(part)
 
+            safe_filename = (
+                        attachment_name.replace('"', '')        # Remove quotes
+                                    .replace('\n', '')          # Remove newlines
+                                    .replace('\r', '')          # Remove carriage returns
+                                    .replace(';', '')           # Remove semicolons (header separator)
+                            )
+
+
+
             part.add_header(
 
                 "Content-Disposition",
 
-                f'attachment; filename="{attachment_name}"'
+                f'attachment; filename="{safe_filename}"'
 
             )
 
@@ -1705,11 +1714,11 @@ def send_test_birthday_sms(mobile):
 
             result = response.read().decode("utf-8", errors="ignore")
 
-        print("✅ SMS API RESPONSE:", result)
-        print("USER:", sms_user_id)
-        print("PASS:", sms_password)
-        print("TEMPLATE:", template_id)
-        print("URL:", url)
+        # print("✅ SMS API RESPONSE:", result)
+        # print("USER:", sms_user_id)
+        # print("PASS:", sms_password)
+        # print("TEMPLATE:", template_id)
+        # print("URL:", url)
 
         return True, result
 
@@ -7608,9 +7617,7 @@ def schedule_demo(lead_id):
 # =========================================================
 
 @csrf.exempt
-@app.route(
-    "/superadmin/lead/converted/<int:lead_id>",
-    methods=["POST"]
+@app.route("/superadmin/lead/converted/<int:lead_id>",methods=["POST"]
 )
 @admin_required
 def convert_lead(lead_id):
@@ -13319,7 +13326,7 @@ def payment_success():
                     order_id,
 
                     transaction_type,
-                    payment_gateway,
+                    payment_gateway
 
                 )
                 VALUES
@@ -13341,7 +13348,7 @@ def payment_success():
 
                 "Subscription Renewal",
                 "Razorpay",
-                str(verify_error)
+                
 
             ))
 
@@ -13349,7 +13356,7 @@ def payment_success():
 
             return (
                 f"Payment verification failed ❌ "
-                f"{verify_error}"
+                # f"{verify_error}"
             )
 
         # =========================================
@@ -15140,12 +15147,7 @@ def clerk_send_password_otp():
         # GENERATE OTP
         # =========================================
 
-        otp = str(
-            random.randint(
-                100000,
-                999999
-            )
-        )
+        otp = ''.join(secrets.choice('0123456789') for _ in range(6))
 
         expiry_time = (
             datetime.now()
