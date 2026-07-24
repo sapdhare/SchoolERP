@@ -1,1 +1,3 @@
-WKHTMLTOPDF_PATH = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+import os
+
+WKHTMLTOPDF_PATH = os.getenv("WKHTMLTOPDF_PATH")

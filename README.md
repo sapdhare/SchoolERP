@@ -192,7 +192,7 @@ STUDENT_ERP_SYSTEM/
 ├── README.md
 ├── setup.sql
 ├── .gitignore
-├── .env
+├── .env.example
 │
 ├── templates/
 ├── static/

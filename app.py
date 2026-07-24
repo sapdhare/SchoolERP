@@ -1,6 +1,4 @@
-# =========================================================
-# PYTHON STANDARD LIBRARY
-# =========================================================
+#  LIBRARY
 
 import os
 import re
@@ -11,10 +9,10 @@ import subprocess
 import math
 import io
 import urllib.request
-
+import logging
 from datetime import datetime, date, timedelta
 from functools import wraps
-
+from flask import abort
 from email.header import Header
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -31,7 +29,7 @@ import secrets
 import pandas as pd
 import pdfkit
 import razorpay
-
+import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 
@@ -66,7 +64,14 @@ from werkzeug.utils import secure_filename
 # =========================================================
 
 from db import get_connection
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s"
+)
+
+logger = logging.getLogger(__name__)
  
 
 
@@ -166,9 +171,9 @@ def internal_server_error(e):
     Handles unexpected server errors.
     """
 
-    print("❌ INTERNAL SERVER ERROR:", e)
+    logger.exception("Internal Server Error")
 
-    return "Something went wrong ❌", 500
+    # logger.exception("Unhandled exception")
 
 
 @app.errorhandler(404)
@@ -1270,7 +1275,7 @@ def get_security_setting(key, default_value):
         return int(value)
 
     except Exception as e:
-        print("❌ SECURITY SETTING FETCH ERROR:", e)
+        logger.exception("Internal Server Error")
         return default_value
 
     finally:
@@ -1472,7 +1477,8 @@ def feature_required(feature_column):
                     e
                 )
 
-                return "Something went wrong ❌",500
+                logger.exception("Internal Server Error",e)
+                return "Something went wrong ❌", 500
 
             finally:
 
@@ -2025,7 +2031,7 @@ def login():
         )
 
         session.permanent = True
-
+        session.clear()
         # =================================================
         # CREATE NEW CLERK SESSION
         # These values are used across clerk dashboard routes
@@ -2229,7 +2235,7 @@ def superadmin_login():
             session.modified = True
 
             return "Invalid Admin Credentials ❌"
-
+            abort(401)
         # =================================================
         # RESET FAILED ATTEMPTS AFTER SUCCESSFUL LOGIN
         # Also update last login timestamp
@@ -2269,7 +2275,7 @@ def superadmin_login():
         )
 
         session.permanent = True
-
+        session.clear()
         # =================================================
         # CREATE NEW ADMIN SESSION
         # These values are used across superadmin routes
@@ -3429,7 +3435,8 @@ def save_school():
             e
         )
 
-        return "Something went wrong ❌"
+
+        logger.exception("Internal Server Error")
 
     finally:
 
@@ -3719,10 +3726,7 @@ def update_school():
         if conn:
             conn.rollback()
 
-        print(
-            "❌ UPDATE SCHOOL ERROR:",
-            e
-        )
+        logger.exception("Unhandled Exception",e)
 
         return "Something went wrong ❌"
 
@@ -6974,7 +6978,7 @@ def superadmin_delete_user():
             e
         )
 
-        return "Something went wrong ❌"
+        logger.exception("Unhandled exception")
 
     finally:
 
@@ -10613,7 +10617,7 @@ def superadmin_settings():
 
     except Exception as e:
         print("❌ SETTINGS ERROR:", e)
-        return "Something went wrong ❌"
+        logger.exception("Internal Server Error")
 
     finally:
         if cursor:
@@ -11100,14 +11104,14 @@ def renew_subscription():
 
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
-
+        abort(401)
     school_id = session.get(
         "clerk_school_id"
     )
 
     if not school_id:
         return "School session missing ❌"
-
+        abort(404)
     conn = None
     cursor = None
 
@@ -12055,8 +12059,7 @@ def save_smtp_settings():
 # 📥 DOWNLOAD BACKUP
 # =========================================================
 
-@app.route(
-    "/download-backup/<filename>"
+@app.route("/download-backup/<filename>"
 )
 @admin_required
 def download_backup(filename):
@@ -12958,14 +12961,14 @@ def subscription_payment():
 
         if session.get("clerk_role") != "clerk":
             return "Unauthorized ❌"
-
+            abort(401)
         school_id = session.get(
             "clerk_school_id"
         )
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         # =========================================
         # FORM DATA
         # =========================================
@@ -13162,14 +13165,14 @@ def payment_success():
 
         if session.get("clerk_role") != "clerk":
             return "Unauthorized ❌"
-
+            abort(401)
         school_id = session.get(
             "clerk_school_id"
         )
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         # =========================================
         # FORM DATA
         # =========================================
@@ -13639,14 +13642,14 @@ def subscription_history():
 
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
-
+        abort(401)
     school_id = session.get(
         "clerk_school_id"
     )
 
     if not school_id:
         return "School session missing ❌"
-
+        abort(404)
     conn = None
     cursor = None
 
@@ -13789,14 +13792,14 @@ def view_invoice(payment_log_id):
 
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
-
+        abort(401)
     school_id = session.get(
         "clerk_school_id"
     )
 
     if not school_id:
         return "School session missing ❌"
-
+        abort(404)
     conn = None
     cursor = None
 
@@ -13893,7 +13896,7 @@ def download_invoice_pdf(payment_log_id):
 
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
-
+        abort(401)
     school_id = session.get(
         "clerk_school_id"
     )
@@ -14043,6 +14046,7 @@ def subscription_success():
 
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
+        abort(401)
 
     plan = request.args.get(
         "plan",
@@ -14070,7 +14074,7 @@ def payment_failed():
 
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
-
+        abort(401)
     return render_template(
         "subscription/payment_failed.html"
     )
@@ -16799,7 +16803,7 @@ def clerk_students():
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         search = (request.args.get("search") or "").strip()
         class_filter = (request.args.get("class") or "").strip()
 
@@ -17037,6 +17041,7 @@ def tc_form(id):
 
         if session.get("clerk_role") != "clerk":
             return "Unauthorized ❌"
+            abort(401)
 
         # =========================================
         # DB CONNECTION
@@ -17356,7 +17361,7 @@ def view_tc(tc_id):
 
             if not school_id:
                 return "School session missing ❌"
-
+                abort(404)
             cursor.execute("""
 
                 SELECT 
@@ -17547,8 +17552,9 @@ def download_tc_pdf(tc_id):
         mode = request.args.get("mode")
         school_id = session.get("clerk_school_id")
 
-        if not school_id:
-                return "School session missing ❌"
+        if not school_id:     
+            return "School session missing ❌"
+            abort(404)
 
         conn = get_connection()
         cursor = conn.cursor()
@@ -18179,7 +18185,7 @@ def clerk_tc_page():
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         # =========================================
         # FILTER VALUES
         # =========================================
@@ -18606,7 +18612,7 @@ def view_bonafide(bid):
 
             if not school_id:
                 return "School session missing ❌"
-
+                abort(404)
             cursor.execute("""
                 SELECT 
                     b.*,
@@ -18751,7 +18757,7 @@ def clerk_bonafide_page():
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         # =========================================
         # FILTER VALUES
         # =========================================
@@ -19177,10 +19183,10 @@ def save_bonafide():
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         if session.get("clerk_role") != "clerk":
             return "Unauthorized ❌"
-
+            abort(401)
         # =========================================
         # GET FORM DATA
         # =========================================
@@ -19424,7 +19430,7 @@ def download_bonafide_pdf(bid):
 
             if not school_id:
                 return "School session missing ❌"
-
+                abort(404)
             cursor.execute("""
 
                 SELECT
@@ -19993,7 +19999,7 @@ def import_export_page():
 
         if not school_id:
             return "School session missing ❌"
-
+        abort(404)
         school = get_school_details(school_id)
 
         if not school:
@@ -20092,7 +20098,7 @@ def import_students():
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         # ================= READ EXCEL =================
         df = pd.read_excel(file, dtype=str)
 
@@ -20420,7 +20426,7 @@ def export_students():
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         cls = (request.args.get("class") or "").strip()
         month = (request.args.get("month") or "").strip()
         year = (request.args.get("year") or "").strip()
@@ -20568,7 +20574,7 @@ def coming_soon(feature):
 
         if not school_id:
             return "School session missing ❌"
-
+            abort(404)
         feature = (feature or "").lower().strip()
 
         feature_names = {
@@ -20697,8 +20703,5 @@ def notice_board_dashboard():
     )
 
 
-# =========================================================
-# 🚀 RUN APP
-# =========================================================
 if __name__ == '__main__':
     app.run(debug=True)
