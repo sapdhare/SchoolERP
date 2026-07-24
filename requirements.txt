@@ -47,3 +47,4 @@ webencodings==0.5.1
 Werkzeug==3.1.8
 WTForms==3.2.2
 zopfli==0.4.1
+mysql-connector-python
