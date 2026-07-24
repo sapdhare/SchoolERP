@@ -20701,7 +20701,10 @@ def notice_board_dashboard():
             feature="notice-board"
         )
     )
-
+# HealthCheck
+@app.route("/healthcheck")
+def healthcheck():
+    return "OK", 200
 
 if __name__ == '__main__':
     app.run(debug=True)

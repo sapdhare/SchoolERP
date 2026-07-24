@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment files
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build artifacts
+build/
+dist/
+
+# Cache
+.pytest_cache/
+.mypy_cache/
+
+# Local PDFs (generated/uploaded)
+pdf/
+
+# Documentation
+README.md
+*.sqlite3
+*.db
