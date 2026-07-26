@@ -19991,59 +19991,99 @@ def public_bonafide_pdf(bid):
 @feature_required("enable_import_export")
 def import_export_page():
 
+    import traceback
+
     conn = None
     cursor = None
 
     try:
+
+        # ================= SCHOOL SESSION =================
+
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            return "School session missing ❌"
-        abort(404)
+            return "School session missing ❌", 400
+
+        # ================= SCHOOL DETAILS =================
+
         school = get_school_details(school_id)
 
         if not school:
-            return "School not found ❌"
+            return "School not found ❌", 404
+
+        # ================= DATABASE =================
 
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM students
-            WHERE school_id = %s
-        """, (school_id,))
-
-        total_students = cursor.fetchone()["total"] or 0
+        # ===================================================
+        # TOTAL STUDENTS
+        # ===================================================
 
         cursor.execute("""
             SELECT COUNT(*) AS total
             FROM students
             WHERE school_id = %s
-            AND DATE(created_at) = CURDATE()
         """, (school_id,))
 
-        today_students = cursor.fetchone()["total"] or 0
+        result = cursor.fetchone()
+        total_students = result["total"] if result else 0
 
-        cursor.execute("""
-            SELECT DISTINCT YEAR(admission_date) AS year_no
-            FROM students
-            WHERE school_id = %s
-            AND admission_date IS NOT NULL
-            ORDER BY year_no DESC
-        """, (school_id,))
+        # ===================================================
+        # TODAY STUDENTS
+        # ===================================================
 
-        years = [
-            row["year_no"]
-            for row in cursor.fetchall()
-            if row["year_no"]
-        ]
+        try:
+
+            cursor.execute("""
+                SELECT COUNT(*) AS total
+                FROM students
+                WHERE school_id = %s
+                AND DATE(created_at) = CURDATE()
+            """, (school_id,))
+
+            result = cursor.fetchone()
+            today_students = result["total"] if result else 0
+
+        except Exception:
+
+            # In case created_at column does not exist
+            today_students = 0
+
+        # ===================================================
+        # ADMISSION YEARS
+        # ===================================================
+
+        try:
+
+            cursor.execute("""
+                SELECT DISTINCT YEAR(admission_date) AS year_no
+                FROM students
+                WHERE school_id = %s
+                AND admission_date IS NOT NULL
+                ORDER BY year_no DESC
+            """, (school_id,))
+
+            years = [
+                row["year_no"]
+                for row in cursor.fetchall()
+                if row["year_no"] is not None
+            ]
+
+        except Exception:
+
+            years = []
+
+        # ===================================================
+        # LOAD PAGE
+        # ===================================================
 
         return render_template(
             "clerk/import_export.html",
             role="clerk",
-            school_name=school["school_name"],
-            school_udise=school["school_udise"],
+            school_name=school.get("school_name", ""),
+            school_udise=school.get("school_udise", ""),
             active_page="import_export",
             total_students=total_students,
             today_students=today_students,
@@ -20051,15 +20091,22 @@ def import_export_page():
         )
 
     except Exception as e:
-        print("❌ IMPORT EXPORT PAGE ERROR:", e)
-        return "Something went wrong ❌"
+
+        print("\n==============================")
+        print("IMPORT EXPORT PAGE ERROR")
+        print("==============================")
+        traceback.print_exc()
+        print("==============================\n")
+
+        return f"Something went wrong ❌<br><br>{e}", 500
 
     finally:
+
         if cursor:
             cursor.close()
+
         if conn:
             conn.close()
-
 # =========================================================
 # 📥 IMPORT STUDENTS FROM EXCEL (SAFE + ATOMIC)
 # =========================================================
