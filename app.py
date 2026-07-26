@@ -10,6 +10,9 @@ import math
 import io
 import urllib.request
 import logging
+
+import traceback
+
 from datetime import datetime, date, timedelta
 from functools import wraps
 from flask import abort
@@ -20050,9 +20053,9 @@ def import_export_page():
             years=years
         )
 
-    except Exception as e:
-        print("❌ IMPORT EXPORT PAGE ERROR:", e)
-        return "Something went wrong ❌"
+    except Exception:
+        traceback.print_exc()
+        raise
 
     finally:
         if cursor:
