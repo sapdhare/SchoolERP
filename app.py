@@ -2107,7 +2107,7 @@ def login():
             "danger"
         )
         
-        redirect(url_for("login"))
+        return redirect(url_for("login"))
 
 
     finally:
