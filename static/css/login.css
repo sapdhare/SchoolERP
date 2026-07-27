@@ -280,7 +280,57 @@
 
     display: block;
 }
+.login-alert{
 
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:20px;
+
+    padding:14px 18px;
+
+    border-radius:12px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    animation:fadeIn .35s ease;
+
+}
+
+.login-alert.danger{
+
+    color:#991b1b;
+
+    background:#fef2f2;
+
+    border:1px solid #fecaca;
+
+}
+
+.login-alert.success{
+
+    color:#166534;
+
+    background:#ecfdf5;
+
+    border:1px solid #bbf7d0;
+
+}
+
+.login-alert.warning{
+
+    color:#92400e;
+
+    background:#fffbeb;
+
+    border:1px solid #fde68a;
+
+}
 @keyframes spin{
 
     100%{
