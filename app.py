@@ -1847,10 +1847,14 @@ def login():
     # BASIC VALIDATION
     # =====================================================
     if not email or not password:
-        return "Email and password required ❌"
+        flash( "Please enter your email and password.","danger")
+        
+        return redirect(url_for("login"))
 
     if not is_valid_email(email):
-        return "Invalid email format ❌"
+        flash("Please enter a valid email address.","danger" )
+
+        return redirect(url_for("login"))
 
     # =====================================================
     # SESSION BASED FAILED LOGIN LIMIT
@@ -1864,7 +1868,9 @@ def login():
     )
 
     if failed_attempts >= login_attempt_limit:
-        return "Too many failed login attempts ❌"
+        flash("Too many failed login attempts. Please try again later.","danger" )
+        
+        return redirect(url_for("login"))
 
     conn = None
     cursor = None
@@ -1909,7 +1915,12 @@ def login():
             session["clerk_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            return "Invalid Credentials ❌"
+            flash(
+                "Invalid email or password.",
+                "danger"
+            )
+            return redirect(url_for("login"))
+
 
         # =================================================
         # MAP DATABASE VALUES
@@ -1948,21 +1959,35 @@ def login():
             session["clerk_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            return "Invalid Credentials ❌"
+            flash(
+                "Invalid email or password.",
+                "danger"
+            )
+            
+            return redirect(url_for("login"))
 
         # =================================================
         # CHECK SCHOOL STATUS
         # Clerk cannot login if school is disabled
         # =================================================
         if int(school_status or 0) != 1:
-            return "School disabled ❌"
+            flash(
+                "Your school account has been disabled. Please contact the administrator.",
+                "danger"
+            )
+            
+            return redirect(url_for("login"))
 
         # =================================================
         # CHECK USER STATUS
         # Clerk cannot login if user account is inactive
         # =================================================
         if user_status != "active":
-            return "User inactive ❌"
+            flash(
+                "Your account is inactive. Please contact the administrator.",
+                "danger"
+            )
+            return redirect(url_for("login"))
 
         # =================================================
         # CHECK LATEST SUBSCRIPTION
@@ -2075,9 +2100,15 @@ def login():
         # =================================================
         # ERROR HANDLING
         # =================================================
-        print("❌ LOGIN ERROR:", e)
+        logger.exception("Login Error")
 
-        return "Login failed ❌", 500
+        flash(
+            "Something went wrong. Please try again.",
+            "danger"
+        )
+        
+        redirect(url_for("login"))
+
 
     finally:
 
@@ -2089,7 +2120,6 @@ def login():
 
         if conn:
             conn.close()
-
 
 
 
