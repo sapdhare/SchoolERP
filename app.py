@@ -2890,9 +2890,6 @@ def superadmin_schools():
         )
 
     except Exception as e:
-
-        # print("❌ SUPERADMIN SCHOOLS ERROR:",e)
-
         return f"Error loading schools ❌ {str(e)}"
 
     finally:
