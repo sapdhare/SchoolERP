@@ -549,8 +549,8 @@ def check_maintenance_mode():
             "/login",
             "/logout",
 
-            "/superadmin/login",
-            "/superadmin/logout"
+            "//login",
+            "//logout"
         ]
 
         if request.path in allowed_paths:
@@ -2149,11 +2149,22 @@ def superadmin_login():
     # BASIC VALIDATION
     # =====================================================
     if not email or not password:
-        print("❌ Admin Login Error: Email and password required")
-        return "Email and password required ❌"
+
+        flash(
+            "Please enter your email and password.",
+            "danger"
+        )
+
+        return redirect(url_for("superadmin_login"))
 
     if not is_valid_email(email):
-        return "Invalid email format ❌"
+        
+        flash(
+            "Please enter a valid email address.",
+            "danger"
+        )
+
+        return redirect(url_for("superadmin_login"))
 
     # =====================================================
     # SESSION BASED FAILED LOGIN LIMIT
@@ -2167,7 +2178,14 @@ def superadmin_login():
     )
 
     if failed_attempts >= login_attempt_limit:
-        return "Too many failed admin login attempts ❌"
+        
+        flash(
+            "Too many failed login attempts. Please try again later.",
+            "danger"
+        )
+
+        return redirect(url_for("superadmin_login"))
+    
 
     conn = None
     cursor = None
@@ -2208,7 +2226,12 @@ def superadmin_login():
             session["admin_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            return "Invalid Admin Credentials ❌"
+            flash(
+                "Invalid email or password.",
+                "danger"
+            )
+
+            return redirect(url_for("superadmin_login"))
 
         # =================================================
         # MAP DATABASE VALUES
@@ -2225,7 +2248,12 @@ def superadmin_login():
         # Protects admin account across browsers/devices
         # =================================================
         if db_failed_attempts >= login_attempt_limit:
-            return "Admin account temporarily locked due to failed attempts ❌"
+            flash(
+                "Your account has been temporarily locked due to multiple failed login attempts.",
+                "danger"
+            )
+
+            return redirect(url_for("superadmin_login"))
 
         # =================================================
         # ROLE SAFETY CHECK
@@ -2236,14 +2264,24 @@ def superadmin_login():
             session["admin_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            return "Invalid Admin Credentials ❌"
+            flash(
+                "Invalid email or password.",
+                "danger"
+            )
+
+            return redirect(url_for("superadmin_login"))
 
         # =================================================
         # ACCOUNT STATUS CHECK
         # Admin cannot login if account is inactive
         # =================================================
         if status != "active":
-            return "Admin account inactive ❌"
+            flash(
+                "Your account is inactive. Please contact the administrator.",
+                "danger"
+            )
+
+            return redirect(url_for("superadmin_login"))
 
         # =================================================
         # PASSWORD CHECK
@@ -2264,8 +2302,13 @@ def superadmin_login():
             session["admin_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            return "Invalid Admin Credentials ❌"
-            abort(401)
+            flash(
+                "Invalid email or password.",
+                "danger"
+            )
+
+            return redirect(url_for("superadmin_login"))
+        
         # =================================================
         # RESET FAILED ATTEMPTS AFTER SUCCESSFUL LOGIN
         # Also update last login timestamp
@@ -2330,9 +2373,14 @@ def superadmin_login():
         # =================================================
         # ERROR HANDLING
         # =================================================
-        print("❌ ADMIN LOGIN ERROR:", e)
+        logger.exception("Admin Login Error")
 
-        return "Admin login failed ❌", 500
+        flash(
+            "Something went wrong. Please try again.",
+            "danger"
+        )
+        
+        return redirect(url_for("superadmin_login"))
 
     finally:
 
@@ -2344,6 +2392,8 @@ def superadmin_login():
 
         if conn:
             conn.close()
+
+    
 
 # =========================================================
 # 🚪 LOGOUT ROUTE
@@ -2359,7 +2409,13 @@ def logout():
         )
 
     if role not in ["clerk", "admin"]:
-        return "Invalid logout request ❌"
+        
+        flash(
+            "Invalid logout request.",
+            "danger"
+        )
+
+        return redirect(url_for("login"))
 
    # ================= CLERK LOGOUT =================
     if role == "clerk":
@@ -2370,6 +2426,11 @@ def logout():
         session.pop("clerk_school_id", None)
         session.pop("clerk_role", None)
         session.pop("clerk_failed_attempts", None)
+        
+        flash(
+            "You have been logged out successfully.",
+            "success"
+        )
 
         return redirect(url_for("login"))
 
@@ -2382,9 +2443,15 @@ def logout():
         session.pop("admin_email", None)
         session.pop("admin_role", None)
         session.pop("admin_failed_attempts", None)
+        
+        flash(
+            "You have been logged out successfully.",
+            "success"
+        )
 
         return redirect(url_for("superadmin_login"))
- 
+
+
 # =========================================================
 # 📊 SUPER ADMIN DASHBOARD
 # =========================================================
