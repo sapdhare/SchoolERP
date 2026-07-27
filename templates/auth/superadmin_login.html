@@ -51,6 +51,19 @@
                     Restricted system login
                 </p>
 
+                <!-- FLASH MSSGE  -->
+
+                {% with messages = get_flashed_messages(with_categories=true) %} {% if
+                messages %} {% for category, message in messages %}
+        
+                <div class="login-alert {{ category }}">
+                  <i class="fa-solid fa-circle-exclamation"></i>
+        
+                  <span>{{ message }}</span>
+                </div>
+        
+                {% endfor %} {% endif %} {% endwith %}
+
                 <!-- FORM -->
                 <form
                     class="login-form"
