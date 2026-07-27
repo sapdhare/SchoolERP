@@ -11,12 +11,12 @@
         <h1>🏫 School Management</h1>
         <p>Manage all schools, track students and control system access</p>
     </div>
- 
+
 
     <div class="hero-stats">
         <div class="hero-stat-card">
             <span>Total Schools</span>
-           <h3>{{ total_schools }}</h3>
+            <h3>{{ total_schools }}</h3>
         </div>
 
         <div class="hero-stat-card">
@@ -30,12 +30,7 @@
 <form method="GET" class="sa-search-box">
 
     <div class="search-wrapper">
-        <input 
-            type="text" 
-            name="search"
-            value="{{ search }}"
-            placeholder="Search school name, code, email, phone..."
-        >
+        <input type="text" name="search" value="{{ search }}" placeholder="Search school name, code, email, phone...">
     </div>
 
     <button type="submit">Search</button>
@@ -64,9 +59,7 @@
 <div class="sa-grid" id="schoolGrid">
 
     {% for school in schools %}
-    <div class="sa-card" 
-         data-name="{{ school.name | lower }}"
-         onclick="goToSchool('{{ school.school_id }}')">
+    <div class="sa-card" data-name="{{ school.name | lower }}" onclick="goToSchool('{{ school.school_id }}')">
 
         <div class="card-glow"></div>
 
@@ -86,59 +79,40 @@
             </div>
         </div>
 
-    <div class="sa-bottom">
+        <div class="sa-bottom">
 
-        <!-- VIEW -->
-        <button
-            class="card-btn view-btn"
-            onclick="event.stopPropagation(); goToSchool('{{ school.school_id }}')">
-            View
-        </button>
+            <!-- VIEW -->
+            <button class="card-btn view-btn" onclick="event.stopPropagation(); goToSchool('{{ school.school_id }}')">
+                View
+            </button>
 
-        <!-- EDIT -->
-        <button
-            class="card-btn edit-btn"
-            onclick="event.stopPropagation(); openEditSchoolModal(
-                '{{ school.school_id }}',
-                '{{ school.name }}',
-                '{{ school.udise_no or }}',
-                '{{ school.address }}',
-                '{{ school.phone }}',
-                '{{ school.email }}',
-                '{{ school.school_code }}',
-                '{{ school.principal_name or ''}}'
-            )">
-            Edit
-        </button>
+            <!-- EDIT -->
+            <button class="card-btn edit-btn" onclick="event.stopPropagation(); openEditSchoolModal(
+        '{{ school.school_id }}',
+        '{{ school.name }}',
+        '{{ school.udise_no or '' }}',
+        '{{ school.address }}',
+        '{{ school.phone }}',
+        '{{ school.email }}',
+        '{{ school.school_code }}',
+        '{{ school.principal_name or '' }}'
+    )">
+                Edit
+            </button>
+            <!-- FEATURES -->
+            <button class="card-btn feature-btn" onclick="event.stopPropagation(); openFeatureModal(this)"
+                data-school-id="{{ school.school_id }}" data-tc="{{ school.enable_tc_management }}"
+                data-bonafide="{{ school.enable_bonafide_management }}"
+                data-import-export="{{ school.enable_import_export }}" data-attendance="{{ school.enable_attendance }}"
+                data-fee="{{ school.enable_fee_management }}" data-teacher="{{ school.enable_teacher_management }}"
+                data-results="{{ school.enable_results }}" data-timetable="{{ school.enable_timetable }}"
+                data-notice="{{ school.enable_notice_board }}">
+                Features
+            </button>
 
-        <!-- FEATURES -->
-        <button
-            class="card-btn feature-btn"
+            <!-- CERTIFICATES -->
 
-            onclick="event.stopPropagation(); openFeatureModal(this)"
-
-            data-school-id="{{ school.school_id }}"
-
-            data-tc="{{ school.enable_tc_management }}"
-            data-bonafide="{{ school.enable_bonafide_management }}"
-            data-import-export="{{ school.enable_import_export }}"
-            data-attendance="{{ school.enable_attendance }}"
-            data-fee="{{ school.enable_fee_management }}"
-            data-teacher="{{ school.enable_teacher_management }}"
-            data-results="{{ school.enable_results }}"
-            data-timetable="{{ school.enable_timetable }}"
-            data-notice="{{ school.enable_notice_board }}"
-        >
-            Features
-        </button>
-
-        <!-- CERTIFICATES -->
-
-        <button
-        class="card-btn certificate-btn"
-
-        
-        onclick="event.stopPropagation(); openCertificateModal(
+            <button class="card-btn certificate-btn" onclick="event.stopPropagation(); openCertificateModal(
 
         '{{ school.school_id }}',
 
@@ -156,30 +130,26 @@
 
         )">
 
-        Certificates
-        
+                Certificates
 
-        </button>
-        
 
-        <!-- STATUS -->
-        {% if school.is_active == 1 %}
-        <button
-            type="button"
-            class="card-btn deactivate-btn"
-            onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 1)">
-            Deactivate
-        </button>
-        {% else %}
-        <button
-            type="button"
-            class="card-btn activate-btn"
-            onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 0)">
-            Activate
-        </button>
-        {% endif %}
+            </button>
 
-    </div>
+
+            <!-- STATUS -->
+            {% if school.is_active == 1 %}
+            <button type="button" class="card-btn deactivate-btn"
+                onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 1)">
+                Deactivate
+            </button>
+            {% else %}
+            <button type="button" class="card-btn activate-btn"
+                onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 0)">
+                Activate
+            </button>
+            {% endif %}
+
+        </div>
 
     </div>
     {% endfor %}
@@ -200,11 +170,10 @@
         Page {{ page }} of {{ total_pages }}
     </span>
 
-    {% if page < total_pages %}
-    <a href="?page={{ page+1 }}&search={{ search }}">
+    {% if page < total_pages %} <a href="?page={{ page+1 }}&search={{ search }}">
         Next →
-    </a>
-    {% endif %}
+        </a>
+        {% endif %}
 
 </div>
 
@@ -350,16 +319,11 @@
             <span onclick="closeFeatureModal()">&times;</span>
         </div>
 
-        <form method="POST"
-              action="{{ url_for('update_school_features') }}">
+        <form method="POST" action="{{ url_for('update_school_features') }}">
 
-            <input type="hidden"
-                   name="csrf_token"
-                   value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <input type="hidden"
-                   name="school_id"
-                   id="featureSchoolId">
+            <input type="hidden" name="school_id" id="featureSchoolId">
 
             <div class="feature-grid">
 
@@ -457,15 +421,12 @@
 
             <div class="school-modal-actions">
 
-                <button type="button"
-                        class="cancel-btn"
-                        onclick="closeFeatureModal()">
+                <button type="button" class="cancel-btn" onclick="closeFeatureModal()">
 
                     Cancel
                 </button>
 
-                <button type="submit"
-                        class="save-btn">
+                <button type="submit" class="save-btn">
 
                     Save Features
                 </button>
@@ -495,16 +456,11 @@
 
         </div>
 
-        <form method="POST"
-              action="{{ url_for('update_school_certificates') }}">
+        <form method="POST" action="{{ url_for('update_school_certificates') }}">
 
-            <input type="hidden"
-                   name="csrf_token"
-                   value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <input type="hidden"
-                   name="school_id"
-                   id="certificateSchoolId">
+            <input type="hidden" name="school_id" id="certificateSchoolId">
 
             <div class="feature-grid">
 
@@ -513,10 +469,7 @@
 
                     <label>TC Prefix</label>
 
-                    <input type="text"
-                           name="tc_prefix"
-                           id="tc_prefix"
-                           value="TC"> 
+                    <input type="text" name="tc_prefix" id="tc_prefix" value="TC">
 
                 </div>
 
@@ -525,10 +478,7 @@
 
                     <label>Bonafide Prefix</label>
 
-                    <input type="text"
-                           name="bonafide_prefix"
-                           id="bonafide_prefix"
-                           value="BON">
+                    <input type="text" name="bonafide_prefix" id="bonafide_prefix" value="BON">
 
                 </div>
 
@@ -650,15 +600,12 @@
 
             <div class="school-modal-actions">
 
-                <button type="button"
-                        class="cancel-btn"
-                        onclick="closeCertificateModal()">
+                <button type="button" class="cancel-btn" onclick="closeCertificateModal()">
 
                     Cancel
                 </button>
 
-                <button type="submit"
-                        class="save-btn">
+                <button type="submit" class="save-btn">
 
                     Save Certificates
                 </button>
@@ -673,319 +620,319 @@
 
 <!-- ================= STATUS TOGGLE MODAL =================  -->
 
- <div class="school-modal" id="statusModal">
+<div class="school-modal" id="statusModal">
 
- <div class="school-modal-box small">
+    <div class="school-modal-box small">
 
-              <div class="modal-head">
-                    <h2>Confirm Action</h2>
-               </div>
-               <p id="statusMessage">
-                    Are you sure you want to change school status?
-               </p>
+        <div class="modal-head">
+            <h2>Confirm Action</h2>
+        </div>
+        <p id="statusMessage">
+            Are you sure you want to change school status?
+        </p>
 
-    <form method="POST" action="{{ url_for('toggle_school_status') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="school_id" id="statusSchoolId">
+        <form method="POST" action="{{ url_for('toggle_school_status') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="school_id" id="statusSchoolId">
 
-                  <div class="school-modal-actions">
-                           <button type="button" class="cancel-btn" onclick="closeStatusModal()">Cancel</button>
-                            <button type="submit" class="save-btn">OK</button>
-                 </div>
-    </form>
+            <div class="school-modal-actions">
+                <button type="button" class="cancel-btn" onclick="closeStatusModal()">Cancel</button>
+                <button type="submit" class="save-btn">OK</button>
+            </div>
+        </form>
 
-     </div>
+    </div>
 
-  </div>
- 
+</div>
+
 <script>
 
-/* =========================================================
-   🏫 ADD SCHOOL MODAL
-   Open + Close modal for new school creation
-========================================================= */
+    /* =========================================================
+       🏫 ADD SCHOOL MODAL
+       Open + Close modal for new school creation
+    ========================================================= */
 
-// Open Add School Modal
-function openSchoolModal() {
-    document.getElementById("schoolModal").style.display = "flex";
-}
-
-// Close Add School Modal
-function closeSchoolModal() {
-    document.getElementById("schoolModal").style.display = "none";
-}
-
-
-/* =========================================================
-   ✏ EDIT SCHOOL MODAL
-   Open modal with existing school data prefilled
-========================================================= */
-
-// Open Edit Modal + Fill Existing Values
-function openEditSchoolModal(
-    id,
-    name,
-    udise,
-    address,
-    phone,
-    email,
-    code,
-    principal
-) {
-    document.getElementById("editSchoolModal").style.display = "flex";
-
-    document.getElementById("editSchoolId").value = id;
-    document.getElementById("editName").value = name;
-    document.getElementById("editUdise").value = udise;
-    document.getElementById("editAddress").value = address;
-    document.getElementById("editPhone").value = phone;
-    document.getElementById("editEmail").value = email;
-    document.getElementById("editCode").value = code;
-    document.getElementById("editPrincipal").value = principal;
-}
-
-// Close Edit Modal
-function closeEditSchoolModal() {
-    document.getElementById("editSchoolModal").style.display = "none";
-}
-
-/* =========================================================
-   ⚙ FEATURE MODAL
-========================================================= */
-
-function openFeatureModal(button){
-
-    // =========================================
-    // OPEN MODAL
-    // =========================================
-
-    document.getElementById(
-        "featureModal"
-    ).style.display = "flex";
-
-    // =========================================
-    // SCHOOL ID
-    // =========================================
-
-    document.getElementById(
-        "featureSchoolId"
-    ).value = button.dataset.schoolId;
-
-    // =========================================
-    // LOAD CURRENT VALUES
-    // =========================================
-
-    document.querySelector(
-        '[name="enable_tc_management"]'
-    ).value = (
-        button.dataset.tc || "Disabled"
-    ).trim();
-
-    document.querySelector(
-        '[name="enable_bonafide_management"]'
-    ).value = (
-        button.dataset.bonafide || "Disabled"
-    ).trim();
-
-    document.querySelector(
-        '[name="enable_import_export"]'
-    ).value = (
-        button.dataset.importExport || "Disabled"
-    ).trim();
-
-    document.querySelector(
-        '[name="enable_attendance"]'
-    ).value = (
-        button.dataset.attendance || "Disabled"
-    ).trim();
-
-    document.querySelector(
-        '[name="enable_fee_management"]'
-    ).value = (
-        button.dataset.fee || "Disabled"
-    ).trim();
-
-    document.querySelector(
-        '[name="enable_teacher_management"]'
-    ).value = (
-        button.dataset.teacher || "Disabled"
-    ).trim();
-
-    document.querySelector(
-        '[name="enable_results"]'
-    ).value = (
-        button.dataset.results || "Disabled"
-    ).trim();
-
-    document.querySelector(
-        '[name="enable_timetable"]'
-    ).value = (
-        button.dataset.timetable || "Disabled"
-    ).trim();
-
-    document.querySelector(
-        '[name="enable_notice_board"]'
-    ).value = (
-        button.dataset.notice || "Disabled"
-    ).trim();
-}
-
-
-/* =========================================================
-   CLOSE MODAL
-========================================================= */
-
-function closeFeatureModal(){
-
-    document.getElementById(
-        "featureModal"
-    ).style.display = "none";
-}
-
- 
-/* =========================================================
-   📜 CERTIFICATE MODAL
-========================================================= */
-
-function openCertificateModal(
-
-    schoolId,
-
-    tcPrefix,
-    bonafidePrefix,
-
-    autoNumbering,
-    certificateLabels,
-
-    tcLogo,
-    tcWatermark,
-
-    bonafideLogo,
-    bonafideWatermark
-
-) {
-
-    // OPEN MODAL
-    document.getElementById(
-        "certificateModal"
-    ).style.display = "flex";
-
-    // SCHOOL ID
-    document.getElementById(
-    "certificateSchoolId"
-    ).value = schoolId;
-
-    // PREFIXES
-    document.getElementById(
-        "tc_prefix"
-    ).value = tcPrefix;
-
-    document.getElementById(
-        "bonafide_prefix"
-    ).value = bonafidePrefix;
-
-    // SETTINGS
-    document.getElementById(
-        "auto_numbering"
-    ).value = autoNumbering;
-
-    document.getElementById(
-        "enable_certificate_labels"
-    ).value = certificateLabels;
-
-    // TC
-    document.getElementById(
-        "show_tc_logo"
-    ).value = tcLogo;
-
-    document.getElementById(
-        "show_tc_watermark"
-    ).value = tcWatermark;
-
-    // BONAFIDE
-    document.getElementById(
-        "show_bonafide_logo"
-    ).value = bonafideLogo;
-
-    document.getElementById(
-        "show_bonafide_watermark"
-    ).value = bonafideWatermark;
-}
-
-function closeCertificateModal(){
-
-    document.getElementById(
-        "certificateModal"
-    ).style.display = "none";
-}
-
-/* =========================================================
-   🔒 SCHOOL STATUS MODAL
-   Activate / Deactivate confirmation modal
-========================================================= */
-function toggleSchoolStatus(id, currentStatus){
-
-     console.log("School ID:", id);
-    console.log("Current Status:", currentStatus);
-
-    // set school id in hidden field
-    document.getElementById("statusSchoolId").value = id;
-
-    // get modal message element
-    const msg = document.getElementById("statusMessage");
-
-    // dynamic message based on current status
-    if (Number(currentStatus) === 1) {
-        msg.innerText = "This school will be deactivated and login will be blocked.";
-    } else {
-        msg.innerText = "This school will be activated and login will be allowed.";
+    // Open Add School Modal
+    function openSchoolModal() {
+        document.getElementById("schoolModal").style.display = "flex";
     }
 
-    // open modal
-    document.getElementById("statusModal").style.display = "flex";
-}
-
- 
-// Close Status Modal
-function closeStatusModal() {
-    document.getElementById("statusModal").style.display = "none";
-}
-
-
-/* =========================================================
-   📂 SCHOOL CARD NAVIGATION
-   Open selected school's student records
-========================================================= */
-
-function goToSchool(id) {
-    window.location.href =
-        "/superadmin/superadmin_students?school_id=" + id;
-}
-
-
-/* =========================================================
-   ❌ CLOSE MODALS ON OUTSIDE CLICK
-   If user clicks outside modal box
-========================================================= */
-
-window.onclick = function(e) {
-
-    const addModal = document.getElementById("schoolModal");
-    const editModal = document.getElementById("editSchoolModal");
-    const statusModal = document.getElementById("statusModal");
-
-    if (e.target === addModal) {
-        closeSchoolModal();
+    // Close Add School Modal
+    function closeSchoolModal() {
+        document.getElementById("schoolModal").style.display = "none";
     }
 
-    if (e.target === editModal) {
-        closeEditSchoolModal();
+
+    /* =========================================================
+       ✏ EDIT SCHOOL MODAL
+       Open modal with existing school data prefilled
+    ========================================================= */
+
+    // Open Edit Modal + Fill Existing Values
+    function openEditSchoolModal(
+        id,
+        name,
+        udise,
+        address,
+        phone,
+        email,
+        code,
+        principal
+    ) {
+        document.getElementById("editSchoolModal").style.display = "flex";
+
+        document.getElementById("editSchoolId").value = id;
+        document.getElementById("editName").value = name;
+        document.getElementById("editUdise").value = udise;
+        document.getElementById("editAddress").value = address;
+        document.getElementById("editPhone").value = phone;
+        document.getElementById("editEmail").value = email;
+        document.getElementById("editCode").value = code;
+        document.getElementById("editPrincipal").value = principal;
     }
 
-    if (e.target === statusModal) {
-        closeStatusModal();
+    // Close Edit Modal
+    function closeEditSchoolModal() {
+        document.getElementById("editSchoolModal").style.display = "none";
     }
-};
+
+    /* =========================================================
+       ⚙ FEATURE MODAL
+    ========================================================= */
+
+    function openFeatureModal(button) {
+
+        // =========================================
+        // OPEN MODAL
+        // =========================================
+
+        document.getElementById(
+            "featureModal"
+        ).style.display = "flex";
+
+        // =========================================
+        // SCHOOL ID
+        // =========================================
+
+        document.getElementById(
+            "featureSchoolId"
+        ).value = button.dataset.schoolId;
+
+        // =========================================
+        // LOAD CURRENT VALUES
+        // =========================================
+
+        document.querySelector(
+            '[name="enable_tc_management"]'
+        ).value = (
+            button.dataset.tc || "Disabled"
+        ).trim();
+
+        document.querySelector(
+            '[name="enable_bonafide_management"]'
+        ).value = (
+            button.dataset.bonafide || "Disabled"
+        ).trim();
+
+        document.querySelector(
+            '[name="enable_import_export"]'
+        ).value = (
+            button.dataset.importExport || "Disabled"
+        ).trim();
+
+        document.querySelector(
+            '[name="enable_attendance"]'
+        ).value = (
+            button.dataset.attendance || "Disabled"
+        ).trim();
+
+        document.querySelector(
+            '[name="enable_fee_management"]'
+        ).value = (
+            button.dataset.fee || "Disabled"
+        ).trim();
+
+        document.querySelector(
+            '[name="enable_teacher_management"]'
+        ).value = (
+            button.dataset.teacher || "Disabled"
+        ).trim();
+
+        document.querySelector(
+            '[name="enable_results"]'
+        ).value = (
+            button.dataset.results || "Disabled"
+        ).trim();
+
+        document.querySelector(
+            '[name="enable_timetable"]'
+        ).value = (
+            button.dataset.timetable || "Disabled"
+        ).trim();
+
+        document.querySelector(
+            '[name="enable_notice_board"]'
+        ).value = (
+            button.dataset.notice || "Disabled"
+        ).trim();
+    }
+
+
+    /* =========================================================
+       CLOSE MODAL
+    ========================================================= */
+
+    function closeFeatureModal() {
+
+        document.getElementById(
+            "featureModal"
+        ).style.display = "none";
+    }
+
+
+    /* =========================================================
+       📜 CERTIFICATE MODAL
+    ========================================================= */
+
+    function openCertificateModal(
+
+        schoolId,
+
+        tcPrefix,
+        bonafidePrefix,
+
+        autoNumbering,
+        certificateLabels,
+
+        tcLogo,
+        tcWatermark,
+
+        bonafideLogo,
+        bonafideWatermark
+
+    ) {
+
+        // OPEN MODAL
+        document.getElementById(
+            "certificateModal"
+        ).style.display = "flex";
+
+        // SCHOOL ID
+        document.getElementById(
+            "certificateSchoolId"
+        ).value = schoolId;
+
+        // PREFIXES
+        document.getElementById(
+            "tc_prefix"
+        ).value = tcPrefix;
+
+        document.getElementById(
+            "bonafide_prefix"
+        ).value = bonafidePrefix;
+
+        // SETTINGS
+        document.getElementById(
+            "auto_numbering"
+        ).value = autoNumbering;
+
+        document.getElementById(
+            "enable_certificate_labels"
+        ).value = certificateLabels;
+
+        // TC
+        document.getElementById(
+            "show_tc_logo"
+        ).value = tcLogo;
+
+        document.getElementById(
+            "show_tc_watermark"
+        ).value = tcWatermark;
+
+        // BONAFIDE
+        document.getElementById(
+            "show_bonafide_logo"
+        ).value = bonafideLogo;
+
+        document.getElementById(
+            "show_bonafide_watermark"
+        ).value = bonafideWatermark;
+    }
+
+    function closeCertificateModal() {
+
+        document.getElementById(
+            "certificateModal"
+        ).style.display = "none";
+    }
+
+    /* =========================================================
+       🔒 SCHOOL STATUS MODAL
+       Activate / Deactivate confirmation modal
+    ========================================================= */
+    function toggleSchoolStatus(id, currentStatus) {
+
+        console.log("School ID:", id);
+        console.log("Current Status:", currentStatus);
+
+        // set school id in hidden field
+        document.getElementById("statusSchoolId").value = id;
+
+        // get modal message element
+        const msg = document.getElementById("statusMessage");
+
+        // dynamic message based on current status
+        if (Number(currentStatus) === 1) {
+            msg.innerText = "This school will be deactivated and login will be blocked.";
+        } else {
+            msg.innerText = "This school will be activated and login will be allowed.";
+        }
+
+        // open modal
+        document.getElementById("statusModal").style.display = "flex";
+    }
+
+
+    // Close Status Modal
+    function closeStatusModal() {
+        document.getElementById("statusModal").style.display = "none";
+    }
+
+
+    /* =========================================================
+       📂 SCHOOL CARD NAVIGATION
+       Open selected school's student records
+    ========================================================= */
+
+    function goToSchool(id) {
+        window.location.href =
+            "/superadmin/superadmin_students?school_id=" + id;
+    }
+
+
+    /* =========================================================
+       ❌ CLOSE MODALS ON OUTSIDE CLICK
+       If user clicks outside modal box
+    ========================================================= */
+
+    window.onclick = function (e) {
+
+        const addModal = document.getElementById("schoolModal");
+        const editModal = document.getElementById("editSchoolModal");
+        const statusModal = document.getElementById("statusModal");
+
+        if (e.target === addModal) {
+            closeSchoolModal();
+        }
+
+        if (e.target === editModal) {
+            closeEditSchoolModal();
+        }
+
+        if (e.target === statusModal) {
+            closeStatusModal();
+        }
+    };
 
 </script>
 
