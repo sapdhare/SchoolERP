@@ -10665,7 +10665,7 @@ def superadmin_settings():
 
     except Exception as e:
         print("❌ SETTINGS ERROR:", e)
-        logger.exception("Internal Server Error")
+        logger.exception("Internal Server Error",e)
 
     finally:
         if cursor:
