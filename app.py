@@ -10665,7 +10665,7 @@ def superadmin_settings():
 
     except Exception as e:
         print("❌ SETTINGS ERROR:", e)
-        logger.exception("Internal Server Error",e)
+        logger.exception("Internal Server Errorrrrrrrr",e)
 
     finally:
         if cursor:
@@ -20812,3 +20812,9 @@ def healthcheck():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
+
+
