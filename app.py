@@ -14970,10 +14970,10 @@ def clerk_profile_update():
         user_id = session.get("clerk_user_id")
 
         if not user_id:
-            return jsonify({
+            return {
                 "status":"error",
-                "message": "Session expired. Please login again."
-            }), 401
+                "message":"Session expired"
+            }
 
         name = request.form.get("name","").strip()
         phone = request.form.get("phone","").strip()
@@ -14981,16 +14981,16 @@ def clerk_profile_update():
         designation = request.form.get("designation","").strip()
 
         if not name:
-            return jsonify({
+            return {
                 "status":"error",
-                "message":"Name is required"
-            }),400
+                "message":"Name required"
+            }
         
         if phone and (not phone.isdigit() or len(phone) != 10):
-            return jsonify({
+            return {
                 "status":"error",
-                "message": "Please enter a valid 10-digit phone number."
-            }),400
+                "message":"Invalid phone number"
+            }
 
         conn = get_connection()
         cursor = conn.cursor()
@@ -15016,22 +15016,17 @@ def clerk_profile_update():
             designation,
             user_id
         ))
-        if cursor.rowcount == 0:
-            return jsonify({
-                "status": "error",
-                "message": "User not found."
-            }), 404
 
         conn.commit()
 
-        return jsonify({
+        return {
             "status":"success",
             "message":"Profile updated successfully"
-        })
+        }
 
     except Exception as e:
         
-        logger.exception("Profile Update Error")
+        print("PROFILE UPDATE ERROR:", e)
         return jsonify({
             "status": "error",
             "message": "Something went wrong"
@@ -15078,8 +15073,8 @@ def clerk_send_password_otp():
 
             return jsonify({
                 "status": "error",
-                "message": "Email is required"
-            }),400
+                "message": "Email required"
+            })
 
         # =========================================
         # SESSION USER
@@ -15093,8 +15088,8 @@ def clerk_send_password_otp():
 
             return jsonify({
                 "status": "error",
-                "message": "User session is missing"
-            }),401
+                "message": "User session missing"
+            })
 
         # =========================================
         # DB CONNECTION
@@ -15107,7 +15102,7 @@ def clerk_send_password_otp():
             return jsonify({
                 "status": "error",
                 "message": "Database connection failed"
-            }),500
+            })
 
         cursor = conn.cursor()
 
@@ -15134,7 +15129,7 @@ def clerk_send_password_otp():
             return jsonify({
                 "status": "error",
                 "message": "User not found"
-            }),404
+            })
 
         db_email = (
             user[0] or ""
@@ -15154,7 +15149,7 @@ def clerk_send_password_otp():
             return jsonify({
                 "status": "error",
                 "message": "Email does not match registered email"
-            }),403
+            })
 
         # =========================================
         # OTP RESEND COOLDOWN
@@ -15194,7 +15189,7 @@ def clerk_send_password_otp():
                 return jsonify({
                     "status": "error",
                     "message": "Please wait 60 seconds before requesting another OTP"
-                }),429
+                })
 
         # =========================================
         # REMOVE OLD UNUSED OTP
@@ -15301,7 +15296,7 @@ def clerk_send_password_otp():
             return jsonify({
                 "status": "error",
                 "message": "Failed to send OTP email"
-            }),500
+            })
 
         # =========================================
         # SUCCESS RESPONSE
@@ -15310,14 +15305,17 @@ def clerk_send_password_otp():
         return jsonify({
             "status": "success",
             "message": "OTP sent successfully"
-        }),200
+        })
 
     except Exception as e:
 
         if conn:
             conn.rollback()
 
-        logger.exception("SEND OTP ERROR")
+        print(
+            "SEND OTP ERROR:",
+            e
+        )
 
         return jsonify({
             "status": "error",
@@ -15371,7 +15369,7 @@ def clerk_check_password_otp():
                 "status": "error",
                 "message": "OTP required"
 
-            }),403
+            })
 
         if (
             not entered_otp.isdigit()
@@ -15383,7 +15381,7 @@ def clerk_check_password_otp():
                 "status": "error",
                 "message": "Invalid OTP format"
 
-            }),400
+            })
 
         # =========================================
         # SESSION USER
@@ -15400,7 +15398,7 @@ def clerk_check_password_otp():
                 "status": "error",
                 "message": "User session missing"
 
-            }),401
+            })
 
         # =========================================
         # DB CONNECTION
@@ -15446,7 +15444,7 @@ def clerk_check_password_otp():
                 "status": "error",
                 "message": "OTP not found"
 
-            }),400
+            })
 
         otp_id = otp_row[0]
         saved_otp = otp_row[1]
@@ -15465,7 +15463,7 @@ def clerk_check_password_otp():
                 "status": "error",
                 "message": "OTP already used"
 
-            }),400
+            })
         # =========================================
         # BLOCK AFTER 5 ATTEMPTS
         # OTP becomes unusable
@@ -15486,9 +15484,13 @@ def clerk_check_password_otp():
             conn.commit()
 
             return jsonify({
+
                 "status": "error",
-                "message":"Too many invalid attempts. Please request a new OTP."
-            }),429
+
+                "message":
+                "Too many invalid attempts. Please request a new OTP."
+
+            })
         # =========================================
         # CHECK EXPIRY
         # =========================================
@@ -15500,7 +15502,7 @@ def clerk_check_password_otp():
                 "status": "error",
                 "message": "OTP expired"
 
-            }),410
+            })
 
         # =========================================
         # INVALID OTP
@@ -15543,7 +15545,7 @@ def clerk_check_password_otp():
                     "message":
                     "OTP blocked after 5 invalid attempts"
 
-                }),410
+                })
 
             return jsonify({
 
@@ -15552,7 +15554,7 @@ def clerk_check_password_otp():
                 "message":
                 f"Invalid OTP. {5 - attempts} attempts remaining"
 
-            }),429
+            })
 
         # =========================================
         # OTP VERIFIED
@@ -15590,21 +15592,21 @@ def clerk_check_password_otp():
             "status": "success",
             "message": "OTP Verified"
 
-        }),200
+        })
 
     except Exception as e:
 
-         if conn:
-            conn.rollback()
+        print(
+            "VERIFY OTP ERROR:",
+            e
+        )
 
-        logger.exception("VERIFY OTP ERROR")
-             
         return jsonify({
 
             "status": "error",
             "message": "Something went wrong"
 
-        }),500
+        })
 
     finally:
 
@@ -15636,26 +15638,31 @@ def clerk_update_password():
         # =========================================
         # SESSION USER
         # =========================================
-        
-        user_id = session.get("clerk_user_id")
+
+        user_id = session.get(
+            "clerk_user_id"
+        )
 
         if not user_id:
+
             return jsonify({
+
                 "status": "error",
                 "message": "User session missing"
-            }),401
 
-        # =========================================
-        # OTP SESSION CHECK
-        # User must verify OTP in current session
-        # =========================================
-        
-        if session.get("otp_verified") is not True:
-        
-            return jsonify({
-                "status": "error",
-                "message": "OTP verification required"
-            }), 403
+            })
+
+            # =========================================
+            # OTP SESSION CHECK
+            # User must verify OTP in current session
+            # =========================================
+
+            if session.get("otp_verified") is not True:
+
+                return jsonify({
+                    "status": "error",
+                    "message": "OTP verification required"
+                })
 
         # =========================================
         # GET REQUEST DATA
@@ -15678,7 +15685,7 @@ def clerk_update_password():
                 "status": "error",
                 "message": "Password required"
 
-            }),400
+            })
 
         # =========================================
         # STRONG PASSWORD VALIDATION
@@ -15713,7 +15720,7 @@ def clerk_update_password():
                 "message":
                 "Password must contain uppercase, lowercase, number and special character"
 
-            }),400
+            })
 
         # =========================================
         # DB CONNECTION
@@ -15755,7 +15762,7 @@ def clerk_update_password():
                 "message":
                 "OTP verification required"
 
-            }),403
+            })
 
         verified_time = otp_row[1]
 
@@ -15782,7 +15789,7 @@ def clerk_update_password():
                     "message":
                     "OTP verification expired"
 
-                }),410
+                })
 
         # =========================================
         # HASH PASSWORD
@@ -15855,21 +15862,24 @@ def clerk_update_password():
             "message":
             "Password updated successfully"
 
-        }),200
+        })
 
     except Exception as e:
 
         if conn:
             conn.rollback()
 
-       logger.exception("UPDATE PASSWORD ERROR")
+        print(
+            "UPDATE PASSWORD ERROR:",
+            e
+        )
 
         return jsonify({
 
             "status": "error",
             "message": "Something went wrong"
 
-        }),500
+        })
 
     finally:
 
@@ -15926,8 +15936,9 @@ def generate_admission_no(school_id):
         # =========================================
 
         if not row:
-            raise ValueError(
-                "School sequence not found "
+
+            raise Exception(
+                "School sequence not found ❌"
             )
 
         current_number = row[0] or 0
@@ -15967,8 +15978,8 @@ def generate_admission_no(school_id):
             f"{str(next_number).zfill(4)}"
         )
 
-        logger.info(
-             "Generated Admission Number: %s",
+        print(
+            "✅ Generated Admission Number:",
             admission_no
         )
 
@@ -15979,7 +15990,10 @@ def generate_admission_no(school_id):
         if conn:
             conn.rollback()
 
-        logger.exception("Admission Number Generation Error")
+        print(
+            "ADMISSION NUMBER ERROR:",
+            e
+        )
 
         raise
 
@@ -16093,51 +16107,45 @@ def add_student():
 
             for label, value in required_fields.items():
                 if not value:
-                    return f"{label} is required "
+                    return f"{label} is required ❌"
 
             # ================= FORMAT VALIDATION =================
             if not is_valid_aadhaar(aadhaar):
-                flash("Invalid Aadhaar number.", "error")
-                return redirect(url_for("add_student"))
+                return "Invalid Aadhaar number ❌"
 
             if not is_valid_phone(primary_mobile):
-                flash("Primary mobile number is invalid.", "error")
+                return "Invalid primary mobile number ❌"
 
             if alternate_mobile and not is_valid_phone(alternate_mobile):
-                flash("Alternate mobile number is invalid.", "error")
+                return "Invalid alternate mobile number ❌"
 
             if guardian_mobile and not is_valid_phone(guardian_mobile):
-                flash("Guardian mobile number is invalid.", "error")
+                return "Invalid guardian mobile number ❌"
 
             if email and not is_valid_email(email):
-                flash("Email is invalid.", "error")
+                return "Invalid email ❌"
 
             # ================= LENGTH VALIDATION =================
             if len(school_register_no) > 50:
-                flash("School register number too long", "error")
-                
+                return "School register number too long ❌"
 
             if len(name) > 200:
-                flash("Student name too long ", "error")
-                
+                return "Student name too long ❌"
 
             if len(father_name) > 200:
-                flash("Father name too long ", "error")
-                
+                return "Father name too long ❌"
 
             if len(mother_name) > 200:
-                flash("Mother name too long", "error")
-                 
+                return "Mother name too long ❌"
 
             if student_uid and len(student_uid) > 50:
-                flash("Student UID too long ", "error")
+                return "Student UID too long ❌"
 
             if apaar_id and len(apaar_id) > 50:
-                flash("APAAR ID too long", "error")
+                return "APAAR ID too long ❌"
 
             if email and len(email) > 255:
-                flash("Email too long", "error")
-                 
+                return "Email too long ❌"
 
             # ================= DUPLICATE CHECK =================
             cursor.execute("""
@@ -16172,11 +16180,7 @@ def add_student():
             ))
 
             if cursor.fetchone():
-                flash(
-                    "Student with the same Register No, Aadhaar, Student UID or APAAR ID already exists.",
-                    "error"
-                )
-                return redirect(url_for("add_student"))
+                return "Student with same Register No, Aadhaar, Student UID or APAAR ID already exists ❌"
 
             # ================= GENERATE ADMISSION NO =================
             admission_no = generate_admission_no(school_id)
@@ -16264,10 +16268,7 @@ def add_student():
 
             conn.commit()
 
-            flash(
-                "Student added successfully.",
-                "success"
-            )
+            print("✅ Student Saved:", admission_no)
 
             return redirect(url_for("clerk_students"))
 
@@ -16276,13 +16277,9 @@ def add_student():
             if conn:
                 conn.rollback()
 
-            logger.exception("ADD STUDENT ERROR")
+            print("❌ ADD STUDENT ERROR:", e)
 
-            flash(
-                "Something went wrong. Please try again.",
-                "error"
-            )
-            return redirect(url_for("add_student"))
+            return "Something went wrong ❌"
 
         finally:
 
@@ -16374,15 +16371,8 @@ def edit_student(id):
         row = cursor.fetchone()
 
         if not row:
-            flash(
-                "Student not found.",
-                "error"
-            )
-            
-            if is_clerk_request:
-                return redirect(url_for("clerk_students"))
+            return "Student Not Found ❌"
 
-        
         columns = [
             column[0]
             for column in cursor.description
@@ -16499,232 +16489,108 @@ def edit_student(id):
             for field_name, field_value in required_fields.items():
 
                 if not field_value:
-                    flash(
-                        f"{field_name} is required.",
-                        "error"
-                    )
-                    return redirect(request.url)
+                    return f"{field_name} is required ❌"
 
             # =========================================
             # FORMAT VALIDATION
             # =========================================
 
             if not is_valid_phone(primary_mobile):
-                flash(
-                    "Invalid primary mobile number.",
-                    "error"
-                )
-                 
+                return "Invalid primary mobile number ❌"
 
             if alternate_mobile and not is_valid_phone(alternate_mobile):
-                flash(
-                    "Invalid alternate mobile number.",
-                    "error"
-                )
+                return "Invalid alternate mobile number ❌"
 
             if guardian_mobile and not is_valid_phone(guardian_mobile):
-                flash(
-                    "Invalid guardian mobile number.",
-                    "error"
-                )
-                 
+                return "Invalid guardian mobile number ❌"
 
             if email and not is_valid_email(email):
-                flash(
-                    "Invalid Email.",
-                    "error"
-                )
-                 
+                return "Invalid email ❌"
 
             if not is_valid_aadhaar(aadhaar):
-                flash(
-                    "Invalid Aadhaar number.",
-                    "error"
-                )
+                return "Invalid Aadhaar number ❌"
 
             # =========================================
             # LENGTH VALIDATION
             # =========================================
 
             if len(school_register_no) > 50:
-                flash(
-                    "School register number too long.",
-                    "error"
-                )
+                return "School register number too long ❌"
 
             if len(name) > 200:
-                flash(
-                    "Student name is too long.",
-                    "error"
-                )
+                return "Student name too long ❌"
 
             if len(father_name) > 200:
-                flash(
-                    "Father name is too long.",
-                    "error"
-                )
-                 
+                return "Father name too long ❌"
 
             if len(mother_name) > 200:
-                flash(
-                    "Mother name is too long.",
-                    "error"
-                )
-               
+                return "Mother name too long ❌"
 
             if student_uid and len(student_uid) > 50:
-                flash(
-                    "Student uid is too long.",
-                    "error"
-                )
-                
+                return "Student UID too long ❌"
 
             if apaar_id and len(apaar_id) > 50:
-                flash(
-                    "APAAR ID is too long.",
-                    "error"
-                )
-                 
+                return "APAAR ID too long ❌"
 
             if len(birth_place) > 100:
-                flash(
-                    "Birth place is too long.",
-                    "error"
-                )
-                 
+                return "Birth place too long ❌"
 
             if len(nationality) > 50:
-                flash(
-                    "Nationality is too long.",
-                    "error"
-                )
-                 
+                return "Nationality too long ❌"
 
             if len(mother_tongue) > 50:
-                flash(
-                    "Mother Toungue is too long.",
-                    "error"
-                )
-                 
+                return "Mother tongue too long ❌"
 
             if len(religion) > 50:
-                flash(
-                    "Religion is too long.",
-                    "error"
-                )
-                 
+                return "Religion too long ❌"
 
             if len(caste) > 50:
-                flash(
-                    "Caste is too long.",
-                    "error"
-                )
-                
+                return "Caste too long ❌"
 
             if len(city) > 100:
-                flash(
-                    "city name is too long.",
-                    "error"
-                )
-                 
+                return "City name too long ❌"
 
             if len(taluka) > 100:
-                flash(
-                    "Taluka name is too long.",
-                    "error"
-                )
-                 
+                return "Taluka name too long ❌"
 
             if len(district) > 100:
-                flash(
-                    "District name is too long.",
-                    "error"
-                )
-                 
+                return "District name too long ❌"
 
             if len(state) > 100:
-                flash(
-                    "State name is too long.",
-                    "error"
-                )
-                 
+                return "State name too long ❌"
 
             if len(student_class) > 50:
-                flash(
-                    "Student class is too long.",
-                    "error"
-                )
-                 
+                return "Class too long ❌"
 
             if len(section) > 10:
-                flash(
-                    "Section is too long.",
-                    "error"
-                )
-                 
+                return "Section too long ❌"
 
             if previous_school and len(previous_school) > 200:
-                flash(
-                    "Previous school name is too long.",
-                    "error"
-                )
-                
+                return "Previous school name too long ❌"
 
             if last_exam and len(last_exam) > 100:
-                flash(
-                    "Last Exam is too long.",
-                    "error"
-                )
-                
+                return "Last exam too long ❌"
 
             if result_status and len(result_status) > 50:
-                flash(
-                    "Result Status is too long.",
-                    "error"
-                )
-                 
+                return "Result status too long ❌"
 
             if progress and len(progress) > 100:
-                flash(
-                    "Progress is too long.",
-                    "error"
-                )
-                 
+                return "Progress too long ❌"
 
             if conduct and len(conduct) > 100:
-                flash(
-                    "Conduct is too long.",
-                    "error"
-                )
-                
+                return "Conduct too long ❌"
 
             if email and len(email) > 255:
-                flash(
-                    "Email is too long.",
-                    "error"
-                )
-               
+                return "Email too long ❌"
 
             if occupation and len(occupation) > 100:
-                flash(
-                    "Occupation is too long.",
-                    "error"
-                )
-               
+                return "Occupation too long ❌"
 
             if income and len(income) > 50:
-                flash(
-                    "Income is too long.",
-                    "error"
-                )
-                 
+                return "Income too long ❌"
 
             if guardian_name and len(guardian_name) > 100:
-                flash(
-                    "Guardian name is too long.",
-                    "error"
-                )
-                
+                return "Guardian name too long ❌"
 
             # =========================================
             # DUPLICATE CHECK
@@ -16773,11 +16639,11 @@ def edit_student(id):
             existing_student = cursor.fetchone()
 
             if existing_student:
-                flash(
-                    "Student with the same Register Number, Aadhaar, Student UID or APAAR ID already exists.",
-                    "error"
+
+                return (
+                    "Student with same Register No, Aadhaar, "
+                    "Student UID or APAAR ID already exists ❌"
                 )
-                return redirect(request.url)
 
             # =========================================
             # UPDATE QUERY
@@ -16935,13 +16801,8 @@ def edit_student(id):
                 ))
 
             conn.commit()
-            
-            logger.info("Student Updated Successfully")
 
-            flash(
-                "Student updated successfully.",
-                "success"
-            )
+            print("✅ Student Updated in DB")
 
             if is_clerk_request:
                 return redirect(url_for("clerk_dashboard"))
@@ -16955,12 +16816,7 @@ def edit_student(id):
         school = get_school_details(student_school_id)
 
         if not school:
-            flash(
-                "School not found.",
-                "error"
-            )
-            if is_clerk_request:
-                return redirect(url_for("clerk_students"))
+            return "School not found ❌"
 
         return render_template(
             "clerk/edit_student.html",
@@ -16976,13 +16832,9 @@ def edit_student(id):
         if conn:
             conn.rollback()
 
-        logger.exception("EDIT STUDENT ERROR")
-        flash(
-            "Something went wrong. Please try again.",
-            "error"
-        )
+        print("❌ EDIT STUDENT ERROR:", e)
 
-        return redirect(request.url)
+        return "Something went wrong ❌"
 
     finally:
 
@@ -17007,13 +16859,8 @@ def clerk_students():
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            flash(
-                "Your session has expired. Please log in again.",
-                "error"
-            )
-            return redirect(url_for("login"))
-             
-             
+            return "School session missing ❌"
+            abort(404)
         search = (request.args.get("search") or "").strip()
         class_filter = (request.args.get("class") or "").strip()
 
@@ -17024,12 +16871,7 @@ def clerk_students():
         conn = get_connection()
 
         if not conn:
-            flash(
-                "Unable to connect to the database. Please try again.",
-                "error"
-            )
-
-            return redirect(url_for("clerk_dashboard"))
+            return "Database connection failed ❌"
 
         cursor = conn.cursor(dictionary=True)
 
@@ -17111,13 +16953,7 @@ def clerk_students():
         school = get_school_details(school_id)
 
         if not school:
-             flash(
-                "School details not found.",
-                "error"
-             )
-        
-            return redirect(url_for("clerk_dashboard"))
-            
+            return "School not found ❌"
 
         return render_template(
             "clerk/students.html",
@@ -17134,16 +16970,8 @@ def clerk_students():
         )
 
     except Exception as e:
-
-        logger.exception(
-            "STUDENTS FETCH ERROR"
-        )
-
-        flash(
-            "Unable to load student records. Please try again.",
-            "error"
-        )
-        return redirect(url_for("clerk_dashboard"))
+        print("❌ STUDENTS FETCH ERROR:", e)
+        return "Something went wrong ❌"
 
     finally:
         if cursor:
@@ -17181,7 +17009,7 @@ def generate_tc_number(cursor, school_id):
     school = cursor.fetchone()
 
     if not school:
-        raise RuntimeError("School not found.")
+        raise Exception("School not found ❌")
 
     school_code = school[0]
     tc_prefix = school[1] or "TC"
@@ -17192,7 +17020,7 @@ def generate_tc_number(cursor, school_id):
     # =====================================
 
     if auto_numbering != "Enabled":
-        raise RuntimeError("Auto numbering is disabled for this school.")
+        raise Exception("Auto numbering disabled for this school ❌")
 
     # =====================================
     # LOCK SCHOOL SEQUENCE
@@ -17211,7 +17039,7 @@ def generate_tc_number(cursor, school_id):
     row = cursor.fetchone()
 
     if not row:
-        raise RuntimeError("School sequence not found.")
+        raise Exception("School sequence not found ❌")
 
     next_number = (row[0] or 0) + 1
 
@@ -17269,12 +17097,8 @@ def tc_form(id):
             return redirect(url_for("login"))
 
         if session.get("clerk_role") != "clerk":
-            flash(
-                "You are not authorized to access this page.",
-                "error"
-            )
-
-            return redirect(url_for("login"))
+            return "Unauthorized ❌"
+            abort(401)
 
         # =========================================
         # DB CONNECTION
@@ -17302,13 +17126,7 @@ def tc_form(id):
         row = cursor.fetchone()
 
         if not row:
-            flash(
-                "Student not found.",
-                "error"
-            )
-            
-            return redirect(url_for("clerk_students"))
-             
+            return "Student Not Found ❌"
 
         columns = [column[0] for column in cursor.description]
         student = dict(zip(columns, row))
@@ -17351,32 +17169,16 @@ def tc_form(id):
             # =========================================
 
             if not tc_date or not leaving_date:
-                flash(
-                    "Please select valid TC Date and Leaving Date.",
-                    "error"
-                )
-                return redirect(request.url)
+                return "TC Date / Leaving Date invalid ❌"
 
             if not leaving_reason:
-                flash(
-                    "Leaving reason is required.",
-                    "error"
-                )
-                return redirect(request.url)
+                return "Leaving reason required ❌"
 
             if len(leaving_reason) > 255:
-                flash(
-                    "Leaving reason is too long.",
-                    "error"
-                )
-                return redirect(request.url)
+                return "Leaving reason too long ❌"
 
             if remark and len(remark) > 500:
-                flash(
-                    "Remark cannot exceed 500 characters.",
-                    "error"
-                )
-                return redirect(request.url)
+                return "Remark too long ❌"
 
             # =========================================
             # CONVERT DATETIME TO DATE FOR DB
@@ -17410,11 +17212,7 @@ def tc_form(id):
                 )
 
                 if leaving_date_value < admission_date_value:
-                    flash(
-                        "Leaving date cannot be before the admission date.",
-                        "error"
-                    )
-                    return redirect(request.url)
+                    return "Leaving date cannot be before admission date ❌"
 
             # =========================================
             # EXISTING TC CHECK
@@ -17435,11 +17233,6 @@ def tc_form(id):
             existing_tc = cursor.fetchone()
 
             if existing_tc:
-                
-                flash(
-                    "Transfer Certificate already exists for this student.",
-                    "info"
-                )
                 return redirect(
                     url_for("view_tc", tc_id=existing_tc[0])
                 )
@@ -17488,10 +17281,6 @@ def tc_form(id):
 
             conn.commit()
 
-            flash(
-                "Transfer Certificate generated successfully.",
-                "success"
-            )
             return redirect(
                 url_for("view_tc", tc_id=new_tc_id)
             )
@@ -17503,12 +17292,7 @@ def tc_form(id):
         school = get_school_details(school_id)
 
         if not school:
-            flash(
-                "School details not found.",
-                "error"
-            )
-            
-            return redirect(url_for("clerk_dashboard"))
+            return "School not found ❌"
 
         return render_template(
             "clerk/tc_form.html",
@@ -17525,14 +17309,9 @@ def tc_form(id):
         if conn:
             conn.rollback()
 
-        logger.exception("TC FORM ERROR")
+        print("❌ TC FORM ERROR:", e)
 
-        flash(
-            "Unable to generate the Transfer Certificate. Please try again.",
-            "error"
-        )
-        
-        return redirect(url_for("clerk_students"))
+        return "TC form failed ❌"
 
     finally:
 
@@ -21033,9 +20812,3 @@ def healthcheck():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-
-
