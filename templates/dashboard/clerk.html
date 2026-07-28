@@ -814,6 +814,35 @@
 </script>
 
 <script>
+
+    /* =====================================================
+   HANDLE EXPIRED SESSION
+===================================================== */
+
+function handleSessionExpired(response){
+
+    if(response.redirected){
+
+        window.location.href = response.url;
+        return true;
+
+    }
+
+    if(response.status === 401){
+
+        alert("Your session has expired. Please login again.");
+
+        window.location.href = "/login";
+
+        return true;
+    }
+
+    return false;
+
+}
+</script>
+
+<script>
 document.addEventListener("DOMContentLoaded", function(){
 
     const chartData = JSON.parse(
@@ -957,7 +986,36 @@ function openProfileModal(){
 function closeProfileModal(){
     document.getElementById("profileModal").style.display = "none";
 }
+/* =====================================================
+   CLOSE MODAL WHEN CLICKING OUTSIDE
+===================================================== */
 
+window.addEventListener("click", function(e){
+
+    const modal = document.getElementById("profileModal");
+
+    if(e.target === modal){
+
+        closeProfileModal();
+
+    }
+
+});
+
+    /* =====================================================
+   CLOSE MODAL ON ESC KEY
+===================================================== */
+
+document.addEventListener("keydown", function(e){
+
+    if(e.key === "Escape"){
+
+        closeProfileModal();
+
+    }
+
+});
+    
 /* TAB SWITCH */
 
 function showProfileTab(tab){
@@ -1005,14 +1063,28 @@ function saveProfile(){
     formData.append("address", document.getElementById("profile_address").value.trim());
     formData.append("designation", document.getElementById("profile_designation").value.trim());
 
-    fetch("/clerk/profile/update",{
-        method:"POST",
-        headers:{
-            "X-CSRFToken": csrfToken
-        },
-        body:formData
+fetch("/clerk/profile/update",{
+
+    method:"POST",
+
+    headers:{
+        "X-CSRFToken": csrfToken
+    },
+
+    body:formData
+
     })
-    .then(res=>res.json())
+        .then(response=>{
+    
+        if(handleSessionExpired(response)){
+    
+            throw new Error("Session Expired");
+    
+        }
+    
+        return response.json();
+    
+    })
     .then(data=>{
         alert(data.message);
 
@@ -1020,8 +1092,14 @@ function saveProfile(){
             location.reload();
         }
     })
-    .catch(()=>{
-        alert("Something went wrong");
+    .catch(error=>{
+
+        if(error.message !== "Session Expired"){
+    
+            alert("Something went wrong");
+    
+        }
+    
     })
     .finally(()=>{
         btn.disabled = false;
@@ -1050,16 +1128,29 @@ function sendPasswordOTP(){
     const email = document.getElementById("reset_email").value.trim();
 
     fetch("/clerk/profile/send-otp",{
+    
         method:"POST",
+    
         headers:{
             "Content-Type":"application/json",
             "X-CSRFToken": csrfToken
         },
+    
         body:JSON.stringify({
             email:email
         })
+    
     })
-    .then(res=>res.json())
+    .then(response=>{
+    
+        if(handleSessionExpired(response)){
+            throw new Error("Session Expired");
+        }
+    
+        return response.json();
+    
+    })
+        
     .then(data=>{
 
         alert(data.message);
@@ -1081,16 +1172,32 @@ function verifyOTPOnly(){
     }
 
     fetch("/clerk/profile/check-otp",{
-        method:"POST",
+        
+         method:"POST",
+
         headers:{
             "Content-Type":"application/json",
             "X-CSRFToken": csrfToken
         },
+    
         body:JSON.stringify({
-            otp:otp
+
+                otp:otp
+            
+            })
         })
+        
+       .then(response=>{
+    
+        if(handleSessionExpired(response)){
+    
+            throw new Error("Session Expired");
+    
+        }
+    
+        return response.json();
+    
     })
-    .then(res=>res.json())
     .then(data=>{
 
         alert(data.message);
@@ -1114,16 +1221,32 @@ function updatePasswordFinal(){
     }
 
     fetch("/clerk/profile/update-password",{
-        method:"POST",
-        headers:{
+        
+         method:"POST",
+
+         headers:{
             "Content-Type":"application/json",
             "X-CSRFToken": csrfToken
         },
+    
         body:JSON.stringify({
-            password:newPassword
+
+                password:newPassword
+            
+            })
         })
+        
+       .then(response=>{
+    
+        if(handleSessionExpired(response)){
+    
+            throw new Error("Session Expired");
+    
+        }
+    
+        return response.json();
+    
     })
-    .then(res=>res.json())
     .then(data=>{
 
         alert(data.message);
