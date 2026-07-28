@@ -11151,15 +11151,15 @@ def save_security_settings():
 def renew_subscription():
 
     if session.get("clerk_role") != "clerk":
-        return "Unauthorized ❌"
         abort(401)
+        
     school_id = session.get(
         "clerk_school_id"
     )
 
     if not school_id:
-        return "School session missing ❌"
         abort(404)
+        
     conn = None
     cursor = None
 
@@ -13008,14 +13008,12 @@ def subscription_payment():
         # =========================================
 
         if session.get("clerk_role") != "clerk":
-            return "Unauthorized ❌"
             abort(401)
         school_id = session.get(
             "clerk_school_id"
         )
 
         if not school_id:
-            return "School session missing ❌"
             abort(404)
         # =========================================
         # FORM DATA
@@ -13213,14 +13211,12 @@ def payment_success():
         # =========================================
 
         if session.get("clerk_role") != "clerk":
-            return "Unauthorized ❌"
             abort(401)
         school_id = session.get(
             "clerk_school_id"
         )
 
         if not school_id:
-            return "School session missing ❌"
             abort(404)
         # =========================================
         # FORM DATA
