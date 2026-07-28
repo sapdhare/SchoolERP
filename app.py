@@ -2005,7 +2005,7 @@ def login():
             UPDATE users
             SET
                 last_login = NOW(),
-                updated_at = NOW(),
+                updated_at = NOW()
             WHERE id = %s
         """, (user_id,))
 
@@ -2188,8 +2188,7 @@ def superadmin_login():
                 email,
                 password,
                 role,
-                status,
-                COALESCE(failed_login_attempts, 0)
+                status
             FROM users
             WHERE email = %s
             AND role = 'admin'
@@ -2221,19 +2220,6 @@ def superadmin_login():
         db_password = user[2]
         role = user[3]
         status = user[4]
-        db_failed_attempts = int(user[5] or 0)
-
-        # =================================================
-        # DATABASE BASED FAILED LOGIN LIMIT
-        # Protects admin account across browsers/devices
-        # =================================================
-        if db_failed_attempts >= login_attempt_limit:
-            flash(
-                "Your account has been temporarily locked due to multiple failed login attempts.",
-                "danger"
-            )
-
-            return redirect(url_for("superadmin_login"))
 
         # =================================================
         # ROLE SAFETY CHECK
@@ -2269,16 +2255,6 @@ def superadmin_login():
         # =================================================
         if not bcrypt.check_password_hash(db_password, password):
 
-            cursor.execute("""
-                UPDATE users
-                SET
-                    failed_login_attempts = COALESCE(failed_login_attempts, 0) + 1,
-                    updated_at = NOW()
-                WHERE id = %s
-            """, (admin_id,))
-
-            conn.commit()
-
             session["admin_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
@@ -2297,8 +2273,7 @@ def superadmin_login():
             UPDATE users
             SET
                 last_login = NOW(),
-                updated_at = NOW(),
-                failed_login_attempts = 0
+                updated_at = NOW()
             WHERE id = %s
         """, (admin_id,))
 
