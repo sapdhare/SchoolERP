@@ -14358,7 +14358,7 @@ def clerk_dashboard():
                 "danger"
             )
         
-            return redirect(url_for("login"))
+        return redirect(url_for("login"))
 
         school_name = school[0]
 
@@ -14945,7 +14945,7 @@ def clerk_dashboard():
             "Unable to load the dashboard. Please try again.",
             "danger"
         )
-         return redirect(url_for("login"))
+        return redirect(url_for("login"))
 
     finally:
 
