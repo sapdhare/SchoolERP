@@ -10664,8 +10664,8 @@ def superadmin_settings():
         )
 
     except Exception as e:
-        print("❌ SETTINGS ERROR:", e)
-        logger.exception(f"SETTINGS ERROR: {e}")
+        logger.exception("SETTINGS ERROR")
+        return f"SETTINGS ERROR: {e}"
 
     finally:
         if cursor:
