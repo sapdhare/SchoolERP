@@ -2082,8 +2082,10 @@ def login():
         # =================================================
         logger.exception("Login Error")
 
+        print("LOGIN ERROR:", e)
+
         flash(
-            "Something went wrong. Please try again.",
+             str(e),
             "danger"
         )
         
