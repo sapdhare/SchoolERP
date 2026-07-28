@@ -13177,12 +13177,13 @@ def subscription_payment():
 
     except Exception as e:
 
-        print(
-            "❌ PAYMENT PAGE ERROR:",
-            e
-        )
+         import traceback
 
-        return "Something went wrong ❌"
+         traceback.print_exc()
+
+        print("❌ PAYMENT PAGE ERROR:", repr(e))
+             
+        return f"PAYMENT PAGE ERROR : {repr(e)}"
 
     finally:
 
