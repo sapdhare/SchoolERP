@@ -14198,6 +14198,10 @@ def clerk_dashboard():
         # SESSION SAFETY
         # =====================================================
         if not school_id or not clerk_user_id:
+             flash(
+                "Your session has expired. Please login again.",
+                "warning"
+            )
             return redirect(url_for("login"))
 
         # =====================================================
@@ -14395,7 +14399,12 @@ def clerk_dashboard():
         school = cursor.fetchone()
 
         if not school:
-            return "School not found ❌"
+             flash(
+                "School record not found.",
+                "danger"
+            )
+        
+            return redirect(url_for("login"))
 
         school_name = school[0]
 
@@ -14976,10 +14985,13 @@ def clerk_dashboard():
         )
 
     except Exception as e:
+        logger.exception("Clerk Dashboard Error")
 
-        print("❌ DASHBOARD ERROR:", e)
-
-        return "Something went wrong ❌"
+        flash(
+            "Unable to load the dashboard. Please try again.",
+            "danger"
+        )
+         return redirect(url_for("login"))
 
     finally:
 
