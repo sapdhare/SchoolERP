@@ -14156,7 +14156,7 @@ def clerk_dashboard():
                 "Your session has expired. Please login again.",
                 "warning"
             )
-            return redirect(url_for("login"))
+        return redirect(url_for("login"))
 
         # =====================================================
         # DEFAULT SUBSCRIPTION VALUES
