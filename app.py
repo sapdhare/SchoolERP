@@ -1895,7 +1895,7 @@ def login():
                 u.school_id,
                 u.status,
                 s.name,
-                s.is_active,
+                s.is_active
             FROM users u
             JOIN schools s
                 ON u.school_id = s.school_id
@@ -2006,7 +2006,6 @@ def login():
             SET
                 last_login = NOW(),
                 updated_at = NOW(),
-                failed_login_attempts = 0
             WHERE id = %s
         """, (user_id,))
 
