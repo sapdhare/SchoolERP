@@ -1896,7 +1896,6 @@ def login():
                 u.status,
                 s.name,
                 s.is_active,
-                COALESCE(u.failed_login_attempts, 0)
             FROM users u
             JOIN schools s
                 ON u.school_id = s.school_id
@@ -1931,39 +1930,21 @@ def login():
         school_id = user[3]
         user_status = user[4]
         school_status = user[6]
-        db_failed_attempts = int(user[7] or 0)
-
-        # =================================================
-        # DATABASE BASED FAILED LOGIN LIMIT
-        # Protects account across different browsers/devices
-        # =================================================
-        if db_failed_attempts >= login_attempt_limit:
-            return "Account temporarily locked due to failed attempts ❌"
 
         # =================================================
         # PASSWORD CHECK
         # If password is wrong, increase failed attempts
         # =================================================
         if not bcrypt.check_password_hash(db_password, password):
-
-            cursor.execute("""
-                UPDATE users
-                SET
-                    failed_login_attempts = COALESCE(failed_login_attempts, 0) + 1,
-                    updated_at = NOW()
-                WHERE id = %s
-            """, (user_id,))
-
-            conn.commit()
-
+            
             session["clerk_failed_attempts"] = failed_attempts + 1
             session.modified = True
-
+        
             flash(
                 "Invalid email or password.",
                 "danger"
             )
-            
+        
             return redirect(url_for("login"))
 
         # =================================================
