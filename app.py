@@ -14153,11 +14153,12 @@ def clerk_dashboard():
         # =====================================================
         if not school_id or not clerk_user_id:
             
-             flash(
+            flash (
                 "Your session has expired. Please login again.",
                 "warning"
-              )
-              return redirect(url_for("login"))
+            )
+            
+            return redirect(url_for("login"))
 
         # =====================================================
         # DEFAULT SUBSCRIPTION VALUES
@@ -14354,12 +14355,12 @@ def clerk_dashboard():
         school = cursor.fetchone()
 
         if not school:
-             flash(
+            flash(
                 "School record not found.",
-                "danger"
-            )
-        
-             return redirect(url_for("login"))
+                "dange 
+                )
+            
+            return redirect(url_for("login"))
 
         school_name = school[0]
 
