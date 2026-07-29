@@ -20788,7 +20788,6 @@ def timetable_dashboard():
 @subscription_required
 @feature_required("enable_notice_board")
 def notice_board_dashboard():
-
     return redirect(
         url_for(
             "coming_soon",
@@ -20798,7 +20797,7 @@ def notice_board_dashboard():
 # HealthCheck
 @app.route("/healthcheck")
 def healthcheck():
-    return "OK", 200
+    return "OKk", 200
 
 if __name__ == '__main__':
     app.run(debug=True)
