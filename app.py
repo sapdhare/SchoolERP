@@ -14152,11 +14152,12 @@ def clerk_dashboard():
         # SESSION SAFETY
         # =====================================================
         if not school_id or not clerk_user_id:
+            
              flash(
                 "Your session has expired. Please login again.",
                 "warning"
-            )
-        return redirect(url_for("login"))
+              )
+              return redirect(url_for("login"))
 
         # =====================================================
         # DEFAULT SUBSCRIPTION VALUES
@@ -14358,7 +14359,7 @@ def clerk_dashboard():
                 "danger"
             )
         
-        return redirect(url_for("login"))
+             return redirect(url_for("login"))
 
         school_name = school[0]
 
