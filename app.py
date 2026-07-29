@@ -14357,7 +14357,7 @@ def clerk_dashboard():
         if not school:
             flash(
                 "School record not found.",
-                "dange 
+                "danger 
                 )
             
             return redirect(url_for("login"))
