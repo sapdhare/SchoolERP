@@ -5,278 +5,265 @@
   box-sizing: border-box;
 }
 
-body{
-    margin:0;
-    font-family:'Inter', sans-serif;
-    background:#F8FAFC;
-    color:#0F172A;
-    letter-spacing:-0.01em;
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
 }
 
-button{
-    cursor:pointer;
+button {
+  cursor: pointer;
 }
 h1,
-.hero-title{
-    font-weight:900;
-    letter-spacing:-0.05em;
+.hero-title {
+  font-weight: 900;
+  letter-spacing: -0.05em;
 }
 
 h2,
-.section-title{
-    font-weight:800;
-    letter-spacing:-0.035em;
+.section-title {
+  font-weight: 800;
+  letter-spacing: -0.035em;
 }
 
 h3,
-h4{
-    font-weight:700;
+h4 {
+  font-weight: 700;
 }
 
 p,
 a,
 button,
 input,
-select{
-    font-weight:500;
+select {
+  font-weight: 500;
 }
 /* ==========================================
    PREMIUM NAVBAR V2
 ========================================== */
 
-.navbar{
+.navbar {
+  position: fixed;
 
-    position:fixed;
+  top: 0;
+  left: 0;
 
-    top:0;
-    left:0;
+  width: 100%;
 
-    width:100%;
+  height: 88px;
 
-    height:95px;
+  padding:0 clamp(32px,5vw,60px);
 
-    padding:0 70px;
+  display: flex;
 
-    display:flex;
+  align-items: center;
 
-    align-items:center;
+  justify-content: space-between;
 
-    justify-content:space-between;
+  z-index: 9999;
 
-    z-index:9999;
+  transition: 0.35s ease;
 
-    transition:.35s ease;
-
-    background:transparent;
+  background: transparent;
 }
 
-.navbar.scrolled{
+.navbar.scrolled {
+  background: rgba(255, 255, 255, 0.88);
 
-    background:
-    rgba(255,255,255,.95);
+  backdrop-filter: blur(28px);
 
-    backdrop-filter:blur(20px);
-
-    box-shadow:
-    0 12px 40px rgba(0,0,0,.08);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
 }
 
 /* LOGO */
 
-.logo-area{
+.logo-area {
+  display: flex;
 
-    display:flex;
+  align-items: center;
 
-    align-items:center;
-
-    gap:14px;
+  gap: 14px;
 }
 
-.navbar-logo{
+.navbar-logo {
+  width: 64px;
+  height: 64px;
 
-    width:68px;
-    height:68px;
+  object-fit: contain;
 
-    object-fit:contain;
-
-    transition:.3s;
+  transition: 0.3s;
 }
 
-.brand-text{
+.brand-text {
+  font-size: 30px;
 
-    font-size:34px;
+  font-weight: 900;
 
-    font-weight:900;
+  letter-spacing: -0.04em;
 
-    letter-spacing:-1px;
+  color: white;
 
-    color:white;
-
-    transition:.3s;
+  transition: 0.3s;
 }
 
-.navbar.scrolled .brand-text{
-
-    color:#14b8a6;
+.navbar.scrolled .brand-text {
+  color: #14b8a6;
 }
 
 /* MENU */
 
-.nav-links{
+.nav-links {
+  display: flex;
 
-    display:flex;
+  align-items: center;
 
-    align-items:center;
-
-    gap:38px;
+  gap: 42px;
 }
 
-.nav-links a{
+.nav-links a {
+  position: relative;
 
-    position:relative;
+  text-decoration: none;
 
-    text-decoration:none;
+  color: white;
 
-    color:white;
+  font-size: 16px;
 
-    font-size:17px;
+  font-weight: 600;
 
-    font-weight:700;
+  letter-spacing: -0.01em;
 
-     letter-spacing:-0.01em;
-
-    transition:.3s;
+  transition: 0.3s;
 }
 
-.navbar.scrolled .nav-links a{
-
-    color:#0f172a;
+.navbar.scrolled .nav-links a {
+  color: #0f172a;
 }
 
-.nav-links a:not(.nav-login-btn)::after{
+.nav-links a:not(.nav-login-btn)::after {
+  content: "";
 
-    content:"";
+  position: absolute;
 
-    position:absolute;
+  left: 0;
 
-    left:0;
-    bottom:-8px;
+  bottom: -8px;
 
-    width:0;
+  width: 0;
 
-    height:2px;
+  height:1.5px; 
 
-    background:#14b8a6;
+  border-radius:999px;
 
-    transition:.3s;
+  background: #14b8a6;
+
+  transition: 0.3s;
 }
 
-.nav-links a:hover::after{
-
-    width:100%;
+.nav-links a:hover::after {
+  width: 100%;
 }
 
-.nav-links a:hover{
-
-    color:#14b8a6;
+.nav-links a:hover {
+  color: #2dd4bf;
 }
 
 /* BUTTON GROUP */
 
-.nav-buttons{
+.nav-buttons {
+  display: flex;
 
-    display:flex;
+  align-items: center;
 
-    align-items:center;
+  gap: 14px;
 
-    gap:14px;
-
-    margin-left:10px;
+  margin-left: 10px;
 }
 
 /* DEMO BUTTON */
 
-.nav-demo-btn{
+.nav-demo-btn {
+  border: none;
 
-    border:none;
+  cursor: pointer;
 
-    cursor:pointer;
+  height: 48px;
 
-    padding:15px 28px;
+  padding: 0 26px;
 
-    border-radius:14px;
+  border-radius: 14px;
 
-    font-size:15px;
+  font-size: 15px;
 
-    font-weight:700;
+  font-weight: 700;
 
-    color:#0f172a;
+  color:#111827;
 
-    background:white;
+  background: white;
 
-    transition:.3s;
+  transition: 0.3s;
 }
 
-.nav-demo-btn:hover{
-
-    transform:translateY(-3px);
+.nav-demo-btn:hover {
+  transform: translateY(-2px);
 }
 
-.navbar.scrolled .nav-demo-btn{
+.navbar.scrolled .nav-demo-btn {
+  background: #99f6e4;
 
-    background:#99f6e4;
+  color: #000000;
+  border: 1px solid #1cb9a4;
+}
 
-    color:#000000;
-    border:1px solid #1cb9a4;
+.navbar.scrolled .nav-login-btn {
+  background:#14b8a6;
+
+  color: white
+  border: 1px solid #1cb9a4;
 }
 /* LOGIN BUTTON */
 
-.nav-login-btn{
+.nav-login-btn {
+  text-decoration: none;
 
-    text-decoration:none;
+  height: 48px;
 
-    padding:15px 30px;
+  padding: 13px 26px;
 
-    border-radius:14px;
+  border-radius: 14px;
 
-    font-size:15px;
+  font-size: 15px;
 
-    font-weight:700;
+  font-weight: 700;
 
-    color:white !important;
+  color: white !important;
 
-    background:
-    linear-gradient(
-        135deg,
-        #14b8a6,
-        #06b6d4
-    );
+  background:transparent;
 
-    box-shadow:
-    0 12px 25px rgba(20,184,166,.25);
+  border:1px solid rgba(255,255,255,.18);
+
+  box-shadow: 0 12px 25px rgba(20, 184, 166, 0.25);
 }
 
-.nav-login-btn:hover{
-
-    transform:translateY(-3px);
+.nav-login-btn:hover {
+  transform: translateY(-2px);
 }
 
-    .menu-toggle{
+.menu-toggle {
+  display: none !important;
+}
 
-            display:none !important;
-        }
+.mobile-menu-header {
+  display: none !important;
+}
+.desktop-nav {
+  display: flex;
+}
 
-        .mobile-menu-header{
-
-            display:none !important;
-        }
-        .desktop-nav{
-        display:flex;
-    }
-
-    .mobile-nav-links{
-        display:none;
-    }
+.mobile-nav-links {
+  display: none;
+}
 /* ===================================
    PREMIUM MOBILE NAVBAR
 =================================== */
@@ -627,8 +614,8 @@ select{
 background:
 linear-gradient(
 180deg,
-rgba(7,18,28,.84),
-rgba(7,18,28,.88)
+rgba(7,18,28,.82),
+rgba(7,18,28,.90)
 );
 
   z-index: 2;
@@ -647,7 +634,7 @@ rgba(7,18,28,.88)
 
   min-height: 100vh;
 
-  padding: 120px 80px 150px;
+  padding: 110px 72px 130px;
 
   display: flex;
 
