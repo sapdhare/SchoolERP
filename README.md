@@ -367,7 +367,7 @@ Before deployment:
 # Git Ignore Recommendations
 
 The following files/folders should not be uploaded:
-#CI/CD deployment verification
+#tesst
 ```gitignore
 venv/
 __pycache__/
