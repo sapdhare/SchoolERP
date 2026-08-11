@@ -6,195 +6,464 @@
 
 <div class="tc-page">
 
-<!-- ================= PREMIUM TC HEADER ================= -->
+    <!-- ==================================================
+TC HEADER
+================================================== -->
 
-<div class="tc-page-header">
+    <div class="tc-page-header">
 
-    <div class="tc-header-left">
+        <div class="tc-header-left">
 
-        <span class="tc-page-badge">
-            📄 Transfer Certificate
-        </span>
+            <span class="tc-page-badge">
 
-        <h1>
-            Manage Transfer Certificates
-        </h1>
+                📄 Transfer Certificate
 
-        <p>
-            Search students, generate TC, and manage issued certificates.
-            <br>
-            <span>विद्यार्थी शोधा, टीसी तयार करा आणि प्रमाणपत्रे व्यवस्थापित करा</span>
-        </p>
+            </span>
 
-    </div>
+            <h1>
 
-    <div class="tc-header-right">
+                Manage Transfer Certificates
 
-        <span class="tc-status-pill">
-            ● TC Module Active
-        </span>
+            </h1>
 
-    </div>
+            <p>
 
-</div>
-<!-- ================= TC STATS ================= -->
+                Search students, generate transfer certificates and manage issued records.
 
-<div class="tc-stats">
+            </p>
 
-    <div class="tc-stat-card total">
-        <div>
-            <span>Total TC</span>
-            <h3>{{ total_tc or 0 }}</h3>
-            <p>एकूण टीसी</p>
+            <small>
+
+                विद्यार्थी शोधा, टीसी तयार करा आणि प्रमाणपत्रे व्यवस्थापित करा
+
+            </small>
+
         </div>
-        <div class="tc-stat-icon">📄</div>
-    </div>
 
-    <div class="tc-stat-card today">
-        <div>
-            <span>Today TC</span>
-            <h3>{{ today_tc or 0 }}</h3>
-            <p>आज तयार</p>
+        <div class="tc-header-right">
+
+            <div class="tc-status-card">
+
+                <span class="tc-status-dot"></span>
+
+                <div>
+
+                    <strong>
+
+                        Module Status
+
+                    </strong>
+
+                    <small>
+
+                        TC Module Active
+
+                    </small>
+
+                </div>
+
+            </div>
+
         </div>
-        <div class="tc-stat-icon">⚡</div>
+
     </div>
 
-    <div class="tc-stat-card month">
-        <div>
-            <span>This Month</span>
-            <h3>{{ month_tc or 0 }}</h3>
-            <p>या महिन्यात</p>
+
+
+    <!-- ================= TC STATS ================= -->
+
+    <div class="tc-stats">
+
+        <div class="tc-stat-card total">
+
+            <div class="tc-stat-content">
+
+                <span class="tc-stat-title">
+
+                    Total Transfer Certificates
+
+                </span>
+
+                <h3>
+
+                    {{ total_tc or 0 }}
+
+                </h3>
+
+                <p>
+
+                    एकूण टीसी
+
+                </p>
+
+            </div>
+
+            <div class="tc-stat-icon">
+
+                📄
+
+            </div>
+
         </div>
-        <div class="tc-stat-icon">📅</div>
+
+        <div class="tc-stat-card today">
+
+            <div class="tc-stat-content">
+
+                <span class="tc-stat-title">
+
+                    Today Generated
+
+                </span>
+
+                <h3>
+
+                    {{ today_tc or 0 }}
+
+                </h3>
+
+                <p>
+
+                    आज तयार
+
+                </p>
+
+            </div>
+
+            <div class="tc-stat-icon">
+
+                ⚡
+
+            </div>
+
+        </div>
+
+        <div class="tc-stat-card month">
+
+            <div class="tc-stat-content">
+
+                <span class="tc-stat-title">
+
+                    This Month
+
+                </span>
+
+                <h3>
+
+                    {{ month_tc or 0 }}
+
+                </h3>
+
+                <p>
+
+                    या महिन्यात
+
+                </p>
+
+            </div>
+
+            <div class="tc-stat-icon">
+
+                📅
+
+            </div>
+
+        </div>
+
     </div>
 
-</div>
+    <!-- ================= TC SEARCH ================= -->
 
+    <form method="GET" action="{{ url_for('clerk_tc_page') }}" class="tc-search-box" autocomplete="off">
 
-<!-- ================= SEARCH ================= -->
+        <input type="search" name="search" value="{{ search or '' }}"
+            placeholder="Search by Student Name or Admission No" autocomplete="off" spellcheck="false" maxlength="100">
 
-<form method="GET"
-      action="{{ url_for('clerk_tc_page') }}"
-      class="tc-search-box">
+        <select name="class">
 
-    <input type="text"
-           name="search"
-           value="{{ search or '' }}"
-           placeholder="Search by Name or Admission No">
-
-    <select name="class">
-        <option value="">Filter by Class</option>
-
-        {% for c in range(1, 11) %}
-            <option value="{{ c }}"
-            {% if class_filter == c|string %}selected{% endif %}>
-                {{ c }}
+            <option value="">
+                Class
             </option>
-        {% endfor %}
-    </select>
 
-    <select name="year">
-        <option value="">Filter by Year</option>
+            {% for c in range(1,11) %}
 
-        {% for y in years %}
-            <option value="{{ y }}"
-            {% if year_filter == y|string %}selected{% endif %}>
+            <option value="{{ c }}" {% if class_filter==c|string %}selected{% endif %}>
+
+                Class {{ c }}
+
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+        <select name="year">
+
+            <option value="">
+                Year
+            </option>
+
+            {% for y in years %}
+
+            <option value="{{ y }}" {% if year_filter==y|string %}selected{% endif %}>
+
                 {{ y }}
+
             </option>
-        {% endfor %}
-    </select>
 
-    <button type="submit" class="btn-search">
-        Search
-    </button>
+            {% endfor %}
 
-    <a href="{{ url_for('clerk_tc_page') }}"
-       class="btn-clear">
-        Clear
-    </a>
+        </select>
 
-</form>
+        <button type="submit" class="btn-search" aria-label="Search Transfer Certificates">
 
-    <!-- ================= TABLE ================= -->
+            Search
+
+        </button>
+
+        <a href="{{ url_for('clerk_tc_page') }}" class="btn-clear">
+
+            Clear
+
+        </a>
+
+    </form>
+
+
+    <!-- ================= TC NOTICE ================= -->
+
+    <div class="tc-info-note">
+
+        <div class="tc-note-icon">
+
+            📄
+
+        </div>
+
+        <div class="tc-note-content">
+
+            <strong>
+
+                Generate Transfer Certificate:
+
+            </strong>
+
+            <span>
+
+                Open <b>Student Records</b>, select a student and click
+                <b>Transfer Certificate</b> to create a new certificate.
+
+            </span>
+
+
+        </div>
+
+    </div>
+
+    <!-- ================= TC TABLE ================= -->
+
     <div class="tc-table">
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Admission No</th>
-                    <th>Class</th>
-                    <th>TC Number</th>
-                    <th>Date</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
+        <div class="tc-table-wrapper">
 
-            <tbody id="tcTableBody">
+            <table class="tc-table-grid">
 
-                {% if tc_list %}
+                <thead>
+
+                    <tr>
+
+                        <th>Student</th>
+
+                        <th>TC Number</th>
+
+                        <th>Leaving Date</th>
+
+                        <th>Issued</th>
+
+                        <th>Status</th>
+
+                        <th class="action-cell">
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="tcTableBody">
+
+                    {% if tc_list %}
+
                     {% for tc in tc_list %}
+
                     <tr>
-                        <td class="tc-name">{{ tc.name }}</td>
-                        <td class="tc-admission">{{ tc.admission_no }}</td>
-                        <td class="tc-class">{{ tc.class }}</td>
-                        <td>{{ tc.tc_number }}</td>
-                        <td class="tc-date">
-                        {{ tc.tc_date }}
+
+                        <!-- STUDENT -->
+
+                        <td class="student-column">
+
+                            <div class="student-name">
+
+                                {{ tc.name }}
+
+                            </div>
+
+                            <div class="student-meta">
+
+                                ADM:
+                                {{ tc.admission_no }}
+
+                                •
+
+                                Class
+                                {{ tc.class }}
+
+                            </div>
+
                         </td>
+
+                        <!-- TC NUMBER -->
+
+                        <td class="certificate-column">
+
+                            {{ tc.tc_number }}
+
+                        </td>
+
+                        <!-- DATE -->
+
+                        <td class="date-column">
+
+                            {{ tc.tc_date }}
+
+                        </td>
+
+                        <td class="date-column">
+                            {{ tc.issue_date }}
+                        </td>
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            <span class="status-badge generated">
+
+                                Issued
+
+                            </span>
+
+                        </td>
+
+                        <!-- ACTION -->
+
                         <td class="action-cell">
-                            <a href="{{ url_for('view_tc', tc_id=tc.id) }}" 
-                            class="btn-view" 
-                            target="_blank">
-                            View
+
+                            <a href="{{ url_for('view_tc', tc_id=tc.id) }}" class="btn-view">
+
+                                View
+
                             </a>
+
                         </td>
+
                     </tr>
+
                     {% endfor %}
-                {% else %}
+
+                    {% else %}
+
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:20px;">
-                            No TC generated yet
+
+                        <td colspan="5">
+
+                            <div class="empty-state">
+
+                                <div>
+
+                                    📄
+
+                                </div>
+
+                                <h3>
+
+                                    No Transfer Certificates Found
+
+                                </h3>
+
+                                <p>
+
+                                    Generate your first Transfer Certificate from Student List.
+
+                                </p>
+
+                            </div>
+
                         </td>
+
                     </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+
+    {% if total_records > 0 %}
+
+    <div class="tc-pagination">
+
+        <div>
+            Page {{ page }} of {{ total_pages }} • {{ total_records }} records
+        </div>
+
+        <div class="tc-pagination-actions">
+
+            {% if page > 1 %}
+            <a href="{{ url_for('clerk_tc_page', search=search, class=class_filter, year=year_filter, page=page-1) }}">
+                ← Previous
+            </a>
+            {% endif %}
+
+            <span>{{ page }}</span>
+
+            {% if page < total_pages %} <a
+                href="{{ url_for('clerk_tc_page', search=search, class=class_filter, year=year_filter, page=page+1) }}">
+                Next →
+                </a>
                 {% endif %}
 
-            </tbody>
-        </table>
+        </div>
 
     </div>
 
+    {% endif %}
 
-    
-{% if total_records > 0 %}
+    <script>
 
-<div class="tc-pagination">
+        document.addEventListener("DOMContentLoaded", function () {
 
-    <div>
-        Page {{ page }} of {{ total_pages }} • {{ total_records }} records
-    </div>
+            const form = document.querySelector(".tc-search-box");
 
-    <div class="tc-pagination-actions">
+            if (!form) return;
 
-        {% if page > 1 %}
-        <a href="{{ url_for('clerk_tc_page', search=search, class=class_filter, year=year_filter, page=page-1) }}">
-            ← Previous
-        </a>
-        {% endif %}
+            form.addEventListener("submit", function () {
 
-        <span>{{ page }}</span>
+                const btn = form.querySelector(".btn-search");
 
-        {% if page < total_pages %}
-        <a href="{{ url_for('clerk_tc_page', search=search, class=class_filter, year=year_filter, page=page+1) }}">
-            Next →
-        </a>
-        {% endif %}
+                btn.disabled = true;
 
-    </div>
+                btn.innerHTML = "Searching...";
 
-</div>
+            });
 
-{% endif %}
- 
+        });
+    </script>
 
-{% endblock %}
+
+    {% endblock %}
