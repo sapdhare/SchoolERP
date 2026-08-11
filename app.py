@@ -14947,6 +14947,7 @@ def clerk_dashboard():
 # UPDATE USER PROFILE
 # =========================================================
 
+
 @app.route("/clerk/profile/update", methods=["POST"])
 @login_required
 def clerk_profile_update():
@@ -14958,32 +14959,24 @@ def clerk_profile_update():
         user_id = session.get("clerk_user_id")
 
         if not user_id:
-            return {
-                "status":"error",
-                "message":"Session expired"
-            }
+            return {"status": "error", "message": "Session expired"}
 
-        name = request.form.get("name","").strip()
-        phone = request.form.get("phone","").strip()
-        address = request.form.get("address","").strip()
-        designation = request.form.get("designation","").strip()
+        name = request.form.get("name", "").strip()
+        phone = request.form.get("phone", "").strip()
+        address = request.form.get("address", "").strip()
+        designation = request.form.get("designation", "").strip()
 
         if not name:
-            return {
-                "status":"error",
-                "message":"Name required"
-            }
-        
+            return {"status": "error", "message": "Name required"}
+
         if phone and (not phone.isdigit() or len(phone) != 10):
-            return {
-                "status":"error",
-                "message":"Invalid phone number"
-            }
+            return {"status": "error", "message": "Invalid phone number"}
 
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE users
             SET
                 name=%s,
@@ -14997,35 +14990,23 @@ def clerk_profile_update():
             WHERE id=%s
             AND role='clerk'      
                            
-        """,(
-            name,
-            phone,
-            address,
-            designation,
-            user_id
-        ))
+        """,
+            (name, phone, address, designation, user_id),
+        )
 
         conn.commit()
 
-        return {
-            "status":"success",
-            "message":"Profile updated successfully"
-        }
+        return {"status": "success", "message": "Profile updated successfully"}
 
     except Exception as e:
-        
         print("PROFILE UPDATE ERROR:", e)
-        return jsonify({
-            "status": "error",
-            "message": "Something went wrong"
-        })
+        return jsonify({"status": "error", "message": "Something went wrong"})
 
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
-
 
 
 # =========================================================
@@ -15037,10 +15018,8 @@ def clerk_profile_update():
 # Includes resend cooldown and failed-email cleanup
 # =========================================================
 
-@app.route(
-    "/clerk/profile/send-otp",
-    methods=["POST"]
-)
+
+@app.route("/clerk/profile/send-otp", methods=["POST"])
 @login_required
 def clerk_send_password_otp():
 
@@ -15048,38 +15027,25 @@ def clerk_send_password_otp():
     cursor = None
 
     try:
-
         # =========================================
         # GET REQUEST DATA
         # =========================================
 
         data = request.get_json() or {}
 
-        email = (
-            data.get("email") or ""
-        ).strip()
+        email = (data.get("email") or "").strip()
 
         if not email:
-
-            return jsonify({
-                "status": "error",
-                "message": "Email required"
-            })
+            return jsonify({"status": "error", "message": "Email required"})
 
         # =========================================
         # SESSION USER
         # =========================================
 
-        user_id = session.get(
-            "clerk_user_id"
-        )
+        user_id = session.get("clerk_user_id")
 
         if not user_id:
-
-            return jsonify({
-                "status": "error",
-                "message": "User session missing"
-            })
+            return jsonify({"status": "error", "message": "User session missing"})
 
         # =========================================
         # DB CONNECTION
@@ -15088,11 +15054,7 @@ def clerk_send_password_otp():
         conn = get_connection()
 
         if not conn:
-
-            return jsonify({
-                "status": "error",
-                "message": "Database connection failed"
-            })
+            return jsonify({"status": "error", "message": "Database connection failed"})
 
         cursor = conn.cursor()
 
@@ -15100,7 +15062,8 @@ def clerk_send_password_otp():
         # CHECK USER EMAIL
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 email,
                 name
@@ -15108,26 +15071,18 @@ def clerk_send_password_otp():
             WHERE id = %s
             AND role = 'clerk'
             LIMIT 1
-        """, (
-            user_id,
-        ))
+        """,
+            (user_id,),
+        )
 
         user = cursor.fetchone()
 
         if not user:
+            return jsonify({"status": "error", "message": "User not found"})
 
-            return jsonify({
-                "status": "error",
-                "message": "User not found"
-            })
+        db_email = (user[0] or "").strip()
 
-        db_email = (
-            user[0] or ""
-        ).strip()
-
-        user_name = (
-            user[1] or "User"
-        )
+        user_name = user[1] or "User"
 
         # =========================================
         # SECURITY EMAIL MATCH
@@ -15135,18 +15090,17 @@ def clerk_send_password_otp():
         # =========================================
 
         if email.lower() != db_email.lower():
-
-            return jsonify({
-                "status": "error",
-                "message": "Email does not match registered email"
-            })
+            return jsonify(
+                {"status": "error", "message": "Email does not match registered email"}
+            )
 
         # =========================================
         # OTP RESEND COOLDOWN
         # Prevent repeated OTP spam
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 created_at
             FROM password_reset_otp
@@ -15154,62 +15108,58 @@ def clerk_send_password_otp():
             AND is_used = 0
             ORDER BY id DESC
             LIMIT 1
-        """, (
-            user_id,
-        ))
+        """,
+            (user_id,),
+        )
 
         last_otp = cursor.fetchone()
 
         if last_otp and last_otp[0]:
-
             last_created = last_otp[0]
 
-            if isinstance(last_created, date) and not isinstance(last_created, datetime):
-                last_created = datetime.combine(
-                    last_created,
-                    datetime.min.time()
-                )
+            if isinstance(last_created, date) and not isinstance(
+                last_created, datetime
+            ):
+                last_created = datetime.combine(last_created, datetime.min.time())
 
-            seconds_passed = (
-                datetime.now() - last_created
-            ).total_seconds()
+            seconds_passed = (datetime.now() - last_created).total_seconds()
 
             if seconds_passed < 60:
-
-                return jsonify({
-                    "status": "error",
-                    "message": "Please wait 60 seconds before requesting another OTP"
-                })
+                return jsonify(
+                    {
+                        "status": "error",
+                        "message": "Please wait 60 seconds before requesting another OTP",
+                    }
+                )
 
         # =========================================
         # REMOVE OLD UNUSED OTP
         # Keep only latest active OTP
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM password_reset_otp
             WHERE user_id = %s
             AND is_used = 0
-        """, (
-            user_id,
-        ))
+        """,
+            (user_id,),
+        )
 
         # =========================================
         # GENERATE OTP
         # =========================================
 
-        otp = ''.join(secrets.choice('0123456789') for _ in range(6))
+        otp = str(random.randint(100000, 999999))
 
-        expiry_time = (
-            datetime.now()
-            + timedelta(minutes=5)
-        )
+        expiry_time = datetime.now() + timedelta(minutes=5)
 
         # =========================================
         # SAVE OTP IN DATABASE
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO password_reset_otp (
                 user_id,
                 email,
@@ -15220,14 +15170,9 @@ def clerk_send_password_otp():
                 created_at
             )
             VALUES (%s, %s, %s, %s, %s, %s, NOW())
-        """, (
-            user_id,
-            email,
-            otp,
-            expiry_time,
-            0,
-            0
-        ))
+        """,
+            (user_id, email, otp, expiry_time, 0, 0),
+        )
 
         conn.commit()
 
@@ -15258,11 +15203,7 @@ def clerk_send_password_otp():
         <p>Regards,<br>SPL ShalaSarthi ERP</p>
         """
 
-        email_sent = send_email(
-            email,
-            "Password Reset OTP",
-            email_body
-        )
+        email_sent = send_email(email, "Password Reset OTP", email_body)
 
         # =========================================
         # CLEAN OTP IF EMAIL FAILED
@@ -15270,66 +15211,50 @@ def clerk_send_password_otp():
         # =========================================
 
         if not email_sent:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 DELETE FROM password_reset_otp
                 WHERE user_id = %s
                 AND otp = %s
                 AND is_used = 0
-            """, (
-                user_id,
-                otp
-            ))
+            """,
+                (user_id, otp),
+            )
 
             conn.commit()
 
-            return jsonify({
-                "status": "error",
-                "message": "Failed to send OTP email"
-            })
+            return jsonify({"status": "error", "message": "Failed to send OTP email"})
 
         # =========================================
         # SUCCESS RESPONSE
         # =========================================
 
-        return jsonify({
-            "status": "success",
-            "message": "OTP sent successfully"
-        })
+        return jsonify({"status": "success", "message": "OTP sent successfully"})
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "SEND OTP ERROR:",
-            e
-        )
+        print("SEND OTP ERROR:", e)
 
-        return jsonify({
-            "status": "error",
-            "message": "Something went wrong"
-        })
+        return jsonify({"status": "error", "message": "Something went wrong"})
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
- 
+
+
 # =========================================================
 # ✅ VERIFY OTP
 # PURPOSE:
 # Verify OTP from database
 # =========================================================
 
-@app.route(
-    "/clerk/profile/check-otp",
-    methods=["POST"]
-)
+
+@app.route("/clerk/profile/check-otp", methods=["POST"])
 @login_required
 def clerk_check_password_otp():
 
@@ -15337,58 +15262,32 @@ def clerk_check_password_otp():
     cursor = None
 
     try:
-
         # =========================================
         # GET REQUEST DATA
         # =========================================
 
         data = request.get_json() or {}
 
-        entered_otp = (
-            data.get("otp") or ""
-        ).strip()
+        entered_otp = (data.get("otp") or "").strip()
 
         # =========================================
         # VALIDATION
         # =========================================
 
         if not entered_otp:
+            return jsonify({"status": "error", "message": "OTP required"})
 
-            return jsonify({
-
-                "status": "error",
-                "message": "OTP required"
-
-            })
-
-        if (
-            not entered_otp.isdigit()
-            or len(entered_otp) != 6
-        ):
-
-            return jsonify({
-
-                "status": "error",
-                "message": "Invalid OTP format"
-
-            })
+        if not entered_otp.isdigit() or len(entered_otp) != 6:
+            return jsonify({"status": "error", "message": "Invalid OTP format"})
 
         # =========================================
         # SESSION USER
         # =========================================
 
-        user_id = session.get(
-            "clerk_user_id"
-        )
+        user_id = session.get("clerk_user_id")
 
         if not user_id:
-
-            return jsonify({
-
-                "status": "error",
-                "message": "User session missing"
-
-            })
+            return jsonify({"status": "error", "message": "User session missing"})
 
         # =========================================
         # DB CONNECTION
@@ -15401,7 +15300,8 @@ def clerk_check_password_otp():
         # GET LATEST UNUSED OTP
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -15419,7 +15319,9 @@ def clerk_check_password_otp():
             ORDER BY id DESC
             LIMIT 1
 
-        """, (user_id,))
+        """,
+            (user_id,),
+        )
 
         otp_row = cursor.fetchone()
 
@@ -15428,13 +15330,7 @@ def clerk_check_password_otp():
         # =========================================
 
         if not otp_row:
-
-            return jsonify({
-
-                "status": "error",
-                "message": "OTP not found"
-
-            })
+            return jsonify({"status": "error", "message": "OTP not found"})
 
         otp_id = otp_row[0]
         saved_otp = otp_row[1]
@@ -15447,21 +15343,15 @@ def clerk_check_password_otp():
         # =========================================
 
         if is_used == 1:
-
-            return jsonify({
-
-                "status": "error",
-                "message": "OTP already used"
-
-            })
+            return jsonify({"status": "error", "message": "OTP already used"})
         # =========================================
         # BLOCK AFTER 5 ATTEMPTS
         # OTP becomes unusable
         # =========================================
 
         if attempts >= 5:
-
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 UPDATE password_reset_otp
 
@@ -15469,38 +15359,32 @@ def clerk_check_password_otp():
 
                 WHERE id = %s
 
-            """, (otp_id,))
+            """,
+                (otp_id,),
+            )
 
             conn.commit()
 
-            return jsonify({
-
-                "status": "error",
-
-                "message":
-                "Too many invalid attempts. Please request a new OTP."
-
-            })
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": "Too many invalid attempts. Please request a new OTP.",
+                }
+            )
         # =========================================
         # CHECK EXPIRY
         # =========================================
 
         if datetime.now() > expiry_time:
-
-            return jsonify({
-
-                "status": "error",
-                "message": "OTP expired"
-
-            })
+            return jsonify({"status": "error", "message": "OTP expired"})
 
         # =========================================
         # INVALID OTP
         # =========================================
 
         if entered_otp != saved_otp:
-
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 UPDATE password_reset_otp
 
@@ -15508,15 +15392,17 @@ def clerk_check_password_otp():
 
                 WHERE id = %s
 
-            """, (otp_id,))
+            """,
+                (otp_id,),
+            )
 
             conn.commit()
 
             attempts += 1
 
             if attempts >= 5:
-
-                cursor.execute("""
+                cursor.execute(
+                    """
 
                     UPDATE password_reset_otp
 
@@ -15524,33 +15410,32 @@ def clerk_check_password_otp():
 
                     WHERE id = %s
 
-                """, (otp_id,))
+                """,
+                    (otp_id,),
+                )
 
                 conn.commit()
 
-                return jsonify({
+                return jsonify(
+                    {
+                        "status": "error",
+                        "message": "OTP blocked after 5 invalid attempts",
+                    }
+                )
 
+            return jsonify(
+                {
                     "status": "error",
-
-                    "message":
-                    "OTP blocked after 5 invalid attempts"
-
-                })
-
-            return jsonify({
-
-                "status": "error",
-
-                "message":
-                f"Invalid OTP. {5 - attempts} attempts remaining"
-
-            })
+                    "message": f"Invalid OTP. {5 - attempts} attempts remaining",
+                }
+            )
 
         # =========================================
         # OTP VERIFIED
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE password_reset_otp
 
@@ -15561,7 +15446,9 @@ def clerk_check_password_otp():
 
             WHERE id = %s
 
-        """, (otp_id,))
+        """,
+            (otp_id,),
+        )
 
         conn.commit()
 
@@ -15577,46 +15464,28 @@ def clerk_check_password_otp():
         # SUCCESS
         # =========================================
 
-        return jsonify({
-
-            "status": "success",
-            "message": "OTP Verified"
-
-        })
+        return jsonify({"status": "success", "message": "OTP Verified"})
 
     except Exception as e:
+        print("VERIFY OTP ERROR:", e)
 
-        print(
-            "VERIFY OTP ERROR:",
-            e
-        )
-
-        return jsonify({
-
-            "status": "error",
-            "message": "Something went wrong"
-
-        })
+        return jsonify({"status": "error", "message": "Something went wrong"})
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
-    
- 
+
+
 # =========================================================
 # 🔒 UPDATE PASSWORD
 # PURPOSE:
 # Final password update after OTP verification
 # =========================================================
 
-@app.route(
-    "/clerk/profile/update-password",
-    methods=["POST"]
-)
+@app.route("/clerk/profile/update-password", methods=["POST"])
 @login_required
 def clerk_update_password():
 
@@ -15624,35 +15493,28 @@ def clerk_update_password():
     cursor = None
 
     try:
-
         # =========================================
         # SESSION USER
         # =========================================
 
-        user_id = session.get(
-            "clerk_user_id"
-        )
+        user_id = session.get("clerk_user_id")
 
         if not user_id:
-
             return jsonify({
-
                 "status": "error",
                 "message": "User session missing"
-
             })
 
-            # =========================================
-            # OTP SESSION CHECK
-            # User must verify OTP in current session
-            # =========================================
+        # =========================================
+        # OTP SESSION CHECK
+        # User must verify OTP in current session
+        # =========================================
 
-            if session.get("otp_verified") is not True:
-
-                return jsonify({
-                    "status": "error",
-                    "message": "OTP verification required"
-                })
+        if session.get("otp_verified") is not True:
+            return jsonify({
+                "status": "error",
+                "message": "OTP verification required"
+            })
 
         # =========================================
         # GET REQUEST DATA
@@ -15660,21 +15522,16 @@ def clerk_update_password():
 
         data = request.get_json() or {}
 
-        new_password = (
-            data.get("password") or ""
-        ).strip()
+        new_password = (data.get("password") or "").strip()
 
         # =========================================
         # PASSWORD REQUIRED
         # =========================================
 
         if not new_password:
-
             return jsonify({
-
                 "status": "error",
                 "message": "Password required"
-
             })
 
         # =========================================
@@ -15682,34 +15539,18 @@ def clerk_update_password():
         # =========================================
 
         if (
-
             len(new_password) < 8
-            or not any(
-                c.isupper()
-                for c in new_password
-            )
-            or not any(
-                c.islower()
-                for c in new_password
-            )
-            or not any(
-                c.isdigit()
-                for c in new_password
-            )
-            or not any(
-                not c.isalnum()
-                for c in new_password
-            )
-
+            or not any(c.isupper() for c in new_password)
+            or not any(c.islower() for c in new_password)
+            or not any(c.isdigit() for c in new_password)
+            or not any(not c.isalnum() for c in new_password)
         ):
-
             return jsonify({
-
                 "status": "error",
-
-                "message":
-                "Password must contain uppercase, lowercase, number and special character"
-
+                "message": (
+                    "Password must contain uppercase, lowercase, "
+                    "number and special character"
+                )
             })
 
         # =========================================
@@ -15723,35 +15564,26 @@ def clerk_update_password():
         # CHECK VERIFIED OTP
         # =========================================
 
-        cursor.execute("""
-
+        cursor.execute(
+            """
             SELECT
-
                 id,
                 verified_at
-
             FROM password_reset_otp
-
             WHERE user_id = %s
-            AND is_used = 1
-
+              AND is_used = 1
             ORDER BY id DESC
-
             LIMIT 1
-
-        """, (user_id,))
+            """,
+            (user_id,),
+        )
 
         otp_row = cursor.fetchone()
 
         if not otp_row:
-
             return jsonify({
-
                 "status": "error",
-
-                "message":
-                "OTP verification required"
-
+                "message": "OTP verification required"
             })
 
         verified_time = otp_row[1]
@@ -15764,21 +15596,13 @@ def clerk_update_password():
         if verified_time:
 
             minutes_passed = (
-
-                datetime.now()
-                - verified_time
-
+                datetime.now() - verified_time
             ).total_seconds() / 60
 
             if minutes_passed > 10:
-
                 return jsonify({
-
                     "status": "error",
-
-                    "message":
-                    "OTP verification expired"
-
+                    "message": "OTP verification expired"
                 })
 
         # =========================================
@@ -15786,49 +15610,38 @@ def clerk_update_password():
         # =========================================
 
         hashed_password = (
-
             bcrypt
-            .generate_password_hash(
-                new_password
-            )
+            .generate_password_hash(new_password)
             .decode("utf-8")
-
         )
 
         # =========================================
         # UPDATE USER PASSWORD
         # =========================================
 
-        cursor.execute("""
-
+        cursor.execute(
+            """
             UPDATE users
-
             SET
-
                 password = %s,
                 last_password_change = NOW(),
                 updated_at = NOW()
-
             WHERE id = %s
-
-        """, (
-
-            hashed_password,
-            user_id
-
-        ))
+            """,
+            (hashed_password, user_id),
+        )
 
         # =========================================
         # CLEAN OLD OTP RECORDS
         # =========================================
 
-        cursor.execute("""
-
+        cursor.execute(
+            """
             DELETE FROM password_reset_otp
-
             WHERE user_id = %s
-
-        """, (user_id,))
+            """,
+            (user_id,),
+        )
 
         conn.commit()
 
@@ -15836,22 +15649,15 @@ def clerk_update_password():
         # CLEAR SESSION
         # =========================================
 
-        session.pop(
-            "otp_verified",
-            None
-        )
+        session.pop("otp_verified", None)
 
         # =========================================
         # SUCCESS
         # =========================================
 
         return jsonify({
-
             "status": "success",
-
-            "message":
-            "Password updated successfully"
-
+            "message": "Password updated successfully"
         })
 
     except Exception as e:
@@ -15859,16 +15665,11 @@ def clerk_update_password():
         if conn:
             conn.rollback()
 
-        print(
-            "UPDATE PASSWORD ERROR:",
-            e
-        )
+        print("UPDATE PASSWORD ERROR:", e)
 
         return jsonify({
-
             "status": "error",
             "message": "Something went wrong"
-
         })
 
     finally:
@@ -15879,12 +15680,12 @@ def clerk_update_password():
         if conn:
             conn.close()
 
-
     
 # =========================================================
 # 🎓 AUTO GENERATE ADMISSION NUMBER
 # (MYSQL SAFE + ATOMIC + PRODUCTION READY)
 # =========================================================
+
 
 def generate_admission_no(school_id):
 
@@ -15892,14 +15693,11 @@ def generate_admission_no(school_id):
     cursor = None
 
     try:
-
         # =========================================
         # GET SCHOOL CODE
         # =========================================
 
-        school_code = get_school_code(
-            school_id
-        )
+        school_code = get_school_code(school_id)
 
         conn = get_connection()
 
@@ -15909,7 +15707,8 @@ def generate_admission_no(school_id):
         # GET CURRENT NUMBER
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT admission_last_number
 
@@ -15917,7 +15716,9 @@ def generate_admission_no(school_id):
 
             WHERE school_id = %s
 
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         row = cursor.fetchone()
 
@@ -15926,10 +15727,8 @@ def generate_admission_no(school_id):
         # =========================================
 
         if not row:
-
-            raise Exception(
-                "School sequence not found ❌"
-            )
+            flash("School sequence not found.", "danger")
+            raise Exception("School sequence not found ❌")
 
         current_number = row[0] or 0
 
@@ -15943,7 +15742,8 @@ def generate_admission_no(school_id):
         # UPDATE NEW NUMBER
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE school_sequences
 
@@ -15952,10 +15752,9 @@ def generate_admission_no(school_id):
 
             WHERE school_id = %s
 
-        """, (
-            next_number,
-            school_id
-        ))
+        """,
+            (next_number, school_id),
+        )
 
         conn.commit()
 
@@ -15963,39 +15762,28 @@ def generate_admission_no(school_id):
         # FINAL ADMISSION NUMBER
         # =========================================
 
-        admission_no = (
-            f"{school_code}-ADM-"
-            f"{str(next_number).zfill(4)}"
-        )
+        admission_no = f"{school_code}-ADM-{str(next_number).zfill(4)}"
 
-        print(
-            "✅ Generated Admission Number:",
-            admission_no
-        )
+        print("✅ Generated Admission Number:", admission_no)
 
         return admission_no
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "ADMISSION NUMBER ERROR:",
-            e
-        )
+        print("ADMISSION NUMBER ERROR:", e)
 
         raise
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
-            
+
 # =========================================================
 # ➕ ADD STUDENT
 # Safe student registration with validation, duplicate check,
@@ -16010,10 +15798,10 @@ def add_student():
     next_admission = "Auto Generated On Save"
 
     if not school_id:
+        flash("School not found.", "danger")
         return redirect(url_for("login"))
 
     if request.method == "POST":
-
         conn = None
         cursor = None
 
@@ -16092,53 +15880,67 @@ def add_student():
                 "Admission Date": admission_date,
                 "Class": student_class,
                 "Section": section,
-                "Primary Mobile": primary_mobile
+                "Primary Mobile": primary_mobile,
             }
 
             for label, value in required_fields.items():
                 if not value:
-                    return f"{label} is required ❌"
+                    flash(f"{label} is required.", "danger")
+                    return redirect(url_for("clerk_dashboard"))
 
             # ================= FORMAT VALIDATION =================
             if not is_valid_aadhaar(aadhaar):
-                return "Invalid Aadhaar number ❌"
+                flash("Invalid Aadhaar number.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if not is_valid_phone(primary_mobile):
-                return "Invalid primary mobile number ❌"
+                flash("Invalid primary mobile number.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if alternate_mobile and not is_valid_phone(alternate_mobile):
-                return "Invalid alternate mobile number ❌"
+                flash("Invalid alternate mobile number.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if guardian_mobile and not is_valid_phone(guardian_mobile):
-                return "Invalid guardian mobile number ❌"
+                flash("Invalid guardian mobile number.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if email and not is_valid_email(email):
-                return "Invalid email ❌"
+                flash("Invalid email.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             # ================= LENGTH VALIDATION =================
             if len(school_register_no) > 50:
-                return "School register number too long ❌"
+                flash("School register number too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if len(name) > 200:
-                return "Student name too long ❌"
+                flash("Student name too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if len(father_name) > 200:
-                return "Father name too long ❌"
+                flash("Father name too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if len(mother_name) > 200:
-                return "Mother name too long ❌"
+                flash("Mother name too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if student_uid and len(student_uid) > 50:
-                return "Student UID too long ❌"
+                flash("Student UID too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if apaar_id and len(apaar_id) > 50:
-                return "APAAR ID too long ❌"
+                flash("APAAR ID too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if email and len(email) > 255:
-                return "Email too long ❌"
+                flash("Email too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             # ================= DUPLICATE CHECK =================
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id
                 FROM students
                 WHERE school_id = %s
@@ -16157,26 +15959,30 @@ def add_student():
                     )
                 )
                 LIMIT 1
-            """, (
-                school_id,
-                school_register_no,
-                aadhaar,
-                student_uid,
-                student_uid,
-                student_uid,
-                apaar_id,
-                apaar_id,
-                apaar_id
-            ))
+            """,
+                (
+                    school_id,
+                    school_register_no,
+                    aadhaar,
+                    student_uid,
+                    student_uid,
+                    student_uid,
+                    apaar_id,
+                    apaar_id,
+                    apaar_id,
+                ),
+            )
 
             if cursor.fetchone():
-                return "Student with same Register No, Aadhaar, Student UID or APAAR ID already exists ❌"
+                flash("Student with same Register No, Aadhaar, Student UID or APAAR ID already exists.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             # ================= GENERATE ADMISSION NO =================
             admission_no = generate_admission_no(school_id)
 
             # ================= INSERT STUDENT =================
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO students (
                     school_id,
                     school_register_no,
@@ -16219,42 +16025,44 @@ def add_student():
                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s
                 )
-            """, (
-                school_id,
-                school_register_no,
-                name,
-                father_name,
-                mother_name,
-                student_uid,
-                aadhaar,
-                apaar_id,
-                dob,
-                birth_place,
-                nationality,
-                mother_tongue,
-                religion,
-                caste,
-                city,
-                taluka,
-                district,
-                state,
-                admission_no,
-                admission_date,
-                student_class,
-                section,
-                previous_school,
-                last_exam,
-                result_status,
-                progress,
-                conduct,
-                primary_mobile,
-                alternate_mobile,
-                email,
-                occupation,
-                income,
-                guardian_name,
-                guardian_mobile
-            ))
+            """,
+                (
+                    school_id,
+                    school_register_no,
+                    name,
+                    father_name,
+                    mother_name,
+                    student_uid,
+                    aadhaar,
+                    apaar_id,
+                    dob,
+                    birth_place,
+                    nationality,
+                    mother_tongue,
+                    religion,
+                    caste,
+                    city,
+                    taluka,
+                    district,
+                    state,
+                    admission_no,
+                    admission_date,
+                    student_class,
+                    section,
+                    previous_school,
+                    last_exam,
+                    result_status,
+                    progress,
+                    conduct,
+                    primary_mobile,
+                    alternate_mobile,
+                    email,
+                    occupation,
+                    income,
+                    guardian_name,
+                    guardian_mobile,
+                ),
+            )
 
             conn.commit()
 
@@ -16263,16 +16071,15 @@ def add_student():
             return redirect(url_for("clerk_students"))
 
         except Exception as e:
-
             if conn:
                 conn.rollback()
 
-            print("❌ ADD STUDENT ERROR:", e)
+            logger.exception("STUDENT PAGE ERROR")
 
-            return "Something went wrong ❌"
+            flash("Unable to add student.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         finally:
-
             if cursor:
                 cursor.close()
 
@@ -16287,7 +16094,7 @@ def add_student():
         role="clerk",
         school_name=school["school_name"],
         school_udise=school["school_udise"],
-        active_page="add_student"
+        active_page="add_student",
     )
 
 
@@ -16303,7 +16110,6 @@ def edit_student(id):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -16324,6 +16130,7 @@ def edit_student(id):
         )
 
         if not is_clerk_request and not is_admin_request:
+            flash("Unauthorized access.", "danger")
             return redirect(url_for("login"))
 
         # =========================================
@@ -16333,44 +16140,39 @@ def edit_student(id):
         # =========================================
 
         if is_clerk_request:
-
             school_id = session.get("clerk_school_id")
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT *
                 FROM students
                 WHERE id = %s
                 AND school_id = %s
                 LIMIT 1
-            """, (
-                id,
-                school_id
-            ))
+            """,
+                (id, school_id),
+            )
 
         else:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT *
                 FROM students
                 WHERE id = %s
                 LIMIT 1
-            """, (
-                id,
-            ))
+            """,
+                (id,),
+            )
 
         row = cursor.fetchone()
 
         if not row:
-            return "Student Not Found ❌"
+            flash("Student Not Found.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
-        columns = [
-            column[0]
-            for column in cursor.description
-        ]
+        columns = [column[0] for column in cursor.description]
 
-        student = dict(
-            zip(columns, row)
-        )
+        student = dict(zip(columns, row))
 
         student_school_id = student["school_id"]
 
@@ -16379,7 +16181,6 @@ def edit_student(id):
         # =========================================
 
         if request.method == "POST":
-
             # ================= SAFE FORM HELPERS =================
 
             def form_value(field):
@@ -16387,7 +16188,6 @@ def edit_student(id):
                 value = request.form.get(field)
 
                 return value.strip() if value else ""
-
 
             def optional_value(field):
 
@@ -16397,7 +16197,6 @@ def edit_student(id):
                     return None
 
                 return value
-
 
             def required_date(field):
 
@@ -16473,11 +16272,10 @@ def edit_student(id):
                 "Admission Date": admission_date,
                 "Class": student_class,
                 "Section": section,
-                "Primary Mobile": primary_mobile
+                "Primary Mobile": primary_mobile,
             }
 
             for field_name, field_value in required_fields.items():
-
                 if not field_value:
                     return f"{field_name} is required ❌"
 
@@ -16590,7 +16388,8 @@ def edit_student(id):
             # APAAR ID = Optional Unique
             # =========================================
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id
                 FROM students
                 WHERE school_id = %s
@@ -16610,30 +16409,26 @@ def edit_student(id):
                     )
                 )
                 LIMIT 1
-            """, (
-                student_school_id,
-                id,
-
-                school_register_no,
-                aadhaar,
-
-                student_uid,
-                student_uid,
-                student_uid,
-
-                apaar_id,
-                apaar_id,
-                apaar_id
-            ))
+            """,
+                (
+                    student_school_id,
+                    id,
+                    school_register_no,
+                    aadhaar,
+                    student_uid,
+                    student_uid,
+                    student_uid,
+                    apaar_id,
+                    apaar_id,
+                    apaar_id,
+                ),
+            )
 
             existing_student = cursor.fetchone()
 
             if existing_student:
-
-                return (
-                    "Student with same Register No, Aadhaar, "
-                    "Student UID or APAAR ID already exists ❌"
-                )
+                flash("Student with same Register No, Aadhaar, Student UID or APAAR ID already exists.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             # =========================================
             # UPDATE QUERY
@@ -16641,8 +16436,8 @@ def edit_student(id):
             # =========================================
 
             if is_clerk_request:
-
-                cursor.execute("""
+                cursor.execute(
+                    """
                     UPDATE students
                     SET
                         school_register_no = %s,
@@ -16679,46 +16474,48 @@ def edit_student(id):
                         guardian_mobile = %s
                     WHERE id = %s
                     AND school_id = %s
-                """, (
-                    school_register_no,
-                    name,
-                    father_name,
-                    mother_name,
-                    student_uid,
-                    aadhaar,
-                    apaar_id,
-                    dob,
-                    birth_place,
-                    nationality,
-                    mother_tongue,
-                    religion,
-                    caste,
-                    city,
-                    taluka,
-                    district,
-                    state,
-                    admission_date,
-                    student_class,
-                    section,
-                    previous_school,
-                    last_exam,
-                    result_status,
-                    progress,
-                    conduct,
-                    primary_mobile,
-                    alternate_mobile,
-                    email,
-                    occupation,
-                    income,
-                    guardian_name,
-                    guardian_mobile,
-                    id,
-                    school_id
-                ))
+                """,
+                    (
+                        school_register_no,
+                        name,
+                        father_name,
+                        mother_name,
+                        student_uid,
+                        aadhaar,
+                        apaar_id,
+                        dob,
+                        birth_place,
+                        nationality,
+                        mother_tongue,
+                        religion,
+                        caste,
+                        city,
+                        taluka,
+                        district,
+                        state,
+                        admission_date,
+                        student_class,
+                        section,
+                        previous_school,
+                        last_exam,
+                        result_status,
+                        progress,
+                        conduct,
+                        primary_mobile,
+                        alternate_mobile,
+                        email,
+                        occupation,
+                        income,
+                        guardian_name,
+                        guardian_mobile,
+                        id,
+                        school_id,
+                    ),
+                )
 
             else:
-
-                cursor.execute("""
+                cursor.execute(
+                    """
                     UPDATE students
                     SET
                         school_register_no = %s,
@@ -16754,45 +16551,47 @@ def edit_student(id):
                         guardian_name = %s,
                         guardian_mobile = %s
                     WHERE id = %s
-                """, (
-                    school_register_no,
-                    name,
-                    father_name,
-                    mother_name,
-                    student_uid,
-                    aadhaar,
-                    apaar_id,
-                    dob,
-                    birth_place,
-                    nationality,
-                    mother_tongue,
-                    religion,
-                    caste,
-                    city,
-                    taluka,
-                    district,
-                    state,
-                    admission_date,
-                    student_class,
-                    section,
-                    previous_school,
-                    last_exam,
-                    result_status,
-                    progress,
-                    conduct,
-                    primary_mobile,
-                    alternate_mobile,
-                    email,
-                    occupation,
-                    income,
-                    guardian_name,
-                    guardian_mobile,
-                    id
-                ))
+                """,
+                    (
+                        school_register_no,
+                        name,
+                        father_name,
+                        mother_name,
+                        student_uid,
+                        aadhaar,
+                        apaar_id,
+                        dob,
+                        birth_place,
+                        nationality,
+                        mother_tongue,
+                        religion,
+                        caste,
+                        city,
+                        taluka,
+                        district,
+                        state,
+                        admission_date,
+                        student_class,
+                        section,
+                        previous_school,
+                        last_exam,
+                        result_status,
+                        progress,
+                        conduct,
+                        primary_mobile,
+                        alternate_mobile,
+                        email,
+                        occupation,
+                        income,
+                        guardian_name,
+                        guardian_mobile,
+                        id,
+                    ),
+                )
 
             conn.commit()
 
-            print("✅ Student Updated in DB")
+            print("Student Updated in DB")
 
             if is_clerk_request:
                 return redirect(url_for("clerk_dashboard"))
@@ -16806,7 +16605,8 @@ def edit_student(id):
         school = get_school_details(student_school_id)
 
         if not school:
-            return "School not found ❌"
+            flash("School not found.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         return render_template(
             "clerk/edit_student.html",
@@ -16814,25 +16614,24 @@ def edit_student(id):
             role="clerk" if is_clerk_request else "admin",
             school_name=school["school_name"],
             school_udise=school["school_udise"],
-            active_page="students"
+            active_page="students",
         )
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print("❌ EDIT STUDENT ERROR:", e)
-
-        return "Something went wrong ❌"
+        logger.exception("EDIT STUDENT ERROR")
+        flash("Unable to edit student.", "danger")
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 📋 VIEW STUDENTS LIST PAGE
@@ -16849,8 +16648,9 @@ def clerk_students():
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            return "School session missing ❌"
-            abort(404)
+            flash("School session missing.", "danger")
+            return redirect(url_for("clerk_dashboard"))
+
         search = (request.args.get("search") or "").strip()
         class_filter = (request.args.get("class") or "").strip()
 
@@ -16861,7 +16661,8 @@ def clerk_students():
         conn = get_connection()
 
         if not conn:
-            return "Database connection failed ❌"
+            flash("Database connection failed.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         cursor = conn.cursor(dictionary=True)
 
@@ -16885,33 +16686,24 @@ def clerk_students():
 
             like_search = f"%{search}%"
 
-            params.extend([
-                like_search,
-                like_search,
-                like_search,
-                like_search,
-                like_search
-            ])
+            params.extend(
+                [like_search, like_search, like_search, like_search, like_search]
+            )
 
         if class_filter:
             where_query += " AND class = %s"
             params.append(class_filter)
 
         # TOTAL COUNT
-        cursor.execute(
-            "SELECT COUNT(*) AS total " + where_query,
-            tuple(params)
-        )
+        cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
 
         total_records = cursor.fetchone()["total"] or 0
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         # STUDENT DATA
-        query = """
+        query = (
+            """
             SELECT
                 id,
                 school_register_no,
@@ -16929,10 +16721,13 @@ def clerk_students():
                 progress,
                 conduct,
                 created_at
-        """ + where_query + """
+        """
+            + where_query
+            + """
             ORDER BY id DESC
             LIMIT %s OFFSET %s
         """
+        )
 
         data_params = params + [per_page, offset]
 
@@ -16943,7 +16738,8 @@ def clerk_students():
         school = get_school_details(school_id)
 
         if not school:
-            return "School not found ❌"
+            flash("School not found.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         return render_template(
             "clerk/students.html",
@@ -16956,12 +16752,13 @@ def clerk_students():
             total_records=total_records,
             role="clerk",
             school_name=school["school_name"],
-            active_page="students"
+            active_page="students",
         )
 
     except Exception as e:
-        print("❌ STUDENTS FETCH ERROR:", e)
-        return "Something went wrong ❌"
+        logger.exception("STUDENTS FETCH ERROR")
+        flash("Unable to fetch students.", "danger")
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
         if cursor:
@@ -16978,13 +16775,15 @@ def clerk_students():
 # Prevents duplicate TC numbers during multiple users
 # =========================================================
 
+
 def generate_tc_number(cursor, school_id):
 
     # =====================================
     # GET SCHOOL CERTIFICATE SETTINGS
     # =====================================
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             school_code,
             tc_prefix,
@@ -16992,14 +16791,15 @@ def generate_tc_number(cursor, school_id):
         FROM schools
         WHERE school_id = %s
         LIMIT 1
-    """, (
-        school_id,
-    ))
+    """,
+        (school_id,),
+    )
 
     school = cursor.fetchone()
 
     if not school:
-        raise Exception("School not found ❌")
+        flash("School not found.", "danger")
+        raise Exception("School not found ")
 
     school_code = school[0]
     tc_prefix = school[1] or "TC"
@@ -17010,26 +16810,29 @@ def generate_tc_number(cursor, school_id):
     # =====================================
 
     if auto_numbering != "Enabled":
-        raise Exception("Auto numbering disabled for this school ❌")
+        flash("Auto numbering disabled for this school.", "danger")
+        raise Exception("Auto numbering disabled for this school  ")
 
     # =====================================
     # LOCK SCHOOL SEQUENCE
     # IMPORTANT: Requires same transaction
     # =====================================
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT tc_last_number
         FROM school_sequences
         WHERE school_id = %s
         FOR UPDATE
-    """, (
-        school_id,
-    ))
+    """,
+        (school_id,),
+    )
 
     row = cursor.fetchone()
 
     if not row:
-        raise Exception("School sequence not found ❌")
+        flash("School sequence not found.", "danger")
+        raise Exception("School sequence not found ")
 
     next_number = (row[0] or 0) + 1
 
@@ -17037,24 +16840,20 @@ def generate_tc_number(cursor, school_id):
     # UPDATE SEQUENCE
     # =====================================
 
-    cursor.execute("""
+    cursor.execute(
+        """
         UPDATE school_sequences
         SET tc_last_number = %s
         WHERE school_id = %s
-    """, (
-        next_number,
-        school_id
-    ))
+    """,
+        (next_number, school_id),
+    )
 
     # =====================================
     # FINAL TC NUMBER
     # =====================================
 
-    tc_number = (
-        f"{school_code}-"
-        f"{tc_prefix}-"
-        f"{str(next_number).zfill(4)}"
-    )
+    tc_number = f"{school_code}-{tc_prefix}-{str(next_number).zfill(4)}"
 
     return tc_number
 
@@ -17066,6 +16865,7 @@ def generate_tc_number(cursor, school_id):
 # TC number + TC insert happen in one transaction
 # =========================================================
 
+
 @app.route("/clerk/tc-form/<int:id>", methods=["GET", "POST"])
 @login_required
 @subscription_required
@@ -17076,7 +16876,6 @@ def tc_form(id):
     cursor = None
 
     try:
-
         # =========================================
         # CLERK SESSION CHECK
         # =========================================
@@ -17084,11 +16883,12 @@ def tc_form(id):
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            return redirect(url_for("login"))
+            flash("School session expired.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         if session.get("clerk_role") != "clerk":
-            return "Unauthorized ❌"
-            abort(401)
+            flash("Unauthorized.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         # =========================================
         # DB CONNECTION
@@ -17102,21 +16902,22 @@ def tc_form(id):
         # Prevents clerk accessing other school student
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT *
             FROM students
             WHERE id = %s
             AND school_id = %s
             LIMIT 1
-        """, (
-            id,
-            school_id
-        ))
+        """,
+            (id, school_id),
+        )
 
         row = cursor.fetchone()
 
         if not row:
-            return "Student Not Found ❌"
+            flash("Student Not Found.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         columns = [column[0] for column in cursor.description]
         student = dict(zip(columns, row))
@@ -17126,26 +16927,17 @@ def tc_form(id):
         # =========================================
 
         if request.method == "POST":
-
             # =========================================
             # GET FORM DATA
             # =========================================
 
-            tc_date_raw = (
-                request.form.get("tc_date") or ""
-            ).strip()
+            tc_date_raw = (request.form.get("tc_date") or "").strip()
 
-            leaving_date_raw = (
-                request.form.get("leaving_date") or ""
-            ).strip()
+            leaving_date_raw = (request.form.get("leaving_date") or "").strip()
 
-            leaving_reason = (
-                request.form.get("leaving_reason") or ""
-            ).strip()
+            leaving_reason = (request.form.get("leaving_reason") or "").strip()
 
-            remark = (
-                request.form.get("remark") or ""
-            ).strip()
+            remark = (request.form.get("remark") or "").strip()
 
             # =========================================
             # PARSE DATES
@@ -17159,31 +16951,29 @@ def tc_form(id):
             # =========================================
 
             if not tc_date or not leaving_date:
-                return "TC Date / Leaving Date invalid ❌"
+                flash("TC Date / Leaving Date invalid.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if not leaving_reason:
-                return "Leaving reason required ❌"
+                flash("Leaving reason required.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if len(leaving_reason) > 255:
-                return "Leaving reason too long ❌"
+                flash("Leaving reason too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             if remark and len(remark) > 500:
-                return "Remark too long ❌"
+                flash("Remark too long.", "danger")
+                return redirect(url_for("clerk_dashboard"))
 
             # =========================================
             # CONVERT DATETIME TO DATE FOR DB
             # =========================================
 
-            tc_date_value = (
-                tc_date.date()
-                if hasattr(tc_date, "date")
-                else tc_date
-            )
+            tc_date_value = tc_date.date() if hasattr(tc_date, "date") else tc_date
 
             leaving_date_value = (
-                leaving_date.date()
-                if hasattr(leaving_date, "date")
-                else leaving_date
+                leaving_date.date() if hasattr(leaving_date, "date") else leaving_date
             )
 
             # =========================================
@@ -17194,7 +16984,6 @@ def tc_form(id):
             admission_date = student.get("admission_date")
 
             if admission_date:
-
                 admission_date_value = (
                     admission_date.date()
                     if hasattr(admission_date, "date")
@@ -17202,46 +16991,43 @@ def tc_form(id):
                 )
 
                 if leaving_date_value < admission_date_value:
-                    return "Leaving date cannot be before admission date ❌"
+                    flash("Leaving date cannot be before admission date.", "danger")
+                    return redirect(url_for("clerk_dashboard"))
 
             # =========================================
             # EXISTING TC CHECK
             # Prevents duplicate TC for same student
             # =========================================
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id
                 FROM tc
                 WHERE student_id = %s
                 AND school_id = %s
                 LIMIT 1
-            """, (
-                id,
-                school_id
-            ))
+            """,
+                (id, school_id),
+            )
 
             existing_tc = cursor.fetchone()
 
             if existing_tc:
-                return redirect(
-                    url_for("view_tc", tc_id=existing_tc[0])
-                )
+                return redirect(url_for("view_tc", tc_id=existing_tc[0]))
 
             # =========================================
             # GENERATE TC NUMBER
             # Same cursor + same transaction
             # =========================================
 
-            tc_number = generate_tc_number(
-                cursor,
-                school_id
-            )
+            tc_number = generate_tc_number(cursor, school_id)
 
             # =========================================
             # INSERT TC
             # =========================================
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO tc (
                     school_id,
                     student_id,
@@ -17252,15 +17038,17 @@ def tc_form(id):
                     remark
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (
-                school_id,
-                id,
-                tc_number,
-                tc_date_value,
-                leaving_date_value,
-                leaving_reason,
-                remark if remark else None
-            ))
+            """,
+                (
+                    school_id,
+                    id,
+                    tc_number,
+                    tc_date_value,
+                    leaving_date_value,
+                    leaving_reason,
+                    remark if remark else None,
+                ),
+            )
 
             new_tc_id = cursor.lastrowid
 
@@ -17271,9 +17059,7 @@ def tc_form(id):
 
             conn.commit()
 
-            return redirect(
-                url_for("view_tc", tc_id=new_tc_id)
-            )
+            return redirect(url_for("view_tc", tc_id=new_tc_id))
 
         # =========================================
         # GET: SHOW TC FORM
@@ -17282,7 +17068,8 @@ def tc_form(id):
         school = get_school_details(school_id)
 
         if not school:
-            return "School not found ❌"
+            flash("School not found.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         return render_template(
             "clerk/tc_form.html",
@@ -17291,29 +17078,34 @@ def tc_form(id):
             role="clerk",
             school_name=school["school_name"],
             school_udise=school["school_udise"],
-            active_page="tc"
+            active_page="tc",
         )
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print("❌ TC FORM ERROR:", e)
+        logger.exception("TC Form ERROR")
 
-        return "TC form failed ❌"
+        flash(
+            "Unable to load Transfer Certificate Form.",
+            "danger"
+        )
+
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 👁️ VIEW TC (MAIN DISPLAY PAGE)
 # =========================================================
+
 
 @app.route("/clerk/tc/view/<int:tc_id>")
 @login_required
@@ -17327,7 +17119,6 @@ def view_tc(tc_id):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -17337,8 +17128,8 @@ def view_tc(tc_id):
         )
 
         if admin_mode:
-
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 SELECT 
                     t.*,
@@ -17398,18 +17189,25 @@ def view_tc(tc_id):
 
                 LIMIT 1
 
-            """, (tc_id,))
+            """,
+                (tc_id,),
+            )
 
             role = "admin"
 
         else:
-
             school_id = session.get("clerk_school_id")
 
             if not school_id:
-                return "School session missing ❌"
-                abort(404)
-            cursor.execute("""
+                flash(
+                    "School session expired.",
+                    "danger"
+                )
+
+                return redirect(url_for("clerk_dashboard"))
+
+            cursor.execute(
+                """
 
                 SELECT 
                     t.*,
@@ -17470,17 +17268,16 @@ def view_tc(tc_id):
 
                 LIMIT 1
 
-            """, (
-                tc_id,
-                school_id
-            ))
+            """,
+                (tc_id, school_id),
+            )
 
             role = "clerk"
 
         row = cursor.fetchone()
 
         if not row:
-            return "TC Not Found ❌"
+            flash("Certificate not found.", "danger")
 
         columns = [col[0] for col in cursor.description]
         row = dict(zip(columns, row))
@@ -17491,7 +17288,7 @@ def view_tc(tc_id):
             "tc_date": format_date(row["tc_date"]),
             "leaving_date": format_date(row["leaving_date"]),
             "leaving_reason": row["leaving_reason"],
-            "remark": row["remark"]
+            "remark": row["remark"],
         }
 
         student = {
@@ -17520,7 +17317,7 @@ def view_tc(tc_id):
             "conduct": row["conduct"] or "",
             "aadhaar": row["aadhaar"] or "",
             "primary_mobile": row["primary_mobile"] or "",
-            "email": row["email"] or ""
+            "email": row["email"] or "",
         }
 
         school = {
@@ -17536,10 +17333,9 @@ def view_tc(tc_id):
             "logo_path": row["logo_path"] or "",
             "watermark_path": row["watermark_path"] or "",
             "website": row["website"] or "",
-
             "enable_certificate_labels": row["enable_certificate_labels"] or "Enabled",
             "show_tc_logo": row["show_tc_logo"] or "Disabled",
-            "show_tc_watermark": row["show_tc_watermark"] or "Disabled"
+            "show_tc_watermark": row["show_tc_watermark"] or "Disabled",
         }
 
         return render_template(
@@ -17559,17 +17355,21 @@ def view_tc(tc_id):
             school_board_name=school["board_name"],
             school_logo=school["logo_path"],
             school_watermark=school["watermark_path"],
-            school_website=school["website"]
+            school_website=school["website"],
         )
 
     except Exception as e:
 
-        print("❌ VIEW TC ERROR:", e)
+        logger.exception("TC PAGE ERROR")
 
-        return "TC view failed ❌"
+        flash(
+            "Unable to load Transfer Certificate records.",
+            "danger"
+        )
+
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
-
         if cursor:
             cursor.close()
 
