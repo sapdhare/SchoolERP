@@ -22,6 +22,7 @@ from urllib.parse import quote_plus
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+
 # =========================================================
 # THIRD PARTY PACKAGES
 # =========================================================
@@ -44,17 +45,14 @@ from flask import (
     url_for,
     send_file,
     jsonify,
-    make_response
+    make_response,
 )
 
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail, Message
 from flask_wtf.csrf import CSRFProtect
 
-from werkzeug.security import (
-    generate_password_hash,
-    check_password_hash
-)
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from werkzeug.utils import secure_filename
 
@@ -66,13 +64,9 @@ from werkzeug.utils import secure_filename
 from db import get_connection
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 logger = logging.getLogger(__name__)
- 
 
 
 # Load env variables from .env file
@@ -81,7 +75,7 @@ load_dotenv()
 # Initialize Flask app
 app = Flask(__name__)
 
-# Secret key for sessions 
+# Secret key for sessions
 app.secret_key = os.getenv("SECRET_KEY")
 
 if not app.secret_key:
@@ -98,9 +92,7 @@ WKHTMLTOPDF_PATH = os.getenv("WKHTMLTOPDF_PATH")
 if not WKHTMLTOPDF_PATH:
     raise Exception("WKHTMLTOPDF_PATH missing in .env")
 
-pdf_config = pdfkit.configuration(
-    wkhtmltopdf=WKHTMLTOPDF_PATH
-)
+pdf_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
 
 # =========================================================
 # SESSION SECURITY CONFIGURATION
@@ -110,7 +102,7 @@ pdf_config = pdfkit.configuration(
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 
 # Use True in production with HTTPS
-app.config["SESSION_COOKIE_SECURE"] = True  #False
+app.config["SESSION_COOKIE_SECURE"] = True  # False
 
 # Protect against CSRF-like cross-site behavior
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -120,7 +112,6 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 
 # File Maximum Upload Size 10 MB (for Excel imports, etc.)
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
-
 
 
 # Initialize Bcrypt for password hashing
@@ -154,16 +145,17 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
 if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
     raise Exception("Razorpay keys missing in .env")
- 
+
 
 # =========================================================
 # 🛠️ COMMON HELPER FUNCTIONS (USED ACROSS APP)
 # =========================================================
- 
- 
+
+
 # =========================================================
 # GLOBAL ERROR HANDLERS
 # =========================================================
+
 
 @app.errorhandler(500)
 def internal_server_error(e):
@@ -184,31 +176,32 @@ def page_not_found(e):
 
     return "Page not found ❌", 404
 
+
 # =========================================================
 # GLOBAL CURRENT YEAR
 # Available in all templates
 # =========================================================
 
+
 @app.context_processor
 def inject_year():
 
-    return {
-        "current_year": datetime.now().year
-    }
+    return {"current_year": datetime.now().year}
 
- #========================================================
+
+# ========================================================
 # 🌟 GLOBAL SYSTEM SETTING
 # Available in all templates as 'global_settings'
 # =========================================================
+
 
 @app.context_processor
 def inject_system_settings():
 
     conn = None
     cursor = None
-    row = None  
+    row = None
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -235,32 +228,25 @@ def inject_system_settings():
         row = cursor.fetchone()
 
         if row:
-
             return {
                 "global_settings": {
                     "system_name": row[0],
                     "system_logo": row[1],
-
                     "support_email": row[2],
                     "support_phone": row[3],
-
                     "favicon": row[4],
-
                     "footer_text": row[5],
                     "powered_by": row[6],
                     "erp_version": row[7],
                     "website_url": row[8],
-
-                    "updated_at": row[9]
+                    "updated_at": row[9],
                 }
             }
 
     except Exception as e:
-
         print("GLOBAL SETTINGS ERROR:", e)
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -268,15 +254,15 @@ def inject_system_settings():
             conn.close()
 
     if not row:
-        return {
-            "global_settings": {}
-        }
+        return {"global_settings": {}}
+
 
 # =========================================================
 # GLOBAL LEAD COUNT
 # Used in Super Admin Dashboard
 # =========================================================
-    
+
+
 @app.context_processor
 def inject_lead_count():
 
@@ -284,7 +270,6 @@ def inject_lead_count():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -298,49 +283,33 @@ def inject_lead_count():
 
         count = result[0] if result else 0
 
-        return {
-            "new_leads_count": count
-        }
+        return {"new_leads_count": count}
 
     except Exception as e:
+        print("LEAD COUNT ERROR:", e)
 
-        print(
-            "LEAD COUNT ERROR:",
-            e
-        )
-
-        return {
-            "new_leads_count": 0
-        }
+        return {"new_leads_count": 0}
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 📧 GLOBAL EMAIL SENDER
 # =========================================================
 
-def send_email(
 
-    to_email,
-    subject,
-    body,
-    attachment_path=None,
-    attachment_name=None
-
-):
+def send_email(to_email, subject, body, attachment_path=None, attachment_name=None):
 
     conn = None
     cursor = None
     server = None
 
     try:
-
         # =========================================
         # DB CONNECTION
         # =========================================
@@ -387,62 +356,38 @@ def send_email(
         message["From"] = smtp_email
         message["To"] = to_email
 
-        message["Subject"] = Header(
-            subject,
-            "utf-8"
-        )
+        message["Subject"] = Header(subject, "utf-8")
 
         # =========================================
         # EMAIL BODY
         # =========================================
 
-        message.attach(
-
-            MIMEText(
-                body,
-                "html",
-                "utf-8"
-            )
-
-        )
+        message.attach(MIMEText(body, "html", "utf-8"))
 
         # =========================================
         # PDF ATTACHMENT
         # =========================================
 
         if attachment_path and attachment_name:
-
             from email.mime.base import MIMEBase
             from email import encoders
 
             with open(attachment_path, "rb") as file:
+                part = MIMEBase("application", "octet-stream")
 
-                part = MIMEBase(
-                    "application",
-                    "octet-stream"
-                )
-
-                part.set_payload(
-                    file.read()
-                )
+                part.set_payload(file.read())
 
             encoders.encode_base64(part)
 
             safe_filename = (
-                        attachment_name.replace('"', '')        # Remove quotes
-                                    .replace('\n', '')          # Remove newlines
-                                    .replace('\r', '')          # Remove carriage returns
-                                    .replace(';', '')           # Remove semicolons (header separator)
-                            )
-
-
+                attachment_name.replace('"', "")  # Remove quotes
+                .replace("\n", "")  # Remove newlines
+                .replace("\r", "")  # Remove carriage returns
+                .replace(";", "")  # Remove semicolons (header separator)
+            )
 
             part.add_header(
-
-                "Content-Disposition",
-
-                f'attachment; filename="{safe_filename}"'
-
+                "Content-Disposition", f'attachment; filename="{safe_filename}"'
             )
 
             message.attach(part)
@@ -451,60 +396,37 @@ def send_email(
         # SMTP CONNECTION
         # =========================================
 
-        server = smtplib.SMTP(
-
-            smtp_server,
-            smtp_port,
-            timeout=20
-
-        )
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=20)
 
         # =========================================
         # TLS SECURITY
         # =========================================
 
         if str(smtp_tls).strip() == "Enabled":
-
             server.starttls()
 
         # =========================================
         # LOGIN
         # =========================================
 
-        server.login(
-
-            smtp_email,
-            smtp_password
-
-        )
+        server.login(smtp_email, smtp_password)
 
         # =========================================
         # SEND EMAIL
         # =========================================
 
-        server.sendmail(
-
-            smtp_email,
-            to_email,
-            message.as_bytes()
-
-        )
+        server.sendmail(smtp_email, to_email, message.as_bytes())
 
         print("✅ EMAIL SENT")
 
         return True
 
     except Exception as e:
-
-        print(
-            "❌ EMAIL SEND ERROR:",
-            str(e)
-        )
+        print("❌ EMAIL SEND ERROR:", str(e))
 
         return False
 
     finally:
-
         # =========================================
         # CLOSE SMTP
         # =========================================
@@ -530,7 +452,8 @@ def send_email(
 # MAINTENANCE MODE CHECK
 # Runs before every request
 # =========================================================
- 
+
+
 @app.before_request
 def check_maintenance_mode():
 
@@ -538,27 +461,18 @@ def check_maintenance_mode():
     cursor = None
 
     try:
-
         # Static files
         if request.path.startswith("/static/"):
             return
 
         # Public routes
-        allowed_paths = [
-
-            "/login",
-            "/logout",
-
-            "//login",
-            "//logout"
-        ]
+        allowed_paths = ["/login", "/logout", "//login", "//logout"]
 
         if request.path in allowed_paths:
             return
 
         # Super Admin always allowed
         if request.path.startswith("/superadmin"):
-
             if session.get("admin_logged_in") is True:
                 return
 
@@ -582,88 +496,76 @@ def check_maintenance_mode():
         if not row:
             return
 
-        maintenance_mode = (
-            row[0] or ""
-        ).strip().upper()
+        maintenance_mode = (row[0] or "").strip().upper()
 
-        maintenance_message = (
-            row[1]
-            or "ERP system is currently under maintenance."
-        )
+        maintenance_message = row[1] or "ERP system is currently under maintenance."
 
         if maintenance_mode == "ON":
-
             return (
-                render_template(
-                    "maintenance.html",
-                    message=maintenance_message
-                ),
-                503
+                render_template("maintenance.html", message=maintenance_message),
+                503,
             )
 
     except Exception as e:
-
-        print(
-            "❌ MAINTENANCE CHECK ERROR:",
-            e
-        )
+        print("❌ MAINTENANCE CHECK ERROR:", e)
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
-            
+
+
 # =========================================================
 # 🌟 GLOBAL BRANDING FUNCTION
 # =========================================================
 
-        # @app.context_processor
-        # def inject_branding_settings():
+# @app.context_processor
+# def inject_branding_settings():
 
-        #     conn = get_connection()
-        #     cursor = conn.cursor()
+#     conn = get_connection()
+#     cursor = conn.cursor()
 
-        #     try:
+#     try:
 
-        #         cursor.execute("""
-        #             SELECT
-        #                 primary_color,
-        #                 secondary_color,
-        #                 button_color,
-        #                 system_logo,
-        #                 favicon,
-        #                 system_name,
-        #                 footer_text,
-        #                 erp_version
-        #             FROM system_settings
-        #             WHERE id = 1
-        #         """)
+#         cursor.execute("""
+#             SELECT
+#                 primary_color,
+#                 secondary_color,
+#                 button_color,
+#                 system_logo,
+#                 favicon,
+#                 system_name,
+#                 footer_text,
+#                 erp_version
+#             FROM system_settings
+#             WHERE id = 1
+#         """)
 
-        #         branding = cursor.fetchone()
+#         branding = cursor.fetchone()
 
-        #         return dict(
-        #             global_settings=branding
-        #         )
+#         return dict(
+#             global_settings=branding
+#         )
 
-        #     except Exception as e:
+#     except Exception as e:
 
-        #         print("Branding Context Error:", e)
+#         print("Branding Context Error:", e)
 
-        #         return dict(
-        #             global_settings=None
-        #         )
+#         return dict(
+#             global_settings=None
+#         )
 
-        #     finally:
+#     finally:
 
-        #         cursor.close()
-        #         conn.close()
+#         cursor.close()
+#         conn.close()
 
 # =========================================================
 # 🌟 SCHOOL FEATURE MODULES
 # =========================================================
+
 
 @app.context_processor
 def inject_feature_modules():
@@ -672,22 +574,17 @@ def inject_feature_modules():
     cursor = None
 
     try:
-
-        school_id = session.get(
-            "clerk_school_id"
-        )
+        school_id = session.get("clerk_school_id")
 
         if not school_id:
-
-            return {
-                "feature_modules": {}
-            }
+            return {"feature_modules": {}}
 
         conn = get_connection()
 
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -705,15 +602,14 @@ def inject_feature_modules():
 
             WHERE school_id = %s
 
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         row = cursor.fetchone()
 
         if not row:
-
-            return {
-                "feature_modules": {}
-            }
+            return {"feature_modules": {}}
 
         # =========================================
         # Convert Enabled/Disabled values
@@ -721,53 +617,25 @@ def inject_feature_modules():
         # =========================================
 
         feature_modules = {
-
-            "tc":
-                row[0] == "Enabled",
-
-            "bonafide":
-                row[1] == "Enabled",
-
-            "import_export":
-                row[2] == "Enabled",
-
-            "attendance":
-                row[3] == "Enabled",
-
-            "fees":
-                row[4] == "Enabled",
-
-            "teachers":
-                row[5] == "Enabled",
-
-            "results":
-                row[6] == "Enabled",
-
-            "timetable":
-                row[7] == "Enabled",
-
-            "notice_board":
-                row[8] == "Enabled"
-
+            "tc": row[0] == "Enabled",
+            "bonafide": row[1] == "Enabled",
+            "import_export": row[2] == "Enabled",
+            "attendance": row[3] == "Enabled",
+            "fees": row[4] == "Enabled",
+            "teachers": row[5] == "Enabled",
+            "results": row[6] == "Enabled",
+            "timetable": row[7] == "Enabled",
+            "notice_board": row[8] == "Enabled",
         }
 
-        return {
-            "feature_modules": feature_modules
-        }
+        return {"feature_modules": feature_modules}
 
     except Exception as e:
+        print("FEATURE MODULE ERROR:", e)
 
-        print(
-            "FEATURE MODULE ERROR:",
-            e
-        )
-
-        return {
-            "feature_modules": {}
-        }
+        return {"feature_modules": {}}
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -787,14 +655,17 @@ def get_school_details(school_id):
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 school_id,
                 name,
                 udise_no
             FROM schools
             WHERE school_id = %s
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         school = cursor.fetchone()
 
@@ -804,14 +675,10 @@ def get_school_details(school_id):
         return {
             "school_id": school[0],
             "school_name": school[1],
-            "school_udise": school[2]
+            "school_udise": school[2],
         }
     except Exception as e:
-
-        print(
-            "GET SCHOOL DETAILS ERROR:",
-            e
-        )
+        print("GET SCHOOL DETAILS ERROR:", e)
 
         return None
 
@@ -821,20 +688,18 @@ def get_school_details(school_id):
         if conn:
             conn.close()
 
- # =========================================================
+
+# =========================================================
 # APPLY PLAN FEATURES TO SCHOOL
 # =========================================================
 
-def apply_plan_features(
-    school_id,
-    plan_id
-):
+
+def apply_plan_features(school_id, plan_id):
 
     conn = None
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -842,7 +707,8 @@ def apply_plan_features(
         # GET PLAN FEATURES
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -860,19 +726,21 @@ def apply_plan_features(
 
             WHERE id = %s
 
-        """, (plan_id,))
+        """,
+            (plan_id,),
+        )
 
         plan = cursor.fetchone()
 
         if not plan:
-
             return False
 
         # =========================================
         # UPDATE SCHOOL FEATURES
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE schools
 
@@ -890,44 +758,36 @@ def apply_plan_features(
 
             WHERE school_id = %s
 
-        """, (
-
-            plan[0],
-            plan[1],
-            plan[2],
-            plan[3],
-            plan[4],
-            plan[5],
-            plan[6],
-            plan[7],
-            plan[8],
-
-            school_id
-
-        ))
+        """,
+            (
+                plan[0],
+                plan[1],
+                plan[2],
+                plan[3],
+                plan[4],
+                plan[5],
+                plan[6],
+                plan[7],
+                plan[8],
+                school_id,
+            ),
+        )
 
         conn.commit()
 
-        print(
-            f"✅ Features Applied | School={school_id} Plan={plan_id}"
-        )
+        print(f"✅ Features Applied | School={school_id} Plan={plan_id}")
 
         return True
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ APPLY PLAN FEATURES ERROR:",
-            e
-        )
+        print("❌ APPLY PLAN FEATURES ERROR:", e)
 
         return False
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -944,7 +804,6 @@ def safe_value(val):
     - If NaN → returns None
     - Else → returns cleaned string
     """
- 
 
     if pd.isna(val):
         return None
@@ -952,7 +811,7 @@ def safe_value(val):
     return str(val).strip()
 
 
- # ---------------------------------------------------------
+# ---------------------------------------------------------
 # 🔹 HANDLE DATE FROM EXCEL (IMPORT SIDE)
 # Converts Excel date into YYYY-MM-DD
 # ---------------------------------------------------------
@@ -979,8 +838,9 @@ def safe_date(val):
 
 
 # ---------------------------------------------------------
-# 🔹 VALIDATION HELPER 
-#---------------------------------------------------------
+# 🔹 VALIDATION HELPER
+# ---------------------------------------------------------
+
 
 def is_valid_email(email):
     """
@@ -990,6 +850,7 @@ def is_valid_email(email):
     pattern = r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
 
     return bool(re.match(pattern, email))
+
 
 def is_valid_phone(phone):
     """
@@ -1029,18 +890,12 @@ def parse_date(date_str):
 
     try:
         # FORMAT: YYYY-MM-DD
-        return datetime.strptime(
-            date_str,
-            "%Y-%m-%d"
-        )
+        return datetime.strptime(date_str, "%Y-%m-%d")
 
     except Exception:
         try:
             # FORMAT: DD-MM-YYYY
-            return datetime.strptime(
-                date_str,
-                "%d-%m-%Y"
-            )
+            return datetime.strptime(date_str, "%d-%m-%Y")
 
         except Exception:
             return None
@@ -1065,7 +920,6 @@ def format_date(d):
         return ""
 
     try:
-
         if hasattr(d, "strftime"):
             return d.strftime("%d-%m-%Y")
 
@@ -1074,7 +928,8 @@ def format_date(d):
     except Exception:
         return str(d)
 
- # ---------------------------------------------------------
+
+# ---------------------------------------------------------
 # SAFE STRING
 # Returns cleaned string or empty string
 # ---------------------------------------------------------
@@ -1084,6 +939,7 @@ def safe_str(value):
         return ""
 
     return str(value).strip()
+
 
 # ---------------------------------------------------------
 # 🔹 GET SCHOOL CODE
@@ -1103,12 +959,12 @@ def get_school_code(school_id):
     """
 
     try:
-
         conn = get_connection()
 
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT school_code
 
@@ -1116,30 +972,28 @@ def get_school_code(school_id):
 
             WHERE school_id = %s
 
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         row = cursor.fetchone()
 
         return row[0] if row else "SCH"
 
     except Exception as e:
-
-        print(
-            "GET SCHOOL CODE ERROR:",
-            e
-        )
+        print("GET SCHOOL CODE ERROR:", e)
 
         return "SCH"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
- # ---------------------------------------------------------
+
+# ---------------------------------------------------------
 # SAFE DATETIME FOR SORTING
 # Converts date and datetime into same format
 # ---------------------------------------------------------
@@ -1154,17 +1008,16 @@ def normalize_datetime(value):
         return value
 
     if isinstance(value, date):
-        return datetime.combine(
-            value,
-            datetime.min.time()
-        )
+        return datetime.combine(value, datetime.min.time())
 
     return datetime.min
+
 
 # ---------------------------------------------------------
 # 🔹 SUBSCRIPTION CHECK DECORATOR
 # Ensures school has active subscription before accessing certain routes
-# ---------------------------------------------------------            
+# ---------------------------------------------------------
+
 
 def subscription_required(f):
 
@@ -1179,7 +1032,8 @@ def subscription_required(f):
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 status,
                 end_date
@@ -1187,7 +1041,9 @@ def subscription_required(f):
             WHERE school_id = %s
             ORDER BY id DESC
             LIMIT 1
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         sub = cursor.fetchone()
 
@@ -1195,54 +1051,38 @@ def subscription_required(f):
         conn.close()
 
         if not sub:
+            flash("No active subscription found.", "danger")
 
-            flash(
-                "No active subscription found.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("renew_subscription")
-            )
+            return redirect(url_for("renew_subscription"))
 
         status = sub[0]
         end_date = sub[1]
 
         if end_date:
-
             if hasattr(end_date, "date"):
                 end_date = end_date.date()
 
-            remaining_days = (
-                end_date - datetime.now().date()
-            ).days
+            remaining_days = (end_date - datetime.now().date()).days
 
         else:
-
             remaining_days = -1
 
-        if (
-            status == "expired"
-            or remaining_days < 0
-        ):
+        if status == "expired" or remaining_days < 0:
+            flash("Your subscription has expired. Please renew.", "danger")
 
-            flash(
-                "Your subscription has expired. Please renew.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("renew_subscription")
-            )
+            return redirect(url_for("renew_subscription"))
 
         return f(*args, **kwargs)
 
     return decorated_function
+
+
 # ---------------------------------------------------------
 # SECUIRTY SETTING GLOBAL
 # Allows only logged-in Super Admin users
 # ---
- 
+
+
 def get_security_setting(key, default_value):
 
     conn = None
@@ -1283,39 +1123,33 @@ def get_security_setting(key, default_value):
             cursor.close()
         if conn:
             conn.close()
+
+
 # ---------------------------------------------------------
 # ADMIN AUTHORIZATION
 # Allows only logged-in Super Admin users
 # ---
-    
+
+
 def admin_required(f):
 
     @wraps(f)
     def wrapper(*args, **kwargs):
 
-        if (
-            not session.get("admin_logged_in")
-            or session.get("admin_role") != "admin"
-        ):
-
+        if not session.get("admin_logged_in") or session.get("admin_role") != "admin":
             # AJAX request
             if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-
-                return jsonify({
-
-                    "success": False,
-                    "message": "Admin login required"
-
-                }), 401
+                return jsonify(
+                    {"success": False, "message": "Admin login required"}
+                ), 401
 
             # Normal page request
-            return redirect(
-                url_for("superadmin_login")
-            )
+            return redirect(url_for("superadmin_login"))
 
         return f(*args, **kwargs)
 
     return wrapper
+
 
 # ---------------------------------------------------------
 # LOGIN AUTHORIZATION
@@ -1331,15 +1165,9 @@ def login_required(f):
         admin_logged_in = session.get("admin_logged_in")
         admin_role = session.get("admin_role")
 
-        clerk_ok = (
-            clerk_logged_in is True
-            and clerk_role == "clerk"
-        )
+        clerk_ok = clerk_logged_in is True and clerk_role == "clerk"
 
-        admin_ok = (
-            admin_logged_in is True
-            and admin_role == "admin"
-        )
+        admin_ok = admin_logged_in is True and admin_role == "admin"
 
         if not clerk_ok and not admin_ok:
             return redirect(url_for("login"))
@@ -1348,12 +1176,12 @@ def login_required(f):
 
     return wrapper
 
- # =========================================================
+
+# =========================================================
 # SCHOOL FEATURE COLUMNS
 # =========================================================
 
 FEATURE_COLUMNS = (
-
     "enable_tc_management",
     "enable_bonafide_management",
     "enable_import_export",
@@ -1362,13 +1190,13 @@ FEATURE_COLUMNS = (
     "enable_teacher_management",
     "enable_results",
     "enable_timetable",
-    "enable_notice_board"
-
+    "enable_notice_board",
 )
 
 # =========================================================
 # 🔒 FEATURE ACCESS CONTROL
 # =========================================================
+
 
 def feature_required(feature_column):
 
@@ -1384,9 +1212,8 @@ def feature_required(feature_column):
                 # =========================================
                 # BLOCK INVALID COLUMN ACCESS
                 # =========================================
-                
-                if feature_column not in FEATURE_COLUMNS:
 
+                if feature_column not in FEATURE_COLUMNS:
                     return "Invalid Feature ❌", 400
 
                 # =========================================
@@ -1397,22 +1224,16 @@ def feature_required(feature_column):
                     session.get("admin_logged_in") is True
                     and session.get("admin_role") == "admin"
                 ):
-
                     return f(*args, **kwargs)
 
                 # =========================================
                 # GET SCHOOL
                 # =========================================
 
-                school_id = session.get(
-                    "clerk_school_id"
-                )
+                school_id = session.get("clerk_school_id")
 
                 if not school_id:
-
-                    return redirect(
-                        url_for("login")
-                    )
+                    return redirect(url_for("login"))
 
                 # =========================================
                 # DB CONNECTION
@@ -1436,10 +1257,7 @@ def feature_required(feature_column):
 
                 """
 
-                cursor.execute(
-                    query,
-                    (school_id,)
-                )
+                cursor.execute(query, (school_id,))
 
                 result = cursor.fetchone()
 
@@ -1447,11 +1265,7 @@ def feature_required(feature_column):
                 # FEATURE DISABLED
                 # =========================================
 
-                if (
-                    not result
-                    or result[0] != "Enabled"
-                ):
-
+                if not result or result[0] != "Enabled":
                     return """
 
                     <h2 style='font-family:sans-serif;
@@ -1471,17 +1285,12 @@ def feature_required(feature_column):
                 return f(*args, **kwargs)
 
             except Exception as e:
+                print("FEATURE ACCESS ERROR:", e)
 
-                print(
-                    "FEATURE ACCESS ERROR:",
-                    e
-                )
-
-                logger.exception("Internal Server Error",e)
+                logger.exception("Internal Server Error", e)
                 return "Something went wrong ❌", 500
 
             finally:
-
                 if cursor:
                     cursor.close()
 
@@ -1492,6 +1301,7 @@ def feature_required(feature_column):
 
     return decorator
 
+
 # =========================================================
 # 🛡 SCHOOL FEATURE ACCESS CHECK
 # PURPOSE:
@@ -1499,26 +1309,22 @@ def feature_required(feature_column):
 # Supports SaaS + subscription based ERP
 # =========================================================
 
+
 def is_module_enabled(module_name):
 
     conn = None
     cursor = None
 
     try:
-
         # =========================================
         # GET CURRENT SCHOOL
         # =========================================
 
-        school_id = session.get(
-            "clerk_school_id"
-        )
+        school_id = session.get("clerk_school_id")
 
         if not school_id:
             return False
 
- 
-                
         # =========================================
         # BLOCK INVALID MODULE ACCESS
         # =========================================
@@ -1543,10 +1349,7 @@ def is_module_enabled(module_name):
             WHERE school_id = %s
         """
 
-        cursor.execute(
-            query,
-            (school_id,)
-        )
+        cursor.execute(query, (school_id,))
 
         row = cursor.fetchone()
 
@@ -1560,21 +1363,17 @@ def is_module_enabled(module_name):
         return False
 
     except Exception as e:
-
-        print(
-            "❌ MODULE CHECK ERROR:",
-            e
-        )
+        print("❌ MODULE CHECK ERROR:", e)
 
         return False
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # ---------------------------------------------------------
 # CREATE SCHOOL SUBSCRIPTION
@@ -1584,13 +1383,8 @@ def is_module_enabled(module_name):
 # - Plan Upgrade
 # ---------------------------------------------------------
 
-def create_subscription(
-    school_id,
-    plan_id,
-    plan_name,
-    days,
-    amount
-):
+
+def create_subscription(school_id, plan_id, plan_name, days, amount):
     """
     Create a new subscription record.
 
@@ -1603,7 +1397,6 @@ def create_subscription(
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -1612,17 +1405,15 @@ def create_subscription(
 
         start_date = date.today()
 
-        end_date = (
-            start_date
-            + timedelta(days=days)
-        )
+        end_date = start_date + timedelta(days=days)
 
         if not school_id:
             return False
 
-        amount = amount or 0   
+        amount = amount or 0
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             INSERT INTO subscriptions
             (
@@ -1636,36 +1427,23 @@ def create_subscription(
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s)
 
-        """, (
-
-            school_id,
-            plan_id,
-            plan_name,
-            start_date,
-            end_date,
-            "active",
-            amount
-
-        ))
+        """,
+            (school_id, plan_id, plan_name, start_date, end_date, "active", amount),
+        )
 
         conn.commit()
 
         return True
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ CREATE SUBSCRIPTION ERROR:",
-            e
-        )
+        print("❌ CREATE SUBSCRIPTION ERROR:", e)
 
         return False
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -1679,13 +1457,11 @@ def create_subscription(
 # Temporary function to test SMS gateway only
 # =========================================================
 
+
 def send_test_birthday_sms(mobile):
 
     try:
-
-        mobile = "".join(
-            filter(str.isdigit, mobile)
-        )
+        mobile = "".join(filter(str.isdigit, mobile))
 
         if len(mobile) != 10:
             return False, "Invalid mobile number"
@@ -1696,7 +1472,7 @@ def send_test_birthday_sms(mobile):
 
         if not sms_password:
             return False, "SMS password missing in .env"
-        
+
         template_id = os.getenv("SMS_BIRTHDAY_TEMPLATE_ID")
 
         if not sms_api_url or not sms_user_id or not template_id:
@@ -1708,16 +1484,15 @@ def send_test_birthday_sms(mobile):
         )
 
         url = (
-        f"{sms_api_url}"
-        f"?ID={quote_plus(sms_user_id)}"
-        f"&Pwd={quote_plus(sms_password)}"
-        f"&PhNo={quote_plus(mobile)}"
-        f"&Text={quote_plus(message)}"
-        f"&TemplateID={quote_plus(template_id)}"
-    )
+            f"{sms_api_url}"
+            f"?ID={quote_plus(sms_user_id)}"
+            f"&Pwd={quote_plus(sms_password)}"
+            f"&PhNo={quote_plus(mobile)}"
+            f"&Text={quote_plus(message)}"
+            f"&TemplateID={quote_plus(template_id)}"
+        )
 
         with urllib.request.urlopen(url, timeout=15) as response:
-
             result = response.read().decode("utf-8", errors="ignore")
 
         # print("✅ SMS API RESPONSE:", result)
@@ -1729,7 +1504,6 @@ def send_test_birthday_sms(mobile):
         return True, result
 
     except Exception as e:
-
         print("❌ SMS TEST ERROR:", e)
 
         return False, str(e)
@@ -1742,16 +1516,17 @@ def send_test_birthday_sms(mobile):
 # REMOVE AFTER TESTING
 # =========================================================
 
+
 @app.route("/superadmin/test-sms")
 @admin_required
 def test_sms():
 
-    mobile = (
-        request.args.get("mobile") or ""
-    ).strip()
+    mobile = (request.args.get("mobile") or "").strip()
 
     if not mobile:
-        return "Mobile number required ❌ Example: /superadmin/test-sms?mobile=9876543210"
+        return (
+            "Mobile number required ❌ Example: /superadmin/test-sms?mobile=9876543210"
+        )
 
     success, response = send_test_birthday_sms(mobile)
 
@@ -1769,57 +1544,52 @@ def test_sms():
 # Privacy Policy
 # -----------------------------------------
 
+
 @app.route("/privacy-policy")
 def privacy_policy():
     """
     Privacy Policy Page
     """
-    return render_template(
-        "privacy_policy.html"
-    )
+    return render_template("privacy_policy.html")
 
 
 # -----------------------------------------
 # Terms & Conditions
 # -----------------------------------------
 
+
 @app.route("/terms-and-conditions")
 def terms_conditions():
     """
     Terms & Conditions Page
     """
-    return render_template(
-        "terms_conditions.html"
-    )
+    return render_template("terms_conditions.html")
 
 
 # -----------------------------------------
 # Home Page
 # -----------------------------------------
 
+
 @app.route("/")
 def home():
     """
     Landing Page
     """
-    return render_template(
-        "index.html"
-    )
+    return render_template("index.html")
 
 
 # -----------------------------------------
 # Demo Page
 # -----------------------------------------
 
+
 @app.route("/demo")
 def demo():
     """
     Product Demo Page
     """
-    return render_template(
-        "demo.html"
-    )
-
+    return render_template("demo.html")
 
 
 # =========================================================
@@ -1827,6 +1597,7 @@ def demo():
 # Handles clerk login, school status, subscription status,
 # failed attempts, and secure session creation.
 # =========================================================
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -1847,12 +1618,12 @@ def login():
     # BASIC VALIDATION
     # =====================================================
     if not email or not password:
-        flash( "Please enter your email and password.","danger")
-        
+        flash("Please enter your email and password.", "danger")
+
         return redirect(url_for("login"))
 
     if not is_valid_email(email):
-        flash("Please enter a valid email address.","danger" )
+        flash("Please enter a valid email address.", "danger")
 
         return redirect(url_for("login"))
 
@@ -1862,21 +1633,17 @@ def login():
     # =====================================================
     failed_attempts = session.get("clerk_failed_attempts", 0)
 
-    login_attempt_limit = get_security_setting(
-        "login_attempt_limit",
-        5
-    )
+    login_attempt_limit = get_security_setting("login_attempt_limit", 5)
 
     if failed_attempts >= login_attempt_limit:
-        flash("Too many failed login attempts. Please try again later.","danger" )
-        
+        flash("Too many failed login attempts. Please try again later.", "danger")
+
         return redirect(url_for("login"))
 
     conn = None
     cursor = None
 
     try:
-
         # =================================================
         # DATABASE CONNECTION
         # =================================================
@@ -1887,7 +1654,8 @@ def login():
         # FETCH CLERK USER WITH SCHOOL DETAILS
         # Also fetch failed_login_attempts from DB
         # =================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 u.id,
                 u.email,
@@ -1902,7 +1670,9 @@ def login():
             WHERE u.email = %s
             AND u.role = 'clerk'
             LIMIT 1
-        """, (email,))
+        """,
+            (email,),
+        )
 
         user = cursor.fetchone()
 
@@ -1910,16 +1680,11 @@ def login():
         # INVALID EMAIL / USER NOT FOUND
         # =================================================
         if not user:
-
             session["clerk_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            flash(
-                "Invalid email or password.",
-                "danger"
-            )
+            flash("Invalid email or password.", "danger")
             return redirect(url_for("login"))
-
 
         # =================================================
         # MAP DATABASE VALUES
@@ -1936,15 +1701,11 @@ def login():
         # If password is wrong, increase failed attempts
         # =================================================
         if not bcrypt.check_password_hash(db_password, password):
-            
             session["clerk_failed_attempts"] = failed_attempts + 1
             session.modified = True
-        
-            flash(
-                "Invalid email or password.",
-                "danger"
-            )
-        
+
+            flash("Invalid email or password.", "danger")
+
             return redirect(url_for("login"))
 
         # =================================================
@@ -1954,9 +1715,9 @@ def login():
         if int(school_status or 0) != 1:
             flash(
                 "Your school account has been disabled. Please contact the administrator.",
-                "danger"
+                "danger",
             )
-            
+
             return redirect(url_for("login"))
 
         # =================================================
@@ -1965,8 +1726,7 @@ def login():
         # =================================================
         if user_status != "active":
             flash(
-                "Your account is inactive. Please contact the administrator.",
-                "danger"
+                "Your account is inactive. Please contact the administrator.", "danger"
             )
             return redirect(url_for("login"))
 
@@ -1974,7 +1734,8 @@ def login():
         # CHECK LATEST SUBSCRIPTION
         # School must have at least one subscription record
         # =================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 status,
                 end_date
@@ -1982,32 +1743,31 @@ def login():
             WHERE school_id = %s
             ORDER BY id DESC
             LIMIT 1
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         sub = cursor.fetchone()
 
         if not sub:
+            flash("No subscription found. Please contact administrator.", "danger")
 
-            flash(
-                "No subscription found. Please contact administrator.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("renew_subscription")
-            )
+            return redirect(url_for("renew_subscription"))
 
         # =================================================
         # RESET FAILED ATTEMPTS AFTER SUCCESSFUL PASSWORD
         # Also update last login timestamp
         # =================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE users
             SET
                 last_login = NOW(),
                 updated_at = NOW()
             WHERE id = %s
-        """, (user_id,))
+        """,
+            (user_id,),
+        )
 
         conn.commit()
 
@@ -2026,14 +1786,9 @@ def login():
         # APPLY GLOBAL SESSION TIMEOUT
         # Value comes from System Settings > Security
         # =================================================
-        session_timeout = get_security_setting(
-            "session_timeout",
-            60
-        )
+        session_timeout = get_security_setting("session_timeout", 60)
 
-        app.permanent_session_lifetime = timedelta(
-            minutes=session_timeout
-        )
+        app.permanent_session_lifetime = timedelta(minutes=session_timeout)
 
         session.permanent = True
         session.clear()
@@ -2056,27 +1811,18 @@ def login():
         end_date = sub[1]
 
         if status == "expired" or (end_date and end_date < date.today()):
+            flash("Your subscription has expired. Please renew.", "danger")
 
-            flash(
-                "Your subscription has expired. Please renew.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("renew_subscription")
-            )
+            return redirect(url_for("renew_subscription"))
 
         # =================================================
         # LOGIN SUCCESS
         # =================================================
         print("✅ Clerk Login Success:", email)
 
-        return redirect(
-            url_for("clerk_dashboard")
-        )
+        return redirect(url_for("clerk_dashboard"))
 
     except Exception as e:
-
         # =================================================
         # ERROR HANDLING
         # =================================================
@@ -2084,16 +1830,11 @@ def login():
 
         print("LOGIN ERROR:", e)
 
-        flash(
-             str(e),
-            "danger"
-        )
-        
+        flash(str(e), "danger")
+
         return redirect(url_for("login"))
 
-
     finally:
-
         # =================================================
         # CLOSE DATABASE RESOURCES
         # =================================================
@@ -2104,13 +1845,12 @@ def login():
             conn.close()
 
 
-
-
 # =========================================================
 # 🔐 SUPER ADMIN LOGIN
 # Handles admin login, failed attempts, password verification,
 # account status check, and secure admin session creation.
 # =========================================================
+
 
 @app.route("/superadmin/login", methods=["GET", "POST"])
 def superadmin_login():
@@ -2131,20 +1871,12 @@ def superadmin_login():
     # BASIC VALIDATION
     # =====================================================
     if not email or not password:
-
-        flash(
-            "Please enter your email and password.",
-            "danger"
-        )
+        flash("Please enter your email and password.", "danger")
 
         return redirect(url_for("superadmin_login"))
 
     if not is_valid_email(email):
-        
-        flash(
-            "Please enter a valid email address.",
-            "danger"
-        )
+        flash("Please enter a valid email address.", "danger")
 
         return redirect(url_for("superadmin_login"))
 
@@ -2154,26 +1886,17 @@ def superadmin_login():
     # =====================================================
     failed_attempts = session.get("admin_failed_attempts", 0)
 
-    login_attempt_limit = get_security_setting(
-        "login_attempt_limit",
-        5
-    )
+    login_attempt_limit = get_security_setting("login_attempt_limit", 5)
 
     if failed_attempts >= login_attempt_limit:
-        
-        flash(
-            "Too many failed login attempts. Please try again later.",
-            "danger"
-        )
+        flash("Too many failed login attempts. Please try again later.", "danger")
 
         return redirect(url_for("superadmin_login"))
-    
 
     conn = None
     cursor = None
 
     try:
-
         # =================================================
         # DATABASE CONNECTION
         # =================================================
@@ -2184,7 +1907,8 @@ def superadmin_login():
         # FETCH ADMIN USER
         # Also fetch failed_login_attempts from DB
         # =================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 email,
@@ -2195,7 +1919,9 @@ def superadmin_login():
             WHERE email = %s
             AND role = 'admin'
             LIMIT 1
-        """, (email,))
+        """,
+            (email,),
+        )
 
         user = cursor.fetchone()
 
@@ -2203,14 +1929,10 @@ def superadmin_login():
         # INVALID EMAIL / ADMIN NOT FOUND
         # =================================================
         if not user:
-
             session["admin_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            flash(
-                "Invalid email or password.",
-                "danger"
-            )
+            flash("Invalid email or password.", "danger")
 
             return redirect(url_for("superadmin_login"))
 
@@ -2228,14 +1950,10 @@ def superadmin_login():
         # Ensures only admin role can login here
         # =================================================
         if role != "admin":
-
             session["admin_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            flash(
-                "Invalid email or password.",
-                "danger"
-            )
+            flash("Invalid email or password.", "danger")
 
             return redirect(url_for("superadmin_login"))
 
@@ -2245,8 +1963,7 @@ def superadmin_login():
         # =================================================
         if status != "active":
             flash(
-                "Your account is inactive. Please contact the administrator.",
-                "danger"
+                "Your account is inactive. Please contact the administrator.", "danger"
             )
 
             return redirect(url_for("superadmin_login"))
@@ -2256,28 +1973,27 @@ def superadmin_login():
         # If password is wrong, increase failed attempts
         # =================================================
         if not bcrypt.check_password_hash(db_password, password):
-
             session["admin_failed_attempts"] = failed_attempts + 1
             session.modified = True
 
-            flash(
-                "Invalid email or password.",
-                "danger"
-            )
+            flash("Invalid email or password.", "danger")
 
             return redirect(url_for("superadmin_login"))
-        
+
         # =================================================
         # RESET FAILED ATTEMPTS AFTER SUCCESSFUL LOGIN
         # Also update last login timestamp
         # =================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE users
             SET
                 last_login = NOW(),
                 updated_at = NOW()
             WHERE id = %s
-        """, (admin_id,))
+        """,
+            (admin_id,),
+        )
 
         conn.commit()
 
@@ -2295,14 +2011,9 @@ def superadmin_login():
         # APPLY GLOBAL SESSION TIMEOUT
         # Value comes from System Settings > Security
         # =================================================
-        session_timeout = get_security_setting(
-            "session_timeout",
-            60
-        )
+        session_timeout = get_security_setting("session_timeout", 60)
 
-        app.permanent_session_lifetime = timedelta(
-            minutes=session_timeout
-        )
+        app.permanent_session_lifetime = timedelta(minutes=session_timeout)
 
         session.permanent = True
         session.clear()
@@ -2321,26 +2032,19 @@ def superadmin_login():
         # =================================================
         print("✅ Admin Login Success:", email)
 
-        return redirect(
-            url_for("superadmin_dashboard")
-        )
+        return redirect(url_for("superadmin_dashboard"))
 
     except Exception as e:
-
         # =================================================
         # ERROR HANDLING
         # =================================================
         logger.exception("Admin Login Error")
 
-        flash(
-            "Something went wrong. Please try again.",
-            "danger"
-        )
-        
+        flash("Something went wrong. Please try again.", "danger")
+
         return redirect(url_for("superadmin_login"))
 
     finally:
-
         # =================================================
         # CLOSE DATABASE RESOURCES
         # =================================================
@@ -2350,7 +2054,6 @@ def superadmin_login():
         if conn:
             conn.close()
 
-    
 
 # =========================================================
 # 🚪 LOGOUT ROUTE
@@ -2359,52 +2062,35 @@ def superadmin_login():
 @login_required
 def logout():
 
-    role = (
-            request.form.get("role", "")
-            .strip()
-            .lower()
-        )
+    role = request.form.get("role", "").strip().lower()
 
     if role not in ["clerk", "admin"]:
-        
-        flash(
-            "Invalid logout request.",
-            "danger"
-        )
+        flash("Invalid logout request.", "danger")
 
         return redirect(url_for("login"))
 
-   # ================= CLERK LOGOUT =================
+    # ================= CLERK LOGOUT =================
     if role == "clerk":
-
         session.pop("clerk_logged_in", None)
         session.pop("clerk_user_id", None)
         session.pop("clerk_email", None)
         session.pop("clerk_school_id", None)
         session.pop("clerk_role", None)
         session.pop("clerk_failed_attempts", None)
-        
-        flash(
-            "You have been logged out successfully.",
-            "success"
-        )
+
+        flash("You have been logged out successfully.", "success")
 
         return redirect(url_for("login"))
 
-
     # ================= ADMIN LOGOUT =================
     elif role == "admin":
-
         session.pop("admin_logged_in", None)
         session.pop("admin_user_id", None)
         session.pop("admin_email", None)
         session.pop("admin_role", None)
         session.pop("admin_failed_attempts", None)
-        
-        flash(
-            "You have been logged out successfully.",
-            "success"
-        )
+
+        flash("You have been logged out successfully.", "success")
 
         return redirect(url_for("superadmin_login"))
 
@@ -2412,6 +2098,7 @@ def logout():
 # =========================================================
 # 📊 SUPER ADMIN DASHBOARD
 # =========================================================
+
 
 @app.route("/superadmin/dashboard")
 @admin_required
@@ -2421,7 +2108,6 @@ def superadmin_dashboard():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -2555,15 +2241,9 @@ def superadmin_dashboard():
             revenue_values.append(float(row[3] or 0))
 
         # SUBSCRIPTION ANALYTICS
-        subscription_labels = [
-            "Active",
-            "Expired"
-        ]
+        subscription_labels = ["Active", "Expired"]
 
-        subscription_values = [
-            active_schools,
-            expired_schools
-        ]
+        subscription_values = [active_schools, expired_schools]
 
         # RECENT TC
         cursor.execute("""
@@ -2595,45 +2275,35 @@ def superadmin_dashboard():
 
         return render_template(
             "dashboard/superadmin.html",
-
             total_schools=total_schools,
             active_schools=active_schools,
             expired_schools=expired_schools,
-
             total_students=total_students,
             total_tc=total_tc,
             total_bonafide=total_bonafide,
-
             revenue_this_month=revenue_this_month,
             total_revenue=total_revenue,
             upcoming_renewals=upcoming_renewals,
             new_leads_count=new_leads_count,
-
             chart_labels=chart_labels,
             chart_values=chart_values,
-
             revenue_labels=revenue_labels,
             revenue_values=revenue_values,
-
             subscription_labels=subscription_labels,
             subscription_values=subscription_values,
-
             recent_tc=recent_tc,
             recent_bonafide=recent_bonafide,
-
             role="admin",
             active_page="dashboard",
-            school_name="SchoolSphere Admin"
+            school_name="SchoolSphere Admin",
         )
 
     except Exception as e:
-
         print("❌ ADMIN DASHBOARD ERROR:", e)
 
         return f"Dashboard Error: {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -2641,9 +2311,10 @@ def superadmin_dashboard():
             conn.close()
 
 
- # =========================================================
+# =========================================================
 # 🏫 SUPER ADMIN - ALL SCHOOLS
 # =========================================================
+
 
 @app.route("/superadmin/schools")
 @admin_required
@@ -2653,40 +2324,28 @@ def superadmin_schools():
     cursor = None
 
     try:
-
         conn = get_connection()
 
-        cursor = conn.cursor(
-            dictionary=True
-        )
+        cursor = conn.cursor(dictionary=True)
 
         # =====================================
         # FILTERS
         # =====================================
 
-        search = request.args.get(
-            "search",
-            ""
-        ).strip()
+        search = request.args.get("search", "").strip()
 
         # =====================================
         # PAGINATION
         # =====================================
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 8
 
         if page < 1:
             page = 1
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         # =====================================
         # BASE WHERE
@@ -2699,7 +2358,6 @@ def superadmin_schools():
         params = []
 
         if search:
-
             where_query += """
 
                 AND (
@@ -2716,21 +2374,14 @@ def superadmin_schools():
 
             keyword = f"%{search}%"
 
-            params.extend([
-
-                keyword,
-                keyword,
-                keyword,
-                keyword,
-                keyword
-
-            ])
+            params.extend([keyword, keyword, keyword, keyword, keyword])
 
         # =====================================
         # TOTAL FILTERED SCHOOLS
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
@@ -2738,25 +2389,17 @@ def superadmin_schools():
 
             {where_query}
 
-        """, params)
-
-        total_filtered = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            params,
         )
 
-        total_pages = max(
-            1,
-            math.ceil(
-                total_filtered / per_page
-            )
-        )
+        total_filtered = cursor.fetchone()["total"] or 0
+
+        total_pages = max(1, math.ceil(total_filtered / per_page))
 
         if page > total_pages:
             page = total_pages
-            offset = (
-                page - 1
-            ) * per_page
+            offset = (page - 1) * per_page
 
         # =====================================
         # SCHOOLS DATA
@@ -2853,17 +2496,9 @@ def superadmin_schools():
 
         query_params = params.copy()
 
-        query_params.extend([
+        query_params.extend([per_page, offset])
 
-            per_page,
-            offset
-
-        ])
-
-        cursor.execute(
-            query,
-            query_params
-        )
+        cursor.execute(query, query_params)
 
         schools = cursor.fetchall()
 
@@ -2876,10 +2511,7 @@ def superadmin_schools():
             FROM schools
         """)
 
-        total_schools = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        total_schools = cursor.fetchone()["total"] or 0
 
         # =====================================
         # ACTIVE SCHOOLS
@@ -2891,10 +2523,7 @@ def superadmin_schools():
             WHERE is_active = 1
         """)
 
-        active_schools = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        active_schools = cursor.fetchone()["total"] or 0
 
         # =====================================
         # SIDEBAR NEW LEADS COUNT
@@ -2906,48 +2535,31 @@ def superadmin_schools():
             WHERE status = 'New'
         """)
 
-        new_leads_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        new_leads_count = cursor.fetchone()["total"] or 0
 
         # =====================================
         # RENDER
         # =====================================
 
         return render_template(
-
             "superadmin/schools.html",
-
             schools=schools,
-
             total_schools=total_schools,
-
             active_schools=active_schools,
-
             search=search,
-
             page=page,
-
             total_pages=total_pages,
-
             total_filtered=total_filtered,
-
             new_leads_count=new_leads_count,
-
             role="admin",
-
             school_name="Admin",
-
-            active_page="schools"
-
+            active_page="schools",
         )
 
     except Exception as e:
         return f"Error loading schools ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -2966,68 +2578,38 @@ def save_school():
     cursor = None
 
     try:
-
         # =====================================================
         # GET FORM DATA
         # =====================================================
 
-        name = (
-            request.form.get("name") or ""
-        ).strip()
+        name = (request.form.get("name") or "").strip()
 
-        udise_no = (
-            request.form.get("udise_no") or ""
-        ).strip()
+        udise_no = (request.form.get("udise_no") or "").strip()
 
-        address = (
-            request.form.get("address") or ""
-        ).strip()
+        address = (request.form.get("address") or "").strip()
 
-        phone = (
-            request.form.get("phone") or ""
-        ).strip()
+        phone = (request.form.get("phone") or "").strip()
 
-        email = (
-            request.form.get("email") or ""
-        ).strip().lower()
+        email = (request.form.get("email") or "").strip().lower()
 
-        school_code = (
-            request.form.get("school_code") or ""
-        ).strip()
+        school_code = (request.form.get("school_code") or "").strip()
 
-        principal_name = (
-            request.form.get("principal_name") or ""
-        ).strip()
+        principal_name = (request.form.get("principal_name") or "").strip()
 
-        recognition_no = (
-            request.form.get("recognition_no") or ""
-        ).strip()
+        recognition_no = (request.form.get("recognition_no") or "").strip()
 
-        medium = (
-            request.form.get("medium") or ""
-        ).strip()
+        medium = (request.form.get("medium") or "").strip()
 
-        school_index_no = (
-            request.form.get("school_index_no") or ""
-        ).strip()
+        school_index_no = (request.form.get("school_index_no") or "").strip()
 
-        board_name = (
-            request.form.get("board_name") or ""
-        ).strip()
+        board_name = (request.form.get("board_name") or "").strip()
 
         # =====================================================
         # VALIDATION
         # =====================================================
 
-        if (
-            not name
-            or not udise_no
-            or not phone
-            or not email
-            or not school_code
-        ):
+        if not name or not udise_no or not phone or not email or not school_code:
             return "Required fields missing ❌"
-
 
         # =====================================================
         # FORMAT VALIDATION
@@ -3036,15 +2618,13 @@ def save_school():
         if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email):
             return "Invalid email format ❌"
 
-        clean_phone = "".join(
-                filter(str.isdigit, phone)
-            )
+        clean_phone = "".join(filter(str.isdigit, phone))
 
         if len(clean_phone) < 10 or len(clean_phone) > 15:
             return "Invalid phone number ❌"
 
         phone = clean_phone
-       
+
         # =====================================================
         # LENGTH VALIDATION
         # =====================================================
@@ -3078,28 +2658,22 @@ def save_school():
         # DUPLICATE CHECK
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT school_id
             FROM schools
             WHERE
                 udise_no = %s
                 OR email = %s
                 OR school_code = %s
-        """, (
-
-            udise_no,
-            email,
-            school_code
-
-        ))
+        """,
+            (udise_no, email, school_code),
+        )
 
         existing_school = cursor.fetchone()
 
         if existing_school:
-            return (
-                "School with same UDISE, "
-                "Email or School Code already exists ❌"
-            )
+            return "School with same UDISE, Email or School Code already exists ❌"
 
         # =====================================================
         # GET SYSTEM SETTINGS
@@ -3193,7 +2767,8 @@ def save_school():
         # INSERT SCHOOL
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO schools (
 
                 -- BASIC INFO
@@ -3250,46 +2825,41 @@ def save_school():
                 %s, %s
 
             )
-        """, (
-
-            # BASIC INFO
-            name,
-            udise_no,
-            address,
-            phone,
-            email,
-            school_code,
-            principal_name,
-            recognition_no,
-            medium,
-            school_index_no,
-            board_name,
-
-            # CERTIFICATE SETTINGS
-            tc_prefix,
-            bonafide_prefix,
-            auto_numbering,
-            enable_certificate_labels,
-
-            show_tc_logo,
-            show_tc_watermark,
-
-            show_bonafide_logo,
-            show_bonafide_watermark,
-
-            # FEATURE MODULES
-            enable_import_export,
-            enable_attendance,
-            enable_fee_management,
-            enable_teacher_management,
-            enable_results,
-            enable_timetable,
-            enable_notice_board,
-
-            enable_tc_management,
-            enable_bonafide_management
-
-        ))
+        """,
+            (
+                # BASIC INFO
+                name,
+                udise_no,
+                address,
+                phone,
+                email,
+                school_code,
+                principal_name,
+                recognition_no,
+                medium,
+                school_index_no,
+                board_name,
+                # CERTIFICATE SETTINGS
+                tc_prefix,
+                bonafide_prefix,
+                auto_numbering,
+                enable_certificate_labels,
+                show_tc_logo,
+                show_tc_watermark,
+                show_bonafide_logo,
+                show_bonafide_watermark,
+                # FEATURE MODULES
+                enable_import_export,
+                enable_attendance,
+                enable_fee_management,
+                enable_teacher_management,
+                enable_results,
+                enable_timetable,
+                enable_notice_board,
+                enable_tc_management,
+                enable_bonafide_management,
+            ),
+        )
 
         # =====================================================
         # GET NEW SCHOOL ID
@@ -3299,12 +2869,12 @@ def save_school():
 
         print("✅ New School ID:", new_school_id)
 
-
         # =====================================================
         # CREATE SCHOOL SEQUENCE
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO school_sequences
             (
                 school_id,
@@ -3319,42 +2889,45 @@ def save_school():
                 0,
                 0
             )
-        """, (new_school_id,))
+        """,
+            (new_school_id,),
+        )
 
         # =====================================================
         # GET PLAN INFO
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 plan_name,
                 monthly_price
             FROM subscription_plans
             WHERE id = %s
-        """, (default_plan_id,))
+        """,
+            (default_plan_id,),
+        )
 
         plan = cursor.fetchone()
 
         if not plan:
-             if conn:
-                 conn.rollback()
-             return "Default plan not found ❌"
+            if conn:
+                conn.rollback()
+            return "Default plan not found ❌"
 
         plan_name = plan[0]
         amount = plan[1]
 
         start_date = date.today()
 
-        end_date = (
-            start_date
-            + timedelta(days=trial_days)
-        )
+        end_date = start_date + timedelta(days=trial_days)
 
         # =====================================================
         # CREATE SUBSCRIPTION
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO subscriptions
             (
                 school_id,
@@ -3366,17 +2939,17 @@ def save_school():
                 amount
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (
-
-            new_school_id,
-            default_plan_id,
-            plan_name,
-            start_date,
-            end_date,
-            "active",
-            amount
-
-        ))
+        """,
+            (
+                new_school_id,
+                default_plan_id,
+                plan_name,
+                start_date,
+                end_date,
+                "active",
+                amount,
+            ),
+        )
 
         # =====================================================
         # SAVE ALL CHANGES
@@ -3389,10 +2962,7 @@ def save_school():
         # =====================================================
 
         try:
-
-            subject = (
-                "Welcome to SPL ShalaSarthi ERP"
-            )
+            subject = "Welcome to SPL ShalaSarthi ERP"
 
             body = f"""
 
@@ -3448,55 +3018,39 @@ def save_school():
 
             """
 
-            send_email(
-                email,
-                subject,
-                body
-            )
+            send_email(email, subject, body)
 
-            print(
-                "✅ SCHOOL WELCOME EMAIL SENT"
-            )
+            print("✅ SCHOOL WELCOME EMAIL SENT")
 
         except Exception as email_error:
-
-            print(
-                "❌ WELCOME EMAIL ERROR:",
-                email_error
-            )
+            print("❌ WELCOME EMAIL ERROR:", email_error)
 
         # =====================================================
         # REDIRECT
         # =====================================================
 
-        return redirect(
-            url_for("superadmin_schools")
-        )
+        return redirect(url_for("superadmin_schools"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ SAVE SCHOOL ERROR:",
-            e
-        )
-
+        print("❌ SAVE SCHOOL ERROR:", e)
 
         logger.exception("Internal Server Error")
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 💾 UPDATE SCHOOL
 # =========================================================
+
 
 @app.route("/superadmin/update-school", methods=["POST"])
 @admin_required
@@ -3506,80 +3060,41 @@ def update_school():
     cursor = None
 
     try:
-
         conn = get_connection()
 
         cursor = conn.cursor()
 
         # ================= SAFE INPUT =================
 
-        school_id = (
-            request.form.get("school_id")
-            or ""
-        ).strip()
+        school_id = (request.form.get("school_id") or "").strip()
 
         try:
-
             school_id = int(school_id)
 
         except ValueError:
-
             return "Invalid School ID ❌"
 
-        name = (
-            request.form.get("name")
-            or ""
-        ).strip()
+        name = (request.form.get("name") or "").strip()
 
-        udise_no = (
-            request.form.get("udise_no")
-            or ""
-        ).strip()
+        udise_no = (request.form.get("udise_no") or "").strip()
 
-        address = (
-            request.form.get("address")
-            or ""
-        ).strip()
+        address = (request.form.get("address") or "").strip()
 
-        phone = (
-            request.form.get("phone")
-            or ""
-        ).strip()
+        phone = (request.form.get("phone") or "").strip()
 
-        email = (
-            request.form.get("email")
-            or ""
-        ).strip().lower()
+        email = (request.form.get("email") or "").strip().lower()
 
-        school_code = (
-            request.form.get("school_code")
-            or ""
-        ).strip()
+        school_code = (request.form.get("school_code") or "").strip()
 
-        principal_name = (
-            request.form.get("principal_name")
-            or ""
-        ).strip()
+        principal_name = (request.form.get("principal_name") or "").strip()
 
-        recognition_no = (
-            request.form.get("recognition_no")
-            or ""
-        ).strip()
+        recognition_no = (request.form.get("recognition_no") or "").strip()
 
-        medium = (
-            request.form.get("medium")
-            or ""
-        ).strip()
+        medium = (request.form.get("medium") or "").strip()
 
-        school_index_no = (
-            request.form.get("school_index_no")
-            or ""
-        ).strip()
+        school_index_no = (request.form.get("school_index_no") or "").strip()
 
-        board_name = (
-            request.form.get("board_name")
-            or ""
-        ).strip()
+        board_name = (request.form.get("board_name") or "").strip()
 
         # ================= REQUIRED VALIDATION =================
 
@@ -3591,27 +3106,16 @@ def update_school():
             or not email
             or not school_code
         ):
-
             return "Required fields missing ❌"
 
         # ================= FORMAT VALIDATION =================
 
-        if not re.match(
-            r"^[\w\.-]+@[\w\.-]+\.\w+$",
-            email
-        ):
-
+        if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email):
             return "Invalid email format ❌"
 
-        clean_phone = "".join(
-            filter(str.isdigit, phone)
-        )
+        clean_phone = "".join(filter(str.isdigit, phone))
 
-        if (
-            len(clean_phone) < 10
-            or len(clean_phone) > 15
-        ):
-
+        if len(clean_phone) < 10 or len(clean_phone) > 15:
             return "Invalid phone number ❌"
 
         phone = clean_phone
@@ -3652,7 +3156,8 @@ def update_school():
 
         # ================= SCHOOL EXISTS CHECK =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT school_id
 
@@ -3662,21 +3167,19 @@ def update_school():
 
             LIMIT 1
 
-        """, (
-
-            school_id,
-
-        ))
+        """,
+            (school_id,),
+        )
 
         existing = cursor.fetchone()
 
         if not existing:
-
             return "School not found ❌"
 
         # ================= DUPLICATE CHECK =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT school_id
 
@@ -3696,27 +3199,19 @@ def update_school():
 
             LIMIT 1
 
-        """, (
-
-            udise_no,
-            email,
-            school_code,
-            school_id
-
-        ))
+        """,
+            (udise_no, email, school_code, school_id),
+        )
 
         duplicate_school = cursor.fetchone()
 
         if duplicate_school:
-
-            return (
-                "School with same UDISE, "
-                "Email or School Code already exists ❌"
-            )
+            return "School with same UDISE, Email or School Code already exists ❌"
 
         # ================= UPDATE SCHOOL =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE schools
 
@@ -3746,54 +3241,49 @@ def update_school():
 
             WHERE school_id = %s
 
-        """, (
-
-            name,
-            udise_no,
-            address,
-            phone,
-            email,
-            school_code,
-            principal_name,
-            recognition_no,
-            medium,
-            school_index_no,
-            board_name,
-            school_id
-
-        ))
+        """,
+            (
+                name,
+                udise_no,
+                address,
+                phone,
+                email,
+                school_code,
+                principal_name,
+                recognition_no,
+                medium,
+                school_index_no,
+                board_name,
+                school_id,
+            ),
+        )
 
         conn.commit()
 
-        return redirect(
-            url_for("superadmin_schools")
-        )
+        return redirect(url_for("superadmin_schools"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        logger.exception("Unhandled Exception",e)
+        logger.exception("Unhandled Exception", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
-            
+
+
 # =========================================================
 # ⚙ UPDATE SCHOOL FEATURES
 # =========================================================
 
-@app.route(
-    "/superadmin/update-school-features",
-    methods=["POST"]
-)
+
+@app.route("/superadmin/update-school-features", methods=["POST"])
 @admin_required
 def update_school_features():
 
@@ -3801,7 +3291,6 @@ def update_school_features():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -3809,27 +3298,23 @@ def update_school_features():
         # SCHOOL ID
         # =========================================
 
-        school_id = (
-            request.form.get("school_id")
-            or ""
-        ).strip()
+        school_id = (request.form.get("school_id") or "").strip()
 
         if not school_id:
             return "School ID missing ❌"
 
         try:
-
             school_id = int(school_id)
 
         except ValueError:
-
             return "Invalid School ID ❌"
 
         # =========================================
         # VERIFY SCHOOL EXISTS
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT school_id
 
@@ -3839,16 +3324,13 @@ def update_school_features():
 
             LIMIT 1
 
-        """, (
-
-            school_id,
-
-        ))
+        """,
+            (school_id,),
+        )
 
         school = cursor.fetchone()
 
         if not school:
-
             return "School not found ❌"
 
         # =========================================
@@ -3856,61 +3338,44 @@ def update_school_features():
         # =========================================
 
         enable_tc_management = (
-            request.form.get("enable_tc_management")
-            or "Disabled"
+            request.form.get("enable_tc_management") or "Disabled"
         ).strip()
 
         enable_bonafide_management = (
-            request.form.get("enable_bonafide_management")
-            or "Disabled"
+            request.form.get("enable_bonafide_management") or "Disabled"
         ).strip()
 
         enable_import_export = (
-            request.form.get("enable_import_export")
-            or "Disabled"
+            request.form.get("enable_import_export") or "Disabled"
         ).strip()
 
         enable_attendance = (
-            request.form.get("enable_attendance")
-            or "Disabled"
+            request.form.get("enable_attendance") or "Disabled"
         ).strip()
 
         enable_fee_management = (
-            request.form.get("enable_fee_management")
-            or "Disabled"
+            request.form.get("enable_fee_management") or "Disabled"
         ).strip()
 
         enable_teacher_management = (
-            request.form.get("enable_teacher_management")
-            or "Disabled"
+            request.form.get("enable_teacher_management") or "Disabled"
         ).strip()
 
-        enable_results = (
-            request.form.get("enable_results")
-            or "Disabled"
-        ).strip()
+        enable_results = (request.form.get("enable_results") or "Disabled").strip()
 
-        enable_timetable = (
-            request.form.get("enable_timetable")
-            or "Disabled"
-        ).strip()
+        enable_timetable = (request.form.get("enable_timetable") or "Disabled").strip()
 
         enable_notice_board = (
-            request.form.get("enable_notice_board")
-            or "Disabled"
+            request.form.get("enable_notice_board") or "Disabled"
         ).strip()
 
         # =========================================
         # VALIDATION
         # =========================================
 
-        valid_values = [
-            "Enabled",
-            "Disabled"
-        ]
+        valid_values = ["Enabled", "Disabled"]
 
         feature_values = [
-
             enable_tc_management,
             enable_bonafide_management,
             enable_import_export,
@@ -3919,21 +3384,19 @@ def update_school_features():
             enable_teacher_management,
             enable_results,
             enable_timetable,
-            enable_notice_board
-
+            enable_notice_board,
         ]
 
         for value in feature_values:
-
             if value not in valid_values:
-
                 return "Invalid feature value ❌"
 
         # =========================================
         # UPDATE SCHOOL FEATURES
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE schools
 
@@ -3959,55 +3422,47 @@ def update_school_features():
 
             WHERE school_id = %s
 
-        """, (
-
-            enable_tc_management,
-            enable_bonafide_management,
-            enable_import_export,
-            enable_attendance,
-            enable_fee_management,
-            enable_teacher_management,
-            enable_results,
-            enable_timetable,
-            enable_notice_board,
-            school_id
-
-        ))
+        """,
+            (
+                enable_tc_management,
+                enable_bonafide_management,
+                enable_import_export,
+                enable_attendance,
+                enable_fee_management,
+                enable_teacher_management,
+                enable_results,
+                enable_timetable,
+                enable_notice_board,
+                school_id,
+            ),
+        )
 
         conn.commit()
 
-        return redirect(
-            url_for("superadmin_schools")
-        )
+        return redirect(url_for("superadmin_schools"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ UPDATE SCHOOL FEATURES ERROR:",
-            e
-        )
+        print("❌ UPDATE SCHOOL FEATURES ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 📜 UPDATE SCHOOL CERTIFICATE SETTINGS
 # =========================================================
 
-@app.route(
-    "/superadmin/update-school-certificates",
-    methods=["POST"]
-)
+
+@app.route("/superadmin/update-school-certificates", methods=["POST"])
 @admin_required
 def update_school_certificates():
 
@@ -4015,7 +3470,6 @@ def update_school_certificates():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -4023,27 +3477,23 @@ def update_school_certificates():
         # GET SCHOOL ID
         # =========================================
 
-        school_id = (
-            request.form.get("school_id")
-            or ""
-        ).strip()
+        school_id = (request.form.get("school_id") or "").strip()
 
         if not school_id:
             return "School ID missing ❌"
 
         try:
-
             school_id = int(school_id)
 
         except ValueError:
-
             return "Invalid School ID ❌"
 
         # =========================================
         # VERIFY SCHOOL EXISTS
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT school_id
 
@@ -4053,60 +3503,41 @@ def update_school_certificates():
 
             LIMIT 1
 
-        """, (
-
-            school_id,
-
-        ))
+        """,
+            (school_id,),
+        )
 
         school = cursor.fetchone()
 
         if not school:
-
             return "School not found ❌"
 
         # =========================================
         # CERTIFICATE SETTINGS
         # =========================================
 
-        tc_prefix = (
-            request.form.get("tc_prefix")
-            or "TC"
-        ).strip().upper()
+        tc_prefix = (request.form.get("tc_prefix") or "TC").strip().upper()
 
-        bonafide_prefix = (
-            request.form.get("bonafide_prefix")
-            or "BON"
-        ).strip().upper()
+        bonafide_prefix = (request.form.get("bonafide_prefix") or "BON").strip().upper()
 
-        auto_numbering = (
-            request.form.get("auto_numbering")
-            or "Enabled"
-        ).strip()
+        auto_numbering = (request.form.get("auto_numbering") or "Enabled").strip()
 
         enable_certificate_labels = (
-            request.form.get("enable_certificate_labels")
-            or "Enabled"
+            request.form.get("enable_certificate_labels") or "Enabled"
         ).strip()
 
-        show_tc_logo = (
-            request.form.get("show_tc_logo")
-            or "Disabled"
-        ).strip()
+        show_tc_logo = (request.form.get("show_tc_logo") or "Disabled").strip()
 
         show_tc_watermark = (
-            request.form.get("show_tc_watermark")
-            or "Disabled"
+            request.form.get("show_tc_watermark") or "Disabled"
         ).strip()
 
         show_bonafide_logo = (
-            request.form.get("show_bonafide_logo")
-            or "Disabled"
+            request.form.get("show_bonafide_logo") or "Disabled"
         ).strip()
 
         show_bonafide_watermark = (
-            request.form.get("show_bonafide_watermark")
-            or "Disabled"
+            request.form.get("show_bonafide_watermark") or "Disabled"
         ).strip()
 
         # =========================================
@@ -4125,51 +3556,37 @@ def update_school_certificates():
         if len(bonafide_prefix) > 20:
             return "Bonafide Prefix too long ❌"
 
-        if not re.match(
-            r"^[A-Z0-9_-]+$",
-            tc_prefix
-        ):
-
+        if not re.match(r"^[A-Z0-9_-]+$", tc_prefix):
             return "Invalid TC Prefix ❌"
 
-        if not re.match(
-            r"^[A-Z0-9_-]+$",
-            bonafide_prefix
-        ):
-
+        if not re.match(r"^[A-Z0-9_-]+$", bonafide_prefix):
             return "Invalid Bonafide Prefix ❌"
 
         # =========================================
         # VALUE VALIDATION
         # =========================================
 
-        valid_values = [
-            "Enabled",
-            "Disabled"
-        ]
+        valid_values = ["Enabled", "Disabled"]
 
         settings_values = [
-
             auto_numbering,
             enable_certificate_labels,
             show_tc_logo,
             show_tc_watermark,
             show_bonafide_logo,
-            show_bonafide_watermark
-
+            show_bonafide_watermark,
         ]
 
         for value in settings_values:
-
             if value not in valid_values:
-
                 return "Invalid certificate setting ❌"
 
         # =========================================
         # UPDATE SCHOOL CERTIFICATE SETTINGS
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE schools
 
@@ -4193,49 +3610,44 @@ def update_school_certificates():
 
             WHERE school_id = %s
 
-        """, (
-
-            tc_prefix,
-            bonafide_prefix,
-            auto_numbering,
-            enable_certificate_labels,
-            show_tc_logo,
-            show_tc_watermark,
-            show_bonafide_logo,
-            show_bonafide_watermark,
-            school_id
-
-        ))
+        """,
+            (
+                tc_prefix,
+                bonafide_prefix,
+                auto_numbering,
+                enable_certificate_labels,
+                show_tc_logo,
+                show_tc_watermark,
+                show_bonafide_logo,
+                show_bonafide_watermark,
+                school_id,
+            ),
+        )
 
         conn.commit()
 
-        return redirect(
-            url_for("superadmin_schools")
-        )
+        return redirect(url_for("superadmin_schools"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ SCHOOL CERTIFICATE SETTINGS ERROR:",
-            e
-        )
+        print("❌ SCHOOL CERTIFICATE SETTINGS ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 🔄 TOGGLE SCHOOL STATUS (ACTIVE/INACTIVE)
 # =========================================================
+
 
 @app.route("/superadmin/toggle-school-status", methods=["POST"])
 @admin_required
@@ -4245,23 +3657,17 @@ def toggle_school_status():
     cursor = None
 
     try:
-
         # ================= SAFE INPUT =================
 
-        school_id = (
-            request.form.get("school_id")
-            or ""
-        ).strip()
+        school_id = (request.form.get("school_id") or "").strip()
 
         if not school_id:
             return "School ID missing ❌"
 
         try:
-
             school_id = int(school_id)
 
         except ValueError:
-
             return "Invalid School ID ❌"
 
         # ================= DB =================
@@ -4272,7 +3678,8 @@ def toggle_school_status():
 
         # ================= CHECK SCHOOL EXISTS =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
                 school_id,
@@ -4284,21 +3691,19 @@ def toggle_school_status():
 
             LIMIT 1
 
-        """, (
-
-            school_id,
-
-        ))
+        """,
+            (school_id,),
+        )
 
         school = cursor.fetchone()
 
         if not school:
-
             return "School not found ❌"
 
         # ================= TOGGLE STATUS =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE schools
 
@@ -4314,38 +3719,28 @@ def toggle_school_status():
 
             WHERE school_id = %s
 
-        """, (
-
-            school_id,
-
-        ))
+        """,
+            (school_id,),
+        )
 
         if cursor.rowcount != 1:
-
             conn.rollback()
 
             return "Status update failed ❌"
 
         conn.commit()
 
-        return redirect(
-            url_for("superadmin_schools")
-        )
+        return redirect(url_for("superadmin_schools"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ STATUS TOGGLE ERROR:",
-            e
-        )
+        print("❌ STATUS TOGGLE ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -4357,6 +3752,7 @@ def toggle_school_status():
 # 👨‍🎓 SUPER ADMIN - STUDENTS BY SCHOOL
 # =========================================================
 
+
 @app.route("/superadmin/superadmin_students")
 @admin_required
 def superadmin_students():
@@ -4365,29 +3761,18 @@ def superadmin_students():
     cursor = None
 
     try:
+        school_id = (request.args.get("school_id") or "").strip()
 
-        school_id = (
-            request.args.get("school_id") or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        search = (
-            request.args.get("search") or ""
-        ).strip()
-
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 8
 
         if page < 1:
             page = 1
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         if not school_id:
             return "School ID missing ❌"
@@ -4401,7 +3786,8 @@ def superadmin_students():
         cursor = conn.cursor()
 
         # ================= GET SCHOOL =================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 school_id,
                 name,
@@ -4409,7 +3795,9 @@ def superadmin_students():
             FROM schools
             WHERE school_id = %s
             LIMIT 1
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         school = cursor.fetchone()
 
@@ -4425,12 +3813,9 @@ def superadmin_students():
             WHERE school_id = %s
         """
 
-        params = [
-            school_id
-        ]
+        params = [school_id]
 
         if search:
-
             where_query += """
                 AND (
                     name LIKE %s
@@ -4440,42 +3825,35 @@ def superadmin_students():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword])
 
         # ================= TOTAL FILTERED STUDENTS =================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT COUNT(*)
             FROM students
             {where_query}
-        """, params)
+        """,
+            params,
+        )
 
         total_filtered = cursor.fetchone()[0] or 0
 
-        total_pages = max(
-            1,
-            math.ceil(total_filtered / per_page)
-        )
+        total_pages = max(1, math.ceil(total_filtered / per_page))
 
         if page > total_pages:
             page = total_pages
-            offset = (
-                page - 1
-            ) * per_page
+            offset = (page - 1) * per_page
 
         # ================= PAGINATED STUDENTS =================
 
         student_params = params.copy()
 
-        student_params.extend([
-            per_page,
-            offset
-        ])
+        student_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT
                 id,
                 name,
@@ -4486,27 +3864,35 @@ def superadmin_students():
             {where_query}
             ORDER BY id DESC
             LIMIT %s OFFSET %s
-        """, student_params)
+        """,
+            student_params,
+        )
 
         students = cursor.fetchall()
 
         # ================= TOTAL STATS FOR SCHOOL =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         total_students = cursor.fetchone()[0] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(DISTINCT `class`)
             FROM students
             WHERE school_id = %s
             AND `class` IS NOT NULL
             AND `class` <> ''
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         total_classes = cursor.fetchone()[0] or 0
 
@@ -4522,29 +3908,26 @@ def superadmin_students():
             school_name=school[1],
             search=search,
             role="admin",
-            active_page="schools"
+            active_page="schools",
         )
 
     except Exception as e:
-
-        print(
-            "❌ SUPERADMIN STUDENTS ERROR:",
-            e
-        )
+        print("❌ SUPERADMIN STUDENTS ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 📦 GET STUDENT DATA (API FOR MODAL) FOR ADMIN
 # =========================================================
+
 
 @app.route("/get-student/<int:id>")
 @admin_required
@@ -4554,11 +3937,11 @@ def get_student(id):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -4584,15 +3967,14 @@ def get_student(id):
 
             LIMIT 1
 
-        """, (id,))
+        """,
+            (id,),
+        )
 
         student = cursor.fetchone()
 
         if not student:
-
-            return jsonify({
-                "error": "Student not found"
-            }), 404
+            return jsonify({"error": "Student not found"}), 404
 
         response = {
             "id": student.get("id"),
@@ -4609,24 +3991,17 @@ def get_student(id):
             "admission_date": str(student.get("admission_date") or ""),
             "progress": student.get("progress") or "",
             "conduct": student.get("conduct") or "",
-            "aadhaar": student.get("aadhaar") or ""
+            "aadhaar": student.get("aadhaar") or "",
         }
 
         return jsonify(response)
 
     except Exception as e:
+        print("❌ GET STUDENT ERROR:", e)
 
-        print(
-            "❌ GET STUDENT ERROR:",
-            e
-        )
-
-        return jsonify({
-            "error": "Something went wrong"
-        }), 500
+        return jsonify({"error": "Something went wrong"}), 500
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -4638,6 +4013,7 @@ def get_student(id):
 # ❌ DELETE STUDENT (ADMIN SAFE)
 # =========================================================
 
+
 @app.route("/superadmin/delete_student", methods=["POST"])
 @admin_required
 def delete_student():
@@ -4646,21 +4022,15 @@ def delete_student():
     cursor = None
 
     try:
-
-        student_id = (
-            request.form.get("student_id")
-            or ""
-        ).strip()
+        student_id = (request.form.get("student_id") or "").strip()
 
         if not student_id:
             return "Invalid student ID ❌"
 
         try:
-
             student_id = int(student_id)
 
         except ValueError:
-
             return "Invalid student ID ❌"
 
         conn = get_connection()
@@ -4668,7 +4038,8 @@ def delete_student():
 
         # ================= CHECK STUDENT =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
                 id,
@@ -4681,17 +4052,19 @@ def delete_student():
 
             LIMIT 1
 
-        """, (student_id,))
+        """,
+            (student_id,),
+        )
 
         student = cursor.fetchone()
 
         if not student:
-
             return "Student not found ❌"
 
         # ================= CHECK TC RECORDS =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT 1
 
@@ -4701,15 +4074,17 @@ def delete_student():
 
             LIMIT 1
 
-        """, (student_id,))
+        """,
+            (student_id,),
+        )
 
         if cursor.fetchone():
-
             return "Cannot delete: TC records exist ❌"
 
         # ================= CHECK BONAFIDE RECORDS =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT 1
 
@@ -4719,58 +4094,55 @@ def delete_student():
 
             LIMIT 1
 
-        """, (student_id,))
+        """,
+            (student_id,),
+        )
 
         if cursor.fetchone():
-
             return "Cannot delete: Bonafide records exist ❌"
 
         # ================= DELETE STUDENT =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             DELETE FROM students
 
             WHERE id = %s
 
-        """, (student_id,))
+        """,
+            (student_id,),
+        )
 
         if cursor.rowcount != 1:
-
             conn.rollback()
 
             return "Student deletion failed ❌"
 
         conn.commit()
 
-        return redirect(
-            request.referrer
-            or url_for("superadmin_schools")
-        )
+        return redirect(request.referrer or url_for("superadmin_schools"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ DELETE STUDENT ERROR:",
-            e
-        )
+        print("❌ DELETE STUDENT ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 👨‍🎓 SUPER ADMIN - ALL STUDENTS
 # =========================================================
+
 
 @app.route("/superadmin/all-students")
 @admin_required
@@ -4780,36 +4152,23 @@ def superadmin_all_students():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
         # ================= GET PARAMS =================
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 10
 
-        search = (
-            request.args.get("search")
-            or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        school_id = request.args.get(
-            "school_id",
-            type=int
-        )
+        school_id = request.args.get("school_id", type=int)
 
         if page < 1:
             page = 1
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         # ================= WHERE =================
 
@@ -4820,7 +4179,6 @@ def superadmin_all_students():
         params = []
 
         if school_id:
-
             where += """
                 AND st.school_id = %s
             """
@@ -4828,7 +4186,6 @@ def superadmin_all_students():
             params.append(school_id)
 
         if search:
-
             where += """
                 AND (
                     st.name LIKE %s
@@ -4839,15 +4196,12 @@ def superadmin_all_students():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword, keyword])
 
         # ================= TOTAL FILTERED COUNT =================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
@@ -4855,34 +4209,26 @@ def superadmin_all_students():
 
             {where}
 
-        """, params)
-
-        total = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            params,
         )
 
-        total_pages = max(
-            1,
-            (total + per_page - 1) // per_page
-        )
+        total = cursor.fetchone()["total"] or 0
+
+        total_pages = max(1, (total + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
-            offset = (
-                page - 1
-            ) * per_page
+            offset = (page - 1) * per_page
 
         # ================= GET STUDENTS =================
 
         student_params = params.copy()
 
-        student_params.extend([
-            per_page,
-            offset
-        ])
+        student_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT
 
@@ -4906,7 +4252,9 @@ def superadmin_all_students():
 
             LIMIT %s OFFSET %s
 
-        """, student_params)
+        """,
+            student_params,
+        )
 
         students = cursor.fetchall()
 
@@ -4917,10 +4265,7 @@ def superadmin_all_students():
             FROM schools
         """)
 
-        total_schools = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        total_schools = cursor.fetchone()["total"] or 0
 
         # ================= SCHOOL DROPDOWN =================
 
@@ -4946,55 +4291,41 @@ def superadmin_all_students():
             WHERE status = 'New'
         """)
 
-        new_leads_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        new_leads_count = cursor.fetchone()["total"] or 0
 
         return render_template(
-
             "superadmin/superadmin_all_students.html",
-
             students=students,
             schools=schools,
-
             total=total,
             total_schools=total_schools,
-
             page=page,
             total_pages=total_pages,
-
             search=search,
             selected_school=school_id,
-
             new_leads_count=new_leads_count,
-
             role="admin",
             school_name="Admin Panel",
-            active_page="all-students"
-
+            active_page="all-students",
         )
 
     except Exception as e:
-
-        print(
-            "❌ ALL STUDENTS ERROR:",
-            e
-        )
+        print("❌ ALL STUDENTS ERROR:", e)
 
         return f"Something went wrong ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 🧾 SUPER ADMIN - TC MANAGEMENT
 # =========================================================
+
 
 @app.route("/superadmin/tc-management")
 @admin_required
@@ -5004,32 +4335,18 @@ def superadmin_tc_management():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
         # ================= PARAMS =================
 
-        search = (
-            request.args.get("search")
-            or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        school_filter = (
-            request.args.get("school_id")
-            or ""
-        ).strip()
+        school_filter = (request.args.get("school_id") or "").strip()
 
-        class_filter = (
-            request.args.get("class")
-            or ""
-        ).strip()
+        class_filter = (request.args.get("class") or "").strip()
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 5
 
@@ -5042,9 +4359,7 @@ def superadmin_tc_management():
         if class_filter and not class_filter.isdigit():
             class_filter = ""
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         # ================= WHERE =================
 
@@ -5055,7 +4370,6 @@ def superadmin_tc_management():
         params = []
 
         if search:
-
             where_query += """
                 AND (
                     st.name LIKE %s
@@ -5066,35 +4380,26 @@ def superadmin_tc_management():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword, keyword])
 
         if school_filter:
-
             where_query += """
                 AND sc.school_id = %s
             """
 
-            params.append(
-                int(school_filter)
-            )
+            params.append(int(school_filter))
 
         if class_filter:
-
             where_query += """
                 AND st.`class` = %s
             """
 
-            params.append(
-                class_filter
-            )
+            params.append(class_filter)
 
         # ================= TOTAL FILTERED COUNT =================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
@@ -5108,34 +4413,26 @@ def superadmin_tc_management():
 
             {where_query}
 
-        """, params)
-
-        total_records = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            params,
         )
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_records = cursor.fetchone()["total"] or 0
+
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
-            offset = (
-                page - 1
-            ) * per_page
+            offset = (page - 1) * per_page
 
         # ================= TC RECORDS =================
 
         query_params = params.copy()
 
-        query_params.extend([
-            per_page,
-            offset
-        ])
+        query_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT
 
@@ -5164,7 +4461,9 @@ def superadmin_tc_management():
 
             LIMIT %s OFFSET %s
 
-        """, query_params)
+        """,
+            query_params,
+        )
 
         tc_records = cursor.fetchall()
 
@@ -5191,10 +4490,7 @@ def superadmin_tc_management():
             FROM tc
         """)
 
-        total_tc = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        total_tc = cursor.fetchone()["total"] or 0
 
         # ================= TODAY TC =================
 
@@ -5208,10 +4504,7 @@ def superadmin_tc_management():
 
         """)
 
-        today_tc = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        today_tc = cursor.fetchone()["total"] or 0
 
         # ================= THIS MONTH TC =================
 
@@ -5226,10 +4519,7 @@ def superadmin_tc_management():
 
         """)
 
-        month_tc = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        month_tc = cursor.fetchone()["total"] or 0
 
         # ================= SCHOOLS WITH TC =================
 
@@ -5241,10 +4531,7 @@ def superadmin_tc_management():
 
         """)
 
-        school_tc_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        school_tc_count = cursor.fetchone()["total"] or 0
 
         # ================= SIDEBAR LEADS COUNT =================
 
@@ -5258,60 +4545,45 @@ def superadmin_tc_management():
 
         """)
 
-        new_leads_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        new_leads_count = cursor.fetchone()["total"] or 0
 
         return render_template(
-
             "superadmin/superadmin_tc.html",
-
             active_page="tc-management",
-
             tc_records=tc_records,
             schools=schools,
-
             total_tc=total_tc,
             today_tc=today_tc,
             month_tc=month_tc,
             school_tc_count=school_tc_count,
-
             total_records=total_records,
             page=page,
             total_pages=total_pages,
-
             search=search,
             school_filter=school_filter,
             class_filter=class_filter,
-
             new_leads_count=new_leads_count,
-
             role="admin",
-            school_name="Admin Panel"
-
+            school_name="Admin Panel",
         )
 
     except Exception as e:
-
-        print(
-            "❌ TC MANAGEMENT ERROR:",
-            e
-        )
+        print("❌ TC MANAGEMENT ERROR:", e)
 
         return f"Something went wrong ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # ❌ DELETE TC (ADMIN SAFE)
 # =========================================================
+
 
 @app.route("/superadmin/delete-tc", methods=["POST"])
 @admin_required
@@ -5321,21 +4593,15 @@ def delete_tc():
     cursor = None
 
     try:
-
-        tc_id = (
-            request.form.get("tc_id")
-            or ""
-        ).strip()
+        tc_id = (request.form.get("tc_id") or "").strip()
 
         if not tc_id:
             return "Invalid TC ID ❌"
 
         try:
-
             tc_id = int(tc_id)
 
         except ValueError:
-
             return "Invalid TC ID ❌"
 
         conn = get_connection()
@@ -5343,7 +4609,8 @@ def delete_tc():
 
         # ================= CHECK TC EXISTS =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
                 id,
@@ -5357,60 +4624,57 @@ def delete_tc():
 
             LIMIT 1
 
-        """, (tc_id,))
+        """,
+            (tc_id,),
+        )
 
         tc_record = cursor.fetchone()
 
         if not tc_record:
-
             return "TC record not found ❌"
 
         # ================= DELETE TC =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             DELETE FROM tc
 
             WHERE id = %s
 
-        """, (tc_id,))
+        """,
+            (tc_id,),
+        )
 
         if cursor.rowcount != 1:
-
             conn.rollback()
 
             return "TC deletion failed ❌"
 
         conn.commit()
 
-        return redirect(
-            request.referrer
-            or url_for("superadmin_tc_management")
-        )
+        return redirect(request.referrer or url_for("superadmin_tc_management"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ DELETE TC ERROR:",
-            e
-        )
+        print("❌ DELETE TC ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 📜 SUPER ADMIN - BONAFIDE MANAGEMENT
 # =========================================================
+
 
 @app.route("/superadmin/bonafide-management")
 @admin_required
@@ -5420,30 +4684,16 @@ def superadmin_bonafide_management():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        search = (
-            request.args.get("search")
-            or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        school_filter = (
-            request.args.get("school_id")
-            or ""
-        ).strip()
+        school_filter = (request.args.get("school_id") or "").strip()
 
-        class_filter = (
-            request.args.get("class")
-            or ""
-        ).strip()
+        class_filter = (request.args.get("class") or "").strip()
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 5
 
@@ -5456,9 +4706,7 @@ def superadmin_bonafide_management():
         if class_filter and not class_filter.isdigit():
             class_filter = ""
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         # ================= WHERE =================
 
@@ -5469,7 +4717,6 @@ def superadmin_bonafide_management():
         params = []
 
         if search:
-
             where_query += """
                 AND (
                     s.name LIKE %s
@@ -5481,36 +4728,26 @@ def superadmin_bonafide_management():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword,
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword, keyword, keyword])
 
         if school_filter:
-
             where_query += """
                 AND sc.school_id = %s
             """
 
-            params.append(
-                int(school_filter)
-            )
+            params.append(int(school_filter))
 
         if class_filter:
-
             where_query += """
                 AND s.`class` = %s
             """
 
-            params.append(
-                class_filter
-            )
+            params.append(class_filter)
 
         # ================= TOTAL FILTERED COUNT =================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
@@ -5524,34 +4761,26 @@ def superadmin_bonafide_management():
 
             {where_query}
 
-        """, params)
-
-        total_records = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            params,
         )
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_records = cursor.fetchone()["total"] or 0
+
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
-            offset = (
-                page - 1
-            ) * per_page
+            offset = (page - 1) * per_page
 
         # ================= BONAFIDE RECORDS =================
 
         query_params = params.copy()
 
-        query_params.extend([
-            per_page,
-            offset
-        ])
+        query_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT
 
@@ -5579,7 +4808,9 @@ def superadmin_bonafide_management():
 
             LIMIT %s OFFSET %s
 
-        """, query_params)
+        """,
+            query_params,
+        )
 
         bonafides = cursor.fetchall()
 
@@ -5606,10 +4837,7 @@ def superadmin_bonafide_management():
             FROM bonafide
         """)
 
-        total_bonafide = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        total_bonafide = cursor.fetchone()["total"] or 0
 
         # ================= THIS MONTH =================
 
@@ -5624,10 +4852,7 @@ def superadmin_bonafide_management():
 
         """)
 
-        month_bonafide = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        month_bonafide = cursor.fetchone()["total"] or 0
 
         # ================= LAST 7 DAYS =================
 
@@ -5641,10 +4866,7 @@ def superadmin_bonafide_management():
 
         """)
 
-        week_bonafide = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        week_bonafide = cursor.fetchone()["total"] or 0
 
         # ================= SCHOOLS USING BONAFIDE =================
 
@@ -5656,10 +4878,7 @@ def superadmin_bonafide_management():
 
         """)
 
-        school_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        school_count = cursor.fetchone()["total"] or 0
 
         # ================= SIDEBAR LEADS COUNT =================
 
@@ -5673,51 +4892,34 @@ def superadmin_bonafide_management():
 
         """)
 
-        new_leads_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        new_leads_count = cursor.fetchone()["total"] or 0
 
         return render_template(
-
             "superadmin/superadmin_bonafide.html",
-
             active_page="bonafide-management",
-
             bonafides=bonafides,
             schools=schools,
-
             total_bonafide=total_bonafide,
             month_bonafide=month_bonafide,
             week_bonafide=week_bonafide,
             school_count=school_count,
-
             total_records=total_records,
             page=page,
             total_pages=total_pages,
-
             search=search,
             school_filter=school_filter,
             class_filter=class_filter,
-
             new_leads_count=new_leads_count,
-
             role="admin",
-            school_name="Admin Panel"
-
+            school_name="Admin Panel",
         )
 
     except Exception as e:
-
-        print(
-            "❌ BONAFIDE MANAGEMENT ERROR:",
-            e
-        )
+        print("❌ BONAFIDE MANAGEMENT ERROR:", e)
 
         return f"Something went wrong ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -5736,11 +4938,8 @@ def delete_bonafide():
     cursor = None
 
     try:
-
         # ================= GET BONAFIDE ID =================
-        bonafide_id = (
-            request.form.get("bonafide_id") or ""
-        ).strip()
+        bonafide_id = (request.form.get("bonafide_id") or "").strip()
 
         if not bonafide_id:
             return "Invalid bonafide ID ❌"
@@ -5754,11 +4953,14 @@ def delete_bonafide():
         cursor = conn.cursor()
 
         # ================= CHECK EXISTS =================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id
             FROM bonafide
             WHERE id = %s
-        """, (bonafide_id,))
+        """,
+            (bonafide_id,),
+        )
 
         bonafide = cursor.fetchone()
 
@@ -5766,44 +4968,41 @@ def delete_bonafide():
             return "Bonafide record not found ❌"
 
         # ================= DELETE =================
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM bonafide
             WHERE id = %s
-        """, (bonafide_id,))
+        """,
+            (bonafide_id,),
+        )
 
         if cursor.rowcount == 0:
             return "Bonafide record not found ❌"
 
         conn.commit()
 
-        return redirect(
-            request.referrer
-            or url_for("superadmin_bonafide_management")
-        )
+        return redirect(request.referrer or url_for("superadmin_bonafide_management"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ DELETE BONAFIDE ERROR:",
-            e
-        )
+        print("❌ DELETE BONAFIDE ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 👥 SUPER ADMIN - USERS MANAGEMENT
 # =========================================================
+
 
 @app.route("/superadmin/users")
 @admin_required
@@ -5813,27 +5012,16 @@ def superadmin_users():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        search = (
-            request.args.get("search") or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        role_filter = (
-            request.args.get("role") or ""
-        ).strip()
+        role_filter = (request.args.get("role") or "").strip()
 
-        status_filter = (
-            request.args.get("status") or ""
-        ).strip()
+        status_filter = (request.args.get("status") or "").strip()
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 5
 
@@ -5858,7 +5046,6 @@ def superadmin_users():
         params = []
 
         if search:
-
             where_query += """
                 AND (
                     u.name LIKE %s
@@ -5870,15 +5057,9 @@ def superadmin_users():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword,
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword, keyword, keyword])
 
         if role_filter:
-
             where_query += """
                 AND u.role = %s
             """
@@ -5886,7 +5067,6 @@ def superadmin_users():
             params.append(role_filter)
 
         if status_filter:
-
             where_query += """
                 AND u.status = %s
             """
@@ -5895,7 +5075,8 @@ def superadmin_users():
 
         # ================= TOTAL FILTERED COUNT =================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
@@ -5906,17 +5087,13 @@ def superadmin_users():
 
             {where_query}
 
-        """, params)
-
-        total_records = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            params,
         )
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_records = cursor.fetchone()["total"] or 0
+
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
@@ -5926,12 +5103,10 @@ def superadmin_users():
 
         user_params = params.copy()
 
-        user_params.extend([
-            per_page,
-            offset
-        ])
+        user_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT
                 u.id,
@@ -5971,7 +5146,9 @@ def superadmin_users():
 
             LIMIT %s OFFSET %s
 
-        """, user_params)
+        """,
+            user_params,
+        )
 
         users = cursor.fetchall()
 
@@ -6028,52 +5205,43 @@ def superadmin_users():
 
         return render_template(
             "superadmin/superadmin_users.html",
-
             users=users,
             schools=schools,
-
             total_users=total_users,
             active_users=active_users,
             clerk_users=clerk_users,
             admin_users=admin_users,
-
             total_records=total_records,
             page=page,
             total_pages=total_pages,
-
             search=search,
             role_filter=role_filter,
             status_filter=status_filter,
-
             new_leads_count=new_leads_count,
-
             role="admin",
             school_name="Admin Panel",
-            active_page="users"
+            active_page="users",
         )
 
     except Exception as e:
-
         print("❌ USERS MANAGEMENT ERROR:", e)
 
         return f"Something went wrong ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # ➕ ADD NEW USER
 # =========================================================
 
-@app.route(
-    "/superadmin/add-user",
-    methods=["POST"]
-)
+
+@app.route("/superadmin/add-user", methods=["POST"])
 @admin_required
 def add_user():
 
@@ -6081,7 +5249,6 @@ def add_user():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -6089,37 +5256,21 @@ def add_user():
         # GET FORM DATA
         # =========================================
 
-        name = (
-            request.form.get("name") or ""
-        ).strip()
+        name = (request.form.get("name") or "").strip()
 
-        email = (
-            request.form.get("email") or ""
-        ).strip().lower()
+        email = (request.form.get("email") or "").strip().lower()
 
-        phone = (
-            request.form.get("phone") or ""
-        ).strip()
+        phone = (request.form.get("phone") or "").strip()
 
-        password = (
-            request.form.get("password") or ""
-        ).strip()
+        password = (request.form.get("password") or "").strip()
 
-        role = (
-            request.form.get("role") or ""
-        ).strip().lower()
+        role = (request.form.get("role") or "").strip().lower()
 
-        school_id = (
-            request.form.get("school_id") or ""
-        ).strip()
+        school_id = (request.form.get("school_id") or "").strip()
 
-        designation = (
-            request.form.get("designation") or ""
-        ).strip()
+        designation = (request.form.get("designation") or "").strip()
 
-        address = (
-            request.form.get("address") or ""
-        ).strip()
+        address = (request.form.get("address") or "").strip()
 
         # =========================================
         # REQUIRED VALIDATION
@@ -6141,10 +5292,7 @@ def add_user():
         # ROLE VALIDATION
         # =========================================
 
-        valid_roles = [
-            "admin",
-            "clerk"
-        ]
+        valid_roles = ["admin", "clerk"]
 
         if role not in valid_roles:
             return "Invalid role ❌"
@@ -6177,7 +5325,6 @@ def add_user():
         # =========================================
 
         if phone:
-
             if not phone.isdigit():
                 return "Phone must contain digits only ❌"
 
@@ -6220,16 +5367,14 @@ def add_user():
         # =========================================
 
         if school_id:
-
             try:
-
                 school_id = int(school_id)
 
             except ValueError:
-
                 return "Invalid school ❌"
 
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 SELECT
                     school_id,
@@ -6242,7 +5387,9 @@ def add_user():
 
                 LIMIT 1
 
-            """, (school_id,))
+            """,
+                (school_id,),
+            )
 
             school = cursor.fetchone()
 
@@ -6253,7 +5400,6 @@ def add_user():
                 return "Cannot assign user to inactive school ❌"
 
         else:
-
             school_id = None
 
         # =========================================
@@ -6267,7 +5413,8 @@ def add_user():
         # DUPLICATE EMAIL CHECK
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT id
 
@@ -6277,7 +5424,9 @@ def add_user():
 
             LIMIT 1
 
-        """, (email,))
+        """,
+            (email,),
+        )
 
         if cursor.fetchone():
             return "Email already exists ❌"
@@ -6287,8 +5436,8 @@ def add_user():
         # =========================================
 
         if phone:
-
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 SELECT id
 
@@ -6298,7 +5447,9 @@ def add_user():
 
                 LIMIT 1
 
-            """, (phone,))
+            """,
+                (phone,),
+            )
 
             if cursor.fetchone():
                 return "Phone already exists ❌"
@@ -6307,7 +5458,8 @@ def add_user():
         # DUPLICATE SAME USER IN SAME SCHOOL CHECK
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT id
 
@@ -6325,12 +5477,9 @@ def add_user():
 
             LIMIT 1
 
-        """, (
-            name,
-            role,
-            school_id,
-            school_id
-        ))
+        """,
+            (name, role, school_id, school_id),
+        )
 
         if cursor.fetchone():
             return "User already exists for this role/school ❌"
@@ -6339,15 +5488,14 @@ def add_user():
         # HASH PASSWORD
         # =========================================
 
-        hashed_password = bcrypt.generate_password_hash(
-            password
-        ).decode("utf-8")
+        hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
 
         # =========================================
         # INSERT USER
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             INSERT INTO users
             (
@@ -6378,51 +5526,46 @@ def add_user():
                 NULL
             )
 
-        """, (
-            name,
-            email,
-            hashed_password,
-            role,
-            school_id,
-            "active",
-            phone,
-            address,
-            designation
-        ))
+        """,
+            (
+                name,
+                email,
+                hashed_password,
+                role,
+                school_id,
+                "active",
+                phone,
+                address,
+                designation,
+            ),
+        )
 
         conn.commit()
 
-        print(
-            "✅ USER CREATED:",
-            email
-        )
+        print("✅ USER CREATED:", email)
 
-        return redirect(
-            url_for("superadmin_users")
-        )
+        return redirect(url_for("superadmin_users"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ ADD USER ERROR:",
-            e
-        )
+        print("❌ ADD USER ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
+
 # =========================================================
 # ✏️ SUPER ADMIN - EDIT USER
 # =========================================================
+
 
 @app.route("/superadmin/user/edit/<int:user_id>", methods=["POST"])
 @admin_required
@@ -6432,7 +5575,6 @@ def superadmin_edit_user(user_id):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -6440,33 +5582,19 @@ def superadmin_edit_user(user_id):
         # GET FORM DATA
         # =========================================
 
-        name = (
-            request.form.get("name") or ""
-        ).strip()
+        name = (request.form.get("name") or "").strip()
 
-        email = (
-            request.form.get("email") or ""
-        ).strip().lower()
+        email = (request.form.get("email") or "").strip().lower()
 
-        phone = (
-            request.form.get("phone") or ""
-        ).strip()
+        phone = (request.form.get("phone") or "").strip()
 
-        role = (
-            request.form.get("role") or ""
-        ).strip().lower()
+        role = (request.form.get("role") or "").strip().lower()
 
-        school_id = (
-            request.form.get("school_id") or ""
-        ).strip()
+        school_id = (request.form.get("school_id") or "").strip()
 
-        designation = (
-            request.form.get("designation") or ""
-        ).strip()
+        designation = (request.form.get("designation") or "").strip()
 
-        address = (
-            request.form.get("address") or ""
-        ).strip()
+        address = (request.form.get("address") or "").strip()
 
         # =========================================
         # REQUIRED VALIDATION
@@ -6485,10 +5613,7 @@ def superadmin_edit_user(user_id):
         # ROLE VALIDATION
         # =========================================
 
-        valid_roles = [
-            "admin",
-            "clerk"
-        ]
+        valid_roles = ["admin", "clerk"]
 
         if role not in valid_roles:
             return "Invalid role ❌"
@@ -6521,7 +5646,6 @@ def superadmin_edit_user(user_id):
         # =========================================
 
         if phone:
-
             if not phone.isdigit():
                 return "Phone must contain digits only ❌"
 
@@ -6542,7 +5666,8 @@ def superadmin_edit_user(user_id):
         # USER EXISTS
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
                 id,
@@ -6556,7 +5681,9 @@ def superadmin_edit_user(user_id):
 
             LIMIT 1
 
-        """, (user_id,))
+        """,
+            (user_id,),
+        )
 
         user = cursor.fetchone()
 
@@ -6568,16 +5695,14 @@ def superadmin_edit_user(user_id):
         # =========================================
 
         if school_id:
-
             try:
-
                 school_id = int(school_id)
 
             except ValueError:
-
                 return "Invalid school ❌"
 
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 SELECT
                     school_id,
@@ -6589,7 +5714,9 @@ def superadmin_edit_user(user_id):
 
                 LIMIT 1
 
-            """, (school_id,))
+            """,
+                (school_id,),
+            )
 
             school = cursor.fetchone()
 
@@ -6600,7 +5727,6 @@ def superadmin_edit_user(user_id):
                 return "Cannot assign user to inactive school ❌"
 
         else:
-
             school_id = None
 
         # =========================================
@@ -6614,7 +5740,8 @@ def superadmin_edit_user(user_id):
         # DUPLICATE EMAIL CHECK
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT id
 
@@ -6625,10 +5752,9 @@ def superadmin_edit_user(user_id):
 
             LIMIT 1
 
-        """, (
-            email,
-            user_id
-        ))
+        """,
+            (email, user_id),
+        )
 
         if cursor.fetchone():
             return "Email already exists ❌"
@@ -6638,8 +5764,8 @@ def superadmin_edit_user(user_id):
         # =========================================
 
         if phone:
-
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 SELECT id
 
@@ -6650,10 +5776,9 @@ def superadmin_edit_user(user_id):
 
                 LIMIT 1
 
-            """, (
-                phone,
-                user_id
-            ))
+            """,
+                (phone, user_id),
+            )
 
             if cursor.fetchone():
                 return "Phone already exists ❌"
@@ -6662,7 +5787,8 @@ def superadmin_edit_user(user_id):
         # DUPLICATE SAME USER IN SAME SCHOOL CHECK
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT id
 
@@ -6681,13 +5807,9 @@ def superadmin_edit_user(user_id):
 
             LIMIT 1
 
-        """, (
-            name,
-            role,
-            school_id,
-            school_id,
-            user_id
-        ))
+        """,
+            (name, role, school_id, school_id, user_id),
+        )
 
         if cursor.fetchone():
             return "User already exists for this role/school ❌"
@@ -6696,7 +5818,8 @@ def superadmin_edit_user(user_id):
         # UPDATE USER
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE users
 
@@ -6712,47 +5835,34 @@ def superadmin_edit_user(user_id):
 
             WHERE id = %s
 
-        """, (
-            name,
-            email,
-            phone,
-            role,
-            school_id,
-            designation,
-            address,
-            user_id
-        ))
+        """,
+            (name, email, phone, role, school_id, designation, address, user_id),
+        )
 
         conn.commit()
 
-        return redirect(
-            request.referrer
-            or url_for("superadmin_users")
-        )
+        return redirect(request.referrer or url_for("superadmin_users"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ EDIT USER ERROR:",
-            e
-        )
+        print("❌ EDIT USER ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
- 
+
+
 # =========================================================
 # 🔄 SUPER ADMIN - TOGGLE USER STATUS
 # =========================================================
+
 
 @app.route("/superadmin/user/status", methods=["POST"])
 @admin_required
@@ -6762,21 +5872,15 @@ def superadmin_toggle_user_status():
     cursor = None
 
     try:
-
-        user_id = (
-            request.form.get("user_id")
-            or ""
-        ).strip()
+        user_id = (request.form.get("user_id") or "").strip()
 
         if not user_id:
             return "Invalid user ID ❌"
 
         try:
-
             user_id = int(user_id)
 
         except ValueError:
-
             return "Invalid user ID ❌"
 
         conn = get_connection()
@@ -6786,7 +5890,8 @@ def superadmin_toggle_user_status():
         # CHECK USER
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
                 id,
@@ -6800,7 +5905,9 @@ def superadmin_toggle_user_status():
 
             LIMIT 1
 
-        """, (user_id,))
+        """,
+            (user_id,),
+        )
 
         user = cursor.fetchone()
 
@@ -6810,19 +5917,14 @@ def superadmin_toggle_user_status():
         role = user["role"]
         current_status = user["status"]
 
-        if current_status not in [
-            "active",
-            "blocked"
-        ]:
+        if current_status not in ["active", "blocked"]:
             return "Invalid current user status ❌"
 
         # =========================================
         # PREVENT SELF BLOCK
         # =========================================
 
-        current_admin_id = session.get(
-            "admin_user_id"
-        )
+        current_admin_id = session.get("admin_user_id")
 
         if current_admin_id and int(current_admin_id) == user_id:
             return "You cannot change your own status ❌"
@@ -6831,11 +5933,7 @@ def superadmin_toggle_user_status():
         # PREVENT BLOCKING LAST ACTIVE ADMIN
         # =========================================
 
-        if (
-            role == "admin"
-            and current_status == "active"
-        ):
-
+        if role == "admin" and current_status == "active":
             cursor.execute("""
 
                 SELECT COUNT(*) AS total
@@ -6847,10 +5945,7 @@ def superadmin_toggle_user_status():
 
             """)
 
-            active_admins = (
-                cursor.fetchone()["total"]
-                or 0
-            )
+            active_admins = cursor.fetchone()["total"] or 0
 
             if active_admins <= 1:
                 return "Cannot block last active admin ❌"
@@ -6859,13 +5954,10 @@ def superadmin_toggle_user_status():
         # TOGGLE STATUS
         # =========================================
 
-        new_status = (
-            "blocked"
-            if current_status == "active"
-            else "active"
-        )
+        new_status = "blocked" if current_status == "active" else "active"
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE users
 
@@ -6875,47 +5967,39 @@ def superadmin_toggle_user_status():
 
             WHERE id = %s
 
-        """, (
-            new_status,
-            user_id
-        ))
+        """,
+            (new_status, user_id),
+        )
 
         if cursor.rowcount != 1:
-
             conn.rollback()
 
             return "Status update failed ❌"
 
         conn.commit()
 
-        return redirect(
-            request.referrer
-            or url_for("superadmin_users")
-        )
+        return redirect(request.referrer or url_for("superadmin_users"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ TOGGLE STATUS ERROR:",
-            e
-        )
+        print("❌ TOGGLE STATUS ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
- 
+
+
 # =========================================================
 # ❌ SUPER ADMIN - DELETE USER
 # =========================================================
+
 
 @app.route("/superadmin/user/delete", methods=["POST"])
 @admin_required
@@ -6925,21 +6009,15 @@ def superadmin_delete_user():
     cursor = None
 
     try:
-
-        user_id = (
-            request.form.get("user_id")
-            or ""
-        ).strip()
+        user_id = (request.form.get("user_id") or "").strip()
 
         if not user_id:
             return "Invalid user ID ❌"
 
         try:
-
             user_id = int(user_id)
 
         except ValueError:
-
             return "Invalid user ID ❌"
 
         conn = get_connection()
@@ -6949,7 +6027,8 @@ def superadmin_delete_user():
         # CHECK USER
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
                 id,
@@ -6964,7 +6043,9 @@ def superadmin_delete_user():
 
             LIMIT 1
 
-        """, (user_id,))
+        """,
+            (user_id,),
+        )
 
         user = cursor.fetchone()
 
@@ -6977,9 +6058,7 @@ def superadmin_delete_user():
         # PREVENT SELF DELETE
         # =========================================
 
-        current_admin_id = session.get(
-            "admin_user_id"
-        )
+        current_admin_id = session.get("admin_user_id")
 
         if current_admin_id and int(current_admin_id) == user_id:
             return "You cannot delete your own account ❌"
@@ -6995,51 +6074,46 @@ def superadmin_delete_user():
         # DELETE USER
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             DELETE FROM users
 
             WHERE id = %s
 
-        """, (user_id,))
+        """,
+            (user_id,),
+        )
 
         if cursor.rowcount != 1:
-
             conn.rollback()
 
             return "User deletion failed ❌"
 
         conn.commit()
 
-        return redirect(
-            request.referrer
-            or url_for("superadmin_users")
-        )
+        return redirect(request.referrer or url_for("superadmin_users"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ DELETE USER ERROR:",
-            e
-        )
+        print("❌ DELETE USER ERROR:", e)
 
         logger.exception("Unhandled exception")
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
- 
+
 
 # =========================================================
 # 📞 SUPER ADMIN - LEADS MANAGEMENT
 # =========================================================
+
 
 @app.route("/superadmin/leads")
 @admin_required
@@ -7049,7 +6123,6 @@ def superadmin_leads():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -7064,12 +6137,7 @@ def superadmin_leads():
         if page < 1:
             page = 1
 
-        valid_status = [
-            "New",
-            "Contacted",
-            "Demo Scheduled",
-            "Converted"
-        ]
+        valid_status = ["New", "Contacted", "Demo Scheduled", "Converted"]
 
         if status_filter and status_filter not in valid_status:
             status_filter = ""
@@ -7081,7 +6149,6 @@ def superadmin_leads():
         params = []
 
         if search:
-
             where_query += """
                 AND (
                     school_name LIKE %s
@@ -7094,16 +6161,9 @@ def superadmin_leads():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword,
-                keyword,
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword, keyword, keyword, keyword])
 
         if status_filter:
-
             where_query += """
                 AND status = %s
             """
@@ -7111,7 +6171,6 @@ def superadmin_leads():
             params.append(status_filter)
 
         if plan_filter:
-
             where_query += """
                 AND selected_plan = %s
             """
@@ -7119,7 +6178,6 @@ def superadmin_leads():
             params.append(plan_filter)
 
         if source_filter:
-
             where_query += """
                 AND lead_source = %s
             """
@@ -7128,7 +6186,8 @@ def superadmin_leads():
 
         # ================= TOTAL FILTERED =================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
@@ -7136,14 +6195,13 @@ def superadmin_leads():
 
             {where_query}
 
-        """, params)
+        """,
+            params,
+        )
 
         total_records = cursor.fetchone()["total"] or 0
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
@@ -7154,12 +6212,10 @@ def superadmin_leads():
 
         lead_params = params.copy()
 
-        lead_params.extend([
-            per_page,
-            offset
-        ])
+        lead_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT
                 id,
@@ -7182,7 +6238,9 @@ def superadmin_leads():
 
             LIMIT %s OFFSET %s
 
-        """, lead_params)
+        """,
+            lead_params,
+        )
 
         leads = cursor.fetchall()
 
@@ -7232,10 +6290,7 @@ def superadmin_leads():
             ORDER BY selected_plan
         """)
 
-        available_plans = [
-            row["selected_plan"]
-            for row in cursor.fetchall()
-        ]
+        available_plans = [row["selected_plan"] for row in cursor.fetchall()]
 
         cursor.execute("""
             SELECT DISTINCT lead_source
@@ -7245,54 +6300,43 @@ def superadmin_leads():
             ORDER BY lead_source
         """)
 
-        available_sources = [
-            row["lead_source"]
-            for row in cursor.fetchall()
-        ]
+        available_sources = [row["lead_source"] for row in cursor.fetchall()]
 
         return render_template(
             "superadmin/leads.html",
-
             leads=leads,
-
             total_leads=total_leads,
             new_leads=new_leads,
             contacted_leads=contacted_leads,
             demo_leads=demo_leads,
             converted_leads=converted_leads,
-
             total_records=total_records,
             page=page,
             total_pages=total_pages,
-
             search=search,
             status_filter=status_filter,
             plan_filter=plan_filter,
             source_filter=source_filter,
-
             available_plans=available_plans,
             available_sources=available_sources,
-
             new_leads_count=new_leads,
-
             role="admin",
             school_name="Admin Panel",
-            active_page="leads"
+            active_page="leads",
         )
 
     except Exception as e:
-
         print("❌ LEADS PAGE ERROR:", e)
 
         return f"Unable to load leads ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 📞 PUBLIC LEAD SUBMISSION
@@ -7310,6 +6354,7 @@ def superadmin_leads():
 # Show in Super Admin Lead Panel
 # =========================================================
 
+
 @csrf.exempt
 @app.route("/submit-lead", methods=["POST"])
 def submit_lead():
@@ -7318,125 +6363,83 @@ def submit_lead():
     cursor = None
 
     try:
-
         data = request.get_json(silent=True)
 
         if not data:
-            return jsonify({
-                "success": False,
-                "message": "Invalid request"
-            }), 400
+            return jsonify({"success": False, "message": "Invalid request"}), 400
 
-        lead_source = (
-            data.get("lead_source")
-            or "Website"
-        ).strip()
+        lead_source = (data.get("lead_source") or "Website").strip()
 
-        school_name = (
-            data.get("school_name")
-            or ""
-        ).strip()
+        school_name = (data.get("school_name") or "").strip()
 
-        contact_person = (
-            data.get("contact_person")
-            or ""
-        ).strip()
+        contact_person = (data.get("contact_person") or "").strip()
 
-        mobile = (
-            data.get("mobile")
-            or ""
-        ).strip()
+        mobile = (data.get("mobile") or "").strip()
 
-        email = (
-            data.get("email")
-            or ""
-        ).strip().lower()
+        email = (data.get("email") or "").strip().lower()
 
-        student_strength = (
-            str(data.get("student_strength") or "")
-        ).strip()
+        student_strength = (str(data.get("student_strength") or "")).strip()
 
-        selected_plan = (
-            data.get("selected_plan")
-            or ""
-        ).strip()
+        selected_plan = (data.get("selected_plan") or "").strip()
 
-        message = (
-            data.get("message")
-            or ""
-        ).strip()
+        message = (data.get("message") or "").strip()
 
         # ================= VALIDATION =================
 
         if not school_name:
-            return jsonify({
-                "success": False,
-                "message": "School name required"
-            }), 400
+            return jsonify({"success": False, "message": "School name required"}), 400
 
         if len(school_name) > 150:
-            return jsonify({
-                "success": False,
-                "message": "School name too long"
-            }), 400
+            return jsonify({"success": False, "message": "School name too long"}), 400
 
         if not contact_person:
-            return jsonify({
-                "success": False,
-                "message": "Contact person required"
-            }), 400
+            return jsonify(
+                {"success": False, "message": "Contact person required"}
+            ), 400
 
         if len(contact_person) > 120:
-            return jsonify({
-                "success": False,
-                "message": "Contact person name too long"
-            }), 400
+            return jsonify(
+                {"success": False, "message": "Contact person name too long"}
+            ), 400
 
         if not re.fullmatch(r"\d{10}", mobile):
-            return jsonify({
-                "success": False,
-                "message": "Enter valid 10 digit mobile number"
-            }), 400
+            return jsonify(
+                {"success": False, "message": "Enter valid 10 digit mobile number"}
+            ), 400
 
         if email and not is_valid_email(email):
-            return jsonify({
-                "success": False,
-                "message": "Invalid email address"
-            }), 400
+            return jsonify({"success": False, "message": "Invalid email address"}), 400
 
         if student_strength and not student_strength.isdigit():
-            return jsonify({
-                "success": False,
-                "message": "Student strength must be numeric"
-            }), 400
+            return jsonify(
+                {"success": False, "message": "Student strength must be numeric"}
+            ), 400
 
         if message and len(message) > 1000:
-            return jsonify({
-                "success": False,
-                "message": "Message too long"
-            }), 400
+            return jsonify({"success": False, "message": "Message too long"}), 400
 
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
         # ================= DUPLICATE CHECK =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id
             FROM lead_requests
             WHERE mobile = %s
             LIMIT 1
-        """, (mobile,))
+        """,
+            (mobile,),
+        )
 
         if cursor.fetchone():
-            return jsonify({
-                "success": False,
-                "message": "Lead already exists"
-            }), 409
+            return jsonify({"success": False, "message": "Lead already exists"}), 409
 
         # ================= INSERT =================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO lead_requests
             (
                 lead_source,
@@ -7461,44 +6464,37 @@ def submit_lead():
                 %s,
                 'New'
             )
-        """, (
-            lead_source,
-            school_name,
-            contact_person,
-            mobile,
-            email,
-            student_strength,
-            selected_plan,
-            message
-        ))
+        """,
+            (
+                lead_source,
+                school_name,
+                contact_person,
+                mobile,
+                email,
+                student_strength,
+                selected_plan,
+                message,
+            ),
+        )
 
         conn.commit()
 
-        return jsonify({
-            "success": True,
-            "message": "Lead saved successfully"
-        }), 201
+        return jsonify({"success": True, "message": "Lead saved successfully"}), 201
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
         print("❌ LEAD SAVE ERROR:", e)
 
-        return jsonify({
-            "success": False,
-            "message": "Something went wrong"
-        }), 500
+        return jsonify({"success": False, "message": "Something went wrong"}), 500
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
-
 
 
 # =========================================================
@@ -7516,11 +6512,9 @@ def submit_lead():
 # Super Admin Lead Management
 # =========================================================
 
+
 @csrf.exempt
-@app.route(
-    "/superadmin/lead/contacted/<int:lead_id>",
-    methods=["POST"]
-)
+@app.route("/superadmin/lead/contacted/<int:lead_id>", methods=["POST"])
 @admin_required
 def mark_lead_contacted(lead_id):
 
@@ -7528,11 +6522,11 @@ def mark_lead_contacted(lead_id):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE lead_requests
 
@@ -7540,42 +6534,26 @@ def mark_lead_contacted(lead_id):
 
             WHERE id = %s
 
-        """, (lead_id,))
+        """,
+            (lead_id,),
+        )
 
         conn.commit()
 
-        return jsonify({
-
-            "success": True,
-
-            "message":
-            "Lead marked as Contacted"
-
-        })
+        return jsonify({"success": True, "message": "Lead marked as Contacted"})
 
     except Exception as e:
+        print("❌ CONTACTED STATUS ERROR:", e)
 
-        print(
-            "❌ CONTACTED STATUS ERROR:",
-            e
-        )
-
-        return jsonify({
-
-            "success": False,
-
-            "message":
-            "Failed to update lead"
-
-        }), 500
+        return jsonify({"success": False, "message": "Failed to update lead"}), 500
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 📅 SUPER ADMIN - SCHEDULE DEMO
@@ -7592,11 +6570,9 @@ def mark_lead_contacted(lead_id):
 # Super Admin Lead Management
 # =========================================================
 
+
 @csrf.exempt
-@app.route(
-    "/superadmin/lead/demo/<int:lead_id>",
-    methods=["POST"]
-)
+@app.route("/superadmin/lead/demo/<int:lead_id>", methods=["POST"])
 @admin_required
 def schedule_demo(lead_id):
 
@@ -7604,11 +6580,11 @@ def schedule_demo(lead_id):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE lead_requests
 
@@ -7616,44 +6592,28 @@ def schedule_demo(lead_id):
 
             WHERE id = %s
 
-        """, (lead_id,))
+        """,
+            (lead_id,),
+        )
 
         conn.commit()
 
-        return jsonify({
-
-            "success": True,
-
-            "message":
-            "Demo Scheduled Successfully"
-
-        })
+        return jsonify({"success": True, "message": "Demo Scheduled Successfully"})
 
     except Exception as e:
+        print("❌ DEMO STATUS ERROR:", e)
 
-        print(
-            "❌ DEMO STATUS ERROR:",
-            e
-        )
-
-        return jsonify({
-
-            "success": False,
-
-            "message":
-            "Failed to schedule demo"
-
-        }), 500
+        return jsonify({"success": False, "message": "Failed to schedule demo"}), 500
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
- # =========================================================
+
+# =========================================================
 # 🏫 SUPER ADMIN - CONVERT LEAD
 #
 # PURPOSE:
@@ -7668,9 +6628,9 @@ def schedule_demo(lead_id):
 # Lead Management
 # =========================================================
 
+
 @csrf.exempt
-@app.route("/superadmin/lead/converted/<int:lead_id>",methods=["POST"]
-)
+@app.route("/superadmin/lead/converted/<int:lead_id>", methods=["POST"])
 @admin_required
 def convert_lead(lead_id):
 
@@ -7678,11 +6638,11 @@ def convert_lead(lead_id):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE lead_requests
 
@@ -7690,37 +6650,20 @@ def convert_lead(lead_id):
 
             WHERE id=%s
 
-        """, (lead_id,))
+        """,
+            (lead_id,),
+        )
 
         conn.commit()
 
-        return jsonify({
-
-            "success": True,
-
-            "message":
-            "Lead Converted Successfully"
-
-        })
+        return jsonify({"success": True, "message": "Lead Converted Successfully"})
 
     except Exception as e:
+        print("❌ CONVERT ERROR:", e)
 
-        print(
-            "❌ CONVERT ERROR:",
-            e
-        )
-
-        return jsonify({
-
-            "success": False,
-
-            "message":
-            "Failed to convert lead"
-
-        }), 500
+        return jsonify({"success": False, "message": "Failed to convert lead"}), 500
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -7728,10 +6671,10 @@ def convert_lead(lead_id):
             conn.close()
 
 
-
 # =========================================================
 # 💳 SUPER ADMIN - SUBSCRIPTION MANAGEMENT
 # =========================================================
+
 
 @app.route("/superadmin/subscriptions")
 @admin_required
@@ -7741,7 +6684,6 @@ def superadmin_subscriptions():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -7749,31 +6691,15 @@ def superadmin_subscriptions():
         # FILTERS
         # =====================================
 
-        search = (
-            request.args.get("search")
-            or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        status_filter = (
-            request.args.get("status")
-            or ""
-        ).strip()
+        status_filter = (request.args.get("status") or "").strip()
 
-        plan_filter = (
-            request.args.get("plan")
-            or ""
-        ).strip()
+        plan_filter = (request.args.get("plan") or "").strip()
 
-        expiry_filter = (
-            request.args.get("expiry")
-            or ""
-        ).strip()
+        expiry_filter = (request.args.get("expiry") or "").strip()
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 5
 
@@ -7784,18 +6710,9 @@ def superadmin_subscriptions():
         # VALID FILTERS
         # =====================================
 
-        valid_status = [
-            "active",
-            "expired",
-            "Active",
-            "Expired"
-        ]
+        valid_status = ["active", "expired", "Active", "Expired"]
 
-        valid_expiry = [
-            "",
-            "expiring_soon",
-            "expired"
-        ]
+        valid_expiry = ["", "expiring_soon", "expired"]
 
         if status_filter and status_filter not in valid_status:
             status_filter = ""
@@ -7816,7 +6733,6 @@ def superadmin_subscriptions():
         # SEARCH SCHOOL / PLAN
 
         if search:
-
             where_query += """
                 AND (
                     s.name LIKE %s
@@ -7826,15 +6742,11 @@ def superadmin_subscriptions():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword])
 
         # STATUS FILTER
 
         if status_filter:
-
             where_query += """
                 AND LOWER(sub.status) = LOWER(%s)
             """
@@ -7844,7 +6756,6 @@ def superadmin_subscriptions():
         # PLAN FILTER
 
         if plan_filter:
-
             where_query += """
                 AND sub.plan_name = %s
             """
@@ -7854,7 +6765,6 @@ def superadmin_subscriptions():
         # EXPIRY FILTER
 
         if expiry_filter == "expiring_soon":
-
             where_query += """
                 AND sub.end_date BETWEEN
                 CURDATE()
@@ -7865,7 +6775,6 @@ def superadmin_subscriptions():
             """
 
         elif expiry_filter == "expired":
-
             where_query += """
                 AND sub.end_date < CURDATE()
             """
@@ -7874,7 +6783,8 @@ def superadmin_subscriptions():
         # TOTAL FILTERED COUNT
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
@@ -7885,24 +6795,18 @@ def superadmin_subscriptions():
 
             {where_query}
 
-        """, params)
-
-        total_records = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            params,
         )
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_records = cursor.fetchone()["total"] or 0
+
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         # =====================================
         # MAIN SUBSCRIPTION QUERY
@@ -7910,12 +6814,10 @@ def superadmin_subscriptions():
 
         query_params = params.copy()
 
-        query_params.extend([
-            per_page,
-            offset
-        ])
+        query_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT
 
@@ -7950,7 +6852,9 @@ def superadmin_subscriptions():
 
             LIMIT %s OFFSET %s
 
-        """, query_params)
+        """,
+            query_params,
+        )
 
         subscriptions = cursor.fetchall()
 
@@ -7963,10 +6867,7 @@ def superadmin_subscriptions():
             FROM subscriptions
         """)
 
-        total_subscriptions = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        total_subscriptions = cursor.fetchone()["total"] or 0
 
         cursor.execute("""
             SELECT COUNT(*) AS total
@@ -7974,10 +6875,7 @@ def superadmin_subscriptions():
             WHERE LOWER(status) = 'active'
         """)
 
-        active_subscriptions = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        active_subscriptions = cursor.fetchone()["total"] or 0
 
         cursor.execute("""
             SELECT COUNT(*) AS total
@@ -7986,10 +6884,7 @@ def superadmin_subscriptions():
             OR end_date < CURDATE()
         """)
 
-        expired_subscriptions = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        expired_subscriptions = cursor.fetchone()["total"] or 0
 
         cursor.execute("""
 
@@ -8006,10 +6901,7 @@ def superadmin_subscriptions():
 
         """)
 
-        renewal_due = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        renewal_due = cursor.fetchone()["total"] or 0
 
         # =====================================
         # TOTAL REVENUE
@@ -8030,10 +6922,7 @@ def superadmin_subscriptions():
 
         """)
 
-        total_revenue = (
-            cursor.fetchone()["revenue"]
-            or 0
-        )
+        total_revenue = cursor.fetchone()["revenue"] or 0
 
         # =====================================
         # PLAN DROPDOWN
@@ -8065,66 +6954,51 @@ def superadmin_subscriptions():
             WHERE status = 'New'
         """)
 
-        new_leads_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        new_leads_count = cursor.fetchone()["total"] or 0
 
         # =====================================
         # RENDER
         # =====================================
 
         return render_template(
-
             "superadmin/subscriptions_admin.html",
-
             subscriptions=subscriptions,
-
             total_subscriptions=total_subscriptions,
             active_subscriptions=active_subscriptions,
             expired_subscriptions=expired_subscriptions,
             renewal_due=renewal_due,
             total_revenue=total_revenue,
-
             plans=plans,
-
             total_records=total_records,
             page=page,
             total_pages=total_pages,
-
             search=search,
             status_filter=status_filter,
             plan_filter=plan_filter,
             expiry_filter=expiry_filter,
-
             new_leads_count=new_leads_count,
-
             role="admin",
             school_name="Admin Panel",
-            active_page="subscriptions"
-
+            active_page="subscriptions",
         )
 
     except Exception as e:
-
-        print(
-            "SUBSCRIPTION ERROR:",
-            e
-        )
+        print("SUBSCRIPTION ERROR:", e)
 
         return f"Unable to load subscriptions ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 🔔 SUPER ADMIN - RENEWAL CENTER
 # =========================================================
+
 
 @app.route("/superadmin/renewals")
 @admin_required
@@ -8134,40 +7008,23 @@ def superadmin_renewals():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        search = (
-            request.args.get("search") or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        status_filter = (
-            request.args.get("status") or ""
-        ).strip()
+        status_filter = (request.args.get("status") or "").strip()
 
-        plan_filter = (
-            request.args.get("plan") or ""
-        ).strip()
+        plan_filter = (request.args.get("plan") or "").strip()
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 5
 
         if page < 1:
             page = 1
 
-        valid_status = [
-            "",
-            "expired",
-            "today",
-            "7",
-            "30"
-        ]
+        valid_status = ["", "expired", "today", "7", "30"]
 
         if status_filter not in valid_status:
             status_filter = ""
@@ -8190,7 +7047,6 @@ def superadmin_renewals():
         # ================= SEARCH =================
 
         if search:
-
             base_query += """
 
                 AND (
@@ -8204,17 +7060,11 @@ def superadmin_renewals():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword,
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword, keyword, keyword])
 
         # ================= PLAN FILTER =================
 
         if plan_filter:
-
             base_query += """
                 AND sub.plan_name = %s
             """
@@ -8224,66 +7074,55 @@ def superadmin_renewals():
         # ================= STATUS FILTER =================
 
         if status_filter == "expired":
-
             base_query += """
                 AND DATEDIFF(sub.end_date, CURDATE()) < 0
             """
 
         elif status_filter == "today":
-
             base_query += """
                 AND DATEDIFF(sub.end_date, CURDATE()) = 0
             """
 
         elif status_filter == "7":
-
             base_query += """
                 AND DATEDIFF(sub.end_date, CURDATE()) BETWEEN 1 AND 7
             """
 
         elif status_filter == "30":
-
             base_query += """
                 AND DATEDIFF(sub.end_date, CURDATE()) BETWEEN 1 AND 30
             """
 
         # ================= TOTAL FILTERED RECORDS =================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
             {base_query}
 
-        """, params)
-
-        total_records = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            params,
         )
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_records = cursor.fetchone()["total"] or 0
+
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         # ================= MAIN DATA =================
 
         query_params = params.copy()
 
-        query_params.extend([
-            per_page,
-            offset
-        ])
+        query_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT
 
@@ -8331,55 +7170,45 @@ def superadmin_renewals():
 
             LIMIT %s OFFSET %s
 
-        """, query_params)
+        """,
+            query_params,
+        )
 
         renewals = cursor.fetchall()
 
         # ================= FORMAT RENEWALS =================
 
         for item in renewals:
-
             days_left = item.get("days_left")
 
             if days_left is None:
-
                 item["days_left"] = -999
                 item["alert_type"] = "expired"
                 item["alert_label"] = "No Expiry Date"
 
             elif days_left < 0:
-
                 item["alert_type"] = "expired"
                 item["alert_label"] = "Expired"
 
             elif days_left == 0:
-
                 item["alert_type"] = "today"
                 item["alert_label"] = "Expires Today"
 
             elif days_left <= 7:
-
                 item["alert_type"] = "warning"
                 item["alert_label"] = "Urgent Renewal"
 
             elif days_left <= 30:
-
                 item["alert_type"] = "safe"
                 item["alert_label"] = "Renewal Due"
 
             else:
-
                 item["alert_type"] = "safe"
                 item["alert_label"] = "Active"
 
-            phone = (
-                item.get("school_phone")
-                or ""
-            )
+            phone = item.get("school_phone") or ""
 
-            phone = "".join(
-                filter(str.isdigit, phone)
-            )
+            phone = "".join(filter(str.isdigit, phone))
 
             if len(phone) == 10:
                 phone = "91" + phone
@@ -8407,10 +7236,7 @@ def superadmin_renewals():
 
         """)
 
-        expired_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        expired_count = cursor.fetchone()["total"] or 0
 
         cursor.execute("""
 
@@ -8422,10 +7248,7 @@ def superadmin_renewals():
 
         """)
 
-        today_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        today_count = cursor.fetchone()["total"] or 0
 
         cursor.execute("""
 
@@ -8437,10 +7260,7 @@ def superadmin_renewals():
 
         """)
 
-        week_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        week_count = cursor.fetchone()["total"] or 0
 
         cursor.execute("""
 
@@ -8452,10 +7272,7 @@ def superadmin_renewals():
 
         """)
 
-        month_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        month_count = cursor.fetchone()["total"] or 0
 
         # ================= PLAN DROPDOWN =================
 
@@ -8487,51 +7304,34 @@ def superadmin_renewals():
 
         """)
 
-        new_leads_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        new_leads_count = cursor.fetchone()["total"] or 0
 
         return render_template(
-
             "superadmin/renewals_admin.html",
-
             renewals=renewals,
-
             expired_count=expired_count,
             today_count=today_count,
             week_count=week_count,
             month_count=month_count,
-
             plans=plans,
-
             search=search,
             status_filter=status_filter,
             plan_filter=plan_filter,
-
             page=page,
             total_pages=total_pages,
             total_records=total_records,
-
             new_leads_count=new_leads_count,
-
             role="admin",
             school_name="Admin Panel",
-            active_page="renewals"
-
+            active_page="renewals",
         )
 
     except Exception as e:
-
-        print(
-            "❌ RENEWAL CENTER ERROR:",
-            e
-        )
+        print("❌ RENEWAL CENTER ERROR:", e)
 
         return f"Unable to load renewal center ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -8543,10 +7343,8 @@ def superadmin_renewals():
 # 📧 SUPER ADMIN - SEND RENEWAL EMAIL
 # =========================================================
 
-@app.route(
-    "/superadmin/renewals/email/<int:subscription_id>",
-    methods=["POST"]
-)
+
+@app.route("/superadmin/renewals/email/<int:subscription_id>", methods=["POST"])
 @admin_required
 def send_renewal_email(subscription_id):
 
@@ -8554,7 +7352,6 @@ def send_renewal_email(subscription_id):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -8562,16 +7359,14 @@ def send_renewal_email(subscription_id):
         # KEEP CURRENT FILTER URL
         # =====================================
 
-        back_url = (
-            request.referrer
-            or url_for("superadmin_renewals")
-        )
+        back_url = request.referrer or url_for("superadmin_renewals")
 
         # =====================================
         # GET SUBSCRIPTION + SCHOOL
         # =====================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -8599,41 +7394,26 @@ def send_renewal_email(subscription_id):
 
             LIMIT 1
 
-        """, (
-            subscription_id,
-        ))
+        """,
+            (subscription_id,),
+        )
 
         sub = cursor.fetchone()
 
         if not sub:
-
-            flash(
-                "Subscription not found ❌",
-                "danger"
-            )
+            flash("Subscription not found ❌", "danger")
 
             return redirect(back_url)
 
-        school_email = (
-            sub.get("school_email")
-            or ""
-        ).strip().lower()
+        school_email = (sub.get("school_email") or "").strip().lower()
 
         if not school_email:
-
-            flash(
-                "School email not found ❌",
-                "danger"
-            )
+            flash("School email not found ❌", "danger")
 
             return redirect(back_url)
 
         if not is_valid_email(school_email):
-
-            flash(
-                "Invalid school email ❌",
-                "danger"
-            )
+            flash("Invalid school email ❌", "danger")
 
             return redirect(back_url)
 
@@ -8641,10 +7421,7 @@ def send_renewal_email(subscription_id):
         # EMAIL CONTENT
         # =====================================
 
-        subject = (
-            "Subscription Renewal Reminder - "
-            "SchoolSphere ERP"
-        )
+        subject = "Subscription Renewal Reminder - SchoolSphere ERP"
 
         body = f"""
 
@@ -8716,19 +7493,15 @@ def send_renewal_email(subscription_id):
         # SEND EMAIL
         # =====================================
 
-        email_sent = send_email(
-            school_email,
-            subject,
-            body
-        )
+        email_sent = send_email(school_email, subject, body)
 
         if email_sent is True:
-
             # =====================================
             # LOG EMAIL
             # =====================================
 
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 INSERT INTO subscription_email_logs
                 (
@@ -8745,61 +7518,43 @@ def send_renewal_email(subscription_id):
                     NOW()
                 )
 
-            """, (
-                sub["school_id"],
-                sub["id"],
-                "admin_renewal_reminder"
-            ))
+            """,
+                (sub["school_id"], sub["id"], "admin_renewal_reminder"),
+            )
 
             conn.commit()
 
-            flash(
-                "Renewal reminder email sent ✅",
-                "success"
-            )
+            flash("Renewal reminder email sent ✅", "success")
 
         else:
-
             conn.rollback()
 
-            flash(
-                "Email sending failed ❌",
-                "danger"
-            )
+            flash("Email sending failed ❌", "danger")
 
         return redirect(back_url)
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ RENEWAL EMAIL ERROR:",
-            e
-        )
+        print("❌ RENEWAL EMAIL ERROR:", e)
 
-        flash(
-            "Renewal email failed ❌",
-            "danger"
-        )
+        flash("Renewal email failed ❌", "danger")
 
-        return redirect(
-            request.referrer
-            or url_for("superadmin_renewals")
-        )
+        return redirect(request.referrer or url_for("superadmin_renewals"))
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 💰 SUPER ADMIN - PAYMENT MANAGEMENT
 # =========================================================
+
 
 @app.route("/superadmin/payments")
 @admin_required
@@ -8809,7 +7564,6 @@ def superadmin_payments():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -8817,11 +7571,7 @@ def superadmin_payments():
         # PAGINATION
         # =====================================
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         per_page = 10
 
@@ -8832,27 +7582,13 @@ def superadmin_payments():
         # FILTERS
         # =====================================
 
-        search = (
-            request.args.get("search")
-            or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        status_filter = (
-            request.args.get("status")
-            or ""
-        ).strip().lower()
+        status_filter = (request.args.get("status") or "").strip().lower()
 
-        gateway_filter = (
-            request.args.get("gateway")
-            or ""
-        ).strip()
+        gateway_filter = (request.args.get("gateway") or "").strip()
 
-        valid_status = [
-            "",
-            "success",
-            "failed",
-            "pending"
-        ]
+        valid_status = ["", "success", "failed", "pending"]
 
         if status_filter not in valid_status:
             status_filter = ""
@@ -8882,7 +7618,6 @@ def superadmin_payments():
         # =====================================
 
         if search:
-
             base_query += """
 
                 AND (
@@ -8899,20 +7634,13 @@ def superadmin_payments():
 
             keyword = f"%{search}%"
 
-            params.extend([
-                keyword,
-                keyword,
-                keyword,
-                keyword,
-                keyword
-            ])
+            params.extend([keyword, keyword, keyword, keyword, keyword])
 
         # =====================================
         # STATUS FILTER
         # =====================================
 
         if status_filter:
-
             base_query += """
 
                 AND LOWER(pl.payment_status) = %s
@@ -8926,7 +7654,6 @@ def superadmin_payments():
         # =====================================
 
         if gateway_filter:
-
             base_query += """
 
                 AND pl.payment_gateway = %s
@@ -8939,30 +7666,25 @@ def superadmin_payments():
         # TOTAL RECORDS
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT COUNT(*) AS total
 
             {base_query}
 
-        """, params)
-
-        total_records = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            params,
         )
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_records = cursor.fetchone()["total"] or 0
+
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         # =====================================
         # MAIN QUERY
@@ -8970,12 +7692,10 @@ def superadmin_payments():
 
         query_params = params.copy()
 
-        query_params.extend([
-            per_page,
-            offset
-        ])
+        query_params.extend([per_page, offset])
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
 
             SELECT
 
@@ -9005,7 +7725,9 @@ def superadmin_payments():
 
             LIMIT %s OFFSET %s
 
-        """, query_params)
+        """,
+            query_params,
+        )
 
         payments = cursor.fetchall()
 
@@ -9092,46 +7814,32 @@ def superadmin_payments():
         # =====================================
 
         return render_template(
-
             "superadmin/payments_admin.html",
-
             payments=payments,
-
             total_transactions=total_transactions,
             successful_payments=successful_payments,
             failed_payments=failed_payments,
             pending_payments=pending_payments,
             total_revenue=total_revenue,
-
             gateways=gateways,
-
             search=search,
             status_filter=status_filter,
             gateway_filter=gateway_filter,
-
             page=page,
             total_pages=total_pages,
             total_records=total_records,
-
             new_leads_count=new_leads_count,
-
             role="admin",
             school_name="Admin Panel",
-            active_page="payments"
-
+            active_page="payments",
         )
 
     except Exception as e:
-
-        print(
-            "PAYMENTS ERROR:",
-            e
-        )
+        print("PAYMENTS ERROR:", e)
 
         return f"Unable to load payments ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -9139,8 +7847,11 @@ def superadmin_payments():
             conn.close()
 
             # =========================================================
+
+
 # 📤 SUPER ADMIN - REUSABLE EXCEL EXPORT
 # =========================================================
+
 
 @app.route("/superadmin/export/excel/<export_type>")
 @admin_required
@@ -9150,7 +7861,6 @@ def superadmin_export_excel(export_type):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -9166,10 +7876,8 @@ def superadmin_export_excel(export_type):
         params = []
         filename = f"{export_type}_export.xlsx"
 
-        
         # ================= PAYMENTS =================
         if export_type == "payments":
-
             query = """
                 SELECT
                     pl.invoice_number,
@@ -9215,7 +7923,6 @@ def superadmin_export_excel(export_type):
 
         # ================= SUBSCRIPTIONS =================
         elif export_type == "subscriptions":
-
             query = """
                 SELECT
                     s.name AS school_name,
@@ -9248,7 +7955,6 @@ def superadmin_export_excel(export_type):
 
         # ================= RENEWALS =================
         elif export_type == "renewals":
-
             query = """
                 SELECT
                     s.name AS school_name,
@@ -9295,7 +8001,6 @@ def superadmin_export_excel(export_type):
 
         # ================= LEADS =================
         elif export_type == "leads":
-
             query = """
                 SELECT
                     lead_source,
@@ -9337,7 +8042,6 @@ def superadmin_export_excel(export_type):
 
         # ================= USERS =================
         elif export_type == "users":
-
             query = """
                 SELECT
                     u.name,
@@ -9399,44 +8103,30 @@ def superadmin_export_excel(export_type):
         output = io.BytesIO()
 
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
-
-            df.to_excel(
-                writer,
-                index=False,
-                sheet_name="Export",
-                startrow=2
-            )
+            df.to_excel(writer, index=False, sheet_name="Export", startrow=2)
 
             workbook = writer.book
             sheet = writer.sheets["Export"]
 
             sheet["A1"] = f"SchoolSphere ERP - {export_type.title()} Export"
-            sheet["A2"] = f"Generated On: {datetime.now().strftime('%d-%m-%Y %I:%M %p')}"
+            sheet["A2"] = (
+                f"Generated On: {datetime.now().strftime('%d-%m-%Y %I:%M %p')}"
+            )
 
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
             from openpyxl.utils import get_column_letter
 
-            title_font = Font(
-                bold=True,
-                size=16,
-                color="0F172A"
-            )
+            title_font = Font(bold=True, size=16, color="0F172A")
 
-            header_font = Font(
-                bold=True,
-                color="FFFFFF"
-            )
+            header_font = Font(bold=True, color="FFFFFF")
 
-            header_fill = PatternFill(
-                "solid",
-                fgColor="0EA5A4"
-            )
+            header_fill = PatternFill("solid", fgColor="0EA5A4")
 
             thin_border = Border(
                 left=Side(style="thin", color="E2E8F0"),
                 right=Side(style="thin", color="E2E8F0"),
                 top=Side(style="thin", color="E2E8F0"),
-                bottom=Side(style="thin", color="E2E8F0")
+                bottom=Side(style="thin", color="E2E8F0"),
             )
 
             sheet["A1"].font = title_font
@@ -9474,26 +8164,25 @@ def superadmin_export_excel(export_type):
             output,
             as_attachment=True,
             download_name=filename,
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
     except Exception as e:
-
         print("❌ ADMIN EXCEL EXPORT ERROR:", e)
         return f"Export failed ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
- 
+
 # =========================================================
 # 📊 SUPER ADMIN - REPORTS & ANALYTICS
 # =========================================================
+
 
 @app.route("/superadmin/reports")
 @admin_required
@@ -9503,7 +8192,6 @@ def superadmin_reports():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -9511,28 +8199,13 @@ def superadmin_reports():
         # FILTERS
         # =====================================
 
-        from_date = (
-            request.args.get("from_date")
-            or ""
-        ).strip()
+        from_date = (request.args.get("from_date") or "").strip()
 
-        to_date = (
-            request.args.get("to_date")
-            or ""
-        ).strip()
+        to_date = (request.args.get("to_date") or "").strip()
 
-        report_type = (
-            request.args.get("report_type")
-            or ""
-        ).strip()
+        report_type = (request.args.get("report_type") or "").strip()
 
-        valid_report_types = [
-            "",
-            "revenue",
-            "subscriptions",
-            "leads",
-            "certificates"
-        ]
+        valid_report_types = ["", "revenue", "subscriptions", "leads", "certificates"]
 
         if report_type not in valid_report_types:
             report_type = ""
@@ -9577,7 +8250,6 @@ def superadmin_reports():
         school_params = []
 
         if from_date:
-
             date_filter_payment += " AND DATE(created_at) >= %s"
             payment_params.append(from_date)
 
@@ -9597,7 +8269,6 @@ def superadmin_reports():
             school_params.append(from_date)
 
         if to_date:
-
             date_filter_payment += " AND DATE(created_at) <= %s"
             payment_params.append(to_date)
 
@@ -9620,55 +8291,56 @@ def superadmin_reports():
         # KPI CARDS
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT COALESCE(SUM(amount), 0) AS revenue
             FROM payment_logs
             WHERE LOWER(payment_status) = 'success'
             {date_filter_payment}
-        """, payment_params)
-
-        total_revenue = (
-            cursor.fetchone()["revenue"]
-            or 0
+        """,
+            payment_params,
         )
 
-        cursor.execute(f"""
+        total_revenue = cursor.fetchone()["revenue"] or 0
+
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM schools
             WHERE 1=1
             {date_filter_school}
-        """, school_params)
-
-        new_schools = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            school_params,
         )
 
-        cursor.execute(f"""
+        new_schools = cursor.fetchone()["total"] or 0
+
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM subscriptions
             WHERE LOWER(status) = 'active'
             {date_filter_sub}
-        """, sub_params)
-
-        active_subscriptions = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            sub_params,
         )
 
-        cursor.execute(f"""
+        active_subscriptions = cursor.fetchone()["total"] or 0
+
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM lead_requests
             WHERE status = 'Converted'
             {date_filter_leads}
-        """, lead_params)
-
-        converted_leads = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            lead_params,
         )
 
-        cursor.execute(f"""
+        converted_leads = cursor.fetchone()["total"] or 0
+
+        cursor.execute(
+            f"""
             SELECT
                 (
                     SELECT COUNT(*)
@@ -9683,18 +8355,18 @@ def superadmin_reports():
                     WHERE 1=1
                     {date_filter_bonafide}
                 ) AS total
-        """, tc_params + bonafide_params)
-
-        total_certificates = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            tc_params + bonafide_params,
         )
+
+        total_certificates = cursor.fetchone()["total"] or 0
 
         # =====================================
         # REVENUE TREND CHART
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT
                 DATE_FORMAT(MIN(created_at), '%b %Y') AS month,
                 SUM(amount) AS revenue,
@@ -9710,25 +8382,22 @@ def superadmin_reports():
                 report_year,
                 report_month
             LIMIT 12
-        """, payment_params)
+        """,
+            payment_params,
+        )
 
         revenue_rows = cursor.fetchall()
 
-        revenue_labels = [
-            row["month"]
-            for row in revenue_rows
-        ]
+        revenue_labels = [row["month"] for row in revenue_rows]
 
-        revenue_values = [
-            float(row["revenue"] or 0)
-            for row in revenue_rows
-        ]
+        revenue_values = [float(row["revenue"] or 0) for row in revenue_rows]
 
         # =====================================
         # PLAN DISTRIBUTION
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT
                 COALESCE(plan_name, 'Unknown') AS plan_name,
                 COUNT(*) AS total
@@ -9737,25 +8406,22 @@ def superadmin_reports():
             {date_filter_sub}
             GROUP BY plan_name
             ORDER BY total DESC
-        """, sub_params)
+        """,
+            sub_params,
+        )
 
         plan_rows = cursor.fetchall()
 
-        plan_labels = [
-            row["plan_name"]
-            for row in plan_rows
-        ]
+        plan_labels = [row["plan_name"] for row in plan_rows]
 
-        plan_values = [
-            row["total"]
-            for row in plan_rows
-        ]
+        plan_values = [row["total"] for row in plan_rows]
 
         # =====================================
         # LEAD FUNNEL
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT
                 COALESCE(status, 'Unknown') AS status,
                 COUNT(*) AS total
@@ -9763,63 +8429,54 @@ def superadmin_reports():
             WHERE 1=1
             {date_filter_leads}
             GROUP BY status
-        """, lead_params)
+        """,
+            lead_params,
+        )
 
         lead_rows = cursor.fetchall()
 
-        lead_labels = [
-            row["status"]
-            for row in lead_rows
-        ]
+        lead_labels = [row["status"] for row in lead_rows]
 
-        lead_values = [
-            row["total"]
-            for row in lead_rows
-        ]
+        lead_values = [row["total"] for row in lead_rows]
 
         # =====================================
         # CERTIFICATE CHART
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM tc
             WHERE 1=1
             {date_filter_tc}
-        """, tc_params)
-
-        tc_count = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            tc_params,
         )
 
-        cursor.execute(f"""
+        tc_count = cursor.fetchone()["total"] or 0
+
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM bonafide
             WHERE 1=1
             {date_filter_bonafide}
-        """, bonafide_params)
-
-        bonafide_count = (
-            cursor.fetchone()["total"]
-            or 0
+        """,
+            bonafide_params,
         )
 
-        certificate_labels = [
-            "TC",
-            "Bonafide"
-        ]
+        bonafide_count = cursor.fetchone()["total"] or 0
 
-        certificate_values = [
-            tc_count,
-            bonafide_count
-        ]
+        certificate_labels = ["TC", "Bonafide"]
+
+        certificate_values = [tc_count, bonafide_count]
 
         # =====================================
         # TOP SCHOOLS TABLE
         # =====================================
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT
                 s.school_id,
                 s.name AS school_name,
@@ -9900,7 +8557,9 @@ def superadmin_reports():
                 total_students DESC
 
             LIMIT 10
-        """, payment_params + tc_params + bonafide_params)
+        """,
+            payment_params + tc_params + bonafide_params,
+        )
 
         top_schools = cursor.fetchall()
 
@@ -9914,10 +8573,7 @@ def superadmin_reports():
             WHERE status = 'New'
         """)
 
-        new_leads_count = (
-            cursor.fetchone()["total"]
-            or 0
-        )
+        new_leads_count = cursor.fetchone()["total"] or 0
 
         if report_type == "revenue":
             plan_labels = []
@@ -9957,53 +8613,43 @@ def superadmin_reports():
 
         return render_template(
             "superadmin/reports_admin.html",
-
             total_revenue=total_revenue,
             new_schools=new_schools,
             active_subscriptions=active_subscriptions,
             converted_leads=converted_leads,
             total_certificates=total_certificates,
-
             revenue_labels=revenue_labels,
             revenue_values=revenue_values,
-
             plan_labels=plan_labels,
             plan_values=plan_values,
-
             lead_labels=lead_labels,
             lead_values=lead_values,
-
             certificate_labels=certificate_labels,
             certificate_values=certificate_values,
-
             top_schools=top_schools,
-
             from_date=from_date,
             to_date=to_date,
             report_type=report_type,
-
             new_leads_count=new_leads_count,
-
             role="admin",
             school_name="Admin Panel",
-            active_page="reports"
+            active_page="reports",
         )
 
     except Exception as e:
-
         print("❌ REPORTS ERROR:", e)
 
         return f"Reports Error: {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
- # =========================================================
+
+# =========================================================
 # 📊 SUPER ADMIN - REPORTS EXCEL EXPORT
 # =========================================================
 @app.route("/superadmin/reports/export/excel")
@@ -10117,10 +8763,8 @@ def export_admin_reports_excel():
             left=Side(style="thin", color="E2E8F0"),
             right=Side(style="thin", color="E2E8F0"),
             top=Side(style="thin", color="E2E8F0"),
-            bottom=Side(style="thin", color="E2E8F0")
+            bottom=Side(style="thin", color="E2E8F0"),
         )
-
-        
 
         ws.merge_cells("A1:G1")
         ws["A1"] = "SchoolSphere ERP - Reports & Analytics"
@@ -10154,7 +8798,7 @@ def export_admin_reports_excel():
             "Plan",
             "Revenue",
             "Certificates",
-            "Status"
+            "Status",
         ]
 
         for col, header in enumerate(headers, 1):
@@ -10173,7 +8817,7 @@ def export_admin_reports_excel():
                 school["plan_name"],
                 school["revenue"],
                 school["certificates"],
-                school["status"]
+                school["status"],
             ]
 
             for c, value in enumerate(values, 1):
@@ -10187,22 +8831,14 @@ def export_admin_reports_excel():
         ws.freeze_panes = "A12"
         ws.auto_filter.ref = f"A{table_start}:G{last_row}"
 
-        widths = {
-            "A": 35,
-            "B": 35,
-            "C": 12,
-            "D": 16,
-            "E": 14,
-            "F": 14,
-            "G": 14
-        }
+        widths = {"A": 35, "B": 35, "C": 12, "D": 16, "E": 14, "F": 14, "G": 14}
 
         for col, width in widths.items():
             ws.column_dimensions[col].width = width
 
             for cell in ws["E"]:
                 if cell.row > table_start:
-                    cell.number_format = '₹#,##0.00'
+                    cell.number_format = "₹#,##0.00"
 
         wb.save(output)
         output.seek(0)
@@ -10211,7 +8847,7 @@ def export_admin_reports_excel():
             output,
             as_attachment=True,
             download_name="admin_reports_analytics.xlsx",
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
     except Exception as e:
@@ -10224,10 +8860,11 @@ def export_admin_reports_excel():
         if conn:
             conn.close()
 
- 
- # =========================================================
+
+# =========================================================
 # 📄 SUPER ADMIN - EXPORT REPORT PDF USING PDFKIT
 # =========================================================
+
 
 @app.route("/superadmin/reports/export/pdf")
 @admin_required
@@ -10237,7 +8874,6 @@ def export_admin_reports_pdf():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -10340,7 +8976,8 @@ def export_admin_reports_pdf():
 
         schools = cursor.fetchall()
 
-        html = render_template_string("""
+        html = render_template_string(
+            """
 
         <!DOCTYPE html>
         <html>
@@ -10502,7 +9139,7 @@ def export_admin_reports_pdf():
             active_subscriptions=active_subscriptions,
             converted_leads=converted_leads,
             total_certificates=total_certificates,
-            schools=schools
+            schools=schools,
         )
 
         options = {
@@ -10512,15 +9149,10 @@ def export_admin_reports_pdf():
             "margin-right": "10mm",
             "margin-bottom": "10mm",
             "margin-left": "10mm",
-            "enable-local-file-access": None
+            "enable-local-file-access": None,
         }
 
-        pdf = pdfkit.from_string(
-            html,
-            False,
-            configuration=pdf_config,
-            options=options
-        )
+        pdf = pdfkit.from_string(html, False, configuration=pdf_config, options=options)
 
         response = make_response(pdf)
 
@@ -10532,17 +9164,16 @@ def export_admin_reports_pdf():
         return response
 
     except Exception as e:
-
         print("❌ ADMIN REPORT PDF ERROR:", e)
         return f"PDF export failed ❌ {str(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # ⚙️ SUPER ADMIN - SETTINGS PAGE
@@ -10611,11 +9242,7 @@ def superadmin_settings():
         """)
 
         plans = [
-            {
-                "id": p[0],
-                "plan_name": p[1],
-                "monthly_price": p[2]
-            }
+            {"id": p[0], "plan_name": p[1], "monthly_price": p[2]}
             for p in cursor.fetchall()
         ]
 
@@ -10645,10 +9272,7 @@ def superadmin_settings():
         backup_rows = cursor.fetchall()
         backup_columns = [col[0] for col in cursor.description]
 
-        backup_logs = [
-            dict(zip(backup_columns, row))
-            for row in backup_rows
-        ]
+        backup_logs = [dict(zip(backup_columns, row)) for row in backup_rows]
 
         return render_template(
             "superadmin/superadmin_settings.html",
@@ -10660,7 +9284,7 @@ def superadmin_settings():
             pending_alerts=pending_alerts,
             role="admin",
             school_name="Admin Panel",
-            active_page="settings"
+            active_page="settings",
         )
 
     except Exception as e:
@@ -10672,7 +9296,8 @@ def superadmin_settings():
             cursor.close()
         if conn:
             conn.close()
-            
+
+
 # =========================================================
 # 💾 SAVE GENERAL SETTINGS
 # =========================================================
@@ -10684,27 +9309,16 @@ def save_general_settings():
     cursor = None
 
     try:
-
         # ================= FORM DATA =================
-        system_name = (
-            request.form.get("system_name") or ""
-        ).strip()
+        system_name = (request.form.get("system_name") or "").strip()
 
-        support_email = (
-            request.form.get("support_email") or ""
-        ).strip().lower()
+        support_email = (request.form.get("support_email") or "").strip().lower()
 
-        support_phone = (
-            request.form.get("support_phone") or ""
-        ).strip()
+        support_phone = (request.form.get("support_phone") or "").strip()
 
-        default_language = (
-            request.form.get("default_language") or "English"
-        ).strip()
+        default_language = (request.form.get("default_language") or "English").strip()
 
-        timezone_value = (
-            request.form.get("timezone") or "Asia/Kolkata"
-        ).strip()
+        timezone_value = (request.form.get("timezone") or "Asia/Kolkata").strip()
 
         # ================= VALIDATION =================
         if not system_name:
@@ -10714,7 +9328,6 @@ def save_general_settings():
             return "System name too long ❌"
 
         if support_email:
-
             if len(support_email) > 150:
                 return "Support email too long ❌"
 
@@ -10722,7 +9335,6 @@ def save_general_settings():
                 return "Invalid support email ❌"
 
         if support_phone:
-
             clean_phone = support_phone.replace("+", "")
 
             if not clean_phone.isdigit():
@@ -10731,17 +9343,12 @@ def save_general_settings():
             if len(support_phone) > 20:
                 return "Support phone too long ❌"
 
-        valid_languages = [
-            "English",
-            "Marathi"
-        ]
+        valid_languages = ["English", "Marathi"]
 
         if default_language not in valid_languages:
             return "Invalid language ❌"
 
-        valid_timezones = [
-            "Asia/Kolkata"
-        ]
+        valid_timezones = ["Asia/Kolkata"]
 
         if timezone_value not in valid_timezones:
             return "Invalid timezone ❌"
@@ -10773,26 +9380,14 @@ def save_general_settings():
         logo = request.files.get("system_logo")
 
         if logo and logo.filename:
-
-            original_filename = secure_filename(
-                logo.filename
-            )
+            original_filename = secure_filename(logo.filename)
 
             if "." not in original_filename:
                 return "Invalid logo file ❌"
 
-            extension = (
-                original_filename
-                .rsplit(".", 1)[1]
-                .lower()
-            )
+            extension = original_filename.rsplit(".", 1)[1].lower()
 
-            allowed_extensions = [
-                "png",
-                "jpg",
-                "jpeg",
-                "webp"
-            ]
+            allowed_extensions = ["png", "jpg", "jpeg", "webp"]
 
             if extension not in allowed_extensions:
                 return "Invalid logo file type ❌"
@@ -10805,16 +9400,9 @@ def save_general_settings():
             if file_size > 2 * 1024 * 1024:
                 return "Logo size must be below 2 MB ❌"
 
-            upload_folder = os.path.join(
-                "static",
-                "uploads",
-                "system"
-            )
+            upload_folder = os.path.join("static", "uploads", "system")
 
-            os.makedirs(
-                upload_folder,
-                exist_ok=True
-            )
+            os.makedirs(upload_folder, exist_ok=True)
 
             new_filename = (
                 f"system_logo_{settings_id}_"
@@ -10822,40 +9410,27 @@ def save_general_settings():
                 f"{extension}"
             )
 
-            upload_path = os.path.join(
-                upload_folder,
-                new_filename
-            )
+            upload_path = os.path.join(upload_folder, new_filename)
 
             logo.save(upload_path)
 
-            logo_filename = (
-                f"uploads/system/{new_filename}"
-            )
+            logo_filename = f"uploads/system/{new_filename}"
 
             # ================= DELETE OLD LOGO =================
             if old_logo:
-
-                old_logo_path = os.path.join(
-                    "static",
-                    old_logo
-                )
+                old_logo_path = os.path.join("static", old_logo)
 
                 if os.path.exists(old_logo_path):
-
                     try:
                         os.remove(old_logo_path)
 
                     except Exception as delete_error:
-                        print(
-                            "⚠️ OLD LOGO DELETE ERROR:",
-                            delete_error
-                        )
+                        print("⚠️ OLD LOGO DELETE ERROR:", delete_error)
 
         # ================= UPDATE SETTINGS =================
         if logo_filename:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE system_settings
                 SET
                     system_name = %s,
@@ -10866,19 +9441,21 @@ def save_general_settings():
                     system_logo = %s,
                     updated_at = NOW()
                 WHERE id = %s
-            """, (
-                system_name,
-                support_email,
-                support_phone,
-                default_language,
-                timezone_value,
-                logo_filename,
-                settings_id
-            ))
+            """,
+                (
+                    system_name,
+                    support_email,
+                    support_phone,
+                    default_language,
+                    timezone_value,
+                    logo_filename,
+                    settings_id,
+                ),
+            )
 
         else:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE system_settings
                 SET
                     system_name = %s,
@@ -10888,14 +9465,16 @@ def save_general_settings():
                     timezone = %s,
                     updated_at = NOW()
                 WHERE id = %s
-            """, (
-                system_name,
-                support_email,
-                support_phone,
-                default_language,
-                timezone_value,
-                settings_id
-            ))
+            """,
+                (
+                    system_name,
+                    support_email,
+                    support_phone,
+                    default_language,
+                    timezone_value,
+                    settings_id,
+                ),
+            )
 
         if cursor.rowcount < 1:
             conn.rollback()
@@ -10905,12 +9484,9 @@ def save_general_settings():
 
         print("✅ GENERAL SETTINGS UPDATED")
 
-        return redirect(
-            url_for("superadmin_settings") + "#general"
-        )
+        return redirect(url_for("superadmin_settings") + "#general")
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
@@ -10919,12 +9495,12 @@ def save_general_settings():
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 💳 SAVE SUBSCRIPTION SETTINGS
@@ -10937,18 +9513,11 @@ def save_subscription_settings():
     cursor = None
 
     try:
+        default_plan_id = (request.form.get("default_plan_id") or "").strip()
 
-        default_plan_id = (
-            request.form.get("default_plan_id") or ""
-        ).strip()
+        trial_days = (request.form.get("trial_days") or "").strip()
 
-        trial_days = (
-            request.form.get("trial_days") or ""
-        ).strip()
-
-        grace_period = (
-            request.form.get("grace_period") or ""
-        ).strip()
+        grace_period = (request.form.get("grace_period") or "").strip()
 
         # ================= VALIDATION =================
         if not default_plan_id:
@@ -10983,13 +9552,16 @@ def save_subscription_settings():
         cursor = conn.cursor()
 
         # ================= CHECK PLAN =================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id
             FROM subscription_plans
             WHERE id = %s
             AND is_active = 1
             LIMIT 1
-        """, (default_plan_id,))
+        """,
+            (default_plan_id,),
+        )
 
         if not cursor.fetchone():
             return "Selected subscription plan not found ❌"
@@ -11010,7 +9582,8 @@ def save_subscription_settings():
         settings_id = settings[0]
 
         # ================= UPDATE =================
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE system_settings
             SET
                 default_plan_id = %s,
@@ -11018,23 +9591,17 @@ def save_subscription_settings():
                 grace_period = %s,
                 updated_at = NOW()
             WHERE id = %s
-        """, (
-            default_plan_id,
-            trial_days,
-            grace_period,
-            settings_id
-        ))
+        """,
+            (default_plan_id, trial_days, grace_period, settings_id),
+        )
 
         conn.commit()
 
         print("✅ SUBSCRIPTION SETTINGS UPDATED")
 
-        return redirect(
-            url_for("superadmin_settings") + "#subscription"
-        )
+        return redirect(url_for("superadmin_settings") + "#subscription")
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
@@ -11043,12 +9610,12 @@ def save_subscription_settings():
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 🔐 SAVE SECURITY SETTINGS
@@ -11107,7 +9674,8 @@ def save_security_settings():
 
         settings_id = settings[0]
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE system_settings
             SET
                 password_length = %s,
@@ -11115,18 +9683,13 @@ def save_security_settings():
                 session_timeout = %s,
                 updated_at = NOW()
             WHERE id = %s
-        """, (
-            password_length,
-            login_attempt_limit,
-            session_timeout,
-            settings_id
-        ))
+        """,
+            (password_length, login_attempt_limit, session_timeout, settings_id),
+        )
 
         conn.commit()
 
-        return redirect(
-            url_for("superadmin_settings") + "#security"
-        )
+        return redirect(url_for("superadmin_settings") + "#security")
 
     except Exception as e:
         if conn:
@@ -11141,10 +9704,12 @@ def save_security_settings():
 
         if conn:
             conn.close()
- 
+
+
 # =========================================================
 # 💳 RENEW SUBSCRIPTION PAGE
 # =========================================================
+
 
 @app.route("/clerk/subscription/renew")
 @login_required
@@ -11152,30 +9717,26 @@ def renew_subscription():
 
     if session.get("clerk_role") != "clerk":
         abort(401)
-        
-    school_id = session.get(
-        "clerk_school_id"
-    )
+
+    school_id = session.get("clerk_school_id")
 
     if not school_id:
         abort(404)
-        
+
     conn = None
     cursor = None
 
     try:
-
         conn = get_connection()
 
-        cursor = conn.cursor(
-            dictionary=True
-        )
+        cursor = conn.cursor(dictionary=True)
 
         # =========================================
         # CURRENT SUBSCRIPTION
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -11212,9 +9773,9 @@ def renew_subscription():
 
             LIMIT 1
 
-        """, (
-            school_id,
-        ))
+        """,
+            (school_id,),
+        )
 
         subscription = cursor.fetchone()
 
@@ -11274,7 +9835,6 @@ def renew_subscription():
         current_feature_count = 0
 
         feature_columns = [
-
             "enable_tc_management",
             "enable_bonafide_management",
             "enable_import_export",
@@ -11283,13 +9843,12 @@ def renew_subscription():
             "enable_teacher_management",
             "enable_results",
             "enable_timetable",
-            "enable_notice_board"
-
+            "enable_notice_board",
         ]
 
         if subscription["plan_id"]:
-
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 SELECT *
 
@@ -11297,18 +9856,14 @@ def renew_subscription():
 
                 WHERE id = %s
 
-            """, (
-
-                subscription["plan_id"],
-
-            ))
+            """,
+                (subscription["plan_id"],),
+            )
 
             current_plan = cursor.fetchone()
 
             if current_plan:
-
                 for col in feature_columns:
-
                     if current_plan.get(col) == "Enabled":
                         current_feature_count += 1
 
@@ -11319,12 +9874,9 @@ def renew_subscription():
             days_left = -1
 
             if subscription.get("end_date"):
-
                 end_date = subscription["end_date"]
 
-                days_left = (
-                    end_date - date.today()
-                ).days
+                days_left = (end_date - date.today()).days
 
                 if days_left < 0:
                     days_left = 0
@@ -11334,39 +9886,27 @@ def renew_subscription():
         # =========================================
 
         return render_template(
-
             "subscription/renew.html",
-
             subscription=subscription,
-
             plans=plans,
-
             current_feature_count=current_feature_count,
-
             days_left=days_left,
-
             role="clerk",
-
-            active_page="subscription"
-
+            active_page="subscription",
         )
 
     except Exception as e:
-
-        print(
-            "❌ RENEW PAGE ERROR:",
-            e
-        )
+        print("❌ RENEW PAGE ERROR:", e)
 
         return "Renew page failed ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 📄 SAVE CERTIFICATE SETTINGS
@@ -11379,29 +9919,19 @@ def save_certificate_settings():
     cursor = None
 
     try:
-        tc_prefix = (
-            request.form.get("tc_prefix") or "TC"
-        ).strip().upper()
+        tc_prefix = (request.form.get("tc_prefix") or "TC").strip().upper()
 
-        bonafide_prefix = (
-            request.form.get("bonafide_prefix") or "BON"
-        ).strip().upper()
+        bonafide_prefix = (request.form.get("bonafide_prefix") or "BON").strip().upper()
 
-        auto_numbering = (
-            request.form.get("auto_numbering") or "Enabled"
-        ).strip()
+        auto_numbering = (request.form.get("auto_numbering") or "Enabled").strip()
 
         enable_certificate_labels = (
             request.form.get("enable_certificate_labels") or "Enabled"
         ).strip()
 
-        show_tc_logo = (
-            request.form.get("show_tc_logo") or "Enabled"
-        ).strip()
+        show_tc_logo = (request.form.get("show_tc_logo") or "Enabled").strip()
 
-        show_tc_watermark = (
-            request.form.get("show_tc_watermark") or "Enabled"
-        ).strip()
+        show_tc_watermark = (request.form.get("show_tc_watermark") or "Enabled").strip()
 
         show_bonafide_logo = (
             request.form.get("show_bonafide_logo") or "Enabled"
@@ -11432,7 +9962,7 @@ def save_certificate_settings():
             show_tc_logo,
             show_tc_watermark,
             show_bonafide_logo,
-            show_bonafide_watermark
+            show_bonafide_watermark,
         ]:
             if value not in valid_options:
                 return "Invalid certificate setting ❌"
@@ -11454,7 +9984,8 @@ def save_certificate_settings():
 
         settings_id = settings_row[0]
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE system_settings
             SET
                 tc_prefix = %s,
@@ -11467,23 +9998,23 @@ def save_certificate_settings():
                 show_bonafide_watermark = %s,
                 updated_at = NOW()
             WHERE id = %s
-        """, (
-            tc_prefix,
-            bonafide_prefix,
-            auto_numbering,
-            enable_certificate_labels,
-            show_tc_logo,
-            show_tc_watermark,
-            show_bonafide_logo,
-            show_bonafide_watermark,
-            settings_id
-        ))
+        """,
+            (
+                tc_prefix,
+                bonafide_prefix,
+                auto_numbering,
+                enable_certificate_labels,
+                show_tc_logo,
+                show_tc_watermark,
+                show_bonafide_logo,
+                show_bonafide_watermark,
+                settings_id,
+            ),
+        )
 
         conn.commit()
 
-        return redirect(
-            url_for("superadmin_settings") + "#certificate"
-        )
+        return redirect(url_for("superadmin_settings") + "#certificate")
 
     except Exception as e:
         if conn:
@@ -11499,7 +10030,7 @@ def save_certificate_settings():
         if conn:
             conn.close()
 
- 
+
 # =========================================================
 # 🧩 SAVE FEATURE MODULE SETTINGS
 # =========================================================
@@ -11511,7 +10042,6 @@ def save_feature_module_settings():
     cursor = None
 
     try:
-
         fields = [
             "enable_tc_management",
             "enable_bonafide_management",
@@ -11521,16 +10051,13 @@ def save_feature_module_settings():
             "enable_results",
             "enable_import_export",
             "enable_timetable",
-            "enable_notice_board"
+            "enable_notice_board",
         ]
 
         values = {}
 
         for field in fields:
-
-            value = (
-                request.form.get(field) or "Disabled"
-            ).strip()
+            value = (request.form.get(field) or "Disabled").strip()
 
             if value not in ["Enabled", "Disabled"]:
                 return "Invalid feature setting ❌"
@@ -11554,7 +10081,8 @@ def save_feature_module_settings():
 
         settings_id = settings_row[0]
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE system_settings
             SET
                 enable_tc_management = %s,
@@ -11568,29 +10096,28 @@ def save_feature_module_settings():
                 enable_notice_board = %s,
                 updated_at = NOW()
             WHERE id = %s
-        """, (
-            values["enable_tc_management"],
-            values["enable_bonafide_management"],
-            values["enable_attendance"],
-            values["enable_fee_management"],
-            values["enable_teacher_management"],
-            values["enable_results"],
-            values["enable_import_export"],
-            values["enable_timetable"],
-            values["enable_notice_board"],
-            settings_id
-        ))
+        """,
+            (
+                values["enable_tc_management"],
+                values["enable_bonafide_management"],
+                values["enable_attendance"],
+                values["enable_fee_management"],
+                values["enable_teacher_management"],
+                values["enable_results"],
+                values["enable_import_export"],
+                values["enable_timetable"],
+                values["enable_notice_board"],
+                settings_id,
+            ),
+        )
 
         conn.commit()
 
         print("✅ FEATURE MODULE SETTINGS UPDATED")
 
-        return redirect(
-            url_for("superadmin_settings") + "#modules"
-        )
+        return redirect(url_for("superadmin_settings") + "#modules")
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
@@ -11599,13 +10126,11 @@ def save_feature_module_settings():
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
-
 
 
 # =========================================================
@@ -11619,46 +10144,28 @@ def save_payment_settings():
     cursor = None
 
     try:
-        payment_gateway = (
-            request.form.get("payment_gateway") or "Razorpay"
-        ).strip()
+        payment_gateway = (request.form.get("payment_gateway") or "Razorpay").strip()
 
-        razorpay_key_id = (
-            request.form.get("razorpay_key_id") or ""
-        ).strip()
+        razorpay_key_id = (request.form.get("razorpay_key_id") or "").strip()
 
-        razorpay_mode = (
-            request.form.get("razorpay_mode") or "Sandbox"
-        ).strip()
+        razorpay_mode = (request.form.get("razorpay_mode") or "Sandbox").strip()
 
-        currency = (
-            request.form.get("currency") or "INR"
-        ).strip().upper()
+        currency = (request.form.get("currency") or "INR").strip().upper()
 
-        gst_percentage = (
-            request.form.get("gst_percentage") or "18"
-        ).strip()
+        gst_percentage = (request.form.get("gst_percentage") or "18").strip()
 
         # ================= VALIDATION =================
-        allowed_gateways = [
-            "Razorpay",
-            "Disabled"
-        ]
+        allowed_gateways = ["Razorpay", "Disabled"]
 
         if payment_gateway not in allowed_gateways:
             return "Invalid payment gateway ❌"
 
-        allowed_modes = [
-            "Sandbox",
-            "Live"
-        ]
+        allowed_modes = ["Sandbox", "Live"]
 
         if razorpay_mode not in allowed_modes:
             return "Invalid payment mode ❌"
 
-        allowed_currencies = [
-            "INR"
-        ]
+        allowed_currencies = ["INR"]
 
         if currency not in allowed_currencies:
             return "Invalid currency ❌"
@@ -11694,7 +10201,8 @@ def save_payment_settings():
 
         settings_id = settings_row[0]
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE system_settings
             SET
                 payment_gateway = %s,
@@ -11704,25 +10212,24 @@ def save_payment_settings():
                 gst_percentage = %s,
                 updated_at = NOW()
             WHERE id = %s
-        """, (
-            payment_gateway,
-            razorpay_key_id,
-            razorpay_mode,
-            currency,
-            gst_percentage,
-            settings_id
-        ))
+        """,
+            (
+                payment_gateway,
+                razorpay_key_id,
+                razorpay_mode,
+                currency,
+                gst_percentage,
+                settings_id,
+            ),
+        )
 
         conn.commit()
 
         print("✅ PAYMENT SETTINGS UPDATED")
 
-        return redirect(
-            url_for("superadmin_settings") + "#payment"
-        )
+        return redirect(url_for("superadmin_settings") + "#payment")
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
@@ -11731,20 +10238,17 @@ def save_payment_settings():
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 📧 SAVE SMTP SETTINGS
 # =========================================================
-@app.route(
-    "/superadmin/settings/smtp",
-    methods=["POST"]
-)
+@app.route("/superadmin/settings/smtp", methods=["POST"])
 @admin_required
 def save_smtp_settings():
 
@@ -11752,36 +10256,15 @@ def save_smtp_settings():
     cursor = None
 
     try:
+        smtp_email = (request.form.get("smtp_email") or "").strip().lower()
 
-        smtp_email = (
-            request.form.get(
-                "smtp_email"
-            ) or ""
-        ).strip().lower()
+        smtp_password = (request.form.get("smtp_password") or "").strip()
 
-        smtp_password = (
-            request.form.get(
-                "smtp_password"
-            ) or ""
-        ).strip()
+        smtp_server = (request.form.get("smtp_server") or "").strip()
 
-        smtp_server = (
-            request.form.get(
-                "smtp_server"
-            ) or ""
-        ).strip()
+        smtp_port = (request.form.get("smtp_port") or "").strip()
 
-        smtp_port = (
-            request.form.get(
-                "smtp_port"
-            ) or ""
-        ).strip()
-
-        smtp_tls = (
-            request.form.get(
-                "smtp_tls"
-            ) or "Enabled"
-        ).strip()
+        smtp_tls = (request.form.get("smtp_tls") or "Enabled").strip()
 
         # =====================================
         # REQUIRED
@@ -11800,9 +10283,7 @@ def save_smtp_settings():
         # EMAIL
         # =====================================
 
-        if not is_valid_email(
-            smtp_email
-        ):
+        if not is_valid_email(smtp_email):
             return "Invalid SMTP Email ❌"
 
         if len(smtp_email) > 150:
@@ -11810,7 +10291,7 @@ def save_smtp_settings():
 
         if len(smtp_server) > 255:
             return "SMTP server too long ❌"
-       
+
         # =====================================
         # PORT
         # =====================================
@@ -11827,10 +10308,7 @@ def save_smtp_settings():
         # TLS
         # =====================================
 
-        if smtp_tls not in [
-            "Enabled",
-            "Disabled"
-        ]:
+        if smtp_tls not in ["Enabled", "Disabled"]:
             return "Invalid TLS setting ❌"
 
         # =====================================
@@ -11871,7 +10349,8 @@ def save_smtp_settings():
         # UPDATE
         # =====================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE system_settings
             SET
 
@@ -11884,41 +10363,25 @@ def save_smtp_settings():
                 updated_at = NOW()
 
             WHERE id = %s
-        """, (
-
-            smtp_email,
-            smtp_password,
-            smtp_server,
-            smtp_port,
-            smtp_tls,
-            settings_id
-
-        ))
+        """,
+            (smtp_email, smtp_password, smtp_server, smtp_port, smtp_tls, settings_id),
+        )
 
         conn.commit()
 
-        print(
-            "✅ SMTP SETTINGS UPDATED"
-        )
+        print("✅ SMTP SETTINGS UPDATED")
 
-        return redirect(
-            url_for("superadmin_settings") + "#smtp"
-        )
+        return redirect(url_for("superadmin_settings") + "#smtp")
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ SMTP SETTINGS ERROR:",
-            e
-        )
+        print("❌ SMTP SETTINGS ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -11942,196 +10405,185 @@ def save_smtp_settings():
 
 #     try:
 
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+# =========================================
+# DB CONNECTION
+# =========================================
 
-        # conn = get_connection()
+# conn = get_connection()
 
-        # BACKUP DATABASE requires autocommit
+# BACKUP DATABASE requires autocommit
 
-        # conn.autocommit = True
+# conn.autocommit = True
 
-        # cursor = conn.cursor()
+# cursor = conn.cursor()
 
-        # =========================================
-        # ADMIN SESSION
-        # =========================================
+# =========================================
+# ADMIN SESSION
+# =========================================
 
-        # admin_id = session.get(
-        #     "admin_user_id"
-        # )
+# admin_id = session.get(
+#     "admin_user_id"
+# )
 
-        # if not admin_id:
-        #     return "Admin session missing ❌"
+# if not admin_id:
+#     return "Admin session missing ❌"
 
-        # =========================================
-        # BACKUP DIRECTORY
-        # =========================================
+# =========================================
+# BACKUP DIRECTORY
+# =========================================
 
-        # backup_dir = os.path.join(
-        #     os.getcwd(),
-        #     "backups"
-        # )
+# backup_dir = os.path.join(
+#     os.getcwd(),
+#     "backups"
+# )
 
-        # os.makedirs(
-        #     backup_dir,
-        #     exist_ok=True
-        # )
+# os.makedirs(
+#     backup_dir,
+#     exist_ok=True
+# )
 
-        # =========================================
-        # FILE NAME
-        # =========================================
+# =========================================
+# FILE NAME
+# =========================================
 
-        # backup_date = datetime.now()
+# backup_date = datetime.now()
 
-        # backup_file = (
-        #     f"backup_"
-        #     f"{backup_date.strftime('%Y%m%d_%H%M%S')}"
-        #     f".bak"
-        # )
+# backup_file = (
+#     f"backup_"
+#     f"{backup_date.strftime('%Y%m%d_%H%M%S')}"
+#     f".bak"
+# )
 
-        # backup_path = os.path.join(
-        #     backup_dir,
-        #     backup_file
-        # )
+# backup_path = os.path.join(
+#     backup_dir,
+#     backup_file
+# )
 
-        # =========================================
-        # SQL SERVER BACKUP COMMAND
-        # =========================================
+# =========================================
+# SQL SERVER BACKUP COMMAND
+# =========================================
 
-        # sql = f"""
-        # BACKUP DATABASE SchoolERP
-        # TO DISK = '{backup_path}'
-        # WITH INIT,
-        # NAME = 'Full Backup of SchoolERP';
-        # """
-        # cursor.execute(sql)
+# sql = f"""
+# BACKUP DATABASE SchoolERP
+# TO DISK = '{backup_path}'
+# WITH INIT,
+# NAME = 'Full Backup of SchoolERP';
+# """
+# cursor.execute(sql)
 
-        # =========================================
-        # FILE SIZE
-        # =========================================
+# =========================================
+# FILE SIZE
+# =========================================
 
-        # size_bytes = os.path.getsize(
-        #     backup_path
-        # )
+# size_bytes = os.path.getsize(
+#     backup_path
+# )
 
-        # size_mb = round(
-        #     size_bytes / (1024 * 1024),
-        #     2
-        # )
+# size_mb = round(
+#     size_bytes / (1024 * 1024),
+#     2
+# )
 
-        # backup_size = f"{size_mb} MB"
+# backup_size = f"{size_mb} MB"
 
-        # =========================================
-        # SAVE BACKUP LOG
-        # =========================================
+# =========================================
+# SAVE BACKUP LOG
+# =========================================
 
-        # cursor.execute("""
+# cursor.execute("""
 
-        #     INSERT INTO system_backup_logs
-        #     (
-        #         backup_file,
-        #         backup_status,
-        #         backup_size,
-        #         backup_date,
-        #         backup_type,
-        #         created_by
-        #     )
+#     INSERT INTO system_backup_logs
+#     (
+#         backup_file,
+#         backup_status,
+#         backup_size,
+#         backup_date,
+#         backup_type,
+#         created_by
+#     )
 
-        #     VALUES (%s, %s, %s, %s, %s, %s)
+#     VALUES (%s, %s, %s, %s, %s, %s)
 
-        # """, (
+# """, (
 
-        #     backup_file,
-        #     "Success",
-        #     backup_size,
-        #     backup_date,
-        #     "manual",
-        #     admin_id
+#     backup_file,
+#     "Success",
+#     backup_size,
+#     backup_date,
+#     "manual",
+#     admin_id
 
-        # ))
+# ))
 
-        # =========================================
-        # UPDATE SETTINGS
-        # =========================================
+# =========================================
+# UPDATE SETTINGS
+# =========================================
 
-    #     cursor.execute("""
+#     cursor.execute("""
 
-    #         UPDATE system_settings
+#         UPDATE system_settings
 
-    #         SET
+#         SET
 
-    #             last_backup = %s,
-    #             backup_status = %s,
-    #             updated_at = NOW()
+#             last_backup = %s,
+#             backup_status = %s,
+#             updated_at = NOW()
 
-    #         WHERE id = 1
+#         WHERE id = 1
 
-    #     """, (
+#     """, (
 
-    #         backup_date,
-    #         "Enabled"
+#         backup_date,
+#         "Enabled"
 
-    #     ))
+#     ))
 
-    #     conn.commit()
+#     conn.commit()
 
-    #     print("✅ REAL BACKUP CREATED")
+#     print("✅ REAL BACKUP CREATED")
 
-    #     return redirect(
-    #         url_for("superadmin_settings")
-    #     )
+#     return redirect(
+#         url_for("superadmin_settings")
+#     )
 
-    # except Exception as e:
+# except Exception as e:
 
-    #     if conn:
-    #         conn.rollback()
+#     if conn:
+#         conn.rollback()
 
-    #     print(
-    #         "❌ BACKUP ERROR:",
-    #         e
-    #     )
+#     print(
+#         "❌ BACKUP ERROR:",
+#         e
+#     )
 
-    #     return "Something went wrong ❌"
+#     return "Something went wrong ❌"
 
-    # finally:
+# finally:
 
-    #     if cursor:
-    #         cursor.close()
+#     if cursor:
+#         cursor.close()
 
-    #     if conn:
-    #         conn.close()
+#     if conn:
+#         conn.close()
 
- # =========================================================
+# =========================================================
 # 📥 DOWNLOAD BACKUP
 # =========================================================
 
-@app.route("/download-backup/<filename>"
-)
+
+@app.route("/download-backup/<filename>")
 @admin_required
 def download_backup(filename):
 
     filename = secure_filename(filename)
 
-    backup_path = os.path.join(
-        os.getcwd(),
-        "backups",
-        filename
-    )
+    backup_path = os.path.join(os.getcwd(), "backups", filename)
 
-    if not os.path.exists(
-        backup_path
-    ):
+    if not os.path.exists(backup_path):
         return "Backup file not found ❌"
 
-    return send_file(
+    return send_file(backup_path, as_attachment=True)
 
-        backup_path,
-
-        as_attachment=True
-
-    )
 
 # =========================================================
 # 🤖 AUTO BACKUP FUNCTION
@@ -12144,198 +10596,198 @@ def download_backup(filename):
 
 #     try:
 
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+# =========================================
+# DB CONNECTION
+# =========================================
 
-        # conn = get_connection()
+# conn = get_connection()
 
-        # conn.autocommit = True
+# conn.autocommit = True
 
-        # cursor = conn.cursor()
+# cursor = conn.cursor()
 
-        # =========================================
-        # BACKUP DIRECTORY
-        # =========================================
+# =========================================
+# BACKUP DIRECTORY
+# =========================================
 
-        # backup_dir = os.path.join(
-        #     os.getcwd(),
-        #     "backups"
-        # )
+# backup_dir = os.path.join(
+#     os.getcwd(),
+#     "backups"
+# )
 
-        # os.makedirs(
-        #     backup_dir,
-        #     exist_ok=True
-        # )
+# os.makedirs(
+#     backup_dir,
+#     exist_ok=True
+# )
 
-        # =========================================
-        # BACKUP FILE NAME
-        # =========================================
+# =========================================
+# BACKUP FILE NAME
+# =========================================
 
-        # backup_date = datetime.now()
+# backup_date = datetime.now()
 
-        # backup_file = (
-        #     f"auto_backup_"
-        #     f"{backup_date.strftime('%Y%m%d_%H%M%S')}"
-        #     f".bak"
-        # )
+# backup_file = (
+#     f"auto_backup_"
+#     f"{backup_date.strftime('%Y%m%d_%H%M%S')}"
+#     f".bak"
+# )
 
-        # backup_path = os.path.join(
-        #     backup_dir,
-        #     backup_file
-        # )
+# backup_path = os.path.join(
+#     backup_dir,
+#     backup_file
+# )
 
-        # =========================================
-        # SQL SERVER BACKUP
-        # =========================================
+# =========================================
+# SQL SERVER BACKUP
+# =========================================
 
-        # sql = f"""
+# sql = f"""
 
-        # BACKUP DATABASE SchoolERP
+# BACKUP DATABASE SchoolERP
 
-        # TO DISK = '{backup_path}'
+# TO DISK = '{backup_path}'
 
-        # WITH INIT,
-        # NAME = 'Auto Backup';
+# WITH INIT,
+# NAME = 'Auto Backup';
 
-        # """
+# """
 
-        # cursor.execute(sql)
+# cursor.execute(sql)
 
-        # =========================================
-        # FILE SIZE
-        # =========================================
+# =========================================
+# FILE SIZE
+# =========================================
 
-        # size_bytes = os.path.getsize(
-        #     backup_path
-        # )
+# size_bytes = os.path.getsize(
+#     backup_path
+# )
 
-        # size_mb = round(
-        #     size_bytes / (1024 * 1024),
-        #     2
-        # )
+# size_mb = round(
+#     size_bytes / (1024 * 1024),
+#     2
+# )
 
-        # backup_size = f"{size_mb} MB"
+# backup_size = f"{size_mb} MB"
 
-        # =========================================
-        # SAVE BACKUP LOG
-        # =========================================
+# =========================================
+# SAVE BACKUP LOG
+# =========================================
 
-        # cursor.execute("""
+# cursor.execute("""
 
-        #     INSERT INTO system_backup_logs
-        #     (
-        #         backup_file,
-        #         backup_status,
-        #         backup_size,
-        #         backup_date,
-        #         backup_type,
-        #         created_by
-        #     )
+#     INSERT INTO system_backup_logs
+#     (
+#         backup_file,
+#         backup_status,
+#         backup_size,
+#         backup_date,
+#         backup_type,
+#         created_by
+#     )
 
-        #     VALUES (%s, %s, %s, %s, %s, %s)
+#     VALUES (%s, %s, %s, %s, %s, %s)
 
-        # """, (
+# """, (
 
-        #     backup_file,
-        #     "Success",
-        #     backup_size,
-        #     backup_date,
-        #     "automatic",
-        #     1
+#     backup_file,
+#     "Success",
+#     backup_size,
+#     backup_date,
+#     "automatic",
+#     1
 
-        # ))
+# ))
 
-        # =========================================
-        # KEEP ONLY LATEST 10 BACKUPS
-        # =========================================
+# =========================================
+# KEEP ONLY LATEST 10 BACKUPS
+# =========================================
 
-        # cursor.execute("""
+# cursor.execute("""
 
-        #     SELECT
+#     SELECT
 
-        #         id,
-        #         backup_file
+#         id,
+#         backup_file
 
-        #     FROM system_backup_logs
-                       
-        #     WHERE backup_type = 'automatic'
+#     FROM system_backup_logs
 
-        #     ORDER BY backup_date DESC
+#     WHERE backup_type = 'automatic'
 
-        # """)
+#     ORDER BY backup_date DESC
 
-        # logs = cursor.fetchall()
+# """)
 
-        # =========================================
-        # DELETE OLD BACKUPS
-        # =========================================
+# logs = cursor.fetchall()
 
-        # if len(logs) > 10:
+# =========================================
+# DELETE OLD BACKUPS
+# =========================================
 
-        #     old_logs = logs[10:]
+# if len(logs) > 10:
 
-        #     for log in old_logs:
+#     old_logs = logs[10:]
 
-        #         old_id = log[0]
+#     for log in old_logs:
 
-        #         old_file = log[1]
+#         old_id = log[0]
 
-        #         old_path = os.path.join(
-        #             backup_dir,
-        #             old_file
-        #         )
+#         old_file = log[1]
 
-                # =================================
-                # DELETE FILE
-                # =================================
+#         old_path = os.path.join(
+#             backup_dir,
+#             old_file
+#         )
 
-                # if os.path.exists(old_path):
+# =================================
+# DELETE FILE
+# =================================
 
-                #     os.remove(old_path)
+# if os.path.exists(old_path):
 
-                # =================================
-                # DELETE DB LOG
-                # =================================
+#     os.remove(old_path)
 
-                # cursor.execute("""
+# =================================
+# DELETE DB LOG
+# =================================
 
-                #     DELETE FROM system_backup_logs
+# cursor.execute("""
 
-                #     WHERE id = %s
+#     DELETE FROM system_backup_logs
 
-                # """, (
+#     WHERE id = %s
 
-                #     old_id,
+# """, (
 
-                # ))
+#     old_id,
 
-        # =========================================
-        # SAVE ALL CHANGES
-        # =========================================
+# ))
 
-    #     conn.commit()
+# =========================================
+# SAVE ALL CHANGES
+# =========================================
 
-    #     print("✅ AUTO BACKUP CREATED")
+#     conn.commit()
 
-    # except Exception as e:
+#     print("✅ AUTO BACKUP CREATED")
 
-    #     print(
-    #         "❌ AUTO BACKUP ERROR:",
-    #         e
-    #     )
+# except Exception as e:
 
-    # finally:
+#     print(
+#         "❌ AUTO BACKUP ERROR:",
+#         e
+#     )
 
-    #     # =========================================
-    #     # CLOSE DB
-    #     # =========================================
+# finally:
 
-    #     if cursor:
-    #         cursor.close()
+#     # =========================================
+#     # CLOSE DB
+#     # =========================================
 
-    #     if conn:
-    #         conn.close()
+#     if cursor:
+#         cursor.close()
+
+#     if conn:
+#         conn.close()
 
 
 # =========================================================
@@ -12387,80 +10839,80 @@ def download_backup(filename):
 #         conn = get_connection()
 #         cursor = conn.cursor()
 
-        # =========================================
-        # GET BACKUP FILE
-        # =========================================
+# =========================================
+# GET BACKUP FILE
+# =========================================
 
-        # cursor.execute("""
+# cursor.execute("""
 
-        #     SELECT backup_file
-        #     FROM system_backup_logs
-        #     WHERE id = %s
+#     SELECT backup_file
+#     FROM system_backup_logs
+#     WHERE id = %s
 
-        # """, (backup_id,))
+# """, (backup_id,))
 
-        # backup = cursor.fetchone()
+# backup = cursor.fetchone()
 
-        # if not backup:
-        #     return "Backup not found ❌"
+# if not backup:
+#     return "Backup not found ❌"
 
-        # backup_file = backup[0]
+# backup_file = backup[0]
 
-        # =========================================
-        # FILE PATH
-        # =========================================
+# =========================================
+# FILE PATH
+# =========================================
 
-        # backup_path = os.path.join(
-        #     os.getcwd(),
-        #     "backups",
-        #     backup_file
-        # )
+# backup_path = os.path.join(
+#     os.getcwd(),
+#     "backups",
+#     backup_file
+# )
 
-        # =========================================
-        # DELETE FILE
-        # =========================================
+# =========================================
+# DELETE FILE
+# =========================================
 
-        # if os.path.exists(backup_path):
+# if os.path.exists(backup_path):
 
-        #     os.remove(backup_path)
+#     os.remove(backup_path)
 
-        # =========================================
-        # DELETE DB LOG
-        # =========================================
+# =========================================
+# DELETE DB LOG
+# =========================================
 
-    #     cursor.execute("""
+#     cursor.execute("""
 
-    #         DELETE FROM system_backup_logs
-    #         WHERE id = %s
+#         DELETE FROM system_backup_logs
+#         WHERE id = %s
 
-    #     """, (backup_id,))
+#     """, (backup_id,))
 
-    #     conn.commit()
+#     conn.commit()
 
-    #     print("✅ BACKUP DELETED")
+#     print("✅ BACKUP DELETED")
 
-    #     return redirect(
-    #         url_for("superadmin_settings")
-    #     )
+#     return redirect(
+#         url_for("superadmin_settings")
+#     )
 
-    # except Exception as e:
+# except Exception as e:
 
-    #     if conn:
-    #         conn.rollback()
+#     if conn:
+#         conn.rollback()
 
-    #     print("❌ DELETE BACKUP ERROR:", e)
+#     print("❌ DELETE BACKUP ERROR:", e)
 
-    #     return "Something went wrong ❌"
+#     return "Something went wrong ❌"
 
-    # finally:
+# finally:
 
-    #     if cursor:
-    #         cursor.close()
+#     if cursor:
+#         cursor.close()
 
-    #     if conn:
-    #         conn.close()
+#     if conn:
+#         conn.close()
 
- # =========================================================
+# =========================================================
 # ♻ SAFE BACKUP VERIFY RESTORE
 # =========================================================
 
@@ -12477,109 +10929,107 @@ def download_backup(filename):
 
 #     try:
 
-        # =========================================
-        # BACKUP PATH
-        # =========================================
+# =========================================
+# BACKUP PATH
+# =========================================
 
-        # backup_path = os.path.join(
-        #     os.getcwd(),
-        #     "backups",
-        #     filename
-        # )
+# backup_path = os.path.join(
+#     os.getcwd(),
+#     "backups",
+#     filename
+# )
 
-        # if not os.path.exists(backup_path):
+# if not os.path.exists(backup_path):
 
-        #     return "Backup file not found ❌"
-        
-        # if not filename.endswith(".bak"):
-            
-        #     return "Invalid backup file ❌"
+#     return "Backup file not found ❌"
 
-        # =========================================
-        # CONNECT
-        # =========================================
+# if not filename.endswith(".bak"):
 
-        # conn = get_connection()
+#     return "Invalid backup file ❌"
 
-        # conn.autocommit = True
+# =========================================
+# CONNECT
+# =========================================
 
-        # cursor = conn.cursor()
+# conn = get_connection()
 
-        # =========================================
-        # TEMP DATABASE NAME
-        # =========================================
+# conn.autocommit = True
 
-        # temp_db = "SchoolERP_TestRestore"
+# cursor = conn.cursor()
 
-        # =========================================
-        # DELETE OLD TEST DB
-        # =========================================
+# =========================================
+# TEMP DATABASE NAME
+# =========================================
 
-        # cursor.execute(f"""
+# temp_db = "SchoolERP_TestRestore"
 
-        # IF DB_ID('{temp_db}') IS NOT NULL
-        # BEGIN
+# =========================================
+# DELETE OLD TEST DB
+# =========================================
 
-        #     ALTER DATABASE [{temp_db}]
-        #     SET SINGLE_USER
-        #     WITH ROLLBACK IMMEDIATE;
+# cursor.execute(f"""
 
-        #     DROP DATABASE [{temp_db}];
+# IF DB_ID('{temp_db}') IS NOT NULL
+# BEGIN
 
-        # END
+#     ALTER DATABASE [{temp_db}]
+#     SET SINGLE_USER
+#     WITH ROLLBACK IMMEDIATE;
 
-        # """)
+#     DROP DATABASE [{temp_db}];
 
-        # =========================================
-        # RESTORE TO TEST DATABASE
-        # =========================================
+# END
 
-    #     restore_sql = f"""
+# """)
 
-    #     RESTORE DATABASE [{temp_db}]
+# =========================================
+# RESTORE TO TEST DATABASE
+# =========================================
 
-    #     FROM DISK = '{backup_path}'
+#     restore_sql = f"""
 
-    #     WITH
-    #     MOVE 'SchoolERP'
-    #     TO 'C:\\Program Files\\Microsoft SQL Server\\MSSQL17.SQLEXPRESS\\MSSQL\\DATA\\{temp_db}.mdf',
+#     RESTORE DATABASE [{temp_db}]
 
-    #     MOVE 'SchoolERP_log'
-    #     TO 'C:\\Program Files\\Microsoft SQL Server\\MSSQL17.SQLEXPRESS\\MSSQL\\DATA\\{temp_db}_log.ldf',
+#     FROM DISK = '{backup_path}'
 
-    #     REPLACE
+#     WITH
+#     MOVE 'SchoolERP'
+#     TO 'C:\\Program Files\\Microsoft SQL Server\\MSSQL17.SQLEXPRESS\\MSSQL\\DATA\\{temp_db}.mdf',
 
-    #     """
+#     MOVE 'SchoolERP_log'
+#     TO 'C:\\Program Files\\Microsoft SQL Server\\MSSQL17.SQLEXPRESS\\MSSQL\\DATA\\{temp_db}_log.ldf',
 
-    #     cursor.execute(restore_sql)
+#     REPLACE
 
-    #     print("✅ BACKUP VERIFIED SUCCESSFULLY")
+#     """
 
-    #     return redirect(
-    #         url_for("superadmin_settings")
-    #     )
+#     cursor.execute(restore_sql)
 
-    # except Exception as e:
+#     print("✅ BACKUP VERIFIED SUCCESSFULLY")
 
-    #     print("❌ RESTORE ERROR:", e)
+#     return redirect(
+#         url_for("superadmin_settings")
+#     )
 
-    #     return "Something went wrong ❌"
+# except Exception as e:
 
-    # finally:
+#     print("❌ RESTORE ERROR:", e)
 
-    #     if cursor:
-    #         cursor.close()
+#     return "Something went wrong ❌"
 
-    #     if conn:
-    #         conn.close()
-            
+# finally:
+
+#     if cursor:
+#         cursor.close()
+
+#     if conn:
+#         conn.close()
+
+
 # =========================================================
 # 🛠 SAVE MAINTENANCE SETTINGS (PRODUCTION SAFE)
 # =========================================================
-@app.route(
-    "/superadmin/settings/maintenance",
-    methods=["POST"]
-)
+@app.route("/superadmin/settings/maintenance", methods=["POST"])
 @admin_required
 def save_maintenance_settings():
 
@@ -12587,27 +11037,21 @@ def save_maintenance_settings():
     cursor = None
 
     try:
-
         # =========================================
         # GET FORM DATA
         # =========================================
 
         maintenance_mode = (
-            request.form.get("maintenance_mode") or "OFF"
-        ).strip().upper()
+            (request.form.get("maintenance_mode") or "OFF").strip().upper()
+        )
 
-        maintenance_message = (
-            request.form.get("maintenance_message") or ""
-        ).strip()
+        maintenance_message = (request.form.get("maintenance_message") or "").strip()
 
         # =========================================
         # VALIDATION
         # =========================================
 
-        if maintenance_mode not in [
-            "ON",
-            "OFF"
-        ]:
+        if maintenance_mode not in ["ON", "OFF"]:
             return "Invalid maintenance mode ❌"
 
         if len(maintenance_message) > 1000:
@@ -12618,22 +11062,13 @@ def save_maintenance_settings():
         # =========================================
 
         if not maintenance_message:
-
             if maintenance_mode == "ON":
-
                 maintenance_message = (
-                    "ERP system is currently "
-                    "under maintenance. "
-                    "Please try again later."
+                    "ERP system is currently under maintenance. Please try again later."
                 )
 
             else:
-
-                maintenance_message = (
-                    "System running normally"
-                )
-
-               
+                maintenance_message = "System running normally"
 
         # =========================================
         # DB CONNECTION
@@ -12668,7 +11103,8 @@ def save_maintenance_settings():
         # UPDATE SETTINGS
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             UPDATE system_settings
 
@@ -12680,13 +11116,9 @@ def save_maintenance_settings():
 
             WHERE id = %s
 
-        """, (
-
-            maintenance_mode,
-            maintenance_message,
-            settings_id
-
-        ))
+        """,
+            (maintenance_mode, maintenance_message, settings_id),
+        )
 
         if cursor.rowcount == 0:
             return "No settings updated ❌"
@@ -12701,33 +11133,23 @@ def save_maintenance_settings():
         # TERMINAL LOG
         # =========================================
 
-        print(
-            f"✅ MAINTENANCE MODE UPDATED: "
-            f"{maintenance_mode}"
-        )
+        print(f"✅ MAINTENANCE MODE UPDATED: {maintenance_mode}")
 
         # =========================================
         # REDIRECT
         # =========================================
 
-        return redirect(
-            url_for("superadmin_settings") + "#maintenance"
-        )
+        return redirect(url_for("superadmin_settings") + "#maintenance")
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        print(
-            "❌ MAINTENANCE SETTINGS ERROR:",
-            e
-        )
+        print("❌ MAINTENANCE SETTINGS ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -12735,7 +11157,7 @@ def save_maintenance_settings():
             conn.close()
 
 
- # =========================================================
+# =========================================================
 # 🎨 SAVE BRANDING SETTINGS
 # =========================================================
 @app.route("/superadmin/save-branding-settings", methods=["POST"])
@@ -12746,43 +11168,24 @@ def save_branding_settings():
     cursor = None
 
     try:
+        primary_color = (request.form.get("primary_color") or "#0EA5A4").strip()
 
-        primary_color = (
-            request.form.get("primary_color") or "#0EA5A4"
-        ).strip()
+        secondary_color = (request.form.get("secondary_color") or "#14B8A6").strip()
 
-        secondary_color = (
-            request.form.get("secondary_color") or "#14B8A6"
-        ).strip()
+        button_color = (request.form.get("button_color") or "#38BDF8").strip()
 
-        button_color = (
-            request.form.get("button_color") or "#38BDF8"
-        ).strip()
+        erp_version = (request.form.get("erp_version") or "").strip()
 
-        erp_version = (
-            request.form.get("erp_version") or ""
-        ).strip()
+        footer_text = (request.form.get("footer_text") or "").strip()
 
-        footer_text = (
-            request.form.get("footer_text") or ""
-        ).strip()
+        powered_by = (request.form.get("powered_by") or "").strip()
 
-        powered_by = (
-            request.form.get("powered_by") or ""
-        ).strip()
-
-        website_url = (
-            request.form.get("website_url") or ""
-        ).strip()
+        website_url = (request.form.get("website_url") or "").strip()
 
         # ================= COLOR VALIDATION =================
         color_pattern = r"^#[0-9A-Fa-f]{6}$"
 
-        for color in [
-            primary_color,
-            secondary_color,
-            button_color
-        ]:
+        for color in [primary_color, secondary_color, button_color]:
             if not re.fullmatch(color_pattern, color):
                 return "Invalid color code ❌"
 
@@ -12802,8 +11205,7 @@ def save_branding_settings():
         # ================= URL VALIDATION =================
         if website_url:
             if not (
-                website_url.startswith("http://")
-                or website_url.startswith("https://")
+                website_url.startswith("http://") or website_url.startswith("https://")
             ):
                 return "Invalid website URL ❌"
 
@@ -12837,7 +11239,6 @@ def save_branding_settings():
         favicon = request.files.get("favicon")
 
         if favicon and favicon.filename:
-
             favicon.seek(0, os.SEEK_END)
             size = favicon.tell()
             favicon.seek(0)
@@ -12845,54 +11246,29 @@ def save_branding_settings():
             if size > 2 * 1024 * 1024:
                 return "Favicon size exceeds 2MB ❌"
 
-            original_filename = secure_filename(
-                favicon.filename
-            )
+            original_filename = secure_filename(favicon.filename)
 
-            allowed_extensions = (
-                ".png",
-                ".jpg",
-                ".jpeg",
-                ".ico",
-                ".webp"
-            )
+            allowed_extensions = (".png", ".jpg", ".jpeg", ".ico", ".webp")
 
-            if not original_filename.lower().endswith(
-                allowed_extensions
-            ):
+            if not original_filename.lower().endswith(allowed_extensions):
                 return "Invalid favicon type ❌"
 
-            filename = (
-                f"{int(datetime.now().timestamp())}_"
-                + original_filename
-            )
+            filename = f"{int(datetime.now().timestamp())}_" + original_filename
 
-            upload_folder = os.path.join(
-                "static",
-                "uploads",
-                "branding"
-            )
+            upload_folder = os.path.join("static", "uploads", "branding")
 
-            os.makedirs(
-                upload_folder,
-                exist_ok=True
-            )
+            os.makedirs(upload_folder, exist_ok=True)
 
-            favicon_path = os.path.join(
-                upload_folder,
-                filename
-            )
+            favicon_path = os.path.join(upload_folder, filename)
 
             favicon.save(favicon_path)
 
-            favicon_filename = (
-                "uploads/branding/" + filename
-            )
+            favicon_filename = "uploads/branding/" + filename
 
         # ================= UPDATE SETTINGS =================
         if favicon_filename:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE system_settings
                 SET
                     primary_color = %s,
@@ -12905,21 +11281,23 @@ def save_branding_settings():
                     favicon = %s,
                     updated_at = NOW()
                 WHERE id = %s
-            """, (
-                primary_color,
-                secondary_color,
-                button_color,
-                erp_version,
-                footer_text,
-                powered_by,
-                website_url,
-                favicon_filename,
-                settings_id
-            ))
+            """,
+                (
+                    primary_color,
+                    secondary_color,
+                    button_color,
+                    erp_version,
+                    footer_text,
+                    powered_by,
+                    website_url,
+                    favicon_filename,
+                    settings_id,
+                ),
+            )
 
         else:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE system_settings
                 SET
                     primary_color = %s,
@@ -12931,44 +11309,36 @@ def save_branding_settings():
                     website_url = %s,
                     updated_at = NOW()
                 WHERE id = %s
-            """, (
-                primary_color,
-                secondary_color,
-                button_color,
-                erp_version,
-                footer_text,
-                powered_by,
-                website_url,
-                settings_id
-            ))
+            """,
+                (
+                    primary_color,
+                    secondary_color,
+                    button_color,
+                    erp_version,
+                    footer_text,
+                    powered_by,
+                    website_url,
+                    settings_id,
+                ),
+            )
 
         conn.commit()
 
         # ================= DELETE OLD FAVICON AFTER SUCCESS =================
         if favicon_filename and old_favicon:
-
-            old_path = os.path.join(
-                "static",
-                old_favicon
-            )
+            old_path = os.path.join("static", old_favicon)
 
             if os.path.exists(old_path):
                 try:
                     os.remove(old_path)
                 except Exception as delete_error:
-                    print(
-                        "⚠️ OLD FAVICON DELETE ERROR:",
-                        delete_error
-                    )
+                    print("⚠️ OLD FAVICON DELETE ERROR:", delete_error)
 
         print("✅ BRANDING SETTINGS UPDATED")
 
-        return redirect(
-            url_for("superadmin_settings") + "#branding"
-        )
+        return redirect(url_for("superadmin_settings") + "#branding")
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
@@ -12977,7 +11347,6 @@ def save_branding_settings():
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -12985,16 +11354,14 @@ def save_branding_settings():
             conn.close()
 
 
-#_________________________________________________________________________________________         
+# _________________________________________________________________________________________
 
 # =========================================================
 # 💰 PAYMENT PAGE (PRODUCTION READY)
 # =========================================================
 
-@app.route(
-    "/clerk/subscription/payment",
-    methods=["POST"]
-)
+
+@app.route("/clerk/subscription/payment", methods=["POST"])
 @login_required
 def subscription_payment():
 
@@ -13002,16 +11369,13 @@ def subscription_payment():
     cursor = None
 
     try:
-
         # =========================================
         # CLERK VALIDATION
         # =========================================
 
         if session.get("clerk_role") != "clerk":
             abort(401)
-        school_id = session.get(
-            "clerk_school_id"
-        )
+        school_id = session.get("clerk_school_id")
 
         if not school_id:
             abort(404)
@@ -13019,19 +11383,9 @@ def subscription_payment():
         # FORM DATA
         # =========================================
 
-        subscription_id = (
-            request.form.get(
-                "subscription_id",
-                ""
-            ).strip()
-        )
+        subscription_id = request.form.get("subscription_id", "").strip()
 
-        plan_id = (
-            request.form.get(
-                "plan_id",
-                ""
-            ).strip()
-        )
+        plan_id = request.form.get("plan_id", "").strip()
 
         if not subscription_id:
             return "Subscription missing ❌"
@@ -13060,16 +11414,16 @@ def subscription_payment():
         # VERIFY SUBSCRIPTION BELONGS TO SCHOOL
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id
             FROM subscriptions
             WHERE id = %s
             AND school_id = %s
-        """, (
-            int(subscription_id),
-            school_id
-        ))
+        """,
+            (int(subscription_id), school_id),
+        )
 
         subscription = cursor.fetchone()
 
@@ -13080,7 +11434,8 @@ def subscription_payment():
         # GET ACTIVE PLAN
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 plan_name,
@@ -13090,9 +11445,9 @@ def subscription_payment():
             FROM subscription_plans
             WHERE id = %s
             AND is_active = 1
-        """, (
-            int(plan_id),
-        ))
+        """,
+            (int(plan_id),),
+        )
 
         plan = cursor.fetchone()
 
@@ -13103,10 +11458,7 @@ def subscription_payment():
         # AMOUNT VALIDATION
         # =========================================
 
-        if (
-            plan[2] is None
-            or float(plan[2]) <= 0
-        ):
+        if plan[2] is None or float(plan[2]) <= 0:
             return "Invalid plan amount ❌"
 
         amount = float(plan[2])
@@ -13115,30 +11467,17 @@ def subscription_payment():
         # CREATE RAZORPAY CLIENT
         # =========================================
 
-        client = razorpay.Client(
-            auth=(
-                RAZORPAY_KEY_ID,
-                RAZORPAY_KEY_SECRET
-            )
-        )
+        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-        amount_in_paise = int(
-            amount * 100
-        )
+        amount_in_paise = int(amount * 100)
 
         # =========================================
         # CREATE ORDER
         # =========================================
 
-        razorpay_order = client.order.create({
-
-            "amount": amount_in_paise,
-
-            "currency": "INR",
-
-            "payment_capture": 1
-
-        })
+        razorpay_order = client.order.create(
+            {"amount": amount_in_paise, "currency": "INR", "payment_capture": 1}
+        )
 
         if not razorpay_order:
             return "Unable to create payment order ❌"
@@ -13148,56 +11487,37 @@ def subscription_payment():
         # =========================================
 
         return render_template(
-
             "subscription/payment.html",
-
-            subscription_id=int(
-                subscription_id
-            ),
-
+            subscription_id=int(subscription_id),
             plan_id=plan[0],
-
             plan_name=plan[1],
-
             amount=amount,
-
             duration_months=plan[4],
-
-            razorpay_order_id=(
-                razorpay_order["id"]
-            ),
-
-            razorpay_key=(
-                RAZORPAY_KEY_ID
-            )
-
+            razorpay_order_id=(razorpay_order["id"]),
+            razorpay_key=(RAZORPAY_KEY_ID),
         )
 
     except Exception as e:
+        import traceback
 
-         import traceback
+        traceback.print_exc()
 
-         traceback.print_exc()
+        print("❌ PAYMENT PAGE ERROR:", repr(e))
 
-         print("❌ PAYMENT PAGE ERROR:", repr(e))
-             
-         return f"PAYMENT PAGE ERROR : {repr(e)}"
+        return f"PAYMENT PAGE ERROR : {repr(e)}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # ✅ PAYMENT SUCCESS (PRODUCTION READY)
 # =========================================================
-@app.route(
-    "/clerk/subscription/payment-success",
-    methods=["POST"]
-)
+@app.route("/clerk/subscription/payment-success", methods=["POST"])
 @login_required
 def payment_success():
 
@@ -13205,16 +11525,13 @@ def payment_success():
     cursor = None
 
     try:
-
         # =========================================
         # SESSION VALIDATION
         # =========================================
 
         if session.get("clerk_role") != "clerk":
             abort(401)
-        school_id = session.get(
-            "clerk_school_id"
-        )
+        school_id = session.get("clerk_school_id")
 
         if not school_id:
             abort(404)
@@ -13222,40 +11539,15 @@ def payment_success():
         # FORM DATA
         # =========================================
 
-        plan_id = (
-            request.form.get(
-                "plan_id",
-                ""
-            ).strip()
-        )
+        plan_id = request.form.get("plan_id", "").strip()
 
-        subscription_id = (
-            request.form.get(
-                "subscription_id",
-                ""
-            ).strip()
-        )
+        subscription_id = request.form.get("subscription_id", "").strip()
 
-        razorpay_payment_id = (
-            request.form.get(
-                "razorpay_payment_id",
-                ""
-            ).strip()
-        )
+        razorpay_payment_id = request.form.get("razorpay_payment_id", "").strip()
 
-        razorpay_order_id = (
-            request.form.get(
-                "razorpay_order_id",
-                ""
-            ).strip()
-        )
+        razorpay_order_id = request.form.get("razorpay_order_id", "").strip()
 
-        razorpay_signature = (
-            request.form.get(
-                "razorpay_signature",
-                ""
-            ).strip()
-        )
+        razorpay_signature = request.form.get("razorpay_signature", "").strip()
 
         # =========================================
         # VALIDATION
@@ -13297,15 +11589,15 @@ def payment_success():
         # VERIFY SUBSCRIPTION OWNERSHIP
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id
             FROM subscriptions
             WHERE id = %s
             AND school_id = %s
-        """, (
-            int(subscription_id),
-            school_id
-        ))
+        """,
+            (int(subscription_id), school_id),
+        )
 
         subscription = cursor.fetchone()
 
@@ -13316,13 +11608,14 @@ def payment_success():
         # PREVENT DUPLICATE PAYMENT
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id
             FROM payment_logs
             WHERE order_id = %s
-        """, (
-            razorpay_order_id,
-        ))
+        """,
+            (razorpay_order_id,),
+        )
 
         existing_order = cursor.fetchone()
 
@@ -13333,35 +11626,20 @@ def payment_success():
         # VERIFY RAZORPAY SIGNATURE
         # =========================================
 
-        client = razorpay.Client(
-            auth=(
-                RAZORPAY_KEY_ID,
-                RAZORPAY_KEY_SECRET
-            )
-        )
+        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
         verify_data = {
-
-            "razorpay_order_id":
-            razorpay_order_id,
-
-            "razorpay_payment_id":
-            razorpay_payment_id,
-
-            "razorpay_signature":
-            razorpay_signature
-
+            "razorpay_order_id": razorpay_order_id,
+            "razorpay_payment_id": razorpay_payment_id,
+            "razorpay_signature": razorpay_signature,
         }
 
         try:
-
-            client.utility.verify_payment_signature(
-                verify_data
-            )
+            client.utility.verify_payment_signature(verify_data)
 
         except Exception as verify_error:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO payment_logs
                 (
                     school_id,
@@ -13383,22 +11661,19 @@ def payment_success():
                     %s,%s,%s,
                     %s,%s
                 )
-            """, (
-
-                school_id,
-                subscription_id,
-                plan_id,
-                0,
-
-                "failed",
-                razorpay_payment_id,
-                razorpay_order_id,
-
-                "Subscription Renewal",
-                "Razorpay",
-                
-
-            ))
+            """,
+                (
+                    school_id,
+                    subscription_id,
+                    plan_id,
+                    0,
+                    "failed",
+                    razorpay_payment_id,
+                    razorpay_order_id,
+                    "Subscription Renewal",
+                    "Razorpay",
+                ),
+            )
 
             conn.commit()
 
@@ -13411,7 +11686,8 @@ def payment_success():
         # GET ACTIVE PLAN
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
 
                 plan_name,
@@ -13422,9 +11698,9 @@ def payment_success():
 
             WHERE id = %s
             AND is_active = 1
-        """, (
-            int(plan_id),
-        ))
+        """,
+            (int(plan_id),),
+        )
 
         plan = cursor.fetchone()
 
@@ -13443,15 +11719,16 @@ def payment_success():
         # GET SCHOOL DETAILS
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 name,
                 email
             FROM schools
             WHERE school_id = %s
-        """, (
-            school_id,
-        ))
+        """,
+            (school_id,),
+        )
 
         school = cursor.fetchone()
 
@@ -13465,7 +11742,8 @@ def payment_success():
         # UPDATE SUBSCRIPTION
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE subscriptions
             SET
 
@@ -13484,36 +11762,32 @@ def payment_success():
 
             WHERE school_id = %s
             AND id = %s
-        """, (
-
-            int(plan_id),
-            plan[0],
-            amount_paid,
-
-            int(plan[2]),
-
-            school_id,
-            int(subscription_id)
-
-        ))
+        """,
+            (
+                int(plan_id),
+                plan[0],
+                amount_paid,
+                int(plan[2]),
+                school_id,
+                int(subscription_id),
+            ),
+        )
 
         if cursor.rowcount == 0:
             return "Subscription update failed ❌"
-
 
         # =========================================
         # GENERATE INVOICE NUMBER
         # =========================================
 
-        invoice_number = (
-            f"INV-{datetime.now().year}-{razorpay_payment_id[-8:]}"
-        )    
+        invoice_number = f"INV-{datetime.now().year}-{razorpay_payment_id[-8:]}"
 
         # =========================================
         # PAYMENT LOG
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO payment_logs
             (
 
@@ -13540,23 +11814,20 @@ def payment_success():
                 %s,
                 %s,%s
             )
-        """, (
-
-            school_id,
-            subscription_id,
-            plan_id,
-            amount_paid,
-
-            "success",
-            razorpay_payment_id,
-            razorpay_order_id,
-
-            invoice_number,
-
-            "Subscription Renewal",
-            "Razorpay"
-
-        ))
+        """,
+            (
+                school_id,
+                subscription_id,
+                plan_id,
+                amount_paid,
+                "success",
+                razorpay_payment_id,
+                razorpay_order_id,
+                invoice_number,
+                "Subscription Renewal",
+                "Razorpay",
+            ),
+        )
 
         # =========================================
         # SAVE
@@ -13568,21 +11839,14 @@ def payment_success():
         # APPLY PLAN FEATURES
         # =========================================
 
-        apply_plan_features(
-            school_id,
-            int(plan_id)
-            )
+        apply_plan_features(school_id, int(plan_id))
 
         # =========================================
         # EMAIL RECEIPT
         # =========================================
 
         try:
-
-            subject = (
-                "Payment Successful - "
-                "SPL ShalaSarthi ERP"
-            )
+            subject = "Payment Successful - SPL ShalaSarthi ERP"
 
             body = f"""
             <div style="font-family:Arial;padding:20px;">
@@ -13626,60 +11890,41 @@ def payment_success():
             </div>
             """
 
-            send_email(
-                school_email,
-                subject,
-                body
-            )
+            send_email(school_email, subject, body)
 
-            print(
-                "✅ PAYMENT RECEIPT EMAIL SENT"
-            )
+            print("✅ PAYMENT RECEIPT EMAIL SENT")
 
         except Exception as email_error:
-
-            print(
-                "❌ PAYMENT EMAIL ERROR:",
-                email_error
-            )
+            print("❌ PAYMENT EMAIL ERROR:", email_error)
 
         # =========================================
         # REDIRECT
         # =========================================
 
         return redirect(
-            url_for(
-                "subscription_success",
-                plan=plan[0],
-                amount=amount_paid
-            )
+            url_for("subscription_success", plan=plan[0], amount=amount_paid)
         )
-    
-    except Exception as e:
 
+    except Exception as e:
         if conn:
             conn.rollback()
 
-        print(
-            "❌ PAYMENT VERIFY ERROR:",
-            e
-        )
+        print("❌ PAYMENT VERIFY ERROR:", e)
 
-        return (
-            f"Payment verification failed ❌ {e}"
-        )
+        return f"Payment verification failed ❌ {e}"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
- # =========================================================
+
+# =========================================================
 # 📜 SUBSCRIPTION HISTORY
 # =========================================================
+
 
 @app.route("/clerk/subscription/history")
 @login_required
@@ -13688,9 +11933,7 @@ def subscription_history():
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
         abort(401)
-    school_id = session.get(
-        "clerk_school_id"
-    )
+    school_id = session.get("clerk_school_id")
 
     if not school_id:
         return "School session missing ❌"
@@ -13699,18 +11942,16 @@ def subscription_history():
     cursor = None
 
     try:
-
         conn = get_connection()
 
-        cursor = conn.cursor(
-            dictionary=True
-        )
+        cursor = conn.cursor(dictionary=True)
 
         # =========================================
         # PAYMENT HISTORY
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -13743,11 +11984,9 @@ def subscription_history():
 
             ORDER BY pl.id DESC
 
-        """, (
-
-            school_id,
-
-        ))
+        """,
+            (school_id,),
+        )
 
         history = cursor.fetchall()
 
@@ -13755,7 +11994,8 @@ def subscription_history():
         # TOTAL PAYMENTS
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
                 COUNT(*) AS total_transactions,
@@ -13771,16 +12011,12 @@ def subscription_history():
 
             AND payment_status = 'success'
 
-        """, (
-
-            school_id,
-
-        ))
+        """,
+            (school_id,),
+        )
 
         summary = cursor.fetchone()
 
-
-        
         # ================= SCHOOL DETAILS =================
         school = get_school_details(school_id)
 
@@ -13792,55 +12028,40 @@ def subscription_history():
         # =========================================
 
         return render_template(
-
             "subscription/history.html",
-
             history=history,
-
             summary=summary,
-
             role="clerk",
-
             school_name=school["school_name"],
-            
-
-            active_page="subscription_history"
-
+            active_page="subscription_history",
         )
 
     except Exception as e:
-
-        print(
-            "❌ SUBSCRIPTION HISTORY ERROR:",
-            e
-        )
+        print("❌ SUBSCRIPTION HISTORY ERROR:", e)
 
         return "History page failed ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 📄 VIEW INVOICE
 # =========================================================
 
-@app.route(
-    "/clerk/subscription/invoice/<int:payment_log_id>"
-)
+
+@app.route("/clerk/subscription/invoice/<int:payment_log_id>")
 @login_required
 def view_invoice(payment_log_id):
 
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
         abort(401)
-    school_id = session.get(
-        "clerk_school_id"
-    )
+    school_id = session.get("clerk_school_id")
 
     if not school_id:
         return "School session missing ❌"
@@ -13849,18 +12070,16 @@ def view_invoice(payment_log_id):
     cursor = None
 
     try:
-
         conn = get_connection()
 
-        cursor = conn.cursor(
-            dictionary=True
-        )
+        cursor = conn.cursor(dictionary=True)
 
         # =========================================
         # GET INVOICE DATA
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -13892,72 +12111,54 @@ def view_invoice(payment_log_id):
 
             LIMIT 1
 
-        """, (
-
-            payment_log_id,
-            school_id
-
-        ))
+        """,
+            (payment_log_id, school_id),
+        )
 
         invoice = cursor.fetchone()
 
         if not invoice:
             return "Invoice not found ❌"
 
-        return render_template(
-
-            "subscription/invoice.html",
-
-            invoice=invoice
-
-        )
+        return render_template("subscription/invoice.html", invoice=invoice)
 
     except Exception as e:
-
-        print(
-            "❌ INVOICE ERROR:",
-            e
-        )
+        print("❌ INVOICE ERROR:", e)
 
         return "Invoice loading failed ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
+
 # =========================================================
 # 📄 DOWNLOAD INVOICE PDF
 # =========================================================
 
-@app.route(
-    "/clerk/subscription/invoice/pdf/<int:payment_log_id>"
-)
+
+@app.route("/clerk/subscription/invoice/pdf/<int:payment_log_id>")
 @login_required
 def download_invoice_pdf(payment_log_id):
 
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
         abort(401)
-    school_id = session.get(
-        "clerk_school_id"
-    )
+    school_id = session.get("clerk_school_id")
 
     conn = None
     cursor = None
 
     try:
-
         conn = get_connection()
 
-        cursor = conn.cursor(
-            dictionary=True
-        )
+        cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("""
+        cursor.execute(
+            """
 
             SELECT
 
@@ -13989,12 +12190,9 @@ def download_invoice_pdf(payment_log_id):
 
             LIMIT 1
 
-        """, (
-
-            payment_log_id,
-            school_id
-
-        ))
+        """,
+            (payment_log_id, school_id),
+        )
 
         invoice = cursor.fetchone()
 
@@ -14006,84 +12204,57 @@ def download_invoice_pdf(payment_log_id):
         # =====================================
 
         rendered = render_template(
-
-            "subscription/invoice.html",
-
-            invoice=invoice,
-
-            is_pdf=True
-
+            "subscription/invoice.html", invoice=invoice, is_pdf=True
         )
 
         # =====================================
         # PDF OPTIONS
         # =====================================
         options = {
-
             "page-size": "A4",
-
             "encoding": "UTF-8",
-
             "enable-local-file-access": "",
-
             "print-media-type": "",
-
             "dpi": 300,
-
             "image-quality": 100,
-
             "margin-top": "0mm",
             "margin-right": "0mm",
             "margin-bottom": "0mm",
             "margin-left": "0mm",
-
-            "disable-smart-shrinking": ""
+            "disable-smart-shrinking": "",
         }
 
         pdf = pdfkit.from_string(
-
-            rendered,
-
-            False,
-
-            configuration=pdf_config,
-
-            options=options
-
+            rendered, False, configuration=pdf_config, options=options
         )
 
         response = make_response(pdf)
 
-        response.headers[
-            "Content-Type"
-        ] = "application/pdf"
+        response.headers["Content-Type"] = "application/pdf"
 
-        response.headers[
-            "Content-Disposition"
-        ] = f'attachment; filename="{invoice["invoice_number"]}.pdf"'
+        response.headers["Content-Disposition"] = (
+            f'attachment; filename="{invoice["invoice_number"]}.pdf"'
+        )
 
         return response
 
     except Exception as e:
-
-        print(
-            "❌ INVOICE PDF ERROR:",
-            e
-        )
+        print("❌ INVOICE PDF ERROR:", e)
 
         return "PDF generation failed ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
- # ==================================================
+
+# ==================================================
 # SUBSCRIPTION SUCCESS PAGE
 # ==================================================
+
 
 @app.route("/clerk/subscription/success")
 @login_required
@@ -14093,25 +12264,17 @@ def subscription_success():
         return "Unauthorized ❌"
         abort(401)
 
-    plan = request.args.get(
-        "plan",
-        "Subscription"
-    )
+    plan = request.args.get("plan", "Subscription")
 
-    amount = request.args.get(
-        "amount",
-        "0"
-    )
+    amount = request.args.get("amount", "0")
 
-    return render_template(
-        "subscription/success.html",
-        plan=plan,
-        amount=amount
-    )
+    return render_template("subscription/success.html", plan=plan, amount=amount)
 
- # ==================================================
+
+# ==================================================
 # PAYMENT FAILED PAGE
 # ==================================================
+
 
 @app.route("/clerk/subscription/payment-failed")
 @login_required
@@ -14120,12 +12283,10 @@ def payment_failed():
     if session.get("clerk_role") != "clerk":
         return "Unauthorized ❌"
         abort(401)
-    return render_template(
-        "subscription/payment_failed.html"
-    )
+    return render_template("subscription/payment_failed.html")
+
 
 # =============================================================================================
-
 
 
 # =========================================================
@@ -14141,7 +12302,6 @@ def clerk_dashboard():
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -14166,7 +12326,8 @@ def clerk_dashboard():
         # =====================================================
         # LATEST SUBSCRIPTION
         # =====================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 end_date,
@@ -14175,12 +12336,13 @@ def clerk_dashboard():
             WHERE school_id = %s
             ORDER BY id DESC
             LIMIT 1
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         sub = cursor.fetchone()
 
         if sub:
-
             subscription_id = sub[0]
             end_date = sub[1]
             current_status = sub[2] or "none"
@@ -14216,12 +12378,14 @@ def clerk_dashboard():
                 and today_date > grace_end_date
                 and current_status == "active"
             ):
-
-                cursor.execute("""
+                cursor.execute(
+                    """
                     UPDATE subscriptions
                     SET status = 'expired'
                     WHERE id = %s
-                """, (subscription_id,))
+                """,
+                    (subscription_id,),
+                )
 
                 conn.commit()
 
@@ -14232,7 +12396,6 @@ def clerk_dashboard():
             # Sends only once for 7, 3, 1 and expiry day
             # =================================================
             if end_date:
-
                 remaining_days_for_email = (end_date - today_date).days
                 email_type = None
 
@@ -14249,37 +12412,36 @@ def clerk_dashboard():
                     email_type = "expiry_today"
 
                 if email_type and subscription_id:
-
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         SELECT id
                         FROM subscription_email_logs
                         WHERE school_id = %s
                         AND subscription_id = %s
                         AND email_type = %s
                         LIMIT 1
-                    """, (
-                        school_id,
-                        subscription_id,
-                        email_type
-                    ))
+                    """,
+                        (school_id, subscription_id, email_type),
+                    )
 
                     already_sent = cursor.fetchone()
 
                     if not already_sent:
-
-                        cursor.execute("""
+                        cursor.execute(
+                            """
                             SELECT
                                 name,
                                 email
                             FROM schools
                             WHERE school_id = %s
                             LIMIT 1
-                        """, (school_id,))
+                        """,
+                            (school_id,),
+                        )
 
                         school_data = cursor.fetchone()
 
                         if school_data and school_data[1]:
-
                             school_name_email = school_data[0]
                             school_email = school_data[1]
 
@@ -14311,15 +12473,11 @@ def clerk_dashboard():
                             </div>
                             """
 
-                            email_sent = send_email(
-                                school_email,
-                                subject,
-                                body
-                            )
+                            email_sent = send_email(school_email, subject, body)
 
                             if email_sent:
-
-                                cursor.execute("""
+                                cursor.execute(
+                                    """
                                     INSERT INTO subscription_email_logs
                                     (
                                         school_id,
@@ -14328,23 +12486,24 @@ def clerk_dashboard():
                                         sent_at
                                     )
                                     VALUES (%s, %s, %s, NOW())
-                                """, (
-                                    school_id,
-                                    subscription_id,
-                                    email_type
-                                ))
+                                """,
+                                    (school_id, subscription_id, email_type),
+                                )
 
                                 conn.commit()
 
         # =====================================================
         # SCHOOL DATA
         # =====================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT name
             FROM schools
             WHERE school_id = %s
             LIMIT 1
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         school = cursor.fetchone()
 
@@ -14356,30 +12515,38 @@ def clerk_dashboard():
         # =====================================================
         # KPI COUNTS
         # =====================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         total_students = cursor.fetchone()[0] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM tc
             WHERE school_id = %s
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         total_tc = cursor.fetchone()[0] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM bonafide
             WHERE school_id = %s
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         total_bonafide = cursor.fetchone()[0] or 0
-
 
         # =====================================================
         # TODAY'S SUMMARY
@@ -14390,46 +12557,43 @@ def clerk_dashboard():
         current_date = datetime.now().strftime("%d %b %Y")
 
         # Today new students
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
             AND DATE(created_at) = %s
-        """, (
-            school_id,
-            today
-        ))
+        """,
+            (school_id, today),
+        )
 
         today_students = cursor.fetchone()[0] or 0
 
-
         # Today TC generated
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM tc
             WHERE school_id = %s
             AND DATE(created_at) = %s
-        """, (
-            school_id,
-            today
-        ))
+        """,
+            (school_id, today),
+        )
 
         today_tc = cursor.fetchone()[0] or 0
 
-
         # Today Bonafide issued
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM bonafide
             WHERE school_id = %s
             AND DATE(created_at) = %s
-        """, (
-            school_id,
-            today
-        ))
+        """,
+            (school_id, today),
+        )
 
         today_bonafide = cursor.fetchone()[0] or 0
-
 
         # =====================================================
         # PENDING TASKS
@@ -14437,7 +12601,8 @@ def clerk_dashboard():
         # Based on add_student form fields
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
@@ -14463,7 +12628,9 @@ def clerk_dashboard():
                 OR section IS NULL OR section = ''
                 OR primary_mobile IS NULL OR primary_mobile = ''
             )
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         pending_tasks = cursor.fetchone()[0] or 0
 
@@ -14471,7 +12638,8 @@ def clerk_dashboard():
         # TOTAL MISSING FIELDS COUNT
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
         SELECT
         (
             SUM(CASE WHEN school_register_no IS NULL OR school_register_no='' THEN 1 ELSE 0 END) +
@@ -14495,17 +12663,19 @@ def clerk_dashboard():
         )
         FROM students
         WHERE school_id = %s
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         pending_fields = cursor.fetchone()[0] or 0
-
 
         # =====================================================
         # PENDING STUDENT DETAILS LIST
         # Shows all missing important fields per student
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 admission_no,
@@ -14564,16 +12734,18 @@ def clerk_dashboard():
             )
             ORDER BY id DESC
             LIMIT 6
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         pending_students = cursor.fetchall()
 
+        # =====================================================
+        # STUDENT GROWTH CHART DATA - LAST 5 MONTHS
+        # =====================================================
 
-      # =====================================================
-      # STUDENT GROWTH CHART DATA - LAST 5 MONTHS
-      # =====================================================
-
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 DATE_FORMAT(created_at, '%b') AS month_name,
                 COUNT(*) AS total
@@ -14587,7 +12759,9 @@ def clerk_dashboard():
                 YEAR(created_at) DESC,
                 MONTH(created_at) DESC
             LIMIT 5
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         rows = cursor.fetchall()[::-1]
 
@@ -14609,7 +12783,8 @@ def clerk_dashboard():
         # TC CHART DATA - LAST 5 ACTIVE DAYS
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 DATE_FORMAT(tc_date, '%d %b') AS tc_day,
                 COUNT(*) AS total
@@ -14618,7 +12793,9 @@ def clerk_dashboard():
             GROUP BY DATE(tc_date), DATE_FORMAT(tc_date, '%d %b')
             ORDER BY DATE(tc_date) DESC
             LIMIT 5
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         rows = cursor.fetchall()[::-1]
 
@@ -14635,15 +12812,9 @@ def clerk_dashboard():
 
         bon_count = total_bonafide or 0
 
-        remaining_students = max(
-            0,
-            (total_students or 0) - bon_count
-        )
+        remaining_students = max(0, (total_students or 0) - bon_count)
 
-        bonafide_data = [
-            bon_count,
-            remaining_students
-        ]
+        bonafide_data = [bon_count, remaining_students]
 
         if bonafide_data == [0, 0]:
             bonafide_data = [0, 1]
@@ -14653,28 +12824,23 @@ def clerk_dashboard():
         # =====================================================
 
         if len(growth_data) >= 2 and growth_data[-2] > 0:
-
             growth_percent = round(
                 ((growth_data[-1] - growth_data[-2]) / growth_data[-2]) * 100
             )
 
         elif total_students > 0:
-
             growth_percent = 100
 
         else:
-
             growth_percent = 0
 
-        growth_percent = max(
-            0,
-            min(growth_percent, 100)
-        )
+        growth_percent = max(0, min(growth_percent, 100))
 
         # =====================================================
         # USER PROFILE
         # =====================================================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 u.id,
                 u.name,
@@ -14710,74 +12876,62 @@ def clerk_dashboard():
                 ON sub.school_id = s.school_id
             WHERE u.id = %s
             LIMIT 1
-        """, (clerk_user_id,))
+        """,
+            (clerk_user_id,),
+        )
 
         row = cursor.fetchone()
 
         if row:
+            columns = [col[0] for col in cursor.description]
 
-            columns = [
-                col[0]
-                for col in cursor.description
-            ]
-
-            user_profile = dict(
-                zip(columns, row)
-            )
+            user_profile = dict(zip(columns, row))
 
         else:
-
             user_profile = {}
 
         # =====================================================
         # SUBSCRIPTION ALERT SYSTEM
         # =====================================================
-        remaining_days = int(
-            user_profile.get("remaining_days") or 0
-        )
+        remaining_days = int(user_profile.get("remaining_days") or 0)
 
         if current_status == "expired":
-
             subscription_alert = {
                 "type": "expired",
                 "title": "Subscription Expired",
                 "message": (
-                    "Your subscription has expired. "
-                    "Renew now to continue ERP services."
-                )
+                    "Your subscription has expired. Renew now to continue ERP services."
+                ),
             }
 
         elif current_status == "none":
-
             subscription_alert = {
                 "type": "danger",
                 "title": "No Subscription Found",
                 "message": (
                     "No active subscription is linked with this school. "
                     "Please contact administrator."
-                )
+                ),
             }
 
         elif remaining_days <= 3:
-
             subscription_alert = {
                 "type": "danger",
                 "title": "Urgent Renewal Required",
                 "message": (
                     f"Your subscription expires in {remaining_days} day(s). "
                     f"Renew immediately."
-                )
+                ),
             }
 
         elif remaining_days <= 7:
-
             subscription_alert = {
                 "type": "warning",
                 "title": "Subscription Expiring Soon",
                 "message": (
                     f"Your subscription expires in {remaining_days} day(s). "
                     f"Please renew before expiry."
-                )
+                ),
             }
 
         # =====================================================
@@ -14787,7 +12941,8 @@ def clerk_dashboard():
         activities = []
 
         # ================= STUDENTS =================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 name,
                 created_at
@@ -14795,20 +12950,24 @@ def clerk_dashboard():
             WHERE school_id = %s
             ORDER BY created_at DESC
             LIMIT 3
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         for s in cursor.fetchall():
-
-            activities.append({
-                "type": "teal",
-                "title": f"New student admission: {s[0]}",
-                "title_mr": "नवीन विद्यार्थी प्रवेश",
-                "time": "Recently",
-                "sort_date": normalize_datetime(s[1])
-            })
+            activities.append(
+                {
+                    "type": "teal",
+                    "title": f"New student admission: {s[0]}",
+                    "title_mr": "नवीन विद्यार्थी प्रवेश",
+                    "time": "Recently",
+                    "sort_date": normalize_datetime(s[1]),
+                }
+            )
 
         # ================= TC =================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 tc.tc_number,
                 st.name,
@@ -14819,20 +12978,24 @@ def clerk_dashboard():
             WHERE tc.school_id = %s
             ORDER BY tc.tc_date DESC
             LIMIT 3
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         for tc in cursor.fetchall():
-
-            activities.append({
-                "type": "orange",
-                "title": f"TC issued for {tc[1]} (TC No: {tc[0]})",
-                "title_mr": "टीसी जारी केले",
-                "time": "Recently",
-                "sort_date": normalize_datetime(tc[2])
-            })
+            activities.append(
+                {
+                    "type": "orange",
+                    "title": f"TC issued for {tc[1]} (TC No: {tc[0]})",
+                    "title_mr": "टीसी जारी केले",
+                    "time": "Recently",
+                    "sort_date": normalize_datetime(tc[2]),
+                }
+            )
 
         # ================= BONAFIDE =================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 st.name,
                 b.date
@@ -14842,29 +13005,27 @@ def clerk_dashboard():
             WHERE b.school_id = %s
             ORDER BY b.date DESC
             LIMIT 3
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         for b in cursor.fetchall():
+            activities.append(
+                {
+                    "type": "blue",
+                    "title": f"Bonafide certificate issued for {b[0]}",
+                    "title_mr": "बोनाफाईड प्रमाणपत्र जारी केले",
+                    "time": "Recently",
+                    "sort_date": normalize_datetime(b[1]),
+                }
+            )
 
-            activities.append({
-                "type": "blue",
-                "title": f"Bonafide certificate issued for {b[0]}",
-                "title_mr": "बोनाफाईड प्रमाणपत्र जारी केले",
-                "time": "Recently",
-                "sort_date": normalize_datetime(b[1])
-            })
-
-        activities = sorted(
-            activities,
-            key=lambda x: x["sort_date"],
-            reverse=True
-        )[:6]
+        activities = sorted(activities, key=lambda x: x["sort_date"], reverse=True)[:6]
 
         # Remove internal sorting key before sending to template
         for activity in activities:
             activity.pop("sort_date", None)
 
-        
         # =====================================================
         # GLOBAL FEATURE SETTINGS
         # Used to lock/hide dashboard action cards
@@ -14896,7 +13057,7 @@ def clerk_dashboard():
             "teacher": feature_row[5] if feature_row else "Disabled",
             "results": feature_row[6] if feature_row else "Disabled",
             "timetable": feature_row[7] if feature_row else "Disabled",
-            "notice": feature_row[8] if feature_row else "Disabled"
+            "notice": feature_row[8] if feature_row else "Disabled",
         }
 
         # =====================================================
@@ -14926,23 +13087,22 @@ def clerk_dashboard():
             growth_percent=growth_percent,
             activities=activities,
             subscription_alert=subscription_alert,
-            features=features
+            features=features,
         )
 
     except Exception as e:
-
         print("❌ DASHBOARD ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
-            
+
+
 # =========================================================
 # UPDATE USER PROFILE
 # =========================================================
@@ -15485,6 +13645,7 @@ def clerk_check_password_otp():
 # Final password update after OTP verification
 # =========================================================
 
+
 @app.route("/clerk/profile/update-password", methods=["POST"])
 @login_required
 def clerk_update_password():
@@ -15500,10 +13661,7 @@ def clerk_update_password():
         user_id = session.get("clerk_user_id")
 
         if not user_id:
-            return jsonify({
-                "status": "error",
-                "message": "User session missing"
-            })
+            return jsonify({"status": "error", "message": "User session missing"})
 
         # =========================================
         # OTP SESSION CHECK
@@ -15511,10 +13669,7 @@ def clerk_update_password():
         # =========================================
 
         if session.get("otp_verified") is not True:
-            return jsonify({
-                "status": "error",
-                "message": "OTP verification required"
-            })
+            return jsonify({"status": "error", "message": "OTP verification required"})
 
         # =========================================
         # GET REQUEST DATA
@@ -15529,10 +13684,7 @@ def clerk_update_password():
         # =========================================
 
         if not new_password:
-            return jsonify({
-                "status": "error",
-                "message": "Password required"
-            })
+            return jsonify({"status": "error", "message": "Password required"})
 
         # =========================================
         # STRONG PASSWORD VALIDATION
@@ -15545,13 +13697,15 @@ def clerk_update_password():
             or not any(c.isdigit() for c in new_password)
             or not any(not c.isalnum() for c in new_password)
         ):
-            return jsonify({
-                "status": "error",
-                "message": (
-                    "Password must contain uppercase, lowercase, "
-                    "number and special character"
-                )
-            })
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": (
+                        "Password must contain uppercase, lowercase, "
+                        "number and special character"
+                    ),
+                }
+            )
 
         # =========================================
         # DB CONNECTION
@@ -15581,10 +13735,7 @@ def clerk_update_password():
         otp_row = cursor.fetchone()
 
         if not otp_row:
-            return jsonify({
-                "status": "error",
-                "message": "OTP verification required"
-            })
+            return jsonify({"status": "error", "message": "OTP verification required"})
 
         verified_time = otp_row[1]
 
@@ -15594,26 +13745,18 @@ def clerk_update_password():
         # =========================================
 
         if verified_time:
-
-            minutes_passed = (
-                datetime.now() - verified_time
-            ).total_seconds() / 60
+            minutes_passed = (datetime.now() - verified_time).total_seconds() / 60
 
             if minutes_passed > 10:
-                return jsonify({
-                    "status": "error",
-                    "message": "OTP verification expired"
-                })
+                return jsonify(
+                    {"status": "error", "message": "OTP verification expired"}
+                )
 
         # =========================================
         # HASH PASSWORD
         # =========================================
 
-        hashed_password = (
-            bcrypt
-            .generate_password_hash(new_password)
-            .decode("utf-8")
-        )
+        hashed_password = bcrypt.generate_password_hash(new_password).decode("utf-8")
 
         # =========================================
         # UPDATE USER PASSWORD
@@ -15655,32 +13798,26 @@ def clerk_update_password():
         # SUCCESS
         # =========================================
 
-        return jsonify({
-            "status": "success",
-            "message": "Password updated successfully"
-        })
+        return jsonify(
+            {"status": "success", "message": "Password updated successfully"}
+        )
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
         print("UPDATE PASSWORD ERROR:", e)
 
-        return jsonify({
-            "status": "error",
-            "message": "Something went wrong"
-        })
+        return jsonify({"status": "error", "message": "Something went wrong"})
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
-    
+
 # =========================================================
 # 🎓 AUTO GENERATE ADMISSION NUMBER
 # (MYSQL SAFE + ATOMIC + PRODUCTION READY)
@@ -15974,7 +14111,10 @@ def add_student():
             )
 
             if cursor.fetchone():
-                flash("Student with same Register No, Aadhaar, Student UID or APAAR ID already exists.", "danger")
+                flash(
+                    "Student with same Register No, Aadhaar, Student UID or APAAR ID already exists.",
+                    "danger",
+                )
                 return redirect(url_for("clerk_dashboard"))
 
             # ================= GENERATE ADMISSION NO =================
@@ -16427,7 +14567,10 @@ def edit_student(id):
             existing_student = cursor.fetchone()
 
             if existing_student:
-                flash("Student with same Register No, Aadhaar, Student UID or APAAR ID already exists.", "danger")
+                flash(
+                    "Student with same Register No, Aadhaar, Student UID or APAAR ID already exists.",
+                    "danger",
+                )
                 return redirect(url_for("clerk_dashboard"))
 
             # =========================================
@@ -17087,10 +15230,7 @@ def tc_form(id):
 
         logger.exception("TC Form ERROR")
 
-        flash(
-            "Unable to load Transfer Certificate Form.",
-            "danger"
-        )
+        flash("Unable to load Transfer Certificate Form.", "danger")
 
         return redirect(url_for("clerk_dashboard"))
 
@@ -17199,10 +15339,7 @@ def view_tc(tc_id):
             school_id = session.get("clerk_school_id")
 
             if not school_id:
-                flash(
-                    "School session expired.",
-                    "danger"
-                )
+                flash("School session expired.", "danger")
 
                 return redirect(url_for("clerk_dashboard"))
 
@@ -17359,13 +15496,9 @@ def view_tc(tc_id):
         )
 
     except Exception as e:
-
         logger.exception("TC PAGE ERROR")
 
-        flash(
-            "Unable to load Transfer Certificate records.",
-            "danger"
-        )
+        flash("Unable to load Transfer Certificate records.", "danger")
 
         return redirect(url_for("clerk_dashboard"))
 
@@ -17376,7 +15509,7 @@ def view_tc(tc_id):
         if conn:
             conn.close()
 
-            
+
 # =========================================================
 # 📄 DOWNLOAD TC PDF (HTML → PDFKIT)
 # =========================================================
@@ -17399,7 +15532,7 @@ def download_tc_pdf(tc_id):
         mode = request.args.get("mode")
         school_id = session.get("clerk_school_id")
 
-        if not school_id:     
+        if not school_id:
             return "School session missing ❌"
             abort(404)
 
@@ -17414,8 +15547,8 @@ def download_tc_pdf(tc_id):
             and session.get("admin_logged_in")
             and session.get("admin_role") == "admin"
         ):
-
-            cursor.execute("""
+            cursor.execute(
+                """
             SELECT 
                 t.*,
 
@@ -17469,14 +15602,16 @@ def download_tc_pdf(tc_id):
             JOIN students s ON t.student_id = s.id
             JOIN schools sc ON t.school_id = sc.school_id
             WHERE t.id = %s
-            """, (tc_id,))
+            """,
+                (tc_id,),
+            )
 
         # =====================================================
         # CLERK MODE
         # =====================================================
         else:
-
-            cursor.execute("""
+            cursor.execute(
+                """
             SELECT 
                 t.*,
 
@@ -17529,13 +15664,15 @@ def download_tc_pdf(tc_id):
             JOIN students s ON t.student_id = s.id
             JOIN schools sc ON t.school_id = sc.school_id
             WHERE t.id = %s AND t.school_id = %s
-            """, (tc_id, school_id))
+            """,
+                (tc_id, school_id),
+            )
 
         row = cursor.fetchone()
 
         if not row:
             return "TC Not Found ❌"
-        
+
         columns = [col[0] for col in cursor.description]
         row = dict(zip(columns, row))
 
@@ -17548,7 +15685,7 @@ def download_tc_pdf(tc_id):
             "tc_date": format_date(row["tc_date"]),
             "leaving_date": format_date(row["leaving_date"]),
             "leaving_reason": row["leaving_reason"],
-            "remark": row["remark"]
+            "remark": row["remark"],
         }
 
         # =====================================================
@@ -17582,7 +15719,7 @@ def download_tc_pdf(tc_id):
             "last_exam": row["last_exam"],
             "result_status": row["result_status"],
             "progress": row["progress"],
-            "conduct": row["conduct"]
+            "conduct": row["conduct"],
         }
 
         # =====================================================
@@ -17595,23 +15732,13 @@ def download_tc_pdf(tc_id):
         watermark_absolute = ""
 
         if row["logo_path"]:
-
             logo_absolute = "file:///" + os.path.join(
-
-                base_dir,
-                "static",
-                row["logo_path"].replace("static/", "")
-
+                base_dir, "static", row["logo_path"].replace("static/", "")
             ).replace("\\", "/")
 
         if row["watermark_path"]:
-
             watermark_absolute = "file:///" + os.path.join(
-
-                base_dir,
-                "static",
-                row["watermark_path"].replace("static/", "")
-
+                base_dir, "static", row["watermark_path"].replace("static/", "")
             ).replace("\\", "/")
 
         school = {
@@ -17626,18 +15753,14 @@ def download_tc_pdf(tc_id):
             "board_name": row["board_name"] or "",
             "logo_path": logo_absolute,
             "watermark_path": watermark_absolute,
-            "website": row["website"] or ""
+            "website": row["website"] or "",
         }
 
         # =====================================================
         # RENDER HTML
         # =====================================================
         html = render_template(
-            "clerk/tc_generate.html",
-            tc=tc,
-            student=student,
-            school=school,
-            is_pdf=True
+            "clerk/tc_generate.html", tc=tc, student=student, school=school, is_pdf=True
         )
 
         # =====================================================
@@ -17648,10 +15771,7 @@ def download_tc_pdf(tc_id):
         if not os.path.exists(pdf_folder):
             os.makedirs(pdf_folder)
 
-        pdf_path = os.path.join(
-            pdf_folder,
-            f"tc_{tc['id']}.pdf"
-        )
+        pdf_path = os.path.join(pdf_folder, f"tc_{tc['id']}.pdf")
 
         # =====================================================
         # PDF OPTIONS
@@ -17663,48 +15783,38 @@ def download_tc_pdf(tc_id):
             "margin-bottom": "5mm",
             "margin-left": "5mm",
             "encoding": "UTF-8",
-            "enable-local-file-access": ""
+            "enable-local-file-access": "",
         }
 
         # =====================================================
         # GENERATE PDF
         # =====================================================
 
-        pdfkit.from_string(
-
-            html,
-            pdf_path,
-            configuration=pdf_config,
-             options=options
-        )
+        pdfkit.from_string(html, pdf_path, configuration=pdf_config, options=options)
 
         # =====================================================
         # 📧 AUTO SEND TC PDF EMAIL
         # =====================================================
 
         try:
-
             student_email = student.get("email")
 
             if student_email:
-
                 # =========================================
                 # CHECK ALREADY SENT
                 # =========================================
 
-                cursor.execute("""
+                cursor.execute(
+                    """
 
                     SELECT id
                     FROM tc_email_logs
                     WHERE school_id = %s
                     AND tc_id = %s
 
-                """, (
-
-                    school_id,
-                    tc["id"]
-
-                ))
+                """,
+                    (school_id, tc["id"]),
+                )
 
                 already_sent = cursor.fetchone()
 
@@ -17713,10 +15823,7 @@ def download_tc_pdf(tc_id):
                 # =========================================
 
                 if not already_sent:
-
-                    subject = (
-                        f"Transfer Certificate - {student['name']}"
-                    )
+                    subject = f"Transfer Certificate - {student['name']}"
 
                     body = f"""
 
@@ -17738,17 +15845,17 @@ def download_tc_pdf(tc_id):
 
                         <p>
                             <b>Student Name:</b>
-                            {student['name']}
+                            {student["name"]}
                         </p>
 
                         <p>
                             <b>TC Number:</b>
-                            {tc['tc_number']}
+                            {tc["tc_number"]}
                         </p>
 
                         <p>
                             <b>School:</b>
-                            {school['name']}
+                            {school["name"]}
                         </p>
 
                         <hr>
@@ -17760,7 +15867,7 @@ def download_tc_pdf(tc_id):
                         <p>
                             Thank you,
                             <br>
-                            <b>{school['name']}</b>
+                            <b>{school["name"]}</b>
                         </p>
 
                     </div>
@@ -17772,13 +15879,7 @@ def download_tc_pdf(tc_id):
                     # =========================================
 
                     email_sent = send_email(
-
-                        student_email,
-                        subject,
-                        body,
-                        pdf_path,
-                        f"{tc['tc_number']}.pdf"
-
+                        student_email, subject, body, pdf_path, f"{tc['tc_number']}.pdf"
                     )
                     # FOR SMS
                     # sms_sent = send_sms(
@@ -17791,14 +15892,14 @@ def download_tc_pdf(tc_id):
                     # =========================================
 
                     if email_sent == True:
-
                         print("✅ TC PDF EMAIL SENT")
 
                         # =====================================
                         # SAVE EMAIL LOG
                         # =====================================
 
-                        cursor.execute("""
+                        cursor.execute(
+                            """
 
                             INSERT INTO tc_email_logs
                             (
@@ -17808,13 +15909,9 @@ def download_tc_pdf(tc_id):
                             )
                             VALUES (%s, %s, %s)
 
-                        """, (
-
-                            school_id,
-                            tc["id"],
-                            student_email
-
-                        ))
+                        """,
+                            (school_id, tc["id"], student_email),
+                        )
 
                         conn.commit()
 
@@ -17823,26 +15920,16 @@ def download_tc_pdf(tc_id):
                     # =========================================
 
                     else:
-
-                        print(
-                            "❌ TC EMAIL FAILED:",
-                            email_sent
-                        )
+                        print("❌ TC EMAIL FAILED:", email_sent)
 
         except Exception as email_error:
-
-            print(
-                "❌ TC EMAIL ERROR:",
-                email_error
-            )
+            print("❌ TC EMAIL ERROR:", email_error)
 
         # =====================================================
         # RETURN FILE
         # =====================================================
         return send_file(
-            pdf_path,
-            as_attachment=True,
-            download_name=f"{tc['tc_number']}.pdf"
+            pdf_path, as_attachment=True, download_name=f"{tc['tc_number']}.pdf"
         )
 
     except Exception as e:
@@ -17855,6 +15942,7 @@ def download_tc_pdf(tc_id):
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 🔓 PUBLIC TC VIEW (SAFE PUBLIC VERIFY) FOR PARENT WP
@@ -17870,7 +15958,8 @@ def public_tc(tc_id):
         cursor = conn.cursor()
 
         # ================= GET FULL TC DATA =================
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 t.*,
 
@@ -17917,13 +16006,15 @@ def public_tc(tc_id):
             JOIN schools sc
                 ON t.school_id = sc.school_id
             WHERE t.id = %s
-        """, (tc_id,))
+        """,
+            (tc_id,),
+        )
 
         row = cursor.fetchone()
 
         if not row:
             return "TC Not Found ❌"
-        
+
         columns = [col[0] for col in cursor.description]
         row = dict(zip(columns, row))
 
@@ -17934,7 +16025,7 @@ def public_tc(tc_id):
             "tc_date": format_date(row["tc_date"]),
             "leaving_date": format_date(row["leaving_date"]),
             "leaving_reason": row["leaving_reason"],
-            "remark": row["remark"]
+            "remark": row["remark"],
         }
 
         # ================= STUDENT =================
@@ -17945,7 +16036,9 @@ def public_tc(tc_id):
             "class_name": row["class_name"],
             "admission_no": row["admission_no"],
             "dob": format_date(row["dob"]),
-            "aadhaar": "XXXX-XXXX-" + str(row["aadhaar"])[-4:] if row["aadhaar"] else "",
+            "aadhaar": "XXXX-XXXX-" + str(row["aadhaar"])[-4:]
+            if row["aadhaar"]
+            else "",
             "birth_place": row["birth_place"],
             "nationality": row["nationality"],
             "mother_tongue": row["mother_tongue"],
@@ -17961,7 +16054,7 @@ def public_tc(tc_id):
             "last_exam": row["last_exam"],
             "result_status": row["result_status"],
             "progress": row["progress"],
-            "conduct": row["conduct"]
+            "conduct": row["conduct"],
         }
 
         # ================= SCHOOL =================
@@ -17977,7 +16070,7 @@ def public_tc(tc_id):
             "board_name": row["board_name"] or "",
             "logo_path": row["logo_path"] or "",
             "watermark_path": row["watermark_path"] or "",
-            "website": row["website"] or ""
+            "website": row["website"] or "",
         }
 
         return render_template(
@@ -17997,7 +16090,7 @@ def public_tc(tc_id):
             school_logo_path=school["logo_path"],
             school_watermark_path=school["watermark_path"],
             school_website=school["website"],
-            is_public=True
+            is_public=True,
         )
 
     except Exception as e:
@@ -18009,6 +16102,7 @@ def public_tc(tc_id):
             cursor.close()
         if conn:
             conn.close()
+
 
 # =========================================================
 # 📊 TC HISTORY PAGE (SAFE + BACKEND FILTER + PAGINATION)
@@ -18023,7 +16117,6 @@ def clerk_tc_page():
     cursor = None
 
     try:
-
         # =========================================
         # CLERK SCHOOL SESSION
         # =========================================
@@ -18031,8 +16124,9 @@ def clerk_tc_page():
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            return "School session missing ❌"
-            abort(404)
+            flash("School session expired.", "danger")
+            return redirect(url_for("clerk_dashboard"))
+
         # =========================================
         # FILTER VALUES
         # =========================================
@@ -18080,29 +16174,42 @@ def clerk_tc_page():
         # =========================================
 
         if search:
-
             where_query += """
-                AND (
-                    s.name LIKE %s
-                    OR s.admission_no LIKE %s
-                    OR t.tc_number LIKE %s
-                )
+            AND (
+
+            s.name LIKE %s
+
+            OR s.admission_no LIKE %s
+
+            OR s.school_register_no LIKE %s
+
+            OR s.student_uid LIKE %s
+
+            OR s.apaar_id LIKE %s
+
+            OR t.tc_number LIKE %s
+
+            )
             """
 
             like_search = f"%{search}%"
 
-            params.extend([
-                like_search,
-                like_search,
-                like_search
-            ])
+            params.extend(
+                [
+                    like_search,
+                    like_search,
+                    like_search,
+                    like_search,
+                    like_search,
+                    like_search,
+                ]
+            )
 
         # =========================================
         # CLASS FILTER
         # =========================================
 
         if class_filter:
-
             where_query += """
                 AND s.class = %s
             """
@@ -18114,9 +16221,8 @@ def clerk_tc_page():
         # =========================================
 
         if year_filter:
-
             where_query += """
-                AND YEAR(t.tc_date) = %s
+                AND YEAR(t.created_at) = %s
             """
 
             params.append(year_filter)
@@ -18125,17 +16231,11 @@ def clerk_tc_page():
         # TOTAL FILTERED RECORDS
         # =========================================
 
-        cursor.execute(
-            "SELECT COUNT(*) AS total " + where_query,
-            tuple(params)
-        )
+        cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
 
         total_records = cursor.fetchone()["total"] or 0
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
@@ -18145,48 +16245,61 @@ def clerk_tc_page():
         # MAIN TC LIST WITH LIMIT
         # =========================================
 
-        query = """
+        query = (
+            """
             SELECT
                 t.id,
                 t.tc_number,
                 t.tc_date,
+                t.created_at,
                 s.name,
                 s.class AS class_name,
-                s.admission_no
-        """ + where_query + """
-            ORDER BY t.id DESC
+                s.admission_no,
+                s.school_register_no,
+                s.student_uid,
+                s.apaar_id
+        """
+            + where_query
+            + """
+            ORDER BY t.created_at DESC
             LIMIT %s OFFSET %s
         """
-
-        cursor.execute(
-            query,
-            tuple(params + [per_page, offset])
         )
+
+        cursor.execute(query, tuple(params + [per_page, offset]))
 
         rows = cursor.fetchall()
 
         tc_list = []
 
         for r in rows:
-
-            tc_list.append({
-                "id": r["id"],
-                "tc_number": r["tc_number"],
-                "tc_date": format_date(r["tc_date"]),
-                "name": r["name"],
-                "class": r["class_name"],
-                "admission_no": r["admission_no"]
-            })
+            tc_list.append(
+                {
+                    "id": r["id"],
+                    "tc_number": r["tc_number"],
+                    "tc_date": format_date(r["tc_date"]),
+                    "issue_date": format_date(r["created_at"]),
+                    "name": r["name"],
+                    "class": r["class_name"],
+                    "admission_no": r["admission_no"],
+                    "school_register_no": r["school_register_no"] or "",
+                    "student_uid": r["student_uid"] or "",
+                    "apaar_id": r["apaar_id"] or "",
+                }
+            )
 
         # =========================================
         # TOTAL TC COUNT
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
             FROM tc
             WHERE school_id = %s
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         total_tc = cursor.fetchone()["total"] or 0
 
@@ -18194,12 +16307,15 @@ def clerk_tc_page():
         # TODAY TC COUNT
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
             FROM tc
             WHERE school_id = %s
             AND DATE(created_at) = CURDATE()
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         today_tc = cursor.fetchone()["total"] or 0
 
@@ -18207,13 +16323,16 @@ def clerk_tc_page():
         # MONTH TC COUNT
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
             FROM tc
             WHERE school_id = %s
             AND MONTH(created_at) = MONTH(NOW())
             AND YEAR(created_at) = YEAR(NOW())
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         month_tc = cursor.fetchone()["total"] or 0
 
@@ -18221,21 +16340,20 @@ def clerk_tc_page():
         # YEAR DROPDOWN DATA
         # =========================================
 
-        cursor.execute("""
-            SELECT DISTINCT YEAR(tc_date) AS year_no
+        cursor.execute(
+            """
+            SELECT DISTINCT YEAR(created_at) AS year_no
             FROM tc
             WHERE school_id = %s
             AND tc_date IS NOT NULL
             ORDER BY year_no DESC
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         year_rows = cursor.fetchall()
 
-        years = [
-            row["year_no"]
-            for row in year_rows
-            if row["year_no"]
-        ]
+        years = [row["year_no"] for row in year_rows if row["year_no"]]
 
         # =========================================
         # SCHOOL DETAILS
@@ -18244,7 +16362,8 @@ def clerk_tc_page():
         school = get_school_details(school_id)
 
         if not school:
-            return "School not found ❌"
+            flash("Unable to load School Data.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         return render_template(
             "clerk/tc_search.html",
@@ -18252,32 +16371,26 @@ def clerk_tc_page():
             school_name=school["school_name"],
             school_udise=school["school_udise"],
             active_page="tc",
-
             tc_list=tc_list,
-
             total_tc=total_tc,
             today_tc=today_tc,
             month_tc=month_tc,
-
             search=search,
             class_filter=class_filter,
             year_filter=year_filter,
             years=years,
-
             page=page,
             per_page=per_page,
             total_pages=total_pages,
-            total_records=total_records
+            total_records=total_records,
         )
 
     except Exception as e:
-
-        print("❌ TC PAGE ERROR:", e)
-
-        return "Something went wrong ❌"
+        logger.exception("TC PAGE ERROR")
+        flash("Something went wrong ", "danger")
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -18292,13 +16405,15 @@ def clerk_tc_page():
 # Prevents duplicate / lost bonafide numbers
 # =========================================================
 
+
 def generate_bonafide_number(cursor, school_id):
 
     # =====================================
     # GET SCHOOL CERTIFICATE SETTINGS
     # =====================================
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             school_code,
             bonafide_prefix,
@@ -18306,9 +16421,9 @@ def generate_bonafide_number(cursor, school_id):
         FROM schools
         WHERE school_id = %s
         LIMIT 1
-    """, (
-        school_id,
-    ))
+    """,
+        (school_id,),
+    )
 
     school = cursor.fetchone()
 
@@ -18331,14 +16446,15 @@ def generate_bonafide_number(cursor, school_id):
     # Safe for multiple schools / clerks
     # =====================================
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT bonafide_last_number
         FROM school_sequences
         WHERE school_id = %s
         FOR UPDATE
-    """, (
-        school_id,
-    ))
+    """,
+        (school_id,),
+    )
 
     row = cursor.fetchone()
 
@@ -18351,33 +16467,31 @@ def generate_bonafide_number(cursor, school_id):
     # UPDATE SEQUENCE
     # =====================================
 
-    cursor.execute("""
+    cursor.execute(
+        """
         UPDATE school_sequences
         SET bonafide_last_number = %s
         WHERE school_id = %s
-    """, (
-        next_number,
-        school_id
-    ))
+    """,
+        (next_number, school_id),
+    )
 
     # =====================================
     # FINAL BONAFIDE NUMBER
     # =====================================
 
-    bonafide_number = (
-        f"{school_code}-"
-        f"{bonafide_prefix}-"
-        f"{str(next_number).zfill(4)}"
-    )
+    bonafide_number = f"{school_code}-{bonafide_prefix}-{str(next_number).zfill(4)}"
 
     return bonafide_number
 
- # =========================================================
+
+# =========================================================
 # 👁️ VIEW BONAFIDE (PRINT PAGE)
 # PURPOSE:
 # Clerk can view only own school bonafide
 # Admin can view all only from valid admin session
 # =========================================================
+
 
 @app.route("/clerk/bonafide/view/<int:bid>")
 @login_required
@@ -18389,7 +16503,6 @@ def view_bonafide(bid):
     cursor = None
 
     try:
-
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -18407,8 +16520,8 @@ def view_bonafide(bid):
         # =========================================
 
         if admin_mode:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT 
                     b.*,
 
@@ -18444,7 +16557,9 @@ def view_bonafide(bid):
                 WHERE b.id = %s
 
                 LIMIT 1
-            """, (bid,))
+            """,
+                (bid,),
+            )
 
             role = "admin"
 
@@ -18454,13 +16569,13 @@ def view_bonafide(bid):
         # =========================================
 
         else:
-
             school_id = session.get("clerk_school_id")
 
             if not school_id:
                 return "School session missing ❌"
                 abort(404)
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT 
                     b.*,
 
@@ -18497,10 +16612,9 @@ def view_bonafide(bid):
                 AND b.school_id = %s
 
                 LIMIT 1
-            """, (
-                bid,
-                school_id
-            ))
+            """,
+                (bid, school_id),
+            )
 
             role = "clerk"
 
@@ -18524,7 +16638,7 @@ def view_bonafide(bid):
             "caste": data.get("caste") or "",
             "primary_mobile": data.get("primary_mobile") or "",
             "email": data.get("student_email") or "",
-            "school_register_no": data.get("school_register_no") or ""
+            "school_register_no": data.get("school_register_no") or "",
         }
 
         # =========================================
@@ -18535,7 +16649,7 @@ def view_bonafide(bid):
             "id": data.get("id"),
             "bonafide_number": data.get("bonafide_number") or "",
             "purpose": data.get("purpose") or "",
-            "date": format_date(data.get("date"))
+            "date": format_date(data.get("date")),
         }
 
         # =========================================
@@ -18549,10 +16663,11 @@ def view_bonafide(bid):
             "email": data.get("school_email") or "",
             "logo_path": data.get("logo_path") or "",
             "watermark_path": data.get("watermark_path") or "",
-
-            "enable_certificate_labels": data.get("enable_certificate_labels") or "Enabled",
+            "enable_certificate_labels": data.get("enable_certificate_labels")
+            or "Enabled",
             "show_bonafide_logo": data.get("show_bonafide_logo") or "Disabled",
-            "show_bonafide_watermark": data.get("show_bonafide_watermark") or "Disabled"
+            "show_bonafide_watermark": data.get("show_bonafide_watermark")
+            or "Disabled",
         }
 
         return render_template(
@@ -18560,22 +16675,21 @@ def view_bonafide(bid):
             student=student,
             bonafide=bonafide,
             school=school,
-            role=role
+            role=role,
         )
 
     except Exception as e:
-
         print("❌ VIEW BONAFIDE ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 📜 BONAFIDE PAGE
@@ -18584,6 +16698,7 @@ def view_bonafide(bid):
 # Backend search + class/year filter + pagination
 # Production-safe for large data
 # =========================================================
+
 
 @app.route("/clerk/bonafide/")
 @login_required
@@ -18595,7 +16710,6 @@ def clerk_bonafide_page():
     cursor = None
 
     try:
-
         # =========================================
         # CLERK SCHOOL SESSION
         # =========================================
@@ -18609,36 +16723,24 @@ def clerk_bonafide_page():
         # FILTER VALUES
         # =========================================
 
-        search = (
-            request.args.get("search") or ""
-        ).strip()
+        search = (request.args.get("search") or "").strip()
 
-        class_filter = (
-            request.args.get("class") or ""
-        ).strip()
+        class_filter = (request.args.get("class") or "").strip()
 
-        year_filter = (
-            request.args.get("year") or ""
-        ).strip()
+        year_filter = (request.args.get("year") or "").strip()
 
         # =========================================
         # PAGINATION VALUES
         # =========================================
 
-        page = request.args.get(
-            "page",
-            1,
-            type=int
-        )
+        page = request.args.get("page", 1, type=int)
 
         if page < 1:
             page = 1
 
         per_page = 10
 
-        offset = (
-            page - 1
-        ) * per_page
+        offset = (page - 1) * per_page
 
         # =========================================
         # DB CONNECTION
@@ -18651,7 +16753,8 @@ def clerk_bonafide_page():
         # SCHOOL INFO
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 school_id,
                 name,
@@ -18659,9 +16762,9 @@ def clerk_bonafide_page():
             FROM schools
             WHERE school_id = %s
             LIMIT 1
-        """, (
-            school_id,
-        ))
+        """,
+            (school_id,),
+        )
 
         school = cursor.fetchone()
 
@@ -18686,16 +16789,13 @@ def clerk_bonafide_page():
             WHERE b.school_id = %s
         """
 
-        params = [
-            school_id
-        ]
+        params = [school_id]
 
         # =========================================
         # SEARCH FILTER
         # =========================================
 
         if search:
-
             where_query += """
                 AND (
                     s.name LIKE %s
@@ -18709,72 +16809,59 @@ def clerk_bonafide_page():
 
             like_search = f"%{search}%"
 
-            params.extend([
-                like_search,
-                like_search,
-                like_search,
-                like_search,
-                like_search,
-                like_search
-            ])
+            params.extend(
+                [
+                    like_search,
+                    like_search,
+                    like_search,
+                    like_search,
+                    like_search,
+                    like_search,
+                ]
+            )
 
         # =========================================
         # CLASS FILTER
         # =========================================
 
         if class_filter:
-
             where_query += """
                 AND s.class = %s
             """
 
-            params.append(
-                class_filter
-            )
+            params.append(class_filter)
 
         # =========================================
         # YEAR FILTER
         # =========================================
 
         if year_filter:
-
             where_query += """
                 AND YEAR(b.date) = %s
             """
 
-            params.append(
-                year_filter
-            )
+            params.append(year_filter)
 
         # =========================================
         # TOTAL FILTERED RECORDS
         # =========================================
 
-        cursor.execute(
-            "SELECT COUNT(*) AS total " + where_query,
-            tuple(params)
-        )
+        cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
 
-        total_records = (
-            cursor.fetchone()["total"] or 0
-        )
+        total_records = cursor.fetchone()["total"] or 0
 
-        total_pages = max(
-            1,
-            (total_records + per_page - 1) // per_page
-        )
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
-            offset = (
-                page - 1
-            ) * per_page
+            offset = (page - 1) * per_page
 
         # =========================================
         # MAIN BONAFIDE LIST
         # =========================================
 
-        query = """
+        query = (
+            """
             SELECT
                 b.id,
                 b.student_id,
@@ -18792,138 +16879,119 @@ def clerk_bonafide_page():
 
                 s.class AS class_name
 
-        """ + where_query + """
+        """
+            + where_query
+            + """
             ORDER BY b.id DESC
             LIMIT %s OFFSET %s
         """
-
-        cursor.execute(
-            query,
-            tuple(
-                params + [
-                    per_page,
-                    offset
-                ]
-            )
         )
+
+        cursor.execute(query, tuple(params + [per_page, offset]))
 
         rows = cursor.fetchall()
 
         bonafide_list = []
 
         for r in rows:
-
-            bonafide_list.append({
-
-                "id": r["id"],
-                "student_id": r["student_id"],
-                "bonafide_number": r["bonafide_number"],
-                "date": format_date(r["date"]),
-                "purpose": r["purpose"] or "",
-
-                "school_register_no": r["school_register_no"] or "",
-                "name": r["name"] or "",
-                "admission_no": r["admission_no"] or "",
-                "student_uid": r["student_uid"] or "",
-                "apaar_id": r["apaar_id"] or "",
-
-                "primary_mobile": r["primary_mobile"] or "",
-                "email": r["email"] or "",
-
-                "class": r["class_name"] or ""
-
-            })
+            bonafide_list.append(
+                {
+                    "id": r["id"],
+                    "student_id": r["student_id"],
+                    "bonafide_number": r["bonafide_number"],
+                    "date": format_date(r["date"]),
+                    "purpose": r["purpose"] or "",
+                    "school_register_no": r["school_register_no"] or "",
+                    "name": r["name"] or "",
+                    "admission_no": r["admission_no"] or "",
+                    "student_uid": r["student_uid"] or "",
+                    "apaar_id": r["apaar_id"] or "",
+                    "primary_mobile": r["primary_mobile"] or "",
+                    "email": r["email"] or "",
+                    "class": r["class_name"] or "",
+                }
+            )
 
         # =========================================
         # TOTAL BONAFIDE COUNT
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
             FROM bonafide
             WHERE school_id = %s
-        """, (
-            school_id,
-        ))
-
-        total_bonafide = (
-            cursor.fetchone()["total"] or 0
+        """,
+            (school_id,),
         )
+
+        total_bonafide = cursor.fetchone()["total"] or 0
 
         # =========================================
         # TODAY BONAFIDE COUNT
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
             FROM bonafide
             WHERE school_id = %s
             AND DATE(created_at) = CURDATE()
-        """, (
-            school_id,
-        ))
-
-        today_bonafide = (
-            cursor.fetchone()["total"] or 0
+        """,
+            (school_id,),
         )
+
+        today_bonafide = cursor.fetchone()["total"] or 0
 
         # =========================================
         # MONTH BONAFIDE COUNT
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
             FROM bonafide
             WHERE school_id = %s
             AND MONTH(created_at) = MONTH(NOW())
             AND YEAR(created_at) = YEAR(NOW())
-        """, (
-            school_id,
-        ))
-
-        month_bonafide = (
-            cursor.fetchone()["total"] or 0
+        """,
+            (school_id,),
         )
+
+        month_bonafide = cursor.fetchone()["total"] or 0
 
         # =========================================
         # YEAR DROPDOWN DATA
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT DISTINCT YEAR(date) AS year_no
             FROM bonafide
             WHERE school_id = %s
             AND date IS NOT NULL
             ORDER BY year_no DESC
-        """, (
-            school_id,
-        ))
+        """,
+            (school_id,),
+        )
 
         year_rows = cursor.fetchall()
 
-        years = [
-            row["year_no"]
-            for row in year_rows
-            if row["year_no"]
-        ]
-
+        years = [row["year_no"] for row in year_rows if row["year_no"]]
 
         # =========================================
         # HISTORY MAP FOR CURRENT PAGE STUDENTS
         # =========================================
 
-        student_ids = list({
-            b["student_id"]
-            for b in bonafide_list
-        })
+        student_ids = list({b["student_id"] for b in bonafide_list})
 
         bonafide_history_map = {}
 
         if student_ids:
-
             placeholders = ",".join(["%s"] * len(student_ids))
 
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 SELECT
                     id,
                     student_id,
@@ -18934,75 +17002,65 @@ def clerk_bonafide_page():
                 WHERE school_id = %s
                 AND student_id IN ({placeholders})
                 ORDER BY id DESC
-            """, tuple([school_id] + student_ids))
+            """,
+                tuple([school_id] + student_ids),
+            )
 
             history_rows = cursor.fetchall()
 
             for h in history_rows:
-
                 sid = h["student_id"]
 
                 if sid not in bonafide_history_map:
                     bonafide_history_map[sid] = []
 
-                bonafide_history_map[sid].append({
-                    "id": h["id"],
-                    "number": h["bonafide_number"],
-                    "date": format_date(h["date"]),
-                    "purpose": h["purpose"] or "-"
-                })
+                bonafide_history_map[sid].append(
+                    {
+                        "id": h["id"],
+                        "number": h["bonafide_number"],
+                        "date": format_date(h["date"]),
+                        "purpose": h["purpose"] or "-",
+                    }
+                )
 
         # =========================================
         # RENDER
         # =========================================
 
         return render_template(
-
             "clerk/bonafide.html",
-
             role="clerk",
-
             school_name=school_name,
             school_code=school_code,
-
             active_page="bonafide",
-
             bonafide_list=bonafide_list,
-            
-
             total_bonafide=total_bonafide,
             today_bonafide=today_bonafide,
             month_bonafide=month_bonafide,
-
             search=search,
             class_filter=class_filter,
             year_filter=year_filter,
             years=years,
-
             page=page,
             per_page=per_page,
             total_pages=total_pages,
             total_records=total_records,
-
             bonafide_history_map=bonafide_history_map,
-
-            next_bonafide_number="Auto Generate On Save"
-
+            next_bonafide_number="Auto Generate On Save",
         )
 
     except Exception as e:
-
         print("❌ BONAFIDE PAGE ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
 
 # =========================================================
 # 📄 SAVE BONAFIDE
@@ -19010,6 +17068,7 @@ def clerk_bonafide_page():
 # Clerk can generate bonafide only for own school student
 # Bonafide number + insert happen in one transaction
 # =========================================================
+
 
 @app.route("/clerk/bonafide/save", methods=["POST"])
 @login_required
@@ -19021,7 +17080,6 @@ def save_bonafide():
     cursor = None
 
     try:
-
         # =========================================
         # CLERK SESSION CHECK
         # =========================================
@@ -19038,17 +17096,11 @@ def save_bonafide():
         # GET FORM DATA
         # =========================================
 
-        student_id = (
-            request.form.get("student_id") or ""
-        ).strip()
+        student_id = (request.form.get("student_id") or "").strip()
 
-        purpose = (
-            request.form.get("purpose") or ""
-        ).strip()
+        purpose = (request.form.get("purpose") or "").strip()
 
-        date_raw = (
-            request.form.get("date") or ""
-        ).strip()
+        date_raw = (request.form.get("date") or "").strip()
 
         certificate_date = parse_date(date_raw)
 
@@ -19091,16 +17143,16 @@ def save_bonafide():
         # Prevents cross-school certificate creation
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id
             FROM students
             WHERE id = %s
             AND school_id = %s
             LIMIT 1
-        """, (
-            student_id,
-            school_id
-        ))
+        """,
+            (student_id, school_id),
+        )
 
         student = cursor.fetchone()
 
@@ -19112,44 +17164,36 @@ def save_bonafide():
         # Same purpose certificate will not duplicate
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id
             FROM bonafide
             WHERE student_id = %s
             AND school_id = %s
             AND purpose = %s
             LIMIT 1
-        """, (
-            student_id,
-            school_id,
-            purpose
-        ))
+        """,
+            (student_id, school_id, purpose),
+        )
 
         existing_bonafide = cursor.fetchone()
 
         if existing_bonafide:
-            return redirect(
-                url_for(
-                    "view_bonafide",
-                    bid=existing_bonafide[0]
-                )
-            )
+            return redirect(url_for("view_bonafide", bid=existing_bonafide[0]))
 
         # =========================================
         # GENERATE BONAFIDE NUMBER
         # Same cursor + same transaction
         # =========================================
 
-        bonafide_number = generate_bonafide_number(
-            cursor,
-            school_id
-        )
+        bonafide_number = generate_bonafide_number(cursor, school_id)
 
         # =========================================
         # INSERT BONAFIDE
         # =========================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO bonafide (
                 school_id,
                 student_id,
@@ -19158,13 +17202,9 @@ def save_bonafide():
                 date
             )
             VALUES (%s, %s, %s, %s, %s)
-        """, (
-            school_id,
-            student_id,
-            bonafide_number,
-            purpose,
-            certificate_date_value
-        ))
+        """,
+            (school_id, student_id, bonafide_number, purpose, certificate_date_value),
+        )
 
         bonafide_id = cursor.lastrowid
 
@@ -19177,15 +17217,9 @@ def save_bonafide():
 
         print("✅ BONAFIDE SAVED")
 
-        return redirect(
-            url_for(
-                "view_bonafide",
-                bid=bonafide_id
-            )
-        )
+        return redirect(url_for("view_bonafide", bid=bonafide_id))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
@@ -19194,14 +17228,13 @@ def save_bonafide():
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
 
-            
+
 # =========================================================
 # 📄 DOWNLOAD BONAFIDE PDF
 # =========================================================
@@ -19215,7 +17248,6 @@ def download_bonafide_pdf(bid):
     cursor = None
 
     try:
-
         mode = request.args.get("mode")
 
         school_id = session.get("clerk_school_id")
@@ -19231,8 +17263,8 @@ def download_bonafide_pdf(bid):
             and session.get("admin_logged_in")
             and session.get("admin_role") == "admin"
         ):
-
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 SELECT
 
@@ -19268,17 +17300,19 @@ def download_bonafide_pdf(bid):
 
                 WHERE b.id = %s
 
-            """, (bid,))
+            """,
+                (bid,),
+            )
 
         # =====================================================
         # CLERK MODE
         # =====================================================
         else:
-
             if not school_id:
                 return "School session missing ❌"
                 abort(404)
-            cursor.execute("""
+            cursor.execute(
+                """
 
                 SELECT
 
@@ -19315,12 +17349,9 @@ def download_bonafide_pdf(bid):
                 WHERE b.id = %s
                 AND b.school_id = %s
 
-            """, (
-
-                bid,
-                school_id
-
-            ))
+            """,
+                (bid, school_id),
+            )
 
         row = cursor.fetchone()
 
@@ -19335,15 +17366,10 @@ def download_bonafide_pdf(bid):
         # =====================================================
 
         bonafide = {
-
             "id": row["id"],
-
             "bonafide_number": row["bonafide_number"],
-
             "purpose": row["purpose"] or "",
-
-            "date": format_date(row["date"])
-
+            "date": format_date(row["date"]),
         }
 
         # =====================================================
@@ -19351,74 +17377,43 @@ def download_bonafide_pdf(bid):
         # =====================================================
 
         student = {
-
             "name": row["name"] or "",
-
             "school_register_no": row["school_register_no"] or "",
-
             "class": row["class_name"] or "",
-
-            "admission_date": format_date(
-                row["admission_date"]
-            ),
-
+            "admission_date": format_date(row["admission_date"]),
             "dob": format_date(row["dob"]),
-
             "caste": row["caste"] or "",
-
             "primary_mobile": row["primary_mobile"] or "",
-
-            "email": row["student_email"] or ""
-
+            "email": row["student_email"] or "",
         }
 
         # =====================================================
         # SCHOOL DATA
         # =====================================================
 
-        base_dir = os.path.abspath(
-            os.path.dirname(__file__)
-        )
+        base_dir = os.path.abspath(os.path.dirname(__file__))
 
         logo_absolute = ""
         watermark_absolute = ""
 
         if row["logo_path"]:
-
             logo_absolute = "file:///" + os.path.join(
-
-                base_dir,
-                "static",
-                row["logo_path"].replace("static/", "")
-
+                base_dir, "static", row["logo_path"].replace("static/", "")
             ).replace("\\", "/")
 
         if row["watermark_path"]:
-
             watermark_absolute = "file:///" + os.path.join(
-
-                base_dir,
-                "static",
-                row["watermark_path"].replace("static/", "")
-
+                base_dir, "static", row["watermark_path"].replace("static/", "")
             ).replace("\\", "/")
 
         school = {
-
             "name": row["school_name"] or "",
-
             "address": row["address"] or "",
-
             "phone": row["phone"] or "",
-
             "email": row["school_email"] or "",
-
             "logo_path": logo_absolute,
-
             "watermark_path": watermark_absolute,
-
-            "website": row["website"] or ""
-
+            "website": row["website"] or "",
         }
 
         # =====================================================
@@ -19426,107 +17421,67 @@ def download_bonafide_pdf(bid):
         # =====================================================
 
         html = render_template(
-
             "clerk/bonafide_generate.html",
-
             student=student,
-
             bonafide=bonafide,
-
             school=school,
-
-            is_pdf=True
-
+            is_pdf=True,
         )
 
         # =====================================================
         # PDF FOLDER
         # =====================================================
 
-        pdf_folder = os.path.join(
-
-            "static",
-            "generated_bonafide"
-
-        )
+        pdf_folder = os.path.join("static", "generated_bonafide")
 
         if not os.path.exists(pdf_folder):
-
             os.makedirs(pdf_folder)
 
-        pdf_path = os.path.join(
-
-            pdf_folder,
-
-            f'bonafide_{bonafide["id"]}.pdf'
-
-        )
+        pdf_path = os.path.join(pdf_folder, f"bonafide_{bonafide['id']}.pdf")
 
         # =====================================================
         # PDF OPTIONS
         # =====================================================
 
         options = {
-
             "page-size": "A4",
-
             "margin-top": "5mm",
-
             "margin-right": "5mm",
-
             "margin-bottom": "5mm",
-
             "margin-left": "5mm",
-
             "encoding": "UTF-8",
-
-            "enable-local-file-access": ""
-
+            "enable-local-file-access": "",
         }
 
         # =====================================================
         # GENERATE PDF
         # =====================================================
 
-        pdfkit.from_string(
-
-            html,
-
-            pdf_path,
-
-            configuration=pdf_config,
-
-            options=options
-
-        )
+        pdfkit.from_string(html, pdf_path, configuration=pdf_config, options=options)
 
         # =====================================================
         # 📧 AUTO SEND BONAFIDE PDF EMAIL
         # =====================================================
 
         try:
-
             student_email = student.get("email")
 
             if student_email:
-
                 # =========================================
                 # CHECK ALREADY SENT
                 # =========================================
 
-                cursor.execute("""
+                cursor.execute(
+                    """
 
                     SELECT id
                     FROM bonafide_email_logs
                     WHERE school_id = %s
                     AND bonafide_id = %s
 
-                """, (
-
-                    row["school_id"],
-                    bonafide["id"]
-
-                ))
+                """,
+                    (row["school_id"], bonafide["id"]),
+                )
 
                 already_sent = cursor.fetchone()
 
@@ -19535,10 +17490,7 @@ def download_bonafide_pdf(bid):
                 # =========================================
 
                 if student_email and not already_sent:
-
-                    subject = (
-                        f'Bonafide Certificate - {student["name"]}'
-                    )
+                    subject = f"Bonafide Certificate - {student['name']}"
 
                     body = f"""
 
@@ -19595,13 +17547,11 @@ def download_bonafide_pdf(bid):
             # =========================================
 
             email_sent = send_email(
-
                 student_email,
                 subject,
                 body,
                 pdf_path,
-                f"{bonafide['bonafide_number']}.pdf"
-
+                f"{bonafide['bonafide_number']}.pdf",
             )
 
             # =========================================
@@ -19609,14 +17559,14 @@ def download_bonafide_pdf(bid):
             # =========================================
 
             if email_sent == True:
-
                 print("✅ BONAFIDE PDF EMAIL SENT")
 
                 # =====================================
                 # SAVE EMAIL LOG
                 # =====================================
 
-                cursor.execute("""
+                cursor.execute(
+                    """
 
                     INSERT INTO bonafide_email_logs
                     (
@@ -19626,13 +17576,9 @@ def download_bonafide_pdf(bid):
                     )
                     VALUES (%s, %s, %s)
 
-                """, (
-
-                    row["school_id"],
-                    bonafide["id"],
-                    student_email
-
-                ))
+                """,
+                    (row["school_id"], bonafide["id"], student_email),
+                )
 
                 conn.commit()
 
@@ -19641,51 +17587,35 @@ def download_bonafide_pdf(bid):
             # =========================================
 
             else:
-
-                print(
-                    "❌ BONAFIDE EMAIL FAILED:",
-                    email_sent
-                )
+                print("❌ BONAFIDE EMAIL FAILED:", email_sent)
 
         except Exception as email_error:
-
-            print(
-                "❌ BONAFIDE EMAIL ERROR:",
-                email_error
-            )
+            print("❌ BONAFIDE EMAIL ERROR:", email_error)
 
         # =====================================================
         # RETURN PDF
         # =====================================================
 
         return send_file(
-
             pdf_path,
-
             as_attachment=True,
-
-            download_name=f'{bonafide["bonafide_number"]}.pdf'
-
+            download_name=f"{bonafide['bonafide_number']}.pdf",
         )
 
     except Exception as e:
-
-        print(
-            "❌ BONAFIDE PDF ERROR:",
-            e
-        )
+        print("❌ BONAFIDE PDF ERROR:", e)
 
         return "Something went wrong ❌"
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
-            conn.close()            
-            
- # =========================================================
+            conn.close()
+
+
+# =========================================================
 # 🔓 PUBLIC BONAFIDE PDF DOWNLOAD - NO LOGIN
 # =========================================================
 @app.route("/public/bonafide/pdf/<int:bid>")
@@ -19698,7 +17628,8 @@ def public_bonafide_pdf(bid):
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 b.*,
                 s.name,
@@ -19725,7 +17656,9 @@ def public_bonafide_pdf(bid):
                 ON b.school_id = sc.school_id
             WHERE b.id = %s
             LIMIT 1
-        """, (bid,))
+        """,
+            (bid,),
+        )
 
         row = cursor.fetchone()
 
@@ -19736,7 +17669,7 @@ def public_bonafide_pdf(bid):
             "id": row["id"],
             "bonafide_number": row["bonafide_number"],
             "purpose": row["purpose"] or "",
-            "date": format_date(row["date"])
+            "date": format_date(row["date"]),
         }
 
         student = {
@@ -19747,7 +17680,7 @@ def public_bonafide_pdf(bid):
             "dob": format_date(row["dob"]),
             "caste": row["caste"] or "",
             "primary_mobile": row["primary_mobile"] or "",
-            "email": row["student_email"] or ""
+            "email": row["student_email"] or "",
         }
 
         base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -19757,16 +17690,12 @@ def public_bonafide_pdf(bid):
 
         if row["logo_path"]:
             logo_absolute = "file:///" + os.path.join(
-                base_dir,
-                "static",
-                row["logo_path"].replace("static/", "")
+                base_dir, "static", row["logo_path"].replace("static/", "")
             ).replace("\\", "/")
 
         if row["watermark_path"]:
             watermark_absolute = "file:///" + os.path.join(
-                base_dir,
-                "static",
-                row["watermark_path"].replace("static/", "")
+                base_dir, "static", row["watermark_path"].replace("static/", "")
             ).replace("\\", "/")
 
         school = {
@@ -19776,7 +17705,7 @@ def public_bonafide_pdf(bid):
             "email": row["school_email"] or "",
             "logo_path": logo_absolute,
             "watermark_path": watermark_absolute,
-            "website": row["website"] or ""
+            "website": row["website"] or "",
         }
 
         html = render_template(
@@ -19785,16 +17714,13 @@ def public_bonafide_pdf(bid):
             bonafide=bonafide,
             school=school,
             is_pdf=True,
-            is_public=True
+            is_public=True,
         )
 
         pdf_folder = os.path.join("static", "generated_bonafide")
         os.makedirs(pdf_folder, exist_ok=True)
 
-        pdf_path = os.path.join(
-            pdf_folder,
-            f"bonafide_{bonafide['id']}.pdf"
-        )
+        pdf_path = os.path.join(pdf_folder, f"bonafide_{bonafide['id']}.pdf")
 
         options = {
             "page-size": "A4",
@@ -19803,20 +17729,15 @@ def public_bonafide_pdf(bid):
             "margin-bottom": "5mm",
             "margin-left": "5mm",
             "encoding": "UTF-8",
-            "enable-local-file-access": ""
+            "enable-local-file-access": "",
         }
 
-        pdfkit.from_string(
-            html,
-            pdf_path,
-            configuration=pdf_config,
-            options=options
-        )
+        pdfkit.from_string(html, pdf_path, configuration=pdf_config, options=options)
 
         return send_file(
             pdf_path,
             as_attachment=True,
-            download_name=f"{bonafide['bonafide_number']}.pdf"
+            download_name=f"{bonafide['bonafide_number']}.pdf",
         )
 
     except Exception as e:
@@ -19828,6 +17749,7 @@ def public_bonafide_pdf(bid):
             cursor.close()
         if conn:
             conn.close()
+
 
 # =========================================================
 # IMPORT - EXPORT PAGE ROUTE
@@ -19844,7 +17766,6 @@ def import_export_page():
     cursor = None
 
     try:
-
         # ================= SCHOOL SESSION =================
 
         school_id = session.get("clerk_school_id")
@@ -19868,11 +17789,14 @@ def import_export_page():
         # TOTAL STUDENTS
         # ===================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
             FROM students
             WHERE school_id = %s
-        """, (school_id,))
+        """,
+            (school_id,),
+        )
 
         result = cursor.fetchone()
         total_students = result["total"] if result else 0
@@ -19882,19 +17806,20 @@ def import_export_page():
         # ===================================================
 
         try:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT COUNT(*) AS total
                 FROM students
                 WHERE school_id = %s
                 AND DATE(created_at) = CURDATE()
-            """, (school_id,))
+            """,
+                (school_id,),
+            )
 
             result = cursor.fetchone()
             today_students = result["total"] if result else 0
 
         except Exception:
-
             # In case created_at column does not exist
             today_students = 0
 
@@ -19903,14 +17828,16 @@ def import_export_page():
         # ===================================================
 
         try:
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT DISTINCT YEAR(admission_date) AS year_no
                 FROM students
                 WHERE school_id = %s
                 AND admission_date IS NOT NULL
                 ORDER BY year_no DESC
-            """, (school_id,))
+            """,
+                (school_id,),
+            )
 
             years = [
                 row["year_no"]
@@ -19919,7 +17846,6 @@ def import_export_page():
             ]
 
         except Exception:
-
             years = []
 
         # ===================================================
@@ -19934,11 +17860,10 @@ def import_export_page():
             active_page="import_export",
             total_students=total_students,
             today_students=today_students,
-            years=years
+            years=years,
         )
 
     except Exception as e:
-
         print("\n==============================")
         print("IMPORT EXPORT PAGE ERROR")
         print("==============================")
@@ -19948,12 +17873,13 @@ def import_export_page():
         return f"Something went wrong ❌<br><br>{e}", 500
 
     finally:
-
         if cursor:
             cursor.close()
 
         if conn:
             conn.close()
+
+
 # =========================================================
 # 📥 IMPORT STUDENTS FROM EXCEL (SAFE + ATOMIC)
 # =========================================================
@@ -19976,7 +17902,6 @@ def import_students():
 
         # ================= FILE CHECK =================
         if not file or not file.filename:
-
             return "No file uploaded ❌"
 
         # ================= SAFE FILENAME =================
@@ -19984,9 +17909,7 @@ def import_students():
 
         # ================= EXTENSION CHECK =================
         if not filename.lower().endswith(".xlsx"):
-
             return "Only .xlsx files allowed ❌"
-        
 
         school_id = session.get("clerk_school_id")
 
@@ -20008,7 +17931,7 @@ def import_students():
 
         print("📊 Columns:", df.columns)
 
-       # ================= REQUIRED COLUMN CHECK =================
+        # ================= REQUIRED COLUMN CHECK =================
         required_columns = ["name", "class"]
 
         for col in required_columns:
@@ -20021,7 +17944,6 @@ def import_students():
         inserted_count = 0
 
         for _, row in df.iterrows():
-
             # ================= CLEAN NULLS =================
             row = row.where(pd.notnull(row), None)
 
@@ -20045,7 +17967,7 @@ def import_students():
             if apaar_id:
                 apaar_id = str(apaar_id).split(".")[0].strip()
 
-           # ================= DATE FIX =================
+            # ================= DATE FIX =================
             dob = row.get("dob")
 
             if dob:
@@ -20053,13 +17975,11 @@ def import_students():
                     if hasattr(dob, "strftime"):
                         dob = dob.strftime("%Y-%m-%d")
                     else:
-                        dob = pd.to_datetime(
-                            str(dob),
-                            dayfirst=True
-                        ).strftime("%Y-%m-%d")
+                        dob = pd.to_datetime(str(dob), dayfirst=True).strftime(
+                            "%Y-%m-%d"
+                        )
                 except:
                     dob = None
-
 
             admission_date = row.get("admission_date")
 
@@ -20069,8 +17989,7 @@ def import_students():
                         admission_date = admission_date.strftime("%Y-%m-%d")
                     else:
                         admission_date = pd.to_datetime(
-                            str(admission_date),
-                            dayfirst=True
+                            str(admission_date), dayfirst=True
                         ).strftime("%Y-%m-%d")
                 except:
                     admission_date = None
@@ -20153,53 +18072,47 @@ def import_students():
 
             print("Processing:", name)
 
-
             # ================= DUPLICATE CHECK (FIXED) =================
             existing_student = None
 
             # check aadhaar only if valid and exists
             if aadhaar:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT id
                     FROM students
                     WHERE school_id = %s
                     AND aadhaar = %s
                                LIMIT 1
-                """, (
-                    school_id,
-                    aadhaar
-                ))
+                """,
+                    (school_id, aadhaar),
+                )
                 existing_student = cursor.fetchone()
 
             # check student uid only if aadhaar not matched
             if not existing_student and student_uid:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT id
                     FROM students
                     WHERE school_id = %s
                     AND student_uid = %s
                      LIMIT 1  
-                """, (
-                    school_id,
-                    student_uid
-                ))
+                """,
+                    (school_id, student_uid),
+                )
                 existing_student = cursor.fetchone()
 
             # skip only real duplicates
             if existing_student:
-                print(
-                    "⚠️ Duplicate student skipped:",
-                    name,
-                    aadhaar,
-                    student_uid
-                )
+                print("⚠️ Duplicate student skipped:", name, aadhaar, student_uid)
                 continue
             # ================= SAFE ATOMIC ADMISSION =================
             admission_no = generate_admission_no(school_id)
 
-
-               # ================= INSERT =================
-            cursor.execute("""
+            # ================= INSERT =================
+            cursor.execute(
+                """
                 INSERT INTO students (
                     school_id,
                     school_register_no,
@@ -20237,42 +18150,44 @@ def import_students():
                     email
                 )
                 VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                school_id,
-                school_register_no,
-                name,
-                father_name,
-                mother_name,
-                student_uid,
-                aadhaar,
-                apaar_id,
-                dob,
-                birth_place,
-                nationality,
-                mother_tongue,
-                religion,
-                caste,
-                city,
-                taluka,
-                district,
-                state,
-                admission_no,
-                admission_date,
-                class_name,
-                section,
-                previous_school,
-                last_exam,
-                result_status,
-                progress,
-                conduct,
-                primary_mobile,
-                alternate_mobile,
-                occupation,
-                income,
-                guardian_name,
-                guardian_mobile,
-                email
-            ))
+            """,
+                (
+                    school_id,
+                    school_register_no,
+                    name,
+                    father_name,
+                    mother_name,
+                    student_uid,
+                    aadhaar,
+                    apaar_id,
+                    dob,
+                    birth_place,
+                    nationality,
+                    mother_tongue,
+                    religion,
+                    caste,
+                    city,
+                    taluka,
+                    district,
+                    state,
+                    admission_no,
+                    admission_date,
+                    class_name,
+                    section,
+                    previous_school,
+                    last_exam,
+                    result_status,
+                    progress,
+                    conduct,
+                    primary_mobile,
+                    alternate_mobile,
+                    occupation,
+                    income,
+                    guardian_name,
+                    guardian_mobile,
+                    email,
+                ),
+            )
 
             inserted_count += 1
 
@@ -20280,12 +18195,9 @@ def import_students():
 
         print("✅ IMPORT SUCCESS:", inserted_count)
 
-        return redirect(
-        f"/clerk/import-export?success={inserted_count}"
-    )
+        return redirect(f"/clerk/import-export?success={inserted_count}")
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
@@ -20431,11 +18343,7 @@ def export_students():
         output = io.BytesIO()
 
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(
-                writer,
-                index=False,
-                sheet_name="Students"
-            )
+            df.to_excel(writer, index=False, sheet_name="Students")
 
         output.seek(0)
 
@@ -20443,7 +18351,7 @@ def export_students():
             output,
             as_attachment=True,
             download_name=f"students_export_{school_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
     except Exception as e:
@@ -20455,9 +18363,8 @@ def export_students():
             cursor.close()
         if conn:
             conn.close()
-            
-                
- 
+
+
 @app.route("/coming-soon/<feature>")
 @login_required
 @subscription_required
@@ -20477,7 +18384,7 @@ def coming_soon(feature):
             "teachers": "Teacher Management",
             "fees": "Fee Management",
             "timetable": "Timetable",
-            "notice-board": "Notice Board"
+            "notice-board": "Notice Board",
         }
 
         if feature not in feature_names:
@@ -20494,17 +18401,18 @@ def coming_soon(feature):
             role="clerk",
             school_name=school["school_name"],
             school_udise=school["school_udise"],
-            active_page=feature
+            active_page=feature,
         )
 
     except Exception as e:
         print("❌ COMING SOON ERROR:", e)
         return "Something went wrong ❌"
-    
-    
+
+
 # =========================================================
 # 📊 ATTENDANCE MODULE
 # =========================================================
+
 
 @app.route("/clerk/attendance")
 @login_required
@@ -20512,12 +18420,9 @@ def coming_soon(feature):
 @feature_required("enable_attendance")
 def attendance_dashboard():
 
-    return redirect(
-        url_for(
-            "coming_soon",
-            feature="attendance"
-        )
-    )
+    return redirect(url_for("coming_soon", feature="attendance"))
+
+
 # =========================================================
 #  MARKS & RESULTS MODULE
 # =========================================================
@@ -20527,12 +18432,9 @@ def attendance_dashboard():
 @feature_required("enable_results")
 def results_dashboard():
 
-    return redirect(
-        url_for(
-            "coming_soon",
-            feature="marks"
-        )
-    )
+    return redirect(url_for("coming_soon", feature="marks"))
+
+
 # =========================================================
 # TEACHERS MODULE
 # =========================================================
@@ -20542,16 +18444,13 @@ def results_dashboard():
 @feature_required("enable_teacher_management")
 def teachers_dashboard():
 
-    return redirect(
-        url_for(
-            "coming_soon",
-            feature="teachers"
-        )
-    )
+    return redirect(url_for("coming_soon", feature="teachers"))
+
 
 # =========================================================
 # 💰 FEE MANAGEMENT
 # =========================================================
+
 
 @app.route("/clerk/fees")
 @login_required
@@ -20559,12 +18458,9 @@ def teachers_dashboard():
 @feature_required("enable_fee_management")
 def fee_dashboard():
 
-    return redirect(
-        url_for(
-            "coming_soon",
-            feature="fees"
-        )
-    )
+    return redirect(url_for("coming_soon", feature="fees"))
+
+
 # =========================================================
 # TIMETABLE MODULE
 # =========================================================
@@ -20574,12 +18470,9 @@ def fee_dashboard():
 @feature_required("enable_timetable")
 def timetable_dashboard():
 
-    return redirect(
-        url_for(
-            "coming_soon",
-            feature="timetable"
-        )
-    )
+    return redirect(url_for("coming_soon", feature="timetable"))
+
+
 # =========================================================
 # NOTICE BOARD MODULE
 # =========================================================
@@ -20588,16 +18481,14 @@ def timetable_dashboard():
 @subscription_required
 @feature_required("enable_notice_board")
 def notice_board_dashboard():
-    return redirect(
-        url_for(
-            "coming_soon",
-            feature="notice-board"
-        )
-    )
+    return redirect(url_for("coming_soon", feature="notice-board"))
+
+
 # HealthCheck
 @app.route("/healthcheck")
 def healthcheck():
     return "OKkK Test", 200
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(debug=True)
