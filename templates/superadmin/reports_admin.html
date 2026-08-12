@@ -2,8 +2,7 @@
 
 {% block content %}
 
-<link rel="stylesheet"
-href="{{ url_for('static',
+<link rel="stylesheet" href="{{ url_for('static',
 filename='css/superadmin/reports_admin.css') }}">
 
 <div class="report-admin-wrapper">
@@ -18,53 +17,52 @@ filename='css/superadmin/reports_admin.css') }}">
         </div>
 
         <div class="report-header-actions">
-           <a href="/superadmin/reports/export/pdf?from_date={{ from_date }}&to_date={{ to_date }}&report_type={{ report_type }}"
-            class="report-export-btn">
-                Export PDF
+
+            <a href="/superadmin/reports/export/pdf?from_date={{ from_date }}&to_date={{ to_date }}&report_type={{ report_type }}"
+                class="report-export-btn">
+                Export Report PDF
             </a>
 
-           <a href="/superadmin/reports/export/excel?from_date={{ from_date }}&to_date={{ to_date }}&report_type={{ report_type }}"
-            class="report-excel-btn">
-                Export Excel
+            <!-- Filtered report export -->
+            <a href="/superadmin/reports/export/excel?from_date={{ from_date }}&to_date={{ to_date }}&report_type={{ report_type }}"
+                class="report-excel-btn">
+                Export Report Excel
             </a>
+
+            <!-- Complete system export -->
+            <a href="{{ url_for('superadmin_excel_backup') }}" class="report-full-excel-btn">
+                Export Full Excel
+            </a>
+
         </div>
     </div>
 
     <!-- FILTERS -->
     <form method="GET" class="report-filter-box">
 
-        <input type="date"
-               name="from_date"
-               value="{{ from_date or '' }}">
+        <input type="date" name="from_date" value="{{ from_date or '' }}">
 
-        <input type="date"
-               name="to_date"
-               value="{{ to_date or '' }}">
+        <input type="date" name="to_date" value="{{ to_date or '' }}">
 
         <select name="report_type">
 
-            <option value=""
-                {% if report_type == "" %}selected{% endif %}>
+            <option value="" {% if report_type=="" %}selected{% endif %}>
                 All Reports
             </option>
 
-            <option value="revenue"
-                {% if report_type == "revenue" %}selected{% endif %}>
+            <option value="revenue" {% if report_type=="revenue" %}selected{% endif %}>
                 Revenue
             </option>
 
-            <option value="subscriptions"
-                {% if report_type == "subscriptions" %}selected{% endif %}>
+            <option value="subscriptions" {% if report_type=="subscriptions" %}selected{% endif %}>
                 Subscriptions
             </option>
 
-            <option value="leads"
-                {% if report_type == "leads" %}selected{% endif %}>
+            <option value="leads" {% if report_type=="leads" %}selected{% endif %}>
                 Leads
             </option>
 
-            <option value="certificates"
-                {% if report_type == "certificates" %}selected{% endif %}>
+            <option value="certificates" {% if report_type=="certificates" %}selected{% endif %}>
                 Certificates
             </option>
 
@@ -72,8 +70,7 @@ filename='css/superadmin/reports_admin.css') }}">
 
         <button type="submit">Apply Filter</button>
 
-        <a href="/superadmin/reports"
-           class="report-clear-btn">
+        <a href="/superadmin/reports" class="report-clear-btn">
             Clear
         </a>
 
@@ -125,28 +122,20 @@ filename='css/superadmin/reports_admin.css') }}">
     </div>
 
     <!-- CHART DATA -->
-    <div id="reportChartData"
-        data-revenue-labels='{{ revenue_labels|tojson }}'
-        data-revenue-values='{{ revenue_values|tojson }}'
-        data-plan-labels='{{ plan_labels|tojson }}'
-        data-plan-values='{{ plan_values|tojson }}'
-        data-lead-labels='{{ lead_labels|tojson }}'
-        data-lead-values='{{ lead_values|tojson }}'
-        data-certificate-labels='{{ certificate_labels|tojson }}'
+    <div id="reportChartData" data-revenue-labels='{{ revenue_labels|tojson }}'
+        data-revenue-values='{{ revenue_values|tojson }}' data-plan-labels='{{ plan_labels|tojson }}'
+        data-plan-values='{{ plan_values|tojson }}' data-lead-labels='{{ lead_labels|tojson }}'
+        data-lead-values='{{ lead_values|tojson }}' data-certificate-labels='{{ certificate_labels|tojson }}'
         data-certificate-values='{{ certificate_values|tojson }}'>
     </div>
 
-   <!-- CHART DATA -->
-<div id="reportChartData"
-     data-revenue-labels='{{ revenue_labels|tojson }}'
-     data-revenue-values='{{ revenue_values|tojson }}'
-     data-plan-labels='{{ plan_labels|tojson }}'
-     data-plan-values='{{ plan_values|tojson }}'
-     data-lead-labels='{{ lead_labels|tojson }}'
-     data-lead-values='{{ lead_values|tojson }}'
-     data-certificate-labels='{{ certificate_labels|tojson }}'
-     data-certificate-values='{{ certificate_values|tojson }}'>
-</div>
+    <!-- CHART DATA -->
+    <div id="reportChartData" data-revenue-labels='{{ revenue_labels|tojson }}'
+        data-revenue-values='{{ revenue_values|tojson }}' data-plan-labels='{{ plan_labels|tojson }}'
+        data-plan-values='{{ plan_values|tojson }}' data-lead-labels='{{ lead_labels|tojson }}'
+        data-lead-values='{{ lead_values|tojson }}' data-certificate-labels='{{ certificate_labels|tojson }}'
+        data-certificate-values='{{ certificate_values|tojson }}'>
+    </div>
 
     <!-- CHARTS -->
     <div class="report-chart-grid">
@@ -278,172 +267,172 @@ filename='css/superadmin/reports_admin.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function(){
+    document.addEventListener("DOMContentLoaded", function () {
 
-    const dataBox = document.getElementById("reportChartData");
+        const dataBox = document.getElementById("reportChartData");
 
-    if(!dataBox){
-        console.error("reportChartData not found");
-        return;
-    }
-
-    function getJsonData(key){
-        try{
-            return JSON.parse(dataBox.dataset[key] || "[]");
+        if (!dataBox) {
+            console.error("reportChartData not found");
+            return;
         }
-        catch(error){
-            console.error("Invalid chart data:", key, error);
-            return [];
+
+        function getJsonData(key) {
+            try {
+                return JSON.parse(dataBox.dataset[key] || "[]");
+            }
+            catch (error) {
+                console.error("Invalid chart data:", key, error);
+                return [];
+            }
         }
-    }
 
-    const revenueLabels = getJsonData("revenueLabels");
-    const revenueValues = getJsonData("revenueValues");
+        const revenueLabels = getJsonData("revenueLabels");
+        const revenueValues = getJsonData("revenueValues");
 
-    const planLabels = getJsonData("planLabels");
-    const planValues = getJsonData("planValues");
+        const planLabels = getJsonData("planLabels");
+        const planValues = getJsonData("planValues");
 
-    const leadLabels = getJsonData("leadLabels");
-    const leadValues = getJsonData("leadValues");
+        const leadLabels = getJsonData("leadLabels");
+        const leadValues = getJsonData("leadValues");
 
-    const certificateLabels = getJsonData("certificateLabels");
-    const certificateValues = getJsonData("certificateValues");
+        const certificateLabels = getJsonData("certificateLabels");
+        const certificateValues = getJsonData("certificateValues");
 
-    // ================= REVENUE LINE CHART =================
-    const revenueCanvas = document.getElementById("revenueReportChart");
+        // ================= REVENUE LINE CHART =================
+        const revenueCanvas = document.getElementById("revenueReportChart");
 
-    if(revenueCanvas){
-        new Chart(revenueCanvas, {
-            type: "line",
-            data: {
-                labels: revenueLabels,
-                datasets: [{
-                    label: "Revenue",
-                    data: revenueValues,
-                    borderColor: "#0EA5A4",
-                    backgroundColor: "rgba(14,165,164,.12)",
-                    fill: true,
-                    tension: .4,
-                    borderWidth: 3,
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        if (revenueCanvas) {
+            new Chart(revenueCanvas, {
+                type: "line",
+                data: {
+                    labels: revenueLabels,
+                    datasets: [{
+                        label: "Revenue",
+                        data: revenueValues,
+                        borderColor: "#0EA5A4",
+                        backgroundColor: "rgba(14,165,164,.12)",
+                        fill: true,
+                        tension: .4,
+                        borderWidth: 3,
+                        pointRadius: 4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // ================= PLAN DOUGHNUT CHART =================
-    const planCanvas = document.getElementById("planReportChart");
+        // ================= PLAN DOUGHNUT CHART =================
+        const planCanvas = document.getElementById("planReportChart");
 
-    if(planCanvas){
-        new Chart(planCanvas, {
-            type: "doughnut",
-            data: {
-                labels: planLabels,
-                datasets: [{
-                    data: planValues,
-                    backgroundColor: [
-                        "#0EA5A4",
-                        "#2563EB",
-                        "#F59E0B",
-                        "#8B5CF6",
-                        "#EF4444"
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: "75%",
-                radius: "85%",
-                plugins: {
-                    legend: {
-                        position: "bottom"
-                    }
-                }
-            }
-        });
-    }
-
-    // ================= LEAD FUNNEL BAR CHART =================
-    const leadCanvas = document.getElementById("leadReportChart");
-
-    if(leadCanvas){
-        new Chart(leadCanvas, {
-            type: "bar",
-            data: {
-                labels: leadLabels,
-                datasets: [{
-                    label: "Leads",
-                    data: leadValues,
-                    backgroundColor: "#2563EB",
-                    borderRadius: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        if (planCanvas) {
+            new Chart(planCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: planLabels,
+                    datasets: [{
+                        data: planValues,
+                        backgroundColor: [
+                            "#0EA5A4",
+                            "#2563EB",
+                            "#F59E0B",
+                            "#8B5CF6",
+                            "#EF4444"
+                        ],
+                        borderWidth: 0
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "75%",
+                    radius: "85%",
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // ================= CERTIFICATE USAGE BAR CHART =================
-    const certificateCanvas = document.getElementById("certificateReportChart");
+        // ================= LEAD FUNNEL BAR CHART =================
+        const leadCanvas = document.getElementById("leadReportChart");
 
-    if(certificateCanvas){
-        new Chart(certificateCanvas, {
-            type: "bar",
-            data: {
-                labels: certificateLabels,
-                datasets: [{
-                    label: "Certificates",
-                    data: certificateValues,
-                    backgroundColor: "#8B5CF6",
-                    borderRadius: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        if (leadCanvas) {
+            new Chart(leadCanvas, {
+                type: "bar",
+                data: {
+                    labels: leadLabels,
+                    datasets: [{
+                        label: "Leads",
+                        data: leadValues,
+                        backgroundColor: "#2563EB",
+                        borderRadius: 10
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-});
+        // ================= CERTIFICATE USAGE BAR CHART =================
+        const certificateCanvas = document.getElementById("certificateReportChart");
+
+        if (certificateCanvas) {
+            new Chart(certificateCanvas, {
+                type: "bar",
+                data: {
+                    labels: certificateLabels,
+                    datasets: [{
+                        label: "Certificates",
+                        data: certificateValues,
+                        backgroundColor: "#8B5CF6",
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+    });
 </script>
 
 {% endblock %}

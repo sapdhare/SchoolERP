@@ -4,6 +4,71 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/clerk.css') }}">
 
+<!-- =========================================================
+     PREMIUM FLASH MESSAGES
+========================================================= -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+{% if messages %}
+
+<div class="clerk-flash-stack" id="clerkFlashStack">
+
+    {% for category, message in messages %}
+
+    <div class="clerk-flash clerk-flash-{{ category }}">
+
+        <div class="clerk-flash-icon">
+
+            {% if category == "success" %}
+            ✓
+            {% elif category == "warning" %}
+            !
+            {% elif category == "danger" %}
+            !
+            {% else %}
+            i
+            {% endif %}
+
+        </div>
+
+        <div class="clerk-flash-content">
+
+            <strong>
+                {% if category == "success" %}
+                Success
+                {% elif category == "warning" %}
+                Attention
+                {% elif category == "danger" %}
+                Something went wrong
+                {% else %}
+                Information
+                {% endif %}
+            </strong>
+
+            <span>
+                {{ message }}
+            </span>
+
+        </div>
+
+        <button type="button" class="clerk-flash-close" onclick="this.closest('.clerk-flash').remove()"
+            aria-label="Close notification">
+
+            ×
+
+        </button>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+
+{% endwith %}
+
 <!-- ================= CLERK HEADER ================= -->
 <div class="clerk-top-header">
 
@@ -33,8 +98,7 @@
 
     <!-- PROFILE ICON -->
 
-    <div class="profile-avatar-box"
-         onclick="openProfileModal()">
+    <div class="profile-avatar-box" onclick="openProfileModal()">
 
         <div class="profile-info">
             <strong>
@@ -61,11 +125,11 @@
     <div class="subscription-icon">
 
         {% if subscription_alert.type == "expired" %}
-            ❌
+        ❌
         {% elif subscription_alert.type == "danger" %}
-            🚨
+        🚨
         {% else %}
-            ⏳
+        ⏳
         {% endif %}
 
     </div>
@@ -86,30 +150,27 @@
 
         {% if subscription_alert.type == "expired" %}
 
-            <a href="{{ url_for('renew_subscription') }}"
-               class="subscription-renew-btn expired-btn">
+        <a href="{{ url_for('renew_subscription') }}" class="subscription-renew-btn expired-btn">
 
-                Renew Now →
+            Renew Now →
 
-            </a>
+        </a>
 
         {% elif subscription_alert.type == "danger" %}
 
-            <a href="{{ url_for('renew_subscription') }}"
-               class="subscription-renew-btn danger-btn">
+        <a href="{{ url_for('renew_subscription') }}" class="subscription-renew-btn danger-btn">
 
-                Renew Now →
+            Renew Now →
 
-            </a>
+        </a>
 
         {% else %}
 
-            <a href="{{ url_for('renew_subscription') }}"
-               class="subscription-renew-btn warning-btn">
+        <a href="{{ url_for('renew_subscription') }}" class="subscription-renew-btn warning-btn">
 
-                Renew Before Expiry →
+            Renew Before Expiry →
 
-            </a>
+        </a>
 
         {% endif %}
 
@@ -119,7 +180,7 @@
 {% endif %}
 
 
- 
+
 <!-- ================= CLERK STATS SECTION ================= -->
 
 <div class="clerk-stats-row">
@@ -161,14 +222,13 @@
     </div>
 
 </div>
- 
+
 
 <!-- ================= ACTION CARDS ================= -->
 
 <div class="clerk-actions">
 
-    <div class="action-card"
-         onclick="window.location.href='/clerk/add-student'">
+    <div class="action-card" onclick="window.location.href='/clerk/add-student'">
 
         <div class="action-icon">➕</div>
         <h3>Add Student</h3>
@@ -176,8 +236,7 @@
 
     </div>
 
-    <div class="action-card"
-         onclick="window.location.href='/clerk/students'">
+    <div class="action-card" onclick="window.location.href='/clerk/students'">
 
         <div class="action-icon">👥</div>
         <h3>View Students</h3>
@@ -187,8 +246,7 @@
 
     {% if features.tc == "Enabled" %}
 
-    <div class="action-card"
-         onclick="window.location.href='/clerk/tc'">
+    <div class="action-card" onclick="window.location.href='/clerk/tc'">
 
         <div class="action-icon">📋</div>
         <h3>TC Management</h3>
@@ -211,8 +269,7 @@
 
     {% if features.bonafide == "Enabled" %}
 
-    <div class="action-card"
-         onclick="window.location.href='/clerk/bonafide'">
+    <div class="action-card" onclick="window.location.href='/clerk/bonafide'">
 
         <div class="action-icon">🏅</div>
         <h3>Bonafide Management</h3>
@@ -335,40 +392,40 @@
 
             {% if activities %}
 
-                {% for activity in activities[:6] %}
+            {% for activity in activities[:6] %}
 
-                <div class="activity-item">
+            <div class="activity-item">
 
-                    <span class="activity-dot {{ activity.type }}"></span>
+                <span class="activity-dot {{ activity.type }}"></span>
 
-                    <div class="activity-content">
+                <div class="activity-content">
 
-                        <h4>
-                            {{ activity.title }}
-                        </h4>
+                    <h4>
+                        {{ activity.title }}
+                    </h4>
 
-                        <p>
-                            {{ activity.title_mr }}
-                            <span>Recently</span>
-                        </p>
-
-                    </div>
+                    <p>
+                        {{ activity.title_mr }}
+                        <span>Recently</span>
+                    </p>
 
                 </div>
 
-                {% endfor %}
+            </div>
+
+            {% endfor %}
 
             {% else %}
 
-                <div class="empty-activity-box">
+            <div class="empty-activity-box">
 
-                    <div>📭</div>
+                <div>📭</div>
 
-                    <h4>No recent activity</h4>
+                <h4>No recent activity</h4>
 
-                    <p>आज कोणतीही नवीन activity नाही.</p>
+                <p>आज कोणतीही नवीन activity नाही.</p>
 
-                </div>
+            </div>
 
             {% endif %}
 
@@ -390,7 +447,7 @@
         </div>
 
         <span class="pending-count-pill">
-            {{ pending_tasks or 0 }} Students Pending 
+            {{ pending_tasks or 0 }} Students Pending
         </span>
         <span class="pending-fields-pill">
             {{ pending_fields }} Missing Fields
@@ -402,56 +459,55 @@
 
         {% if pending_students %}
 
-            {% for student in pending_students %}
+        {% for student in pending_students %}
 
-            <div class="pending-student-item">
+        <div class="pending-student-item">
 
-                <div class="pending-avatar">
-                    {{ student[2][0] if student[2] else "S" }}
-                </div>
+            <div class="pending-avatar">
+                {{ student[2][0] if student[2] else "S" }}
+            </div>
 
-                <div class="pending-info">
+            <div class="pending-info">
 
-                    <h4>{{ student[2] }}</h4>
+                <h4>{{ student[2] }}</h4>
 
-                    <p>
-                        {{ student[1] or "No Admission No" }}
-                        • Class {{ student[3] or "-" }}
-                        {{ student[4] or "" }}
-                    </p>
+                <p>
+                    {{ student[1] or "No Admission No" }}
+                    • Class {{ student[3] or "-" }}
+                    {{ student[4] or "" }}
+                </p>
 
-                    <div class="pending-missing-tags">
+                <div class="pending-missing-tags">
 
-                        {% for reason in student[5].split(', ') %}
+                    {% for reason in student[5].split(', ') %}
 
-                            <span>{{ reason }}</span>
+                    <span>{{ reason }}</span>
 
-                        {% endfor %}
-
-                    </div>
+                    {% endfor %}
 
                 </div>
-
-               <a href="{{ url_for('edit_student', id=student[0]) }}"
-                class="pending-fix-btn">
-                    Fix →
-                </a>
 
             </div>
 
-            {% endfor %}
+            <a href="{{ url_for('edit_student', id=student[0]) }}" class="pending-fix-btn">
+                Fix →
+            </a>
+
+        </div>
+
+        {% endfor %}
 
         {% else %}
 
-            <div class="empty-activity-box">
+        <div class="empty-activity-box">
 
-                <div>✅</div>
+            <div>✅</div>
 
-                <h4>All student records complete</h4>
+            <h4>All student records complete</h4>
 
-                <p>कोणतीही अपूर्ण माहिती नाही.</p>
+            <p>कोणतीही अपूर्ण माहिती नाही.</p>
 
-            </div>
+        </div>
 
         {% endif %}
 
@@ -482,8 +538,7 @@
             </p>
         </div>
 
-        <a href="javascript:void(0)"
-            class="analytics-report-btn disabled-report-btn">
+        <a href="javascript:void(0)" class="analytics-report-btn disabled-report-btn">
             Report Coming Soon
         </a>
 
@@ -566,7 +621,7 @@
     </div>
 
 </section>
- 
+
 
 <!-- ================= PREMIUM PROFILE MODAL ================= -->
 
@@ -590,8 +645,7 @@
 
             </div>
 
-            <button class="profile-close-btn"
-                    onclick="closeProfileModal()">
+            <button class="profile-close-btn" onclick="closeProfileModal()">
                 ×
             </button>
 
@@ -600,15 +654,11 @@
         <!-- TABS -->
         <div class="profile-tabs">
 
-            <button class="profile-tab-btn active"
-                    id="profileTabBtn"
-                    onclick="showProfileTab('profile')">
+            <button class="profile-tab-btn active" id="profileTabBtn" onclick="showProfileTab('profile')">
                 👤 Profile
             </button>
 
-            <button class="profile-tab-btn"
-                    id="passwordTabBtn"
-                    onclick="showProfileTab('password')">
+            <button class="profile-tab-btn" id="passwordTabBtn" onclick="showProfileTab('password')">
                 🔐 Reset Password
             </button>
 
@@ -631,61 +681,48 @@
 
                 <div class="profile-input-group">
                     <label>Name</label>
-                    <input id="profile_name"
-                           maxlength="150"
-                           value="{{ user_profile.name or '' }}">
+                    <input id="profile_name" maxlength="150" value="{{ user_profile.name or '' }}">
                 </div>
 
                 <div class="profile-input-group readonly">
                     <label>Email</label>
-                    <input value="{{ user_profile.email or '' }}"
-                           disabled>
+                    <input value="{{ user_profile.email or '' }}" disabled>
                 </div>
 
                 <div class="profile-input-group">
                     <label>Phone</label>
-                    <input id="profile_phone"
-                           maxlength="10"
-                           value="{{ user_profile.phone or '' }}">
+                    <input id="profile_phone" maxlength="10" value="{{ user_profile.phone or '' }}">
                 </div>
 
                 <div class="profile-input-group">
                     <label>Designation</label>
-                    <input id="profile_designation"
-                           maxlength="100"
-                           value="{{ user_profile.designation or '' }}">
+                    <input id="profile_designation" maxlength="100" value="{{ user_profile.designation or '' }}">
                 </div>
 
                 <div class="profile-input-group full">
                     <label>Address</label>
-                    <input id="profile_address"
-                           maxlength="255"
-                           value="{{ user_profile.address or '' }}">
+                    <input id="profile_address" maxlength="255" value="{{ user_profile.address or '' }}">
                 </div>
 
                 <div class="profile-input-group readonly">
                     <label>School</label>
-                    <input value="{{ user_profile.school_name or '' }}"
-                           disabled>
+                    <input value="{{ user_profile.school_name or '' }}" disabled>
                 </div>
 
                 <div class="profile-input-group readonly">
                     <label>Subscription</label>
-                    <input value="{{ user_profile.plan_name or 'No Plan' }}"
-                           disabled>
+                    <input value="{{ user_profile.plan_name or 'No Plan' }}" disabled>
                 </div>
 
                 <div class="profile-input-group readonly">
                     <label>Days Remaining</label>
-                    <input value="{{ user_profile.remaining_days or 0 }}"
-                           disabled>
+                    <input value="{{ user_profile.remaining_days or 0 }}" disabled>
                 </div>
 
             </div>
 
             <div class="profile-actions">
-                <button onclick="saveProfile()"
-                        id="profileSaveBtn">
+                <button onclick="saveProfile()" id="profileSaveBtn">
                     Save Changes
                 </button>
             </div>
@@ -720,23 +757,17 @@
 
                     <div class="profile-input-group">
                         <label>Registered Email</label>
-                        <input id="reset_email"
-                               type="email"
-                               value="{{ user_profile.email or '' }}"
-                               readonly>
+                        <input id="reset_email" type="email" value="{{ user_profile.email or '' }}" readonly>
                     </div>
 
-                    <button class="password-main-btn"
-                            onclick="sendPasswordOTP()">
+                    <button class="password-main-btn" onclick="sendPasswordOTP()">
                         Send OTP
                     </button>
 
                 </div>
 
                 <!-- STEP 2 -->
-                <div id="password-step-2"
-                     class="password-step"
-                     style="display:none;">
+                <div id="password-step-2" class="password-step" style="display:none;">
 
                     <h3>Verify OTP</h3>
 
@@ -746,23 +777,17 @@
 
                     <div class="profile-input-group">
                         <label>Enter OTP</label>
-                        <input id="profile_otp"
-                               type="text"
-                               maxlength="6"
-                               placeholder="Enter OTP">
+                        <input id="profile_otp" type="text" maxlength="6" placeholder="Enter OTP">
                     </div>
 
-                    <button class="password-main-btn"
-                            onclick="verifyOTPOnly()">
+                    <button class="password-main-btn" onclick="verifyOTPOnly()">
                         Verify OTP
                     </button>
 
                 </div>
 
                 <!-- STEP 3 -->
-                <div id="password-step-3"
-                     class="password-step"
-                     style="display:none;">
+                <div id="password-step-3" class="password-step" style="display:none;">
 
                     <h3>Create New Password</h3>
 
@@ -772,20 +797,15 @@
 
                     <div class="profile-input-group">
                         <label>New Password</label>
-                        <input id="new_password"
-                               type="password"
-                               placeholder="Enter New Password">
+                        <input id="new_password" type="password" placeholder="Enter New Password">
                     </div>
 
                     <div class="profile-input-group">
                         <label>Confirm Password</label>
-                        <input id="confirm_password"
-                               type="password"
-                               placeholder="Repeat Password">
+                        <input id="confirm_password" type="password" placeholder="Repeat Password">
                     </div>
 
-                    <button class="password-main-btn"
-                            onclick="updatePasswordFinal()">
+                    <button class="password-main-btn" onclick="updatePasswordFinal()">
                         Update Password
                     </button>
 
@@ -815,448 +835,478 @@
 
 <script>
 
+    /* =========================================================
+    AUTO DISMISS FLASH MESSAGES
+    ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const flashMessages =
+            document.querySelectorAll(".clerk-flash");
+
+        flashMessages.forEach(function (message) {
+
+            setTimeout(function () {
+
+                message.style.opacity = "0";
+                message.style.transform = "translateY(-6px)";
+
+                setTimeout(function () {
+                    message.remove();
+                }, 250);
+
+            }, 5000);
+
+        });
+
+    });
+
+</script>
+
+<script>
+
     /* =====================================================
    HANDLE EXPIRED SESSION
 ===================================================== */
 
-function handleSessionExpired(response){
+    function handleSessionExpired(response) {
 
-    if(response.redirected){
+        if (response.redirected) {
 
-        window.location.href = response.url;
-        return true;
+            window.location.href = response.url;
+            return true;
+
+        }
+
+        if (response.status === 401) {
+
+            alert("Your session has expired. Please login again.");
+
+            window.location.href = "/login";
+
+            return true;
+        }
+
+        return false;
 
     }
-
-    if(response.status === 401){
-
-        alert("Your session has expired. Please login again.");
-
-        window.location.href = "/login";
-
-        return true;
-    }
-
-    return false;
-
-}
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function(){
+    document.addEventListener("DOMContentLoaded", function () {
 
-    const chartData = JSON.parse(
-        document.getElementById("chart-data").textContent
-    );
+        const chartData = JSON.parse(
+            document.getElementById("chart-data").textContent
+        );
 
-    const gridColor = "rgba(148,163,184,0.16)";
-    const textColor = "#64748b";
+        const gridColor = "rgba(148,163,184,0.16)";
+        const textColor = "#64748b";
 
-    new Chart(document.getElementById("chartGrowth"), {
-        type: "line",
-        data: {
-            labels: chartData.growth_labels,
-            datasets: [{
-                label: "Students",
-                data: chartData.growth,
-                borderColor: "#14b8a6",
-                backgroundColor: "rgba(20,184,166,0.12)",
-                fill: true,
-                tension: 0.42,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive:true,
-            maintainAspectRatio:false,
-            plugins:{
-                legend:{display:false}
+        new Chart(document.getElementById("chartGrowth"), {
+            type: "line",
+            data: {
+                labels: chartData.growth_labels,
+                datasets: [{
+                    label: "Students",
+                    data: chartData.growth,
+                    borderColor: "#14b8a6",
+                    backgroundColor: "rgba(20,184,166,0.12)",
+                    fill: true,
+                    tension: 0.42,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
             },
-            scales:{
-                x:{
-                    ticks:{color:textColor},
-                    grid:{display:false}
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
                 },
-                y:{
-                    beginAtZero:true,
-                    ticks:{color:textColor, precision:0},
-                    grid:{color:gridColor}
-                }
-            }
-        }
-    });
-
-    new Chart(document.getElementById("chartTC"), {
-        type: "bar",
-        data: {
-            labels: chartData.tc_labels,
-            datasets: [{
-                label: "TC",
-                data: chartData.tc,
-                backgroundColor: "#3b82f6",
-                borderRadius: 10,
-                maxBarThickness: 42
-            }]
-        },
-        options: {
-            responsive:true,
-            maintainAspectRatio:false,
-            plugins:{
-                legend:{display:false}
-            },
-            scales:{
-                x:{
-                    ticks:{color:textColor},
-                    grid:{display:false}
-                },
-                y:{
-                    beginAtZero:true,
-                    ticks:{color:textColor, precision:0},
-                    grid:{color:gridColor}
-                }
-            }
-        }
-    });
-
-    new Chart(document.getElementById("chartBonafide"), {
-        type: "doughnut",
-        data: {
-            labels:["Issued", "Remaining"],
-            datasets: [{
-                data: chartData.bonafide,
-                backgroundColor:["#8b5cf6", "#e5e7eb"],
-                borderWidth:0
-            }]
-        },
-        options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            cutout:"72%",
-            plugins:{
-                legend:{
-                    position:"bottom",
-                    labels:{
-                        color:textColor,
-                        usePointStyle:true,
-                        boxWidth:8
+                scales: {
+                    x: {
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: textColor, precision: 0 },
+                        grid: { color: gridColor }
                     }
                 }
             }
-        }
-    });
+        });
 
-});
+        new Chart(document.getElementById("chartTC"), {
+            type: "bar",
+            data: {
+                labels: chartData.tc_labels,
+                datasets: [{
+                    label: "TC",
+                    data: chartData.tc,
+                    backgroundColor: "#3b82f6",
+                    borderRadius: 10,
+                    maxBarThickness: 42
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: textColor, precision: 0 },
+                        grid: { color: gridColor }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById("chartBonafide"), {
+            type: "doughnut",
+            data: {
+                labels: ["Issued", "Remaining"],
+                datasets: [{
+                    data: chartData.bonafide,
+                    backgroundColor: ["#8b5cf6", "#e5e7eb"],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "72%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            color: textColor,
+                            usePointStyle: true,
+                            boxWidth: 8
+                        }
+                    }
+                }
+            }
+        });
+
+    });
 </script>
 
 <!-- ================= LIVE COUNTER JS ================= -->
 
 <script>
-document.querySelectorAll('.counter').forEach(counter => {
+    document.querySelectorAll('.counter').forEach(counter => {
 
-    const isPercent = counter.innerText.includes('%');
-    const target = parseInt(counter.innerText) || 0;
-    let current = 0;
+        const isPercent = counter.innerText.includes('%');
+        const target = parseInt(counter.innerText) || 0;
+        let current = 0;
 
-    const increment = target / 40;
+        const increment = target / 40;
 
-    const update = () => {
-        if (current < target) {
-            current += increment;
-            counter.innerText = Math.ceil(current) + (isPercent ? "%" : "");
-            setTimeout(update, 20);
-        } else {
-            counter.innerText = target + (isPercent ? "%" : "");
-        }
-    };
+        const update = () => {
+            if (current < target) {
+                current += increment;
+                counter.innerText = Math.ceil(current) + (isPercent ? "%" : "");
+                setTimeout(update, 20);
+            } else {
+                counter.innerText = target + (isPercent ? "%" : "");
+            }
+        };
 
-    counter.innerText = "0" + (isPercent ? "%" : "");
-    update();
-});
+        counter.innerText = "0" + (isPercent ? "%" : "");
+        update();
+    });
 </script>
 
 <!-- PROFILE + PASSWORD JS -->
 
 <script>
 
-function openProfileModal(){
-    document.getElementById("profileModal").style.display = "flex";
-}
-
-function closeProfileModal(){
-    document.getElementById("profileModal").style.display = "none";
-}
-/* =====================================================
-   CLOSE MODAL WHEN CLICKING OUTSIDE
-===================================================== */
-
-window.addEventListener("click", function(e){
-
-    const modal = document.getElementById("profileModal");
-
-    if(e.target === modal){
-
-        closeProfileModal();
-
+    function openProfileModal() {
+        document.getElementById("profileModal").style.display = "flex";
     }
 
-});
+    function closeProfileModal() {
+        document.getElementById("profileModal").style.display = "none";
+    }
+    /* =====================================================
+       CLOSE MODAL WHEN CLICKING OUTSIDE
+    ===================================================== */
+
+    window.addEventListener("click", function (e) {
+
+        const modal = document.getElementById("profileModal");
+
+        if (e.target === modal) {
+
+            closeProfileModal();
+
+        }
+
+    });
 
     /* =====================================================
    CLOSE MODAL ON ESC KEY
 ===================================================== */
 
-document.addEventListener("keydown", function(e){
+    document.addEventListener("keydown", function (e) {
 
-    if(e.key === "Escape"){
+        if (e.key === "Escape") {
 
-        closeProfileModal();
-
-    }
-
-});
-    
-/* TAB SWITCH */
-
-function showProfileTab(tab){
-
-    document.getElementById("profile-tab").style.display = "none";
-    document.getElementById("password-tab").style.display = "none";
-
-    document.getElementById("profileTabBtn").classList.remove("active");
-    document.getElementById("passwordTabBtn").classList.remove("active");
-
-    document.getElementById(tab + "-tab").style.display = "block";
-
-    if(tab === "profile"){
-        document.getElementById("profileTabBtn").classList.add("active");
-    }else{
-        document.getElementById("passwordTabBtn").classList.add("active");
-    }
-}
-
-/* SAVE PROFILE */
-
-function saveProfile(){
-
-    const name = document.getElementById("profile_name").value.trim();
-    const phone = document.getElementById("profile_phone").value.trim();
-
-    if(!name){
-        alert("Name required");
-        return;
-    }
-
-    if(phone && !/^[0-9]{10}$/.test(phone)){
-        alert("Enter valid 10 digit phone number");
-        return;
-    }
-
-    const btn = document.getElementById("profileSaveBtn");
-    btn.disabled = true;
-    btn.innerText = "Saving...";
-
-    const formData = new FormData();
-
-    formData.append("name", name);
-    formData.append("phone", phone);
-    formData.append("address", document.getElementById("profile_address").value.trim());
-    formData.append("designation", document.getElementById("profile_designation").value.trim());
-
-fetch("/clerk/profile/update",{
-
-    method:"POST",
-
-    headers:{
-        "X-CSRFToken": csrfToken
-    },
-
-    body:formData
-
-    })
-        .then(response=>{
-    
-        if(handleSessionExpired(response)){
-    
-            throw new Error("Session Expired");
-    
-        }
-    
-        return response.json();
-    
-    })
-    .then(data=>{
-        alert(data.message);
-
-        if(data.status === "success"){
-            location.reload();
-        }
-    })
-    .catch(error=>{
-
-        if(error.message !== "Session Expired"){
-    
-            alert("Something went wrong");
-    
-        }
-    
-    })
-    .finally(()=>{
-        btn.disabled = false;
-        btn.innerText = "Save Changes";
-    });
-}
-
-
-
-function setPasswordStep(step){
-
-    document.getElementById("password-step-1").style.display = "none";
-    document.getElementById("password-step-2").style.display = "none";
-    document.getElementById("password-step-3").style.display = "none";
-
-    document.getElementById("password-step-" + step).style.display = "block";
-
-    document.getElementById("otpDot1").classList.toggle("active", step >= 1);
-    document.getElementById("otpDot2").classList.toggle("active", step >= 2);
-    document.getElementById("otpDot3").classList.toggle("active", step >= 3);
-}
-
-/* STEP 1 */
-function sendPasswordOTP(){
-
-    const email = document.getElementById("reset_email").value.trim();
-
-    fetch("/clerk/profile/send-otp",{
-    
-        method:"POST",
-    
-        headers:{
-            "Content-Type":"application/json",
-            "X-CSRFToken": csrfToken
-        },
-    
-        body:JSON.stringify({
-            email:email
-        })
-    
-    })
-    .then(response=>{
-    
-        if(handleSessionExpired(response)){
-            throw new Error("Session Expired");
-        }
-    
-        return response.json();
-    
-    })
-        
-    .then(data=>{
-
-        alert(data.message);
-
-        if(data.status === "success"){
-            setPasswordStep(2);
-        }
-    });
-}
-
-/* STEP 2 */
-function verifyOTPOnly(){
-
-    const otp = document.getElementById("profile_otp").value.trim();
-
-    if(!/^[0-9]{6}$/.test(otp)){
-        alert("Enter valid 6 digit OTP");
-        return;
-    }
-
-    fetch("/clerk/profile/check-otp",{
-        
-         method:"POST",
-
-        headers:{
-            "Content-Type":"application/json",
-            "X-CSRFToken": csrfToken
-        },
-    
-        body:JSON.stringify({
-
-                otp:otp
-            
-            })
-        })
-        
-       .then(response=>{
-    
-        if(handleSessionExpired(response)){
-    
-            throw new Error("Session Expired");
-    
-        }
-    
-        return response.json();
-    
-    })
-    .then(data=>{
-
-        alert(data.message);
-
-        if(data.status === "success"){
-            setPasswordStep(3);
-        }
-    });
-}
-
-
-/* STEP 3 */
-function updatePasswordFinal(){
-
-    const newPassword = document.getElementById("new_password").value;
-    const confirmPassword = document.getElementById("confirm_password").value;
-
-    if(newPassword !== confirmPassword){
-        alert("Passwords do not match");
-        return;
-    }
-
-    fetch("/clerk/profile/update-password",{
-        
-         method:"POST",
-
-         headers:{
-            "Content-Type":"application/json",
-            "X-CSRFToken": csrfToken
-        },
-    
-        body:JSON.stringify({
-
-                password:newPassword
-            
-            })
-        })
-        
-       .then(response=>{
-    
-        if(handleSessionExpired(response)){
-    
-            throw new Error("Session Expired");
-    
-        }
-    
-        return response.json();
-    
-    })
-    .then(data=>{
-
-        alert(data.message);
-
-        if(data.status === "success"){
             closeProfileModal();
-            location.reload();
+
         }
+
     });
-}
+
+    /* TAB SWITCH */
+
+    function showProfileTab(tab) {
+
+        document.getElementById("profile-tab").style.display = "none";
+        document.getElementById("password-tab").style.display = "none";
+
+        document.getElementById("profileTabBtn").classList.remove("active");
+        document.getElementById("passwordTabBtn").classList.remove("active");
+
+        document.getElementById(tab + "-tab").style.display = "block";
+
+        if (tab === "profile") {
+            document.getElementById("profileTabBtn").classList.add("active");
+        } else {
+            document.getElementById("passwordTabBtn").classList.add("active");
+        }
+    }
+
+    /* SAVE PROFILE */
+
+    function saveProfile() {
+
+        const name = document.getElementById("profile_name").value.trim();
+        const phone = document.getElementById("profile_phone").value.trim();
+
+        if (!name) {
+            alert("Name required");
+            return;
+        }
+
+        if (phone && !/^[0-9]{10}$/.test(phone)) {
+            alert("Enter valid 10 digit phone number");
+            return;
+        }
+
+        const btn = document.getElementById("profileSaveBtn");
+        btn.disabled = true;
+        btn.innerText = "Saving...";
+
+        const formData = new FormData();
+
+        formData.append("name", name);
+        formData.append("phone", phone);
+        formData.append("address", document.getElementById("profile_address").value.trim());
+        formData.append("designation", document.getElementById("profile_designation").value.trim());
+
+        fetch("/clerk/profile/update", {
+
+            method: "POST",
+
+            headers: {
+                "X-CSRFToken": csrfToken
+            },
+
+            body: formData
+
+        })
+            .then(response => {
+
+                if (handleSessionExpired(response)) {
+
+                    throw new Error("Session Expired");
+
+                }
+
+                return response.json();
+
+            })
+            .then(data => {
+                alert(data.message);
+
+                if (data.status === "success") {
+                    location.reload();
+                }
+            })
+            .catch(error => {
+
+                if (error.message !== "Session Expired") {
+
+                    alert("Something went wrong");
+
+                }
+
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = "Save Changes";
+            });
+    }
+
+
+
+    function setPasswordStep(step) {
+
+        document.getElementById("password-step-1").style.display = "none";
+        document.getElementById("password-step-2").style.display = "none";
+        document.getElementById("password-step-3").style.display = "none";
+
+        document.getElementById("password-step-" + step).style.display = "block";
+
+        document.getElementById("otpDot1").classList.toggle("active", step >= 1);
+        document.getElementById("otpDot2").classList.toggle("active", step >= 2);
+        document.getElementById("otpDot3").classList.toggle("active", step >= 3);
+    }
+
+    /* STEP 1 */
+    function sendPasswordOTP() {
+
+        const email = document.getElementById("reset_email").value.trim();
+
+        fetch("/clerk/profile/send-otp", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+
+            body: JSON.stringify({
+                email: email
+            })
+
+        })
+            .then(response => {
+
+                if (handleSessionExpired(response)) {
+                    throw new Error("Session Expired");
+                }
+
+                return response.json();
+
+            })
+
+            .then(data => {
+
+                alert(data.message);
+
+                if (data.status === "success") {
+                    setPasswordStep(2);
+                }
+            });
+    }
+
+    /* STEP 2 */
+    function verifyOTPOnly() {
+
+        const otp = document.getElementById("profile_otp").value.trim();
+
+        if (!/^[0-9]{6}$/.test(otp)) {
+            alert("Enter valid 6 digit OTP");
+            return;
+        }
+
+        fetch("/clerk/profile/check-otp", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+
+            body: JSON.stringify({
+
+                otp: otp
+
+            })
+        })
+
+            .then(response => {
+
+                if (handleSessionExpired(response)) {
+
+                    throw new Error("Session Expired");
+
+                }
+
+                return response.json();
+
+            })
+            .then(data => {
+
+                alert(data.message);
+
+                if (data.status === "success") {
+                    setPasswordStep(3);
+                }
+            });
+    }
+
+
+    /* STEP 3 */
+    function updatePasswordFinal() {
+
+        const newPassword = document.getElementById("new_password").value;
+        const confirmPassword = document.getElementById("confirm_password").value;
+
+        if (newPassword !== confirmPassword) {
+            alert("Passwords do not match");
+            return;
+        }
+
+        fetch("/clerk/profile/update-password", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+
+            body: JSON.stringify({
+
+                password: newPassword
+
+            })
+        })
+
+            .then(response => {
+
+                if (handleSessionExpired(response)) {
+
+                    throw new Error("Session Expired");
+
+                }
+
+                return response.json();
+
+            })
+            .then(data => {
+
+                alert(data.message);
+
+                if (data.status === "success") {
+                    closeProfileModal();
+                    location.reload();
+                }
+            });
+    }
 
 </script>
 

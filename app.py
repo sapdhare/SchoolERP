@@ -84,6 +84,13 @@ if not app.secret_key:
 # Enable CSRF protection
 csrf = CSRFProtect(app)
 
+
+# =========================================================
+# SYSTEM SETTINGS CACHE
+# =========================================================
+
+SYSTEM_SETTINGS_CACHE = {"data": None, "updated_at": None}
+
 # =========================================================
 # PDF CONFIGURATION
 # =========================================================
@@ -193,43 +200,49 @@ def inject_year():
 # 🌟 GLOBAL SYSTEM SETTING
 # Available in all templates as 'global_settings'
 # =========================================================
-
-
 @app.context_processor
 def inject_system_settings():
 
-    conn = None
-    cursor = None
-    row = None
+    global SYSTEM_SETTINGS_CACHE
+
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
+        # =================================================
+        # RETURN CACHED SETTINGS
+        # =================================================
+        if SYSTEM_SETTINGS_CACHE["data"] is not None:
+            return {"global_settings": SYSTEM_SETTINGS_CACHE["data"]}
 
-        cursor.execute("""
-            SELECT 
-                system_name,
-                system_logo,
-                       
-                support_email,
-                support_phone,
-                       
-                favicon,
-                       
-                footer_text,
-                powered_by,
-                erp_version,
-                website_url,
-                       
-                updated_at
+        # =================================================
+        # FIRST REQUEST → FETCH FROM DATABASE
+        # =================================================
+        conn = None
+        cursor = None
+
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                SELECT
+                    system_name,
+                    system_logo,
+                    support_email,
+                    support_phone,
+                    favicon,
+                    footer_text,
+                    powered_by,
+                    erp_version,
+                    website_url,
+                    updated_at
                 FROM system_settings
+                WHERE id = 1
                 LIMIT 1
-        """)
+            """)
 
-        row = cursor.fetchone()
+            row = cursor.fetchone()
 
-        if row:
-            return {
-                "global_settings": {
+            if row:
+                settings = {
                     "system_name": row[0],
                     "system_logo": row[1],
                     "support_email": row[2],
@@ -241,28 +254,30 @@ def inject_system_settings():
                     "website_url": row[8],
                     "updated_at": row[9],
                 }
-            }
+
+                # Save in server memory
+                SYSTEM_SETTINGS_CACHE["data"] = settings
+                SYSTEM_SETTINGS_CACHE["updated_at"] = row[9]
+
+                return {"global_settings": settings}
+
+        finally:
+            if cursor:
+                cursor.close()
+
+            if conn:
+                conn.close()
 
     except Exception as e:
         print("GLOBAL SETTINGS ERROR:", e)
 
-    finally:
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
-
-    if not row:
-        return {"global_settings": {}}
+    return {"global_settings": {}}
 
 
 # =========================================================
 # GLOBAL LEAD COUNT
 # Used in Super Admin Dashboard
 # =========================================================
-
-
 @app.context_processor
 def inject_lead_count():
 
@@ -660,7 +675,8 @@ def get_school_details(school_id):
             SELECT
                 school_id,
                 name,
-                udise_no
+                udise_no,
+                school_code
             FROM schools
             WHERE school_id = %s
         """,
@@ -676,6 +692,7 @@ def get_school_details(school_id):
             "school_id": school[0],
             "school_name": school[1],
             "school_udise": school[2],
+            "school_code": school[3],
         }
     except Exception as e:
         print("GET SCHOOL DETAILS ERROR:", e)
@@ -690,109 +707,38 @@ def get_school_details(school_id):
 
 
 # =========================================================
-# APPLY PLAN FEATURES TO SCHOOL
+# 🔎 GET STUDENT FOR SCHOOL
+# Reusable + school-safe + soft-delete aware
+# IMPORTANT:
+# Uses the existing cursor/transaction.
 # =========================================================
+def get_student_for_school(cursor, student_id, school_id, include_deleted=False):
 
-
-def apply_plan_features(school_id, plan_id):
-
-    conn = None
-    cursor = None
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # =========================================
-        # GET PLAN FEATURES
-        # =========================================
-
+    if include_deleted:
         cursor.execute(
             """
-
-            SELECT
-
-                enable_tc_management,
-                enable_bonafide_management,
-                enable_import_export,
-                enable_attendance,
-                enable_fee_management,
-                enable_teacher_management,
-                enable_results,
-                enable_timetable,
-                enable_notice_board
-
-            FROM subscription_plans
-
+            SELECT *
+            FROM students
             WHERE id = %s
-
-        """,
-            (plan_id,),
+              AND school_id = %s
+            LIMIT 1
+            """,
+            (student_id, school_id),
         )
-
-        plan = cursor.fetchone()
-
-        if not plan:
-            return False
-
-        # =========================================
-        # UPDATE SCHOOL FEATURES
-        # =========================================
-
+    else:
         cursor.execute(
             """
-
-            UPDATE schools
-
-            SET
-
-                enable_tc_management = %s,
-                enable_bonafide_management = %s,
-                enable_import_export = %s,
-                enable_attendance = %s,
-                enable_fee_management = %s,
-                enable_teacher_management = %s,
-                enable_results = %s,
-                enable_timetable = %s,
-                enable_notice_board = %s
-
-            WHERE school_id = %s
-
-        """,
-            (
-                plan[0],
-                plan[1],
-                plan[2],
-                plan[3],
-                plan[4],
-                plan[5],
-                plan[6],
-                plan[7],
-                plan[8],
-                school_id,
-            ),
+            SELECT *
+            FROM students
+            WHERE id = %s
+              AND school_id = %s
+              AND is_deleted = 0
+            LIMIT 1
+            """,
+            (student_id, school_id),
         )
 
-        conn.commit()
-
-        print(f"✅ Features Applied | School={school_id} Plan={plan_id}")
-
-        return True
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-
-        print("❌ APPLY PLAN FEATURES ERROR:", e)
-
-        return False
-
-    finally:
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
+    return cursor.fetchone()
 
 
 # ---------------------------------------------------------
@@ -1029,34 +975,15 @@ def subscription_required(f):
         if not school_id:
             return redirect(url_for("login"))
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            SELECT
-                status,
-                end_date
-            FROM subscriptions
-            WHERE school_id = %s
-            ORDER BY id DESC
-            LIMIT 1
-        """,
-            (school_id,),
-        )
-
-        sub = cursor.fetchone()
-
-        cursor.close()
-        conn.close()
+        sub = get_latest_subscription(school_id)
 
         if not sub:
             flash("No active subscription found.", "danger")
 
             return redirect(url_for("renew_subscription"))
 
-        status = sub[0]
-        end_date = sub[1]
+        status = sub.get("status")
+        end_date = sub.get("end_date")
 
         if end_date:
             if hasattr(end_date, "date"):
@@ -1067,8 +994,8 @@ def subscription_required(f):
         else:
             remaining_days = -1
 
-        if status == "expired" or remaining_days < 0:
-            flash("Your subscription has expired. Please renew.", "danger")
+        if status != "active" or remaining_days < 0:
+            flash("Your subscription is inactive or expired. Please renew.", "danger")
 
             return redirect(url_for("renew_subscription"))
 
@@ -1364,6 +1291,468 @@ def is_module_enabled(module_name):
 
     except Exception as e:
         print("❌ MODULE CHECK ERROR:", e)
+
+        return False
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# =========================================================
+# 💳 GET LATEST SUBSCRIPTION
+# Common subscription lookup for a school
+# =========================================================
+
+
+def get_latest_subscription(school_id):
+
+    conn = None
+    cursor = None
+
+    try:
+        if not school_id:
+            return None
+
+        conn = get_connection()
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+
+                s.id,
+                s.school_id,
+                s.plan_id,
+                s.plan_name,
+                s.amount,
+                s.start_date,
+                s.end_date,
+                s.status,
+
+                p.plan_name AS current_plan_name,
+                p.student_limit,
+                p.tc_limit,
+                p.bonafide_limit,
+                p.staff_limit,
+                p.storage_limit,
+                p.support_type,
+                p.duration_months,
+
+                p.enable_tc_management,
+                p.enable_bonafide_management,
+                p.enable_import_export,
+                p.enable_attendance,
+                p.enable_fee_management,
+                p.enable_teacher_management,
+                p.enable_results,
+                p.enable_timetable,
+                p.enable_notice_board
+
+            FROM subscriptions s
+
+            LEFT JOIN subscription_plans p
+                ON s.plan_id = p.id
+
+            WHERE s.school_id = %s
+
+            ORDER BY s.id DESC
+
+            LIMIT 1
+            """,
+            (school_id,),
+        )
+
+        return cursor.fetchone()
+
+    except Exception as e:
+        print("❌ GET LATEST SUBSCRIPTION ERROR:", e)
+
+        logger.exception("GET LATEST SUBSCRIPTION ERROR")
+
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# =========================================================
+# 📊 SUBSCRIPTION RESOURCE LIMIT CHECK
+# =========================================================
+
+def check_subscription_limit(cursor, school_id, resource_type):
+    """
+    Centralized subscription limit checker.
+
+    Supported resources:
+        students
+        tc
+        bonafide
+        staff
+    """
+
+    if not school_id:
+        return {
+            "allowed": False,
+            "current": 0,
+            "limit": 0,
+            "remaining": 0,
+            "message": "School session missing."
+        }
+
+    # =====================================================
+    # GET LATEST SUBSCRIPTION + PLAN LIMITS
+    # =====================================================
+
+    cursor.execute(
+        """
+        SELECT
+            s.status,
+            s.end_date,
+
+            p.student_limit,
+            p.tc_limit,
+            p.bonafide_limit,
+            p.staff_limit
+
+        FROM subscriptions s
+
+        LEFT JOIN subscription_plans p
+            ON s.plan_id = p.id
+
+        WHERE s.school_id = %s
+
+        ORDER BY s.id DESC
+
+        LIMIT 1
+        """,
+        (school_id,),
+    )
+
+    subscription = cursor.fetchone()
+
+    if not subscription:
+        return {
+            "allowed": False,
+            "current": 0,
+            "limit": 0,
+            "remaining": 0,
+            "message": "No subscription found."
+        }
+
+    # =====================================================
+    # HANDLE BOTH NORMAL + DICTIONARY CURSORS
+    # =====================================================
+
+    if isinstance(subscription, dict):
+
+        status = subscription.get("status")
+        end_date = subscription.get("end_date")
+
+        limits = {
+            "students": subscription.get("student_limit"),
+            "tc": subscription.get("tc_limit"),
+            "bonafide": subscription.get("bonafide_limit"),
+            "staff": subscription.get("staff_limit"),
+        }
+
+    else:
+
+        status = subscription[0]
+        end_date = subscription[1]
+
+        limits = {
+            "students": subscription[2],
+            "tc": subscription[3],
+            "bonafide": subscription[4],
+            "staff": subscription[5],
+        }
+
+    # =====================================================
+    # VALID RESOURCE
+    # =====================================================
+
+    if resource_type not in limits:
+
+        return {
+            "allowed": False,
+            "current": 0,
+            "limit": 0,
+            "remaining": 0,
+            "message": "Invalid subscription resource."
+        }
+
+    # =====================================================
+    # SUBSCRIPTION STATUS
+    # =====================================================
+
+    if not status or str(status).lower() != "active":
+
+        return {
+            "allowed": False,
+            "current": 0,
+            "limit": 0,
+            "remaining": 0,
+            "message": "Your subscription is inactive."
+        }
+
+    # =====================================================
+    # SUBSCRIPTION EXPIRY
+    # =====================================================
+
+    if end_date:
+
+        if hasattr(end_date, "date"):
+            end_date = end_date.date()
+
+        if end_date < date.today():
+
+            return {
+                "allowed": False,
+                "current": 0,
+                "limit": 0,
+                "remaining": 0,
+                "message": "Your subscription has expired."
+            }
+
+    # =====================================================
+    # PLAN LIMIT
+    # =====================================================
+
+    raw_limit = limits.get(resource_type)
+
+    # NULL / empty limit = don't enforce
+    if raw_limit is None or str(raw_limit).strip() == "":
+
+        return {
+            "allowed": True,
+            "current": 0,
+            "limit": None,
+            "remaining": None,
+            "message": ""
+        }
+
+    try:
+        resource_limit = int(raw_limit)
+
+    except (TypeError, ValueError):
+
+        return {
+            "allowed": False,
+            "current": 0,
+            "limit": 0,
+            "remaining": 0,
+            "message": "Invalid subscription limit configuration."
+        }
+
+    # =====================================================
+    # GET CURRENT USAGE
+    # =====================================================
+
+    usage_queries = {
+
+        "students": """
+            SELECT COUNT(*) AS total
+            FROM students
+            WHERE school_id = %s
+        """,
+
+        "tc": """
+            SELECT COUNT(*) AS total
+            FROM tc
+            WHERE school_id = %s
+            AND is_deleted = 0
+        """,
+
+        "bonafide": """
+            SELECT COUNT(*) AS total
+            FROM bonafide
+            WHERE school_id = %s
+            AND is_deleted = 0
+        """,
+
+        "staff": """
+            SELECT COUNT(*) AS total
+            FROM users
+            WHERE school_id = %s
+            AND role != 'admin'
+            AND is_deleted = 0
+        """
+    }
+
+    # =====================================================
+    # RESOURCE QUERY
+    # =====================================================
+
+    usage_query = usage_queries.get(resource_type)
+
+    if not usage_query:
+
+        return {
+            "allowed": False,
+            "current": 0,
+            "limit": resource_limit,
+            "remaining": 0,
+            "message": "Resource usage query not configured."
+        }
+
+    cursor.execute(
+        usage_query,
+        (school_id,),
+    )
+
+    usage_row = cursor.fetchone()
+
+    if isinstance(usage_row, dict):
+        current_usage = usage_row.get("total") or 0
+    else:
+        current_usage = usage_row[0] or 0
+
+    current_usage = int(current_usage)
+
+    # =====================================================
+    # LIMIT REACHED
+    # =====================================================
+
+    if current_usage >= resource_limit:
+
+        resource_names = {
+            "students": "Student",
+            "tc": "Transfer Certificate",
+            "bonafide": "Bonafide Certificate",
+            "staff": "Staff"
+        }
+
+        resource_name = resource_names.get(
+            resource_type,
+            "Resource"
+        )
+
+        return {
+            "allowed": False,
+            "current": current_usage,
+            "limit": resource_limit,
+            "remaining": 0,
+            "message": (
+                f"{resource_name} limit reached. "
+                f"Your plan allows {resource_limit}."
+            )
+        }
+
+    # =====================================================
+    # ALLOWED
+    # =====================================================
+
+    return {
+        "allowed": True,
+        "current": current_usage,
+        "limit": resource_limit,
+        "remaining": resource_limit - current_usage,
+        "message": ""
+    }
+
+
+# =========================================================
+# APPLY PLAN FEATURES TO SCHOOL
+# =========================================================
+def apply_plan_features(school_id, plan_id):
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # =========================================
+        # GET PLAN FEATURES
+        # =========================================
+
+        cursor.execute(
+            """
+
+            SELECT
+
+                enable_tc_management,
+                enable_bonafide_management,
+                enable_import_export,
+                enable_attendance,
+                enable_fee_management,
+                enable_teacher_management,
+                enable_results,
+                enable_timetable,
+                enable_notice_board
+
+            FROM subscription_plans
+
+            WHERE id = %s
+
+        """,
+            (plan_id,),
+        )
+
+        plan = cursor.fetchone()
+
+        if not plan:
+            return False
+
+        # =========================================
+        # UPDATE SCHOOL FEATURES
+        # =========================================
+
+        cursor.execute(
+            """
+
+            UPDATE schools
+
+            SET
+
+                enable_tc_management = %s,
+                enable_bonafide_management = %s,
+                enable_import_export = %s,
+                enable_attendance = %s,
+                enable_fee_management = %s,
+                enable_teacher_management = %s,
+                enable_results = %s,
+                enable_timetable = %s,
+                enable_notice_board = %s
+
+            WHERE school_id = %s
+
+        """,
+            (
+                plan[0],
+                plan[1],
+                plan[2],
+                plan[3],
+                plan[4],
+                plan[5],
+                plan[6],
+                plan[7],
+                plan[8],
+                school_id,
+            ),
+        )
+
+        conn.commit()
+
+        print(f"✅ Features Applied | School={school_id} Plan={plan_id}")
+
+        return True
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+
+        print("❌ APPLY PLAN FEATURES ERROR:", e)
 
         return False
 
@@ -3751,8 +4140,6 @@ def toggle_school_status():
 # =========================================================
 # 👨‍🎓 SUPER ADMIN - STUDENTS BY SCHOOL
 # =========================================================
-
-
 @app.route("/superadmin/superadmin_students")
 @admin_required
 def superadmin_students():
@@ -3811,6 +4198,7 @@ def superadmin_students():
 
         where_query = """
             WHERE school_id = %s
+            AND is_deleted = 0
         """
 
         params = [school_id]
@@ -3877,6 +4265,7 @@ def superadmin_students():
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
+            AND is_deleted = 0
         """,
             (school_id,),
         )
@@ -3888,6 +4277,7 @@ def superadmin_students():
             SELECT COUNT(DISTINCT `class`)
             FROM students
             WHERE school_id = %s
+            AND is_deleted = 0
             AND `class` IS NOT NULL
             AND `class` <> ''
         """,
@@ -3927,8 +4317,6 @@ def superadmin_students():
 # =========================================================
 # 📦 GET STUDENT DATA (API FOR MODAL) FOR ADMIN
 # =========================================================
-
-
 @app.route("/get-student/<int:id>")
 @admin_required
 def get_student(id):
@@ -3964,6 +4352,8 @@ def get_student(id):
             FROM students
 
             WHERE id = %s
+
+            AND is_deleted = 0
 
             LIMIT 1
 
@@ -4010,7 +4400,7 @@ def get_student(id):
 
 
 # =========================================================
-# ❌ DELETE STUDENT (ADMIN SAFE)
+# 🗑️ DELETE STUDENT - SOFT DELETE
 # =========================================================
 
 
@@ -4022,6 +4412,10 @@ def delete_student():
     cursor = None
 
     try:
+        # =====================================================
+        # GET STUDENT ID
+        # =====================================================
+
         student_id = (request.form.get("student_id") or "").strip()
 
         if not student_id:
@@ -4030,106 +4424,127 @@ def delete_student():
         try:
             student_id = int(student_id)
 
-        except ValueError:
+        except (ValueError, TypeError):
             return "Invalid student ID ❌"
 
+        if student_id <= 0:
+            return "Invalid student ID ❌"
+
+        # =====================================================
+        # DATABASE CONNECTION
+        # =====================================================
+
         conn = get_connection()
+
         cursor = conn.cursor(dictionary=True)
 
-        # ================= CHECK STUDENT =================
+        # =====================================================
+        # CHECK ACTIVE STUDENT
+        # =====================================================
 
         cursor.execute(
             """
-
             SELECT
                 id,
                 school_id,
-                name
-
+                name,
+                is_deleted
             FROM students
-
             WHERE id = %s
-
             LIMIT 1
-
-        """,
+            FOR UPDATE
+            """,
             (student_id,),
         )
 
         student = cursor.fetchone()
 
+        # =====================================================
+        # STUDENT NOT FOUND
+        # =====================================================
+
         if not student:
+            conn.rollback()
             return "Student not found ❌"
 
-        # ================= CHECK TC RECORDS =================
+        # =====================================================
+        # ALREADY DELETED
+        # =====================================================
 
-        cursor.execute(
-            """
+        if int(student.get("is_deleted") or 0) == 1:
+            conn.rollback()
 
-            SELECT 1
+            return "Student is already deleted ❌"
 
-            FROM tc
+        # =====================================================
+        # GET ADMIN IDENTIFIER
+        # =====================================================
 
-            WHERE student_id = %s
-
-            LIMIT 1
-
-        """,
-            (student_id,),
+        deleted_by = (
+            session.get("username")
+            or session.get("email")
+            or session.get("user_id")
+            or "admin"
         )
 
-        if cursor.fetchone():
-            return "Cannot delete: TC records exist ❌"
+        deleted_by = str(deleted_by)[:100]
 
-        # ================= CHECK BONAFIDE RECORDS =================
-
-        cursor.execute(
-            """
-
-            SELECT 1
-
-            FROM bonafide
-
-            WHERE student_id = %s
-
-            LIMIT 1
-
-        """,
-            (student_id,),
-        )
-
-        if cursor.fetchone():
-            return "Cannot delete: Bonafide records exist ❌"
-
-        # ================= DELETE STUDENT =================
+        # =====================================================
+        # SOFT DELETE STUDENT
+        # =====================================================
 
         cursor.execute(
             """
-
-            DELETE FROM students
-
+            UPDATE students
+            SET
+                is_deleted = 1,
+                deleted_at = NOW(),
+                deleted_by = %s
             WHERE id = %s
-
-        """,
-            (student_id,),
+              AND is_deleted = 0
+            """,
+            (
+                deleted_by,
+                student_id,
+            ),
         )
+
+        # =====================================================
+        # VERIFY UPDATE
+        # =====================================================
 
         if cursor.rowcount != 1:
             conn.rollback()
 
-            return "Student deletion failed ❌"
+            return "Student deletion failed or record was already deleted ❌"
+
+        # =====================================================
+        # COMMIT
+        # =====================================================
 
         conn.commit()
 
+        # =====================================================
+        # REDIRECT
+        # =====================================================
+
         return redirect(request.referrer or url_for("superadmin_schools"))
+
+    # =========================================================
+    # ERROR
+    # =========================================================
 
     except Exception as e:
         if conn:
             conn.rollback()
 
-        print("❌ DELETE STUDENT ERROR:", e)
+        print("❌ SOFT DELETE STUDENT ERROR:", e)
 
-        return "Something went wrong ❌"
+        return "Something went wrong while deleting student ❌"
+
+    # =========================================================
+    # CLEANUP
+    # =========================================================
 
     finally:
         if cursor:
@@ -4174,6 +4589,7 @@ def superadmin_all_students():
 
         where = """
             WHERE 1=1
+            AND st.is_deleted = 0
         """
 
         params = []
@@ -4325,8 +4741,6 @@ def superadmin_all_students():
 # =========================================================
 # 🧾 SUPER ADMIN - TC MANAGEMENT
 # =========================================================
-
-
 @app.route("/superadmin/tc-management")
 @admin_required
 def superadmin_tc_management():
@@ -4365,6 +4779,8 @@ def superadmin_tc_management():
 
         where_query = """
             WHERE 1=1
+            AND tc.is_deleted = 0
+            AND st.is_deleted = 0
         """
 
         params = []
@@ -4488,6 +4904,7 @@ def superadmin_tc_management():
         cursor.execute("""
             SELECT COUNT(*) AS total
             FROM tc
+            WHERE is_deleted = 0
         """)
 
         total_tc = cursor.fetchone()["total"] or 0
@@ -4496,11 +4913,10 @@ def superadmin_tc_management():
 
         cursor.execute("""
 
-            SELECT COUNT(*) AS total
-
-            FROM tc
-
-            WHERE DATE(tc_date) = CURDATE()
+        SELECT COUNT(*) AS total
+        FROM tc
+        WHERE is_deleted = 0
+        AND DATE(tc_date) = CURDATE()
 
         """)
 
@@ -4510,12 +4926,11 @@ def superadmin_tc_management():
 
         cursor.execute("""
 
-            SELECT COUNT(*) AS total
-
-            FROM tc
-
-            WHERE MONTH(tc_date) = MONTH(CURDATE())
-            AND YEAR(tc_date) = YEAR(CURDATE())
+        SELECT COUNT(*) AS total
+        FROM tc
+        WHERE is_deleted = 0
+        AND MONTH(tc_date) = MONTH(CURDATE())
+        AND YEAR(tc_date) = YEAR(CURDATE())
 
         """)
 
@@ -4528,6 +4943,8 @@ def superadmin_tc_management():
             SELECT COUNT(DISTINCT school_id) AS total
 
             FROM tc
+
+            WHERE is_deleted = 0
 
         """)
 
@@ -4581,7 +4998,7 @@ def superadmin_tc_management():
 
 
 # =========================================================
-# ❌ DELETE TC (ADMIN SAFE)
+# 🗑️ DELETE TC - SOFT DELETE
 # =========================================================
 
 
@@ -4593,6 +5010,10 @@ def delete_tc():
     cursor = None
 
     try:
+        # =====================================================
+        # GET TC ID
+        # =====================================================
+
         tc_id = (request.form.get("tc_id") or "").strip()
 
         if not tc_id:
@@ -4601,57 +5022,111 @@ def delete_tc():
         try:
             tc_id = int(tc_id)
 
-        except ValueError:
+        except (ValueError, TypeError):
             return "Invalid TC ID ❌"
 
+        if tc_id <= 0:
+            return "Invalid TC ID ❌"
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
         conn = get_connection()
+
         cursor = conn.cursor(dictionary=True)
 
-        # ================= CHECK TC EXISTS =================
+        # =====================================================
+        # CHECK ACTIVE TC
+        # =====================================================
 
         cursor.execute(
             """
-
             SELECT
                 id,
                 student_id,
                 school_id,
-                tc_number
-
+                tc_number,
+                is_deleted
             FROM tc
-
             WHERE id = %s
-
             LIMIT 1
-
-        """,
+            FOR UPDATE
+            """,
             (tc_id,),
         )
 
         tc_record = cursor.fetchone()
 
+        # =====================================================
+        # NOT FOUND
+        # =====================================================
+
         if not tc_record:
+            conn.rollback()
+
             return "TC record not found ❌"
 
-        # ================= DELETE TC =================
+        # =====================================================
+        # ALREADY DELETED
+        # =====================================================
+
+        if int(tc_record.get("is_deleted") or 0) == 1:
+            conn.rollback()
+
+            return "TC record is already deleted ❌"
+
+        # =====================================================
+        # ADMIN IDENTIFIER
+        # =====================================================
+
+        deleted_by = (
+            session.get("username")
+            or session.get("email")
+            or session.get("user_id")
+            or "admin"
+        )
+
+        deleted_by = str(deleted_by)[:100]
+
+        # =====================================================
+        # SOFT DELETE
+        # =====================================================
 
         cursor.execute(
             """
-
-            DELETE FROM tc
-
+            UPDATE tc
+            SET
+                is_deleted = 1,
+                deleted_at = NOW(),
+                deleted_by = %s
             WHERE id = %s
-
-        """,
-            (tc_id,),
+              AND is_deleted = 0
+            """,
+            (
+                deleted_by,
+                tc_id,
+            ),
         )
+
+        # =====================================================
+        # VERIFY
+        # =====================================================
 
         if cursor.rowcount != 1:
             conn.rollback()
 
-            return "TC deletion failed ❌"
+            return "TC deletion failed or record was already deleted ❌"
+
+        # =====================================================
+        # COMMIT
+        # =====================================================
 
         conn.commit()
+
+        # =====================================================
+        # REDIRECT
+        # =====================================================
 
         return redirect(request.referrer or url_for("superadmin_tc_management"))
 
@@ -4659,9 +5134,9 @@ def delete_tc():
         if conn:
             conn.rollback()
 
-        print("❌ DELETE TC ERROR:", e)
+        print("❌ SOFT DELETE TC ERROR:", e)
 
-        return "Something went wrong ❌"
+        return "Something went wrong while deleting TC ❌"
 
     finally:
         if cursor:
@@ -4674,8 +5149,6 @@ def delete_tc():
 # =========================================================
 # 📜 SUPER ADMIN - BONAFIDE MANAGEMENT
 # =========================================================
-
-
 @app.route("/superadmin/bonafide-management")
 @admin_required
 def superadmin_bonafide_management():
@@ -4712,6 +5185,8 @@ def superadmin_bonafide_management():
 
         where_query = """
             WHERE 1=1
+            AND b.is_deleted = 0
+            AND s.is_deleted = 0
         """
 
         params = []
@@ -4835,6 +5310,7 @@ def superadmin_bonafide_management():
         cursor.execute("""
             SELECT COUNT(*) AS total
             FROM bonafide
+            WHERE is_deleted = 0
         """)
 
         total_bonafide = cursor.fetchone()["total"] or 0
@@ -4842,14 +5318,11 @@ def superadmin_bonafide_management():
         # ================= THIS MONTH =================
 
         cursor.execute("""
-
             SELECT COUNT(*) AS total
-
             FROM bonafide
-
-            WHERE MONTH(date) = MONTH(CURDATE())
+            WHERE is_deleted = 0
+            AND MONTH(date) = MONTH(CURDATE())
             AND YEAR(date) = YEAR(CURDATE())
-
         """)
 
         month_bonafide = cursor.fetchone()["total"] or 0
@@ -4857,13 +5330,10 @@ def superadmin_bonafide_management():
         # ================= LAST 7 DAYS =================
 
         cursor.execute("""
-
             SELECT COUNT(*) AS total
-
             FROM bonafide
-
-            WHERE date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-
+            WHERE is_deleted = 0
+            AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         """)
 
         week_bonafide = cursor.fetchone()["total"] or 0
@@ -4875,6 +5345,8 @@ def superadmin_bonafide_management():
             SELECT COUNT(DISTINCT school_id) AS total
 
             FROM bonafide
+
+            WHERE is_deleted = 0
 
         """)
 
@@ -4928,8 +5400,10 @@ def superadmin_bonafide_management():
 
 
 # =========================================================
-# ❌ DELETE BONAFIDE (ADMIN SAFE)
+# 🗑️ DELETE BONAFIDE - SOFT DELETE
 # =========================================================
+
+
 @app.route("/superadmin/delete-bonafide", methods=["POST"])
 @admin_required
 def delete_bonafide():
@@ -4938,7 +5412,10 @@ def delete_bonafide():
     cursor = None
 
     try:
-        # ================= GET BONAFIDE ID =================
+        # =====================================================
+        # GET BONAFIDE ID
+        # =====================================================
+
         bonafide_id = (request.form.get("bonafide_id") or "").strip()
 
         if not bonafide_id:
@@ -4946,40 +5423,112 @@ def delete_bonafide():
 
         try:
             bonafide_id = int(bonafide_id)
-        except ValueError:
+
+        except (ValueError, TypeError):
             return "Invalid bonafide ID ❌"
 
-        conn = get_connection()
-        cursor = conn.cursor()
+        if bonafide_id <= 0:
+            return "Invalid bonafide ID ❌"
 
-        # ================= CHECK EXISTS =================
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # CHECK ACTIVE BONAFIDE
+        # =====================================================
+
         cursor.execute(
             """
-            SELECT id
+            SELECT
+                id,
+                student_id,
+                school_id,
+                bonafide_number,
+                is_deleted
             FROM bonafide
             WHERE id = %s
-        """,
+            LIMIT 1
+            FOR UPDATE
+            """,
             (bonafide_id,),
         )
 
         bonafide = cursor.fetchone()
 
+        # =====================================================
+        # NOT FOUND
+        # =====================================================
+
         if not bonafide:
+            conn.rollback()
+
             return "Bonafide record not found ❌"
 
-        # ================= DELETE =================
-        cursor.execute(
-            """
-            DELETE FROM bonafide
-            WHERE id = %s
-        """,
-            (bonafide_id,),
+        # =====================================================
+        # ALREADY DELETED
+        # =====================================================
+
+        if int(bonafide.get("is_deleted") or 0) == 1:
+            conn.rollback()
+
+            return "Bonafide record is already deleted ❌"
+
+        # =====================================================
+        # ADMIN IDENTIFIER
+        # =====================================================
+
+        deleted_by = (
+            session.get("username")
+            or session.get("email")
+            or session.get("user_id")
+            or "admin"
         )
 
-        if cursor.rowcount == 0:
-            return "Bonafide record not found ❌"
+        deleted_by = str(deleted_by)[:100]
+
+        # =====================================================
+        # SOFT DELETE
+        # =====================================================
+
+        cursor.execute(
+            """
+            UPDATE bonafide
+            SET
+                is_deleted = 1,
+                deleted_at = NOW(),
+                deleted_by = %s
+            WHERE id = %s
+              AND is_deleted = 0
+            """,
+            (
+                deleted_by,
+                bonafide_id,
+            ),
+        )
+
+        # =====================================================
+        # VERIFY
+        # =====================================================
+
+        if cursor.rowcount != 1:
+            conn.rollback()
+
+            return "Bonafide deletion failed or record was already deleted ❌"
+
+        # =====================================================
+        # COMMIT
+        # =====================================================
 
         conn.commit()
+
+        # =====================================================
+        # REDIRECT
+        # =====================================================
 
         return redirect(request.referrer or url_for("superadmin_bonafide_management"))
 
@@ -4987,9 +5536,9 @@ def delete_bonafide():
         if conn:
             conn.rollback()
 
-        print("❌ DELETE BONAFIDE ERROR:", e)
+        print("❌ SOFT DELETE BONAFIDE ERROR:", e)
 
-        return "Something went wrong ❌"
+        return "Something went wrong while deleting Bonafide ❌"
 
     finally:
         if cursor:
@@ -7846,13 +8395,10 @@ def superadmin_payments():
         if conn:
             conn.close()
 
-            # =========================================================
 
-
+# =========================================================
 # 📤 SUPER ADMIN - REUSABLE EXCEL EXPORT
 # =========================================================
-
-
 @app.route("/superadmin/export/excel/<export_type>")
 @admin_required
 def superadmin_export_excel(export_type):
@@ -8179,11 +8725,628 @@ def superadmin_export_excel(export_type):
             conn.close()
 
 
+
+# =========================================================
+# 💾 SUPER ADMIN - FULL DATABASE EXCEL BACKUP
+# =========================================================
+
+@app.route("/superadmin/backup/excel")
+@admin_required
+def superadmin_excel_backup():
+
+    conn = None
+    cursor = None
+
+    try:
+
+        import io
+        import pandas as pd
+
+        from datetime import datetime
+
+        from flask import send_file
+
+        from openpyxl.styles import (
+            Font,
+            PatternFill,
+            Alignment,
+            Border,
+            Side
+        )
+
+        from openpyxl.utils import get_column_letter
+
+
+        # =====================================================
+        # DATABASE CONNECTION
+        # =====================================================
+
+        conn = get_connection()
+
+        if not conn:
+            flash(
+                "Database connection failed. Backup could not be created.",
+                "danger"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for("superadmin_reports")
+            )
+
+        cursor = conn.cursor(dictionary=True)
+
+
+        # =====================================================
+        # OUTPUT WORKBOOK
+        # =====================================================
+
+        output = io.BytesIO()
+
+
+        # =====================================================
+        # GET ALL DATABASE TABLES
+        # =====================================================
+
+        cursor.execute("SHOW TABLES")
+
+        table_rows = cursor.fetchall()
+
+        if not table_rows:
+
+            flash(
+                "No database tables were found.",
+                "danger"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for("superadmin_reports")
+            )
+
+
+        # =====================================================
+        # EXTRACT TABLE NAMES
+        # =====================================================
+
+        table_names = []
+
+        for row in table_rows:
+
+            if row:
+
+                table_name = next(iter(row.values()))
+
+                if table_name:
+                    table_names.append(str(table_name))
+
+
+        # =====================================================
+        # SORT TABLES
+        # =====================================================
+
+        table_names = sorted(
+            table_names,
+            key=lambda x: x.lower()
+        )
+
+
+        # =====================================================
+        # EXCEL SHEET NAME HELPER
+        # =====================================================
+
+        used_sheet_names = set()
+
+
+        def create_safe_sheet_name(table_name):
+
+            # Excel maximum sheet name length = 31
+            base_name = str(table_name)
+
+            # Remove characters not allowed in Excel
+            invalid_chars = [
+                "[",
+                "]",
+                ":",
+                "*",
+                "?",
+                "/",
+                "\\",
+            ]
+
+            for char in invalid_chars:
+                base_name = base_name.replace(char, "_")
+
+            base_name = base_name.strip()
+
+            if not base_name:
+                base_name = "Table"
+
+            base_name = base_name[:31]
+
+            sheet_name = base_name
+            counter = 1
+
+            while sheet_name.lower() in used_sheet_names:
+
+                suffix = f"_{counter}"
+
+                sheet_name = (
+                    base_name[:31 - len(suffix)]
+                    + suffix
+                )
+
+                counter += 1
+
+            used_sheet_names.add(
+                sheet_name.lower()
+            )
+
+            return sheet_name
+
+
+        # =====================================================
+        # BACKUP ERRORS
+        # =====================================================
+
+        backup_errors = []
+
+        successful_tables = 0
+
+        total_rows_exported = 0
+
+
+        # =====================================================
+        # CREATE WORKBOOK
+        # =====================================================
+
+        with pd.ExcelWriter(
+            output,
+            engine="openpyxl"
+        ) as writer:
+
+
+            # =================================================
+            # BACKUP INFORMATION
+            # =================================================
+
+            backup_info = pd.DataFrame(
+                [
+                    {
+                        "Backup Type":
+                            "Full Database Excel Backup",
+
+                        "Generated On":
+                            datetime.now().strftime(
+                                "%d-%m-%Y %I:%M:%S %p"
+                            ),
+
+                        "Generated By":
+                            session.get(
+                                "admin_email",
+                                "Super Admin"
+                            ),
+
+                        "Database Tables":
+                            len(table_names),
+
+                        "Status":
+                            "Completed",
+                    }
+                ]
+            )
+
+
+            backup_info.to_excel(
+                writer,
+                index=False,
+                sheet_name="Backup Info"
+            )
+
+            used_sheet_names.add(
+                "backup info"
+            )
+
+
+            # =================================================
+            # EXPORT EVERY TABLE
+            # =================================================
+
+            for table_name in table_names:
+
+                try:
+
+                    # -----------------------------------------
+                    # SAFE TABLE NAME
+                    # -----------------------------------------
+
+                    safe_table_name = (
+                        table_name.replace("`", "")
+                    )
+
+
+                    # -----------------------------------------
+                    # READ COMPLETE TABLE
+                    # -----------------------------------------
+
+                    cursor.execute(
+                        f"""
+                        SELECT *
+                        FROM `{safe_table_name}`
+                        """
+                    )
+
+                    rows = cursor.fetchall()
+
+
+                    # -----------------------------------------
+                    # GET COLUMN NAMES
+                    # -----------------------------------------
+
+                    column_names = []
+
+                    if cursor.description:
+
+                        column_names = [
+                            column[0]
+                            for column in cursor.description
+                        ]
+
+
+                    # -----------------------------------------
+                    # CREATE DATAFRAME
+                    # -----------------------------------------
+
+                    if rows:
+
+                        df = pd.DataFrame(rows)
+
+                    else:
+
+                        df = pd.DataFrame(
+                            columns=column_names
+                        )
+
+
+                    # -----------------------------------------
+                    # SHEET NAME
+                    # -----------------------------------------
+
+                    sheet_name = create_safe_sheet_name(
+                        table_name
+                    )
+
+
+                    # -----------------------------------------
+                    # EXPORT
+                    # -----------------------------------------
+
+                    df.to_excel(
+                        writer,
+                        index=False,
+                        sheet_name=sheet_name
+                    )
+
+
+                    successful_tables += 1
+
+                    total_rows_exported += len(df)
+
+
+                except Exception as table_error:
+
+                    print(
+                        f"⚠️ BACKUP TABLE ERROR "
+                        f"[{table_name}]:",
+                        table_error
+                    )
+
+
+                    backup_errors.append(
+                        {
+                            "Table":
+                                table_name,
+
+                            "Error":
+                                str(table_error),
+                        }
+                    )
+
+
+            # =================================================
+            # ERROR SHEET
+            # =================================================
+
+            if backup_errors:
+
+                error_df = pd.DataFrame(
+                    backup_errors
+                )
+
+                error_sheet_name = (
+                    create_safe_sheet_name(
+                        "Export Errors"
+                    )
+                )
+
+                error_df.to_excel(
+                    writer,
+                    index=False,
+                    sheet_name=error_sheet_name
+                )
+
+
+            # =================================================
+            # UPDATE BACKUP INFO
+            # =================================================
+
+            info_sheet = writer.book[
+                "Backup Info"
+            ]
+
+            info_sheet["A4"] = (
+                "Successful Tables"
+            )
+
+            info_sheet["B4"] = (
+                successful_tables
+            )
+
+            info_sheet["A5"] = (
+                "Failed Tables"
+            )
+
+            info_sheet["B5"] = (
+                len(backup_errors)
+            )
+
+            info_sheet["A6"] = (
+                "Total Rows Exported"
+            )
+
+            info_sheet["B6"] = (
+                total_rows_exported
+            )
+
+
+            # =================================================
+            # WORKBOOK STYLING
+            # =================================================
+
+            workbook = writer.book
+
+
+            header_fill = PatternFill(
+                "solid",
+                fgColor="0EA5A4"
+            )
+
+            header_font = Font(
+                bold=True,
+                color="FFFFFF"
+            )
+
+            thin_side = Side(
+                style="thin",
+                color="E2E8F0"
+            )
+
+            thin_border = Border(
+                left=thin_side,
+                right=thin_side,
+                top=thin_side,
+                bottom=thin_side
+            )
+
+
+            # =================================================
+            # STYLE EVERY SHEET
+            # =================================================
+
+            for sheet in workbook.worksheets:
+
+
+                # -----------------------------------------
+                # HEADER
+                # -----------------------------------------
+
+                for cell in sheet[1]:
+
+                    cell.font = header_font
+
+                    cell.fill = header_fill
+
+                    cell.alignment = Alignment(
+                        horizontal="center",
+                        vertical="center"
+                    )
+
+                    cell.border = thin_border
+
+
+                # -----------------------------------------
+                # DATA
+                # -----------------------------------------
+
+                if sheet.max_row >= 2:
+
+                    for row in sheet.iter_rows(
+                        min_row=2
+                    ):
+
+                        for cell in row:
+
+                            cell.border = thin_border
+
+                            cell.alignment = Alignment(
+                                vertical="top"
+                            )
+
+
+                # -----------------------------------------
+                # COLUMN WIDTH
+                # -----------------------------------------
+
+                for column_cells in sheet.columns:
+
+                    if not column_cells:
+                        continue
+
+                    max_length = 0
+
+                    column_letter = (
+                        get_column_letter(
+                            column_cells[0].column
+                        )
+                    )
+
+
+                    for cell in column_cells:
+
+                        if cell.value is not None:
+
+                            value_length = len(
+                                str(cell.value)
+                            )
+
+                            max_length = max(
+                                max_length,
+                                value_length
+                            )
+
+
+                    sheet.column_dimensions[
+                        column_letter
+                    ].width = min(
+                        max(max_length + 3, 12),
+                        40
+                    )
+
+
+                # -----------------------------------------
+                # FREEZE HEADER
+                # -----------------------------------------
+
+                sheet.freeze_panes = "A2"
+
+
+                # -----------------------------------------
+                # AUTO FILTER
+                # -----------------------------------------
+
+                if sheet.max_row >= 2:
+
+                    sheet.auto_filter.ref = (
+                        sheet.dimensions
+                    )
+
+
+        # =====================================================
+        # FINAL VALIDATION
+        # =====================================================
+
+        if successful_tables == 0:
+
+            flash(
+                "Backup failed. No database tables could be exported.",
+                "danger"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for("superadmin_reports")
+            )
+
+
+        # =====================================================
+        # PREPARE DOWNLOAD
+        # =====================================================
+
+        output.seek(0)
+
+
+        filename = (
+            "SchoolSphere_Full_Database_Backup_"
+            f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+            ".xlsx"
+        )
+
+
+        # =====================================================
+        # DOWNLOAD
+        # =====================================================
+
+        return send_file(
+
+            output,
+
+            as_attachment=True,
+
+            download_name=filename,
+
+            mimetype=(
+                "application/vnd.openxmlformats-"
+                "officedocument.spreadsheetml.sheet"
+            )
+        )
+
+
+    # =========================================================
+    # ERROR HANDLING
+    # =========================================================
+
+    except Exception as e:
+
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+
+        logger.exception(
+            "SUPER ADMIN EXCEL BACKUP ERROR"
+        )
+
+
+        flash(
+            "Unable to create database backup. Please try again.",
+            "danger"
+        )
+
+
+        return redirect(
+            request.referrer
+            or url_for("superadmin_reports")
+        )
+
+
+    # =========================================================
+    # CLEANUP
+    # =========================================================
+
+    finally:
+
+        if cursor:
+
+            try:
+                cursor.close()
+
+            except Exception:
+                pass
+
+
+        if conn:
+
+            try:
+                conn.close()
+
+            except Exception:
+                pass
+
 # =========================================================
 # 📊 SUPER ADMIN - REPORTS & ANALYTICS
 # =========================================================
-
-
 @app.route("/superadmin/reports")
 @admin_required
 def superadmin_reports():
@@ -8864,7 +10027,6 @@ def export_admin_reports_excel():
 # =========================================================
 # 📄 SUPER ADMIN - EXPORT REPORT PDF USING PDFKIT
 # =========================================================
-
 
 @app.route("/superadmin/reports/export/pdf")
 @admin_required
@@ -9709,11 +10871,13 @@ def save_security_settings():
 # =========================================================
 # 💳 RENEW SUBSCRIPTION PAGE
 # =========================================================
-
-
 @app.route("/clerk/subscription/renew")
 @login_required
 def renew_subscription():
+
+    # =====================================================
+    # CLERK ACCESS CHECK
+    # =====================================================
 
     if session.get("clerk_role") != "clerk":
         abort(401)
@@ -9721,73 +10885,51 @@ def renew_subscription():
     school_id = session.get("clerk_school_id")
 
     if not school_id:
-        abort(404)
+        flash("School session missing. Please login again.", "danger")
+        return redirect(url_for("login"))
 
     conn = None
     cursor = None
 
     try:
+
+        # =================================================
+        # DATABASE
+        # =================================================
+
         conn = get_connection()
+
+        if not conn:
+            flash(
+                "Unable to connect to the database. Please try again.",
+                "danger"
+            )
+
+            return redirect(url_for("clerk_dashboard"))
 
         cursor = conn.cursor(dictionary=True)
 
-        # =========================================
+        # =================================================
         # CURRENT SUBSCRIPTION
-        # =========================================
+        # =================================================
+
+        subscription = get_latest_subscription(school_id)
+
+        if not subscription:
+
+            flash(
+                "No subscription record found for this school.",
+                "warning"
+            )
+
+            return redirect(url_for("clerk_dashboard"))
+
+        # =================================================
+        # AVAILABLE PLANS
+        # =================================================
 
         cursor.execute(
             """
-
-            SELECT
-
-                s.id,
-                s.plan_id,
-                s.amount,
-                s.end_date,
-                s.status,
-
-                p.plan_name,
-                p.student_limit,
-                p.staff_limit,
-                p.storage_limit,
-                p.support_type,
-
-                p.enable_tc_management,
-                p.enable_bonafide_management,
-                p.enable_import_export,
-                p.enable_attendance,
-                p.enable_fee_management,
-                p.enable_teacher_management,
-                p.enable_results,
-                p.enable_timetable,
-                p.enable_notice_board
-
-            FROM subscriptions s
-
-            LEFT JOIN subscription_plans p
-                ON s.plan_id = p.id
-
-            WHERE s.school_id = %s
-
-            ORDER BY s.id DESC
-
-            LIMIT 1
-
-        """,
-            (school_id,),
-        )
-
-        subscription = cursor.fetchone()
-
-        if not subscription:
-            return "Subscription not found ❌"
-
-        # =========================================
-        # AVAILABLE PLANS
-        # =========================================
-
-        cursor.execute("""
-
             SELECT
 
                 id,
@@ -9797,6 +10939,8 @@ def renew_subscription():
                 yearly_price,
 
                 student_limit,
+                tc_limit,
+                bonafide_limit,
                 staff_limit,
 
                 storage_limit,
@@ -9823,16 +10967,14 @@ def renew_subscription():
             )
 
             ORDER BY monthly_price ASC
-
-        """)
+            """
+        )
 
         plans = cursor.fetchall()
 
-        # =========================================
-        # CURRENT PLAN FEATURES COUNT
-        # =========================================
-
-        current_feature_count = 0
+        # =================================================
+        # CURRENT PLAN FEATURE COUNT
+        # =================================================
 
         feature_columns = [
             "enable_tc_management",
@@ -9846,61 +10988,72 @@ def renew_subscription():
             "enable_notice_board",
         ]
 
-        if subscription["plan_id"]:
-            cursor.execute(
-                """
+        current_feature_count = sum(
+            1
+            for column in feature_columns
+            if str(subscription.get(column) or "").lower() == "enabled"
+        )
 
-                SELECT *
+        # =================================================
+        # DAYS LEFT
+        # =================================================
 
-                FROM subscription_plans
+        days_left = -1
 
-                WHERE id = %s
+        end_date = subscription.get("end_date")
 
-            """,
-                (subscription["plan_id"],),
-            )
+        if end_date:
 
-            current_plan = cursor.fetchone()
+            if hasattr(end_date, "date"):
+                end_date = end_date.date()
 
-            if current_plan:
-                for col in feature_columns:
-                    if current_plan.get(col) == "Enabled":
-                        current_feature_count += 1
+            days_left = (
+                end_date - date.today()
+            ).days
 
-            # =========================================
-            # DAYS LEFT
-            # =========================================
+            if days_left < 0:
+                days_left = 0
 
-            days_left = -1
-
-            if subscription.get("end_date"):
-                end_date = subscription["end_date"]
-
-                days_left = (end_date - date.today()).days
-
-                if days_left < 0:
-                    days_left = 0
-
-        # =========================================
+        # =================================================
         # RENDER
-        # =========================================
+        # =================================================
 
         return render_template(
             "subscription/renew.html",
+
             subscription=subscription,
+
             plans=plans,
+
             current_feature_count=current_feature_count,
+
             days_left=days_left,
+
             role="clerk",
+
             active_page="subscription",
         )
 
     except Exception as e:
-        print("❌ RENEW PAGE ERROR:", e)
 
-        return "Renew page failed ❌"
+        if conn:
+            conn.rollback()
+
+        logger.exception(
+            "RENEW SUBSCRIPTION PAGE ERROR"
+        )
+
+        flash(
+            "Unable to load subscription page. Please try again.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("clerk_dashboard")
+        )
 
     finally:
+
         if cursor:
             cursor.close()
 
@@ -11324,7 +12477,15 @@ def save_branding_settings():
 
         conn.commit()
 
+        # =========================================================
+        # CLEAR SYSTEM SETTINGS CACHE
+        # Force next request to load fresh settings from database
+        # =========================================================
+        SYSTEM_SETTINGS_CACHE["data"] = None
+        SYSTEM_SETTINGS_CACHE["updated_at"] = None
+
         # ================= DELETE OLD FAVICON AFTER SUCCESS =================
+
         if favicon_filename and old_favicon:
             old_path = os.path.join("static", old_favicon)
 
@@ -12303,6 +13464,11 @@ def clerk_dashboard():
 
     try:
         conn = get_connection()
+
+        if not conn:
+            flash("Unable to connect to database. Please try again.", "danger")
+            return redirect(url_for("login"))
+
         cursor = conn.cursor()
 
         school_id = session.get("clerk_school_id")
@@ -12311,13 +13477,15 @@ def clerk_dashboard():
         # =====================================================
         # SESSION SAFETY
         # =====================================================
+
         if not school_id or not clerk_user_id:
+            flash("Your session has expired. Please login again.", "warning")
             return redirect(url_for("login"))
 
         # =====================================================
         # DEFAULT SUBSCRIPTION VALUES
-        # Prevents variable errors if subscription is missing
         # =====================================================
+
         subscription_id = None
         end_date = None
         current_status = "none"
@@ -12326,6 +13494,7 @@ def clerk_dashboard():
         # =====================================================
         # LATEST SUBSCRIPTION
         # =====================================================
+
         cursor.execute(
             """
             SELECT
@@ -12336,7 +13505,7 @@ def clerk_dashboard():
             WHERE school_id = %s
             ORDER BY id DESC
             LIMIT 1
-        """,
+            """,
             (school_id,),
         )
 
@@ -12353,14 +13522,18 @@ def clerk_dashboard():
             # =================================================
             # GET GLOBAL GRACE PERIOD
             # =================================================
-            cursor.execute("""
+
+            cursor.execute(
+                """
                 SELECT COALESCE(grace_period, 0)
                 FROM system_settings
                 ORDER BY id ASC
                 LIMIT 1
-            """)
+                """
+            )
 
             settings_row = cursor.fetchone()
+
             grace_days = int(settings_row[0] or 0) if settings_row else 0
 
             grace_end_date = None
@@ -12373,6 +13546,7 @@ def clerk_dashboard():
             # =================================================
             # AUTO EXPIRE AFTER GRACE PERIOD
             # =================================================
+
             if (
                 grace_end_date
                 and today_date > grace_end_date
@@ -12383,7 +13557,7 @@ def clerk_dashboard():
                     UPDATE subscriptions
                     SET status = 'expired'
                     WHERE id = %s
-                """,
+                    """,
                     (subscription_id,),
                 )
 
@@ -12395,8 +13569,10 @@ def clerk_dashboard():
             # SUBSCRIPTION REMINDER EMAIL
             # Sends only once for 7, 3, 1 and expiry day
             # =================================================
+
             if end_date:
                 remaining_days_for_email = (end_date - today_date).days
+
                 email_type = None
 
                 if remaining_days_for_email == 7:
@@ -12420,8 +13596,12 @@ def clerk_dashboard():
                         AND subscription_id = %s
                         AND email_type = %s
                         LIMIT 1
-                    """,
-                        (school_id, subscription_id, email_type),
+                        """,
+                        (
+                            school_id,
+                            subscription_id,
+                            email_type,
+                        ),
                     )
 
                     already_sent = cursor.fetchone()
@@ -12435,7 +13615,7 @@ def clerk_dashboard():
                             FROM schools
                             WHERE school_id = %s
                             LIMIT 1
-                        """,
+                            """,
                             (school_id,),
                         )
 
@@ -12449,19 +13629,25 @@ def clerk_dashboard():
 
                             body = f"""
                             <div style="font-family:Arial;padding:20px;">
+
                                 <h2 style="color:#f59e0b;">
                                     Subscription Expiry Reminder
                                 </h2>
 
-                                <p>Dear {school_name_email},</p>
-
                                 <p>
-                                    Your subscription will expire in
-                                    <b>{remaining_days_for_email} day(s)</b>.
+                                    Dear {school_name_email},
                                 </p>
 
                                 <p>
-                                    Please renew your subscription to continue using ERP services.
+                                    Your subscription will expire in
+                                    <b>
+                                        {remaining_days_for_email} day(s)
+                                    </b>.
+                                </p>
+
+                                <p>
+                                    Please renew your subscription
+                                    to continue using ERP services.
                                 </p>
 
                                 <hr>
@@ -12470,6 +13656,7 @@ def clerk_dashboard():
                                     Thank you,<br>
                                     <b>SPL ShalaSarthi ERP Team</b>
                                 </p>
+
                             </div>
                             """
 
@@ -12486,63 +13673,72 @@ def clerk_dashboard():
                                         sent_at
                                     )
                                     VALUES (%s, %s, %s, NOW())
-                                """,
-                                    (school_id, subscription_id, email_type),
+                                    """,
+                                    (
+                                        school_id,
+                                        subscription_id,
+                                        email_type,
+                                    ),
                                 )
 
                                 conn.commit()
 
         # =====================================================
         # SCHOOL DATA
+        # Common school information helper
         # =====================================================
-        cursor.execute(
-            """
-            SELECT name
-            FROM schools
-            WHERE school_id = %s
-            LIMIT 1
-        """,
-            (school_id,),
-        )
 
-        school = cursor.fetchone()
+        school = get_school_details(school_id)
 
         if not school:
-            return "School not found ❌"
+            flash("School information could not be found.", "danger")
 
-        school_name = school[0]
+            return redirect(url_for("login"))
+
+        school_name = school["school_name"]
 
         # =====================================================
         # KPI COUNTS
+        # Only active records
         # =====================================================
+
+        # ---------------- STUDENTS ----------------
+
         cursor.execute(
             """
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
-        """,
+            AND is_deleted = 0
+            """,
             (school_id,),
         )
 
         total_students = cursor.fetchone()[0] or 0
+
+        # ---------------- TC ----------------
 
         cursor.execute(
             """
             SELECT COUNT(*)
             FROM tc
             WHERE school_id = %s
-        """,
+            AND is_deleted = 0
+            """,
             (school_id,),
         )
 
         total_tc = cursor.fetchone()[0] or 0
+
+        # ---------------- BONAFIDE ----------------
 
         cursor.execute(
             """
             SELECT COUNT(*)
             FROM bonafide
             WHERE school_id = %s
-        """,
+            AND is_deleted = 0
+            """,
             (school_id,),
         )
 
@@ -12550,46 +13746,52 @@ def clerk_dashboard():
 
         # =====================================================
         # TODAY'S SUMMARY
-        # Shows today's clerk workload
         # =====================================================
 
         today = date.today()
+
         current_date = datetime.now().strftime("%d %b %Y")
 
-        # Today new students
+        # ---------------- TODAY STUDENTS ----------------
+
         cursor.execute(
             """
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
+            AND is_deleted = 0
             AND DATE(created_at) = %s
-        """,
+            """,
             (school_id, today),
         )
 
         today_students = cursor.fetchone()[0] or 0
 
-        # Today TC generated
+        # ---------------- TODAY TC ----------------
+
         cursor.execute(
             """
             SELECT COUNT(*)
             FROM tc
             WHERE school_id = %s
+            AND is_deleted = 0
             AND DATE(created_at) = %s
-        """,
+            """,
             (school_id, today),
         )
 
         today_tc = cursor.fetchone()[0] or 0
 
-        # Today Bonafide issued
+        # ---------------- TODAY BONAFIDE ----------------
+
         cursor.execute(
             """
             SELECT COUNT(*)
             FROM bonafide
             WHERE school_id = %s
+            AND is_deleted = 0
             AND DATE(created_at) = %s
-        """,
+            """,
             (school_id, today),
         )
 
@@ -12597,8 +13799,6 @@ def clerk_dashboard():
 
         # =====================================================
         # PENDING TASKS
-        # Counts students with incomplete important profile data
-        # Based on add_student form fields
         # =====================================================
 
         cursor.execute(
@@ -12606,64 +13806,260 @@ def clerk_dashboard():
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
+            AND is_deleted = 0
             AND (
-                school_register_no IS NULL OR school_register_no = ''
-                OR name IS NULL OR name = ''
-                OR father_name IS NULL OR father_name = ''
-                OR mother_name IS NULL OR mother_name = ''
-                OR aadhaar IS NULL OR aadhaar = ''
+                school_register_no IS NULL
+                OR school_register_no = ''
+
+                OR name IS NULL
+                OR name = ''
+
+                OR father_name IS NULL
+                OR father_name = ''
+
+                OR mother_name IS NULL
+                OR mother_name = ''
+
+                OR aadhaar IS NULL
+                OR aadhaar = ''
+
                 OR dob IS NULL
-                OR birth_place IS NULL OR birth_place = ''
-                OR nationality IS NULL OR nationality = ''
-                OR mother_tongue IS NULL OR mother_tongue = ''
-                OR religion IS NULL OR religion = ''
-                OR caste IS NULL OR caste = ''
-                OR city IS NULL OR city = ''
-                OR taluka IS NULL OR taluka = ''
-                OR district IS NULL OR district = ''
-                OR state IS NULL OR state = ''
-                OR admission_no IS NULL OR admission_no = ''
+
+                OR birth_place IS NULL
+                OR birth_place = ''
+
+                OR nationality IS NULL
+                OR nationality = ''
+
+                OR mother_tongue IS NULL
+                OR mother_tongue = ''
+
+                OR religion IS NULL
+                OR religion = ''
+
+                OR caste IS NULL
+                OR caste = ''
+
+                OR city IS NULL
+                OR city = ''
+
+                OR taluka IS NULL
+                OR taluka = ''
+
+                OR district IS NULL
+                OR district = ''
+
+                OR state IS NULL
+                OR state = ''
+
+                OR admission_no IS NULL
+                OR admission_no = ''
+
                 OR admission_date IS NULL
-                OR class IS NULL OR class = ''
-                OR section IS NULL OR section = ''
-                OR primary_mobile IS NULL OR primary_mobile = ''
+
+                OR class IS NULL
+                OR class = ''
+
+                OR section IS NULL
+                OR section = ''
+
+                OR primary_mobile IS NULL
+                OR primary_mobile = ''
             )
-        """,
+            """,
             (school_id,),
         )
 
         pending_tasks = cursor.fetchone()[0] or 0
 
-        # =========================================
+        # =====================================================
         # TOTAL MISSING FIELDS COUNT
-        # =========================================
+        # =====================================================
 
         cursor.execute(
             """
-        SELECT
-        (
-            SUM(CASE WHEN school_register_no IS NULL OR school_register_no='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN father_name IS NULL OR father_name='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN mother_name IS NULL OR mother_name='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN aadhaar IS NULL OR aadhaar='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN dob IS NULL THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN birth_place IS NULL OR birth_place='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN nationality IS NULL OR nationality='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN mother_tongue IS NULL OR mother_tongue='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN religion IS NULL OR religion='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN caste IS NULL OR caste='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN city IS NULL OR city='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN taluka IS NULL OR taluka='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN district IS NULL OR district='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN state IS NULL OR state='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN admission_date IS NULL THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN class IS NULL OR class='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN section IS NULL OR section='' THEN 1 ELSE 0 END) +
-            SUM(CASE WHEN primary_mobile IS NULL OR primary_mobile='' THEN 1 ELSE 0 END)
-        )
-        FROM students
-        WHERE school_id = %s
-        """,
+            SELECT
+            (
+                SUM(
+                    CASE
+                        WHEN school_register_no IS NULL
+                        OR school_register_no = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN father_name IS NULL
+                        OR father_name = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN mother_name IS NULL
+                        OR mother_name = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN aadhaar IS NULL
+                        OR aadhaar = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN dob IS NULL
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN birth_place IS NULL
+                        OR birth_place = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN nationality IS NULL
+                        OR nationality = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN mother_tongue IS NULL
+                        OR mother_tongue = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN religion IS NULL
+                        OR religion = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN caste IS NULL
+                        OR caste = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN city IS NULL
+                        OR city = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN taluka IS NULL
+                        OR taluka = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN district IS NULL
+                        OR district = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN state IS NULL
+                        OR state = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN admission_date IS NULL
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN class IS NULL
+                        OR class = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN section IS NULL
+                        OR section = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+
+                +
+
+                SUM(
+                    CASE
+                        WHEN primary_mobile IS NULL
+                        OR primary_mobile = ''
+                        THEN 1 ELSE 0
+                    END
+                )
+            )
+            FROM students
+            WHERE school_id = %s
+            AND is_deleted = 0
+            """,
             (school_id,),
         )
 
@@ -12671,7 +14067,6 @@ def clerk_dashboard():
 
         # =====================================================
         # PENDING STUDENT DETAILS LIST
-        # Shows all missing important fields per student
         # =====================================================
 
         cursor.execute(
@@ -12683,58 +14078,197 @@ def clerk_dashboard():
                 class,
                 section,
 
-                CONCAT_WS(', ',
+                CONCAT_WS(
+                    ', ',
 
-                    CASE WHEN school_register_no IS NULL OR school_register_no = '' THEN 'Register No' END,
-                    CASE WHEN name IS NULL OR name = '' THEN 'Name' END,
-                    CASE WHEN father_name IS NULL OR father_name = '' THEN 'Father Name' END,
-                    CASE WHEN mother_name IS NULL OR mother_name = '' THEN 'Mother Name' END,
-                    CASE WHEN aadhaar IS NULL OR aadhaar = '' THEN 'Aadhaar' END,
-                    CASE WHEN dob IS NULL THEN 'DOB' END,
-                    CASE WHEN birth_place IS NULL OR birth_place = '' THEN 'Birth Place' END,
-                    CASE WHEN nationality IS NULL OR nationality = '' THEN 'Nationality' END,
-                    CASE WHEN mother_tongue IS NULL OR mother_tongue = '' THEN 'Mother Tongue' END,
-                    CASE WHEN religion IS NULL OR religion = '' THEN 'Religion' END,
-                    CASE WHEN caste IS NULL OR caste = '' THEN 'Caste' END,
-                    CASE WHEN city IS NULL OR city = '' THEN 'City' END,
-                    CASE WHEN taluka IS NULL OR taluka = '' THEN 'Taluka' END,
-                    CASE WHEN district IS NULL OR district = '' THEN 'District' END,
-                    CASE WHEN state IS NULL OR state = '' THEN 'State' END,
-                    CASE WHEN admission_no IS NULL OR admission_no = '' THEN 'Admission No' END,
-                    CASE WHEN admission_date IS NULL THEN 'Admission Date' END,
-                    CASE WHEN class IS NULL OR class = '' THEN 'Class' END,
-                    CASE WHEN section IS NULL OR section = '' THEN 'Section' END,
-                    CASE WHEN primary_mobile IS NULL OR primary_mobile = '' THEN 'Mobile' END
+                    CASE
+                        WHEN school_register_no IS NULL
+                        OR school_register_no = ''
+                        THEN 'Register No'
+                    END,
+
+                    CASE
+                        WHEN name IS NULL
+                        OR name = ''
+                        THEN 'Name'
+                    END,
+
+                    CASE
+                        WHEN father_name IS NULL
+                        OR father_name = ''
+                        THEN 'Father Name'
+                    END,
+
+                    CASE
+                        WHEN mother_name IS NULL
+                        OR mother_name = ''
+                        THEN 'Mother Name'
+                    END,
+
+                    CASE
+                        WHEN aadhaar IS NULL
+                        OR aadhaar = ''
+                        THEN 'Aadhaar'
+                    END,
+
+                    CASE
+                        WHEN dob IS NULL
+                        THEN 'DOB'
+                    END,
+
+                    CASE
+                        WHEN birth_place IS NULL
+                        OR birth_place = ''
+                        THEN 'Birth Place'
+                    END,
+
+                    CASE
+                        WHEN nationality IS NULL
+                        OR nationality = ''
+                        THEN 'Nationality'
+                    END,
+
+                    CASE
+                        WHEN mother_tongue IS NULL
+                        OR mother_tongue = ''
+                        THEN 'Mother Tongue'
+                    END,
+
+                    CASE
+                        WHEN religion IS NULL
+                        OR religion = ''
+                        THEN 'Religion'
+                    END,
+
+                    CASE
+                        WHEN caste IS NULL
+                        OR caste = ''
+                        THEN 'Caste'
+                    END,
+
+                    CASE
+                        WHEN city IS NULL
+                        OR city = ''
+                        THEN 'City'
+                    END,
+
+                    CASE
+                        WHEN taluka IS NULL
+                        OR taluka = ''
+                        THEN 'Taluka'
+                    END,
+
+                    CASE
+                        WHEN district IS NULL
+                        OR district = ''
+                        THEN 'District'
+                    END,
+
+                    CASE
+                        WHEN state IS NULL
+                        OR state = ''
+                        THEN 'State'
+                    END,
+
+                    CASE
+                        WHEN admission_no IS NULL
+                        OR admission_no = ''
+                        THEN 'Admission No'
+                    END,
+
+                    CASE
+                        WHEN admission_date IS NULL
+                        THEN 'Admission Date'
+                    END,
+
+                    CASE
+                        WHEN class IS NULL
+                        OR class = ''
+                        THEN 'Class'
+                    END,
+
+                    CASE
+                        WHEN section IS NULL
+                        OR section = ''
+                        THEN 'Section'
+                    END,
+
+                    CASE
+                        WHEN primary_mobile IS NULL
+                        OR primary_mobile = ''
+                        THEN 'Mobile'
+                    END
 
                 ) AS pending_reason
 
             FROM students
+
             WHERE school_id = %s
+            AND is_deleted = 0
+
             AND (
-                school_register_no IS NULL OR school_register_no = ''
-                OR name IS NULL OR name = ''
-                OR father_name IS NULL OR father_name = ''
-                OR mother_name IS NULL OR mother_name = ''
-                OR aadhaar IS NULL OR aadhaar = ''
+                school_register_no IS NULL
+                OR school_register_no = ''
+
+                OR name IS NULL
+                OR name = ''
+
+                OR father_name IS NULL
+                OR father_name = ''
+
+                OR mother_name IS NULL
+                OR mother_name = ''
+
+                OR aadhaar IS NULL
+                OR aadhaar = ''
+
                 OR dob IS NULL
-                OR birth_place IS NULL OR birth_place = ''
-                OR nationality IS NULL OR nationality = ''
-                OR mother_tongue IS NULL OR mother_tongue = ''
-                OR religion IS NULL OR religion = ''
-                OR caste IS NULL OR caste = ''
-                OR city IS NULL OR city = ''
-                OR taluka IS NULL OR taluka = ''
-                OR district IS NULL OR district = ''
-                OR state IS NULL OR state = ''
-                OR admission_no IS NULL OR admission_no = ''
+
+                OR birth_place IS NULL
+                OR birth_place = ''
+
+                OR nationality IS NULL
+                OR nationality = ''
+
+                OR mother_tongue IS NULL
+                OR mother_tongue = ''
+
+                OR religion IS NULL
+                OR religion = ''
+
+                OR caste IS NULL
+                OR caste = ''
+
+                OR city IS NULL
+                OR city = ''
+
+                OR taluka IS NULL
+                OR taluka = ''
+
+                OR district IS NULL
+                OR district = ''
+
+                OR state IS NULL
+                OR state = ''
+
+                OR admission_no IS NULL
+                OR admission_no = ''
+
                 OR admission_date IS NULL
-                OR class IS NULL OR class = ''
-                OR section IS NULL OR section = ''
-                OR primary_mobile IS NULL OR primary_mobile = ''
+
+                OR class IS NULL
+                OR class = ''
+
+                OR section IS NULL
+                OR section = ''
+
+                OR primary_mobile IS NULL
+                OR primary_mobile = ''
             )
+
             ORDER BY id DESC
             LIMIT 6
-        """,
+            """,
             (school_id,),
         )
 
@@ -12749,17 +14283,23 @@ def clerk_dashboard():
             SELECT
                 DATE_FORMAT(created_at, '%b') AS month_name,
                 COUNT(*) AS total
+
             FROM students
+
             WHERE school_id = %s
+            AND is_deleted = 0
+
             GROUP BY
                 YEAR(created_at),
                 MONTH(created_at),
                 DATE_FORMAT(created_at, '%b')
+
             ORDER BY
                 YEAR(created_at) DESC,
                 MONTH(created_at) DESC
+
             LIMIT 5
-        """,
+            """,
             (school_id,),
         )
 
@@ -12788,12 +14328,20 @@ def clerk_dashboard():
             SELECT
                 DATE_FORMAT(tc_date, '%d %b') AS tc_day,
                 COUNT(*) AS total
+
             FROM tc
+
             WHERE school_id = %s
-            GROUP BY DATE(tc_date), DATE_FORMAT(tc_date, '%d %b')
+            AND is_deleted = 0
+
+            GROUP BY
+                DATE(tc_date),
+                DATE_FORMAT(tc_date, '%d %b')
+
             ORDER BY DATE(tc_date) DESC
+
             LIMIT 5
-        """,
+            """,
             (school_id,),
         )
 
@@ -12839,6 +14387,7 @@ def clerk_dashboard():
         # =====================================================
         # USER PROFILE
         # =====================================================
+
         cursor.execute(
             """
             SELECT
@@ -12850,33 +14399,57 @@ def clerk_dashboard():
                 u.designation,
                 s.name AS school_name,
                 sub.plan_name,
+
                 CASE
-                    WHEN sub.end_date IS NULL THEN 0
-                    WHEN DATEDIFF(sub.end_date, NOW()) < 0 THEN 0
-                    ELSE DATEDIFF(sub.end_date, NOW())
+                    WHEN sub.end_date IS NULL
+                        THEN 0
+
+                    WHEN DATEDIFF(
+                        sub.end_date,
+                        NOW()
+                    ) < 0
+                        THEN 0
+
+                    ELSE DATEDIFF(
+                        sub.end_date,
+                        NOW()
+                    )
                 END AS remaining_days
+
             FROM users u
+
             JOIN schools s
                 ON u.school_id = s.school_id
+
             LEFT JOIN (
+
                 SELECT
                     s1.school_id,
                     s1.plan_name,
                     s1.end_date
+
                 FROM subscriptions s1
+
                 INNER JOIN (
+
                     SELECT
                         school_id,
                         MAX(id) AS latest_id
+
                     FROM subscriptions
+
                     GROUP BY school_id
+
                 ) s2
                     ON s1.id = s2.latest_id
+
             ) sub
                 ON sub.school_id = s.school_id
+
             WHERE u.id = %s
+
             LIMIT 1
-        """,
+            """,
             (clerk_user_id,),
         )
 
@@ -12893,6 +14466,7 @@ def clerk_dashboard():
         # =====================================================
         # SUBSCRIPTION ALERT SYSTEM
         # =====================================================
+
         remaining_days = int(user_profile.get("remaining_days") or 0)
 
         if current_status == "expired":
@@ -12919,7 +14493,8 @@ def clerk_dashboard():
                 "type": "danger",
                 "title": "Urgent Renewal Required",
                 "message": (
-                    f"Your subscription expires in {remaining_days} day(s). "
+                    f"Your subscription expires in "
+                    f"{remaining_days} day(s). "
                     f"Renew immediately."
                 ),
             }
@@ -12929,28 +14504,35 @@ def clerk_dashboard():
                 "type": "warning",
                 "title": "Subscription Expiring Soon",
                 "message": (
-                    f"Your subscription expires in {remaining_days} day(s). "
+                    f"Your subscription expires in "
+                    f"{remaining_days} day(s). "
                     f"Please renew before expiry."
                 ),
             }
 
         # =====================================================
         # RECENT ACTIVITIES
-        # Store real activity date for proper sorting
         # =====================================================
+
         activities = []
 
         # ================= STUDENTS =================
+
         cursor.execute(
             """
             SELECT
                 name,
                 created_at
+
             FROM students
+
             WHERE school_id = %s
+            AND is_deleted = 0
+
             ORDER BY created_at DESC
+
             LIMIT 3
-        """,
+            """,
             (school_id,),
         )
 
@@ -12958,7 +14540,7 @@ def clerk_dashboard():
             activities.append(
                 {
                     "type": "teal",
-                    "title": f"New student admission: {s[0]}",
+                    "title": (f"New student admission: {s[0]}"),
                     "title_mr": "नवीन विद्यार्थी प्रवेश",
                     "time": "Recently",
                     "sort_date": normalize_datetime(s[1]),
@@ -12966,19 +14548,28 @@ def clerk_dashboard():
             )
 
         # ================= TC =================
+
         cursor.execute(
             """
             SELECT
                 tc.tc_number,
                 st.name,
-                tc.tc_date
+                tc.created_at
+
             FROM tc
+
             JOIN students st
                 ON tc.student_id = st.id
+                AND st.school_id = tc.school_id
+
             WHERE tc.school_id = %s
-            ORDER BY tc.tc_date DESC
+            AND tc.is_deleted = 0
+            AND st.is_deleted = 0
+
+            ORDER BY tc.created_at DESC
+
             LIMIT 3
-        """,
+            """,
             (school_id,),
         )
 
@@ -12986,7 +14577,7 @@ def clerk_dashboard():
             activities.append(
                 {
                     "type": "orange",
-                    "title": f"TC issued for {tc[1]} (TC No: {tc[0]})",
+                    "title": (f"TC issued for {tc[1]} (TC No: {tc[0]})"),
                     "title_mr": "टीसी जारी केले",
                     "time": "Recently",
                     "sort_date": normalize_datetime(tc[2]),
@@ -12994,18 +14585,27 @@ def clerk_dashboard():
             )
 
         # ================= BONAFIDE =================
+
         cursor.execute(
             """
             SELECT
                 st.name,
                 b.date
+
             FROM bonafide b
+
             JOIN students st
                 ON b.student_id = st.id
+                AND st.school_id = b.school_id
+
             WHERE b.school_id = %s
+            AND b.is_deleted = 0
+            AND st.is_deleted = 0
+
             ORDER BY b.date DESC
+
             LIMIT 3
-        """,
+            """,
             (school_id,),
         )
 
@@ -13013,24 +14613,29 @@ def clerk_dashboard():
             activities.append(
                 {
                     "type": "blue",
-                    "title": f"Bonafide certificate issued for {b[0]}",
+                    "title": (f"Bonafide certificate issued for {b[0]}"),
                     "title_mr": "बोनाफाईड प्रमाणपत्र जारी केले",
                     "time": "Recently",
                     "sort_date": normalize_datetime(b[1]),
                 }
             )
 
-        activities = sorted(activities, key=lambda x: x["sort_date"], reverse=True)[:6]
+        activities = sorted(
+            activities,
+            key=lambda x: x["sort_date"],
+            reverse=True,
+        )[:6]
 
-        # Remove internal sorting key before sending to template
+        # Remove internal sorting key
         for activity in activities:
             activity.pop("sort_date", None)
 
         # =====================================================
         # GLOBAL FEATURE SETTINGS
-        # Used to lock/hide dashboard action cards
         # =====================================================
-        cursor.execute("""
+
+        cursor.execute(
+            """
             SELECT
                 enable_tc_management,
                 enable_bonafide_management,
@@ -13041,28 +14646,33 @@ def clerk_dashboard():
                 enable_results,
                 enable_timetable,
                 enable_notice_board
+
             FROM system_settings
+
             ORDER BY id ASC
+
             LIMIT 1
-        """)
+            """
+        )
 
         feature_row = cursor.fetchone()
 
         features = {
-            "tc": feature_row[0] if feature_row else "Disabled",
-            "bonafide": feature_row[1] if feature_row else "Disabled",
-            "import_export": feature_row[2] if feature_row else "Disabled",
-            "attendance": feature_row[3] if feature_row else "Disabled",
-            "fee": feature_row[4] if feature_row else "Disabled",
-            "teacher": feature_row[5] if feature_row else "Disabled",
-            "results": feature_row[6] if feature_row else "Disabled",
-            "timetable": feature_row[7] if feature_row else "Disabled",
-            "notice": feature_row[8] if feature_row else "Disabled",
+            "tc": (feature_row[0] if feature_row else "Disabled"),
+            "bonafide": (feature_row[1] if feature_row else "Disabled"),
+            "import_export": (feature_row[2] if feature_row else "Disabled"),
+            "attendance": (feature_row[3] if feature_row else "Disabled"),
+            "fee": (feature_row[4] if feature_row else "Disabled"),
+            "teacher": (feature_row[5] if feature_row else "Disabled"),
+            "results": (feature_row[6] if feature_row else "Disabled"),
+            "timetable": (feature_row[7] if feature_row else "Disabled"),
+            "notice": (feature_row[8] if feature_row else "Disabled"),
         }
 
         # =====================================================
         # FINAL RENDER
         # =====================================================
+
         return render_template(
             "dashboard/clerk.html",
             role="clerk",
@@ -13091,9 +14701,23 @@ def clerk_dashboard():
         )
 
     except Exception as e:
-        print("❌ DASHBOARD ERROR:", e)
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
 
-        return "Something went wrong ❌"
+        logger.exception(
+            "CLERK DASHBOARD ERROR | school_id=%s | clerk_user_id=%s",
+            session.get("clerk_school_id"),
+            session.get("clerk_user_id"),
+        )
+
+        print("CLERK DASHBOARD ERROR:", repr(e))
+
+        flash("Unable to load dashboard right now. Please try again.", "danger")
+
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
         if cursor:
@@ -14117,10 +15741,23 @@ def add_student():
                 )
                 return redirect(url_for("clerk_dashboard"))
 
+            # ================= CHECK STUDENT LIMIT =================
+
+            limit_check = check_subscription_limit(
+                cursor,
+                school_id,
+                "students"
+            )
+
+            if not limit_check["allowed"]:
+                return limit_check["message"] + " Please upgrade your plan ❌"
+
             # ================= GENERATE ADMISSION NO =================
+
             admission_no = generate_admission_no(school_id)
 
             # ================= INSERT STUDENT =================
+            
             cursor.execute(
                 """
                 INSERT INTO students (
@@ -14282,15 +15919,10 @@ def edit_student(id):
         if is_clerk_request:
             school_id = session.get("clerk_school_id")
 
-            cursor.execute(
-                """
-                SELECT *
-                FROM students
-                WHERE id = %s
-                AND school_id = %s
-                LIMIT 1
-            """,
-                (id, school_id),
+            row = get_student_for_school(
+                cursor,
+                id,
+                school_id,
             )
 
         else:
@@ -14299,12 +15931,13 @@ def edit_student(id):
                 SELECT *
                 FROM students
                 WHERE id = %s
+                AND is_deleted = 0
                 LIMIT 1
-            """,
+                """,
                 (id,),
             )
 
-        row = cursor.fetchone()
+            row = cursor.fetchone()
 
         if not row:
             flash("Student Not Found.", "danger")
@@ -14694,6 +16327,7 @@ def edit_student(id):
                         guardian_name = %s,
                         guardian_mobile = %s
                     WHERE id = %s
+                    AND is_deleted = 0
                 """,
                     (
                         school_register_no,
@@ -14778,7 +16412,13 @@ def edit_student(id):
 
 # =========================================================
 # 📋 VIEW STUDENTS LIST PAGE
+# PURPOSE:
+# Show only active students for logged-in clerk school
+# Backend search + class filter + pagination
+# Soft-delete aware
 # =========================================================
+
+
 @app.route("/clerk/students")
 @login_required
 @subscription_required
@@ -14788,33 +16428,64 @@ def clerk_students():
     cursor = None
 
     try:
+        # =====================================================
+        # CLERK SCHOOL SESSION
+        # =====================================================
+
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            flash("School session missing.", "danger")
+            flash("Your school session has expired. Please log in again.", "warning")
+
             return redirect(url_for("clerk_dashboard"))
+
+        # =====================================================
+        # FILTERS
+        # =====================================================
 
         search = (request.args.get("search") or "").strip()
         class_filter = (request.args.get("class") or "").strip()
 
+        # =====================================================
+        # PAGINATION
+        # =====================================================
+
         page = request.args.get("page", 1, type=int)
+
+        if not page or page < 1:
+            page = 1
+
         per_page = 10
         offset = (page - 1) * per_page
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
 
         conn = get_connection()
 
         if not conn:
-            flash("Database connection failed.", "danger")
+            flash("Unable to connect to the database. Please try again.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
 
         cursor = conn.cursor(dictionary=True)
 
+        # =====================================================
+        # ACTIVE STUDENTS ONLY
+        # =====================================================
+
         where_query = """
             FROM students
             WHERE school_id = %s
+            AND is_deleted = 0
         """
 
         params = [school_id]
+
+        # =====================================================
+        # SEARCH
+        # =====================================================
 
         if search:
             where_query += """
@@ -14830,21 +16501,44 @@ def clerk_students():
             like_search = f"%{search}%"
 
             params.extend(
-                [like_search, like_search, like_search, like_search, like_search]
+                [
+                    like_search,
+                    like_search,
+                    like_search,
+                    like_search,
+                    like_search,
+                ]
             )
 
+        # =====================================================
+        # CLASS FILTER
+        # =====================================================
+
         if class_filter:
-            where_query += " AND class = %s"
+            where_query += """
+                AND class = %s
+            """
+
             params.append(class_filter)
 
+        # =====================================================
         # TOTAL COUNT
+        # =====================================================
+
         cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
 
         total_records = cursor.fetchone()["total"] or 0
 
         total_pages = max(1, (total_records + per_page - 1) // per_page)
 
+        if page > total_pages:
+            page = total_pages
+            offset = (page - 1) * per_page
+
+        # =====================================================
         # STUDENT DATA
+        # =====================================================
+
         query = (
             """
             SELECT
@@ -14864,25 +16558,32 @@ def clerk_students():
                 progress,
                 conduct,
                 created_at
-        """
+            """
             + where_query
             + """
-            ORDER BY id DESC
-            LIMIT %s OFFSET %s
-        """
+                ORDER BY id DESC
+                LIMIT %s OFFSET %s
+            """
         )
 
-        data_params = params + [per_page, offset]
-
-        cursor.execute(query, tuple(data_params))
+        cursor.execute(query, tuple(params + [per_page, offset]))
 
         students = cursor.fetchall()
+
+        # =====================================================
+        # SCHOOL DETAILS
+        # =====================================================
 
         school = get_school_details(school_id)
 
         if not school:
-            flash("School not found.", "danger")
+            flash("School information could not be found.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
+
+        # =====================================================
+        # RENDER
+        # =====================================================
 
         return render_template(
             "clerk/students.html",
@@ -14898,9 +16599,11 @@ def clerk_students():
             active_page="students",
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("STUDENTS FETCH ERROR")
-        flash("Unable to fetch students.", "danger")
+
+        flash("Unable to load student records. Please try again.", "danger")
+
         return redirect(url_for("clerk_dashboard"))
 
     finally:
@@ -14917,7 +16620,6 @@ def clerk_students():
 # Generate TC number using same DB transaction
 # Prevents duplicate TC numbers during multiple users
 # =========================================================
-
 
 def generate_tc_number(cursor, school_id):
 
@@ -15008,7 +16710,6 @@ def generate_tc_number(cursor, school_id):
 # TC number + TC insert happen in one transaction
 # =========================================================
 
-
 @app.route("/clerk/tc-form/<int:id>", methods=["GET", "POST"])
 @login_required
 @subscription_required
@@ -15045,18 +16746,11 @@ def tc_form(id):
         # Prevents clerk accessing other school student
         # =========================================
 
-        cursor.execute(
-            """
-            SELECT *
-            FROM students
-            WHERE id = %s
-            AND school_id = %s
-            LIMIT 1
-        """,
-            (id, school_id),
+        row = get_student_for_school(
+            cursor,
+            id,
+            school_id,
         )
-
-        row = cursor.fetchone()
 
         if not row:
             flash("Student Not Found.", "danger")
@@ -15157,6 +16851,22 @@ def tc_form(id):
 
             if existing_tc:
                 return redirect(url_for("view_tc", tc_id=existing_tc[0]))
+
+            # =========================================
+            # CHECK TC SUBSCRIPTION LIMIT
+            # =========================================
+
+            limit_check = check_subscription_limit(
+                cursor,
+                school_id,
+                "tc"
+            )
+
+            if not limit_check["allowed"]:
+                return (
+                    limit_check["message"]
+                    + " Please upgrade your plan ❌"
+                )
 
             # =========================================
             # GENERATE TC NUMBER
@@ -16105,8 +17815,14 @@ def public_tc(tc_id):
 
 
 # =========================================================
-# 📊 TC HISTORY PAGE (SAFE + BACKEND FILTER + PAGINATION)
+# 📊 TC HISTORY PAGE
+# PURPOSE:
+# Show active TC records for logged-in clerk school
+# Backend search + class/year filter + pagination
+# Soft-delete aware
 # =========================================================
+
+
 @app.route("/clerk/tc")
 @login_required
 @subscription_required
@@ -16117,79 +17833,87 @@ def clerk_tc_page():
     cursor = None
 
     try:
-        # =========================================
+        # =====================================================
         # CLERK SCHOOL SESSION
-        # =========================================
+        # =====================================================
 
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            flash("School session expired.", "danger")
+            flash("Your school session has expired. Please log in again.", "warning")
+
             return redirect(url_for("clerk_dashboard"))
 
-        # =========================================
+        # =====================================================
         # FILTER VALUES
-        # =========================================
+        # =====================================================
 
         search = (request.args.get("search") or "").strip()
         class_filter = (request.args.get("class") or "").strip()
         year_filter = (request.args.get("year") or "").strip()
 
-        # =========================================
-        # PAGINATION VALUES
-        # =========================================
+        # =====================================================
+        # PAGINATION
+        # =====================================================
 
         page = request.args.get("page", 1, type=int)
 
-        if page < 1:
+        if not page or page < 1:
             page = 1
 
         per_page = 10
         offset = (page - 1) * per_page
 
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+        # =====================================================
+        # DATABASE
+        # =====================================================
 
         conn = get_connection()
+
+        if not conn:
+            flash("Unable to connect to the database. Please try again.", "danger")
+
+            return redirect(url_for("clerk_dashboard"))
+
         cursor = conn.cursor(dictionary=True)
 
-        # =========================================
+        # =====================================================
         # COMMON WHERE QUERY
-        # Ensures only logged-in school TC records
-        # =========================================
+        #
+        # Only ACTIVE TC records.
+        #
+        # We intentionally don't filter s.is_deleted because
+        # historical certificates should remain visible even
+        # if the student was later soft-deleted.
+        # =====================================================
 
         where_query = """
             FROM tc t
+
             JOIN students s
                 ON t.student_id = s.id
                 AND s.school_id = t.school_id
+
             WHERE t.school_id = %s
+            AND t.is_deleted = 0
         """
 
         params = [school_id]
 
-        # =========================================
-        # SEARCH FILTER
-        # =========================================
+        # =====================================================
+        # SEARCH
+        # =====================================================
 
         if search:
             where_query += """
-            AND (
-
-            s.name LIKE %s
-
-            OR s.admission_no LIKE %s
-
-            OR s.school_register_no LIKE %s
-
-            OR s.student_uid LIKE %s
-
-            OR s.apaar_id LIKE %s
-
-            OR t.tc_number LIKE %s
-
-            )
+                AND (
+                    s.name LIKE %s
+                    OR s.admission_no LIKE %s
+                    OR s.school_register_no LIKE %s
+                    OR s.student_uid LIKE %s
+                    OR s.apaar_id LIKE %s
+                    OR t.tc_number LIKE %s
+                )
             """
 
             like_search = f"%{search}%"
@@ -16205,9 +17929,9 @@ def clerk_tc_page():
                 ]
             )
 
-        # =========================================
+        # =====================================================
         # CLASS FILTER
-        # =========================================
+        # =====================================================
 
         if class_filter:
             where_query += """
@@ -16216,9 +17940,11 @@ def clerk_tc_page():
 
             params.append(class_filter)
 
-        # =========================================
+        # =====================================================
         # YEAR FILTER
-        # =========================================
+        #
+        # created_at = Issue date
+        # =====================================================
 
         if year_filter:
             where_query += """
@@ -16227,9 +17953,9 @@ def clerk_tc_page():
 
             params.append(year_filter)
 
-        # =========================================
+        # =====================================================
         # TOTAL FILTERED RECORDS
-        # =========================================
+        # =====================================================
 
         cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
 
@@ -16241,9 +17967,9 @@ def clerk_tc_page():
             page = total_pages
             offset = (page - 1) * per_page
 
-        # =========================================
-        # MAIN TC LIST WITH LIMIT
-        # =========================================
+        # =====================================================
+        # MAIN TC LIST
+        # =====================================================
 
         query = (
             """
@@ -16252,18 +17978,19 @@ def clerk_tc_page():
                 t.tc_number,
                 t.tc_date,
                 t.created_at,
+
                 s.name,
                 s.class AS class_name,
                 s.admission_no,
                 s.school_register_no,
                 s.student_uid,
                 s.apaar_id
-        """
+            """
             + where_query
             + """
-            ORDER BY t.created_at DESC
-            LIMIT %s OFFSET %s
-        """
+                ORDER BY t.created_at DESC
+                LIMIT %s OFFSET %s
+            """
         )
 
         cursor.execute(query, tuple(params + [per_page, offset]))
@@ -16278,76 +18005,84 @@ def clerk_tc_page():
                     "id": r["id"],
                     "tc_number": r["tc_number"],
                     "tc_date": format_date(r["tc_date"]),
+                    # created_at is used as Issue Date
                     "issue_date": format_date(r["created_at"]),
-                    "name": r["name"],
-                    "class": r["class_name"],
-                    "admission_no": r["admission_no"],
+                    "name": r["name"] or "",
+                    "class": r["class_name"] or "",
+                    "admission_no": r["admission_no"] or "",
                     "school_register_no": r["school_register_no"] or "",
                     "student_uid": r["student_uid"] or "",
                     "apaar_id": r["apaar_id"] or "",
                 }
             )
 
-        # =========================================
+        # =====================================================
         # TOTAL TC COUNT
-        # =========================================
+        # =====================================================
 
         cursor.execute(
             """
             SELECT COUNT(*) AS total
             FROM tc
             WHERE school_id = %s
-        """,
+            AND is_deleted = 0
+            """,
             (school_id,),
         )
 
         total_tc = cursor.fetchone()["total"] or 0
 
-        # =========================================
+        # =====================================================
         # TODAY TC COUNT
-        # =========================================
+        # =====================================================
 
         cursor.execute(
             """
             SELECT COUNT(*) AS total
             FROM tc
             WHERE school_id = %s
+            AND is_deleted = 0
             AND DATE(created_at) = CURDATE()
-        """,
+            """,
             (school_id,),
         )
 
         today_tc = cursor.fetchone()["total"] or 0
 
-        # =========================================
+        # =====================================================
         # MONTH TC COUNT
-        # =========================================
+        # =====================================================
 
         cursor.execute(
             """
             SELECT COUNT(*) AS total
             FROM tc
             WHERE school_id = %s
-            AND MONTH(created_at) = MONTH(NOW())
-            AND YEAR(created_at) = YEAR(NOW())
-        """,
+            AND is_deleted = 0
+            AND MONTH(created_at) = MONTH(CURDATE())
+            AND YEAR(created_at) = YEAR(CURDATE())
+            """,
             (school_id,),
         )
 
         month_tc = cursor.fetchone()["total"] or 0
 
-        # =========================================
-        # YEAR DROPDOWN DATA
-        # =========================================
+        # =====================================================
+        # YEAR DROPDOWN
+        #
+        # IMPORTANT:
+        # Use created_at because it represents Issue Date.
+        # =====================================================
 
         cursor.execute(
             """
             SELECT DISTINCT YEAR(created_at) AS year_no
             FROM tc
             WHERE school_id = %s
-            AND tc_date IS NOT NULL
+            AND is_deleted = 0
+            AND created_at IS NOT NULL
             ORDER BY year_no DESC
-        """,
+            """,
             (school_id,),
         )
 
@@ -16355,15 +18090,20 @@ def clerk_tc_page():
 
         years = [row["year_no"] for row in year_rows if row["year_no"]]
 
-        # =========================================
+        # =====================================================
         # SCHOOL DETAILS
-        # =========================================
+        # =====================================================
 
         school = get_school_details(school_id)
 
         if not school:
-            flash("Unable to load School Data.", "danger")
+            flash("School information could not be found.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
+
+        # =====================================================
+        # RENDER
+        # =====================================================
 
         return render_template(
             "clerk/tc_search.html",
@@ -16385,9 +18125,13 @@ def clerk_tc_page():
             total_records=total_records,
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("TC PAGE ERROR")
-        flash("Something went wrong ", "danger")
+
+        flash(
+            "Unable to load Transfer Certificate records. Please try again.", "danger"
+        )
+
         return redirect(url_for("clerk_dashboard"))
 
     finally:
@@ -16694,8 +18438,9 @@ def view_bonafide(bid):
 # =========================================================
 # 📜 BONAFIDE PAGE
 # PURPOSE:
-# Show bonafide records for logged-in clerk school only
+# Show active bonafide records for logged-in clerk school only
 # Backend search + class/year filter + pagination
+# Soft-delete aware
 # Production-safe for large data
 # =========================================================
 
@@ -16710,48 +18455,51 @@ def clerk_bonafide_page():
     cursor = None
 
     try:
-        # =========================================
+        # =====================================================
         # CLERK SCHOOL SESSION
-        # =========================================
+        # =====================================================
 
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            return "School session missing ❌"
-            abort(404)
-        # =========================================
+            flash("Your school session has expired. Please log in again.", "warning")
+            return redirect(url_for("clerk_dashboard"))
+
+        # =====================================================
         # FILTER VALUES
-        # =========================================
+        # =====================================================
 
         search = (request.args.get("search") or "").strip()
-
         class_filter = (request.args.get("class") or "").strip()
-
         year_filter = (request.args.get("year") or "").strip()
 
-        # =========================================
-        # PAGINATION VALUES
-        # =========================================
+        # =====================================================
+        # PAGINATION
+        # =====================================================
 
         page = request.args.get("page", 1, type=int)
 
-        if page < 1:
+        if not page or page < 1:
             page = 1
 
         per_page = 10
-
         offset = (page - 1) * per_page
 
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+        # =====================================================
+        # DATABASE
+        # =====================================================
 
         conn = get_connection()
+
+        if not conn:
+            flash("Unable to connect to the database. Please try again.", "danger")
+            return redirect(url_for("clerk_dashboard"))
+
         cursor = conn.cursor(dictionary=True)
 
-        # =========================================
+        # =====================================================
         # SCHOOL INFO
-        # =========================================
+        # =====================================================
 
         cursor.execute(
             """
@@ -16762,22 +18510,31 @@ def clerk_bonafide_page():
             FROM schools
             WHERE school_id = %s
             LIMIT 1
-        """,
+            """,
             (school_id,),
         )
 
         school = cursor.fetchone()
 
         if not school:
-            return "School not found ❌"
+            flash("School information could not be found.", "danger")
+            return redirect(url_for("clerk_dashboard"))
 
         school_name = school["name"]
         school_code = school["school_code"]
 
-        # =========================================
+        # =====================================================
         # COMMON WHERE QUERY
-        # Only logged-in school bonafide records
-        # =========================================
+        #
+        # IMPORTANT:
+        # Only Bonafide records are filtered by is_deleted.
+        #
+        # We intentionally DO NOT add:
+        # s.is_deleted = 0
+        #
+        # because certificate history should remain available
+        # even if the student is later soft-deleted.
+        # =====================================================
 
         where_query = """
             FROM bonafide b
@@ -16787,13 +18544,14 @@ def clerk_bonafide_page():
                 AND s.school_id = b.school_id
 
             WHERE b.school_id = %s
+            AND b.is_deleted = 0
         """
 
         params = [school_id]
 
-        # =========================================
-        # SEARCH FILTER
-        # =========================================
+        # =====================================================
+        # SEARCH
+        # =====================================================
 
         if search:
             where_query += """
@@ -16820,9 +18578,9 @@ def clerk_bonafide_page():
                 ]
             )
 
-        # =========================================
+        # =====================================================
         # CLASS FILTER
-        # =========================================
+        # =====================================================
 
         if class_filter:
             where_query += """
@@ -16831,9 +18589,11 @@ def clerk_bonafide_page():
 
             params.append(class_filter)
 
-        # =========================================
+        # =====================================================
         # YEAR FILTER
-        # =========================================
+        #
+        # Certificate year = Bonafide certificate date
+        # =====================================================
 
         if year_filter:
             where_query += """
@@ -16842,9 +18602,9 @@ def clerk_bonafide_page():
 
             params.append(year_filter)
 
-        # =========================================
+        # =====================================================
         # TOTAL FILTERED RECORDS
-        # =========================================
+        # =====================================================
 
         cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
 
@@ -16856,9 +18616,9 @@ def clerk_bonafide_page():
             page = total_pages
             offset = (page - 1) * per_page
 
-        # =========================================
+        # =====================================================
         # MAIN BONAFIDE LIST
-        # =========================================
+        # =====================================================
 
         query = (
             """
@@ -16879,12 +18639,12 @@ def clerk_bonafide_page():
 
                 s.class AS class_name
 
-        """
+            """
             + where_query
             + """
-            ORDER BY b.id DESC
-            LIMIT %s OFFSET %s
-        """
+                ORDER BY b.id DESC
+                LIMIT %s OFFSET %s
+            """
         )
 
         cursor.execute(query, tuple(params + [per_page, offset]))
@@ -16912,66 +18672,70 @@ def clerk_bonafide_page():
                 }
             )
 
-        # =========================================
+        # =====================================================
         # TOTAL BONAFIDE COUNT
-        # =========================================
+        # =====================================================
 
         cursor.execute(
             """
             SELECT COUNT(*) AS total
             FROM bonafide
             WHERE school_id = %s
-        """,
+            AND is_deleted = 0
+            """,
             (school_id,),
         )
 
         total_bonafide = cursor.fetchone()["total"] or 0
 
-        # =========================================
+        # =====================================================
         # TODAY BONAFIDE COUNT
-        # =========================================
+        # =====================================================
 
         cursor.execute(
             """
             SELECT COUNT(*) AS total
             FROM bonafide
             WHERE school_id = %s
+            AND is_deleted = 0
             AND DATE(created_at) = CURDATE()
-        """,
+            """,
             (school_id,),
         )
 
         today_bonafide = cursor.fetchone()["total"] or 0
 
-        # =========================================
+        # =====================================================
         # MONTH BONAFIDE COUNT
-        # =========================================
+        # =====================================================
 
         cursor.execute(
             """
             SELECT COUNT(*) AS total
             FROM bonafide
             WHERE school_id = %s
-            AND MONTH(created_at) = MONTH(NOW())
-            AND YEAR(created_at) = YEAR(NOW())
-        """,
+            AND is_deleted = 0
+            AND MONTH(created_at) = MONTH(CURDATE())
+            AND YEAR(created_at) = YEAR(CURDATE())
+            """,
             (school_id,),
         )
 
         month_bonafide = cursor.fetchone()["total"] or 0
 
-        # =========================================
-        # YEAR DROPDOWN DATA
-        # =========================================
+        # =====================================================
+        # YEAR DROPDOWN
+        # =====================================================
 
         cursor.execute(
             """
             SELECT DISTINCT YEAR(date) AS year_no
             FROM bonafide
             WHERE school_id = %s
+            AND is_deleted = 0
             AND date IS NOT NULL
             ORDER BY year_no DESC
-        """,
+            """,
             (school_id,),
         )
 
@@ -16979,11 +18743,12 @@ def clerk_bonafide_page():
 
         years = [row["year_no"] for row in year_rows if row["year_no"]]
 
-        # =========================================
-        # HISTORY MAP FOR CURRENT PAGE STUDENTS
-        # =========================================
+        # =====================================================
+        # HISTORY MAP
+        # Only ACTIVE Bonafide records
+        # =====================================================
 
-        student_ids = list({b["student_id"] for b in bonafide_list})
+        student_ids = list({b["student_id"] for b in bonafide_list if b["student_id"]})
 
         bonafide_history_map = {}
 
@@ -17000,9 +18765,10 @@ def clerk_bonafide_page():
                     purpose
                 FROM bonafide
                 WHERE school_id = %s
+                AND is_deleted = 0
                 AND student_id IN ({placeholders})
                 ORDER BY id DESC
-            """,
+                """,
                 tuple([school_id] + student_ids),
             )
 
@@ -17023,9 +18789,9 @@ def clerk_bonafide_page():
                     }
                 )
 
-        # =========================================
+        # =====================================================
         # RENDER
-        # =========================================
+        # =====================================================
 
         return render_template(
             "clerk/bonafide.html",
@@ -17049,10 +18815,12 @@ def clerk_bonafide_page():
             next_bonafide_number="Auto Generate On Save",
         )
 
-    except Exception as e:
-        print("❌ BONAFIDE PAGE ERROR:", e)
+    except Exception:
+        logger.exception("BONAFIDE PAGE ERROR")
 
-        return "Something went wrong ❌"
+        flash("Unable to load Bonafide records. Please try again.", "danger")
+
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
         if cursor:
@@ -17143,18 +18911,11 @@ def save_bonafide():
         # Prevents cross-school certificate creation
         # =========================================
 
-        cursor.execute(
-            """
-            SELECT id
-            FROM students
-            WHERE id = %s
-            AND school_id = %s
-            LIMIT 1
-        """,
-            (student_id, school_id),
+        student = get_student_for_school(
+            cursor,
+            student_id,
+            school_id,
         )
-
-        student = cursor.fetchone()
 
         if not student:
             return "Student Not Found ❌"
@@ -17180,6 +18941,22 @@ def save_bonafide():
 
         if existing_bonafide:
             return redirect(url_for("view_bonafide", bid=existing_bonafide[0]))
+
+        # =========================================
+        # CHECK BONAFIDE SUBSCRIPTION LIMIT
+        # =========================================
+
+        limit_check = check_subscription_limit(
+            cursor,
+            school_id,
+            "bonafide"
+        )
+
+        if not limit_check["allowed"]:
+            return (
+                limit_check["message"]
+                + " Please upgrade your plan ❌"
+            )
 
         # =========================================
         # GENERATE BONAFIDE NUMBER
@@ -17881,7 +19658,8 @@ def import_export_page():
 
 
 # =========================================================
-# 📥 IMPORT STUDENTS FROM EXCEL (SAFE + ATOMIC)
+# 📥 IMPORT STUDENTS FROM EXCEL
+# SAFE + ATOMIC + SUBSCRIPTION LIMIT AWARE
 # =========================================================
 @app.route("/clerk/import-students", methods=["GET", "POST"])
 @login_required
@@ -17889,228 +19667,901 @@ def import_export_page():
 @feature_required("enable_import_export")
 def import_students():
 
-    if request.method == "GET":
-        return redirect("/clerk/import-export")
+    # =====================================================
+    # GET REQUEST
+    # =====================================================
 
-    print("🔥 IMPORT STARTED")
+    if request.method == "GET":
+        return redirect(url_for("import_export_page"))
 
     conn = None
     cursor = None
 
     try:
-        file = request.files.get("file")
 
-        # ================= FILE CHECK =================
-        if not file or not file.filename:
-            return "No file uploaded ❌"
+        print("🔥 IMPORT STARTED")
 
-        # ================= SAFE FILENAME =================
-        filename = secure_filename(file.filename)
-
-        # ================= EXTENSION CHECK =================
-        if not filename.lower().endswith(".xlsx"):
-            return "Only .xlsx files allowed ❌"
+        # =================================================
+        # SCHOOL SESSION
+        # =================================================
 
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            return "School session missing ❌"
-            abort(404)
-        # ================= READ EXCEL =================
-        df = pd.read_excel(file, dtype=str)
+            flash(
+                "School session expired. Please login again.",
+                "danger"
+            )
+
+            return redirect(url_for("login"))
+
+        # =================================================
+        # FILE CHECK
+        # =================================================
+
+        file = request.files.get("file")
+
+        if not file or not file.filename:
+
+            flash(
+                "Please select an Excel file before importing.",
+                "warning"
+            )
+
+            return redirect(url_for("import_export_page"))
+
+        # =================================================
+        # SAFE FILENAME
+        # =================================================
+
+        filename = secure_filename(file.filename)
+
+        if not filename:
+
+            flash(
+                "Invalid file name.",
+                "danger"
+            )
+
+            return redirect(url_for("import_export_page"))
+
+        # =================================================
+        # EXTENSION CHECK
+        # =================================================
+
+        if not filename.lower().endswith(".xlsx"):
+
+            flash(
+                "Only .xlsx Excel files are allowed.",
+                "danger"
+            )
+
+            return redirect(url_for("import_export_page"))
+
+        # =================================================
+        # FILE SIZE CHECK
+        # =================================================
+
+        file.seek(0, os.SEEK_END)
+
+        file_size = file.tell()
+
+        file.seek(0)
+
+        max_file_size = 5 * 1024 * 1024
+
+        if file_size > max_file_size:
+
+            flash(
+                "Excel file size must not exceed 5 MB.",
+                "danger"
+            )
+
+            return redirect(url_for("import_export_page"))
+
+        # =================================================
+        # READ EXCEL
+        # =================================================
+
+        try:
+
+            df = pd.read_excel(
+                file,
+                dtype=str,
+                engine="openpyxl"
+            )
+
+        except Exception:
+
+            logger.exception("EXCEL READ ERROR")
+
+            flash(
+                "Unable to read the Excel file. Please use the official template.",
+                "danger"
+            )
+
+            return redirect(url_for("import_export_page"))
+
+        # =================================================
+        # EMPTY FILE
+        # =================================================
 
         if df.empty:
-            return "Excel file is empty ❌"
 
-        # ================= LIMIT ROWS =================
+            flash(
+                "The Excel file is empty.",
+                "warning"
+            )
+
+            return redirect(url_for("import_export_page"))
+
+        # =================================================
+        # MAX ROW LIMIT
+        # =================================================
+
         if len(df) > 5000:
-            return "Maximum 5000 rows allowed ❌"
 
-        # ================= NORMALIZE COLUMNS =================
-        df.columns = df.columns.str.strip().str.lower()
+            flash(
+                "Maximum 5000 student rows can be imported at once.",
+                "danger"
+            )
 
-        print("📊 Columns:", df.columns)
+            return redirect(url_for("import_export_page"))
 
-        # ================= REQUIRED COLUMN CHECK =================
-        required_columns = ["name", "class"]
+        # =================================================
+        # NORMALIZE COLUMN NAMES
+        # =================================================
 
-        for col in required_columns:
-            if col not in df.columns:
-                return f"Missing required column: {col} ❌"
+        df.columns = (
+            df.columns
+            .astype(str)
+            .str.strip()
+            .str.lower()
+        )
+
+        print("📊 Excel Columns:", list(df.columns))
+
+        # =================================================
+        # REQUIRED COLUMNS
+        # =================================================
+
+        required_columns = [
+            "name",
+            "class"
+        ]
+
+        missing_columns = [
+            column
+            for column in required_columns
+            if column not in df.columns
+        ]
+
+        if missing_columns:
+
+            flash(
+                "Missing required Excel column(s): "
+                + ", ".join(missing_columns),
+                "danger"
+            )
+
+            return redirect(url_for("import_export_page"))
+
+        # =================================================
+        # DATABASE
+        # =================================================
 
         conn = get_connection()
-        cursor = conn.cursor()
+
+        if not conn:
+
+            flash(
+                "Database connection failed. Please try again.",
+                "danger"
+            )
+
+            return redirect(url_for("import_export_page"))
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =================================================
+        # PREPARED STUDENTS
+        # =================================================
+
+        prepared_students = []
+
+        skipped_rows = 0
+
+        duplicate_rows = 0
+
+        invalid_rows = 0
+
+        # Prevent duplicate records inside the SAME Excel file
+        seen_aadhaar = set()
+        seen_student_uid = set()
+
+        # =================================================
+        # PROCESS EXCEL ROWS
+        # =================================================
+
+        for row_number, (_, row) in enumerate(
+            df.iterrows(),
+            start=2
+        ):
+
+            try:
+
+                # =========================================
+                # CLEAN NULLS
+                # =========================================
+
+                row = row.where(
+                    pd.notnull(row),
+                    None
+                )
+
+                # =========================================
+                # BASIC REQUIRED FIELDS
+                # =========================================
+
+                raw_name = row.get("name")
+
+                raw_class = row.get("class")
+
+                name = (
+                    str(raw_name).strip()
+                    if raw_name is not None
+                    else ""
+                )
+
+                class_name = (
+                    str(raw_class).strip()
+                    if raw_class is not None
+                    else ""
+                )
+
+                if not name or not class_name:
+
+                    print(
+                        f"⚠️ Row {row_number} skipped: "
+                        "missing name/class"
+                    )
+
+                    skipped_rows += 1
+                    invalid_rows += 1
+
+                    continue
+
+                # =========================================
+                # NEW FIELDS
+                # =========================================
+
+                school_register_no = row.get(
+                    "school_register_no"
+                )
+
+                if school_register_no is not None:
+                    school_register_no = str(
+                        school_register_no
+                    ).strip()
+
+                # =========================================
+                # STUDENT UID
+                # =========================================
+
+                student_uid = row.get("student_uid")
+
+                if student_uid:
+
+                    student_uid = (
+                        str(student_uid)
+                        .split(".")[0]
+                        .strip()
+                    )
+
+                else:
+
+                    student_uid = None
+
+                # =========================================
+                # APAAR ID
+                # =========================================
+
+                apaar_id = row.get("apaar_id")
+
+                if apaar_id:
+
+                    apaar_id = (
+                        str(apaar_id)
+                        .split(".")[0]
+                        .strip()
+                    )
+
+                else:
+
+                    apaar_id = None
+
+                # =========================================
+                # DOB
+                # =========================================
+
+                dob = row.get("dob")
+
+                if dob:
+
+                    try:
+
+                        if hasattr(dob, "strftime"):
+
+                            dob = dob.strftime(
+                                "%Y-%m-%d"
+                            )
+
+                        else:
+
+                            dob = pd.to_datetime(
+                                str(dob),
+                                dayfirst=True
+                            ).strftime(
+                                "%Y-%m-%d"
+                            )
+
+                    except Exception:
+
+                        dob = None
+
+                # =========================================
+                # ADMISSION DATE
+                # =========================================
+
+                admission_date = row.get(
+                    "admission_date"
+                )
+
+                if admission_date:
+
+                    try:
+
+                        if hasattr(
+                            admission_date,
+                            "strftime"
+                        ):
+
+                            admission_date = (
+                                admission_date.strftime(
+                                    "%Y-%m-%d"
+                                )
+                            )
+
+                        else:
+
+                            admission_date = (
+                                pd.to_datetime(
+                                    str(admission_date),
+                                    dayfirst=True
+                                ).strftime(
+                                    "%Y-%m-%d"
+                                )
+                            )
+
+                    except Exception:
+
+                        admission_date = None
+
+                # =========================================
+                # OTHER FIELDS
+                # =========================================
+
+                caste = row.get("caste")
+
+                father_name = row.get(
+                    "father_name"
+                )
+
+                mother_name = row.get(
+                    "mother_name"
+                )
+
+                aadhaar = row.get("aadhaar")
+
+                if aadhaar:
+
+                    aadhaar = (
+                        str(aadhaar)
+                        .split(".")[0]
+                        .strip()
+                    )
+
+                else:
+
+                    aadhaar = None
+
+                birth_place = row.get(
+                    "birth_place"
+                )
+
+                nationality = row.get(
+                    "nationality"
+                )
+
+                mother_tongue = row.get(
+                    "mother_tongue"
+                )
+
+                religion = row.get(
+                    "religion"
+                )
+
+                city = row.get("city")
+
+                taluka = row.get("taluka")
+
+                district = row.get("district")
+
+                state = row.get("state")
+
+                section = row.get("section")
+
+                previous_school = row.get(
+                    "previous_school"
+                )
+
+                last_exam = row.get(
+                    "last_exam"
+                )
+
+                result_status = row.get(
+                    "result_status"
+                )
+
+                progress = row.get(
+                    "progress"
+                )
+
+                conduct = row.get(
+                    "conduct"
+                )
+
+                primary_mobile = row.get(
+                    "primary_mobile"
+                )
+
+                alternate_mobile = row.get(
+                    "alternate_mobile"
+                )
+
+                email = row.get("email")
+
+                # =========================================
+                # EMAIL
+                # =========================================
+
+                if email:
+
+                    email = (
+                        str(email)
+                        .strip()
+                        .lower()
+                    )
+
+                    if not is_valid_email(email):
+
+                        print(
+                            f"⚠️ Row {row_number}: "
+                            "invalid email skipped"
+                        )
+
+                        skipped_rows += 1
+                        invalid_rows += 1
+
+                        continue
+
+                else:
+
+                    email = None
+
+                # =========================================
+                # INCOME
+                # =========================================
+
+                income = row.get("income")
+
+                if income:
+
+                    income = (
+                        str(income)
+                        .replace(",", "")
+                        .strip()
+                    )
+
+                    try:
+
+                        income = int(
+                            float(income)
+                        )
+
+                    except (TypeError, ValueError):
+
+                        income = None
+
+                else:
+
+                    income = None
+
+                # =========================================
+                # GUARDIAN
+                # =========================================
+
+                guardian_name = row.get(
+                    "guardian_name"
+                )
+
+                guardian_mobile = row.get(
+                    "guardian_mobile"
+                )
+
+                # =========================================
+                # AADHAAR VALIDATION
+                # =========================================
+
+                if aadhaar:
+
+                    if (
+                        not aadhaar.isdigit()
+                        or len(aadhaar) != 12
+                    ):
+
+                        print(
+                            f"⚠️ Row {row_number}: "
+                            "invalid Aadhaar skipped"
+                        )
+
+                        skipped_rows += 1
+                        invalid_rows += 1
+
+                        continue
+
+                # =========================================
+                # MOBILE CLEANUP
+                # =========================================
+
+                if primary_mobile:
+
+                    primary_mobile = (
+                        str(primary_mobile)
+                        .split(".")[0]
+                        .strip()
+                    )
+
+                if alternate_mobile:
+
+                    alternate_mobile = (
+                        str(alternate_mobile)
+                        .split(".")[0]
+                        .strip()
+                    )
+
+                if guardian_mobile:
+
+                    guardian_mobile = (
+                        str(guardian_mobile)
+                        .split(".")[0]
+                        .strip()
+                    )
+
+                # =========================================
+                # DUPLICATE CHECK - AADHAAR
+                # =========================================
+
+                existing_student = None
+
+                if aadhaar:
+
+                    cursor.execute(
+                        """
+                        SELECT id
+                        FROM students
+                        WHERE school_id = %s
+                        AND aadhaar = %s
+                        AND is_deleted = 0
+                        LIMIT 1
+                        """,
+                        (
+                            school_id,
+                            aadhaar,
+                        ),
+                    )
+
+                    existing_student = (
+                        cursor.fetchone()
+                    )
+
+                    if (
+                        aadhaar in seen_aadhaar
+                    ):
+
+                        existing_student = True
+
+                # =========================================
+                # DUPLICATE CHECK - STUDENT UID
+                # =========================================
+
+                if (
+                    not existing_student
+                    and student_uid
+                ):
+
+                    cursor.execute(
+                        """
+                        SELECT id
+                        FROM students
+                        WHERE school_id = %s
+                        AND student_uid = %s
+                        AND is_deleted = 0
+                        LIMIT 1
+                        """,
+                        (
+                            school_id,
+                            student_uid,
+                        ),
+                    )
+
+                    existing_student = (
+                        cursor.fetchone()
+                    )
+
+                    if (
+                        student_uid
+                        in seen_student_uid
+                    ):
+
+                        existing_student = True
+
+                # =========================================
+                # DUPLICATE FOUND
+                # =========================================
+
+                if existing_student:
+
+                    print(
+                        f"⚠️ Row {row_number}: "
+                        f"duplicate student skipped - {name}"
+                    )
+
+                    duplicate_rows += 1
+                    skipped_rows += 1
+
+                    continue
+
+                # =========================================
+                # TRACK CURRENT EXCEL DUPLICATES
+                # =========================================
+
+                if aadhaar:
+                    seen_aadhaar.add(aadhaar)
+
+                if student_uid:
+                    seen_student_uid.add(student_uid)
+
+                # =========================================
+                # PREPARE STUDENT
+                # =========================================
+
+                prepared_students.append(
+                    {
+                        "school_register_no":
+                            school_register_no,
+
+                        "name":
+                            name,
+
+                        "father_name":
+                            father_name,
+
+                        "mother_name":
+                            mother_name,
+
+                        "student_uid":
+                            student_uid,
+
+                        "aadhaar":
+                            aadhaar,
+
+                        "apaar_id":
+                            apaar_id,
+
+                        "dob":
+                            dob,
+
+                        "birth_place":
+                            birth_place,
+
+                        "nationality":
+                            nationality,
+
+                        "mother_tongue":
+                            mother_tongue,
+
+                        "religion":
+                            religion,
+
+                        "caste":
+                            caste,
+
+                        "city":
+                            city,
+
+                        "taluka":
+                            taluka,
+
+                        "district":
+                            district,
+
+                        "state":
+                            state,
+
+                        "admission_date":
+                            admission_date,
+
+                        "class":
+                            class_name,
+
+                        "section":
+                            section,
+
+                        "previous_school":
+                            previous_school,
+
+                        "last_exam":
+                            last_exam,
+
+                        "result_status":
+                            result_status,
+
+                        "progress":
+                            progress,
+
+                        "conduct":
+                            conduct,
+
+                        "primary_mobile":
+                            primary_mobile,
+
+                        "alternate_mobile":
+                            alternate_mobile,
+
+                        "occupation":
+                            row.get("occupation"),
+
+                        "income":
+                            income,
+
+                        "guardian_name":
+                            guardian_name,
+
+                        "guardian_mobile":
+                            guardian_mobile,
+
+                        "email":
+                            email,
+                    }
+                )
+
+            except Exception:
+
+                logger.exception(
+                    "EXCEL ROW PROCESSING ERROR | Row=%s",
+                    row_number
+                )
+
+                skipped_rows += 1
+                invalid_rows += 1
+
+                continue
+
+        # =================================================
+        # NOTHING TO IMPORT
+        # =================================================
+
+        incoming_students = len(
+            prepared_students
+        )
+
+        if incoming_students == 0:
+
+            conn.rollback()
+
+            flash(
+                "No valid new student records were found in the Excel file.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("import_export_page")
+            )
+
+        # =================================================
+        # SUBSCRIPTION STUDENT LIMIT
+        # IMPORTANT:
+        # CHECK ONLY ACTUAL NEW STUDENTS
+        # =================================================
+
+        limit_check = check_subscription_limit(
+            cursor,
+            school_id,
+            "students"
+        )
+
+        if not limit_check["allowed"]:
+
+            conn.rollback()
+
+            flash(
+                limit_check["message"]
+                + " Please upgrade your plan.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("import_export_page")
+            )
+
+        current_students = int(
+            limit_check["current"] or 0
+        )
+
+        student_limit = limit_check["limit"]
+
+        # =================================================
+        # PLAN LIMIT
+        # =================================================
+
+        if (
+            student_limit is not None
+            and current_students + incoming_students
+            > int(student_limit)
+        ):
+
+            available_slots = max(
+                0,
+                int(student_limit)
+                - current_students
+            )
+
+            conn.rollback()
+
+            flash(
+                "Student limit exceeded. "
+                f"Your plan allows {student_limit} students. "
+                f"Current students: {current_students}. "
+                f"Available slots: {available_slots}. "
+                f"New students: {incoming_students}.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("import_export_page")
+            )
+
+        # =================================================
+        # INSERT STUDENTS
+        # =================================================
 
         inserted_count = 0
 
-        for _, row in df.iterrows():
-            # ================= CLEAN NULLS =================
-            row = row.where(pd.notnull(row), None)
+        for student in prepared_students:
 
-            # ================= BASIC REQUIRED =================
-            name = str(row.get("name")).strip()
-            class_name = str(row.get("class")).strip()
+            # =============================================
+            # SAFE ATOMIC ADMISSION NUMBER
+            # =============================================
 
-            # ================= SKIP INVALID =================
-            if not name or not class_name:
-                print("⚠️ Row skipped (missing required data)")
-                continue
+            admission_no = generate_admission_no(
+                school_id
+            )
 
-            # ================= NEW FIELDS =================
-            school_register_no = row.get("school_register_no")
+            # =============================================
+            # INSERT
+            # =============================================
 
-            student_uid = row.get("student_uid")
-            if student_uid:
-                student_uid = str(student_uid).split(".")[0].strip()
-
-            apaar_id = row.get("apaar_id")
-            if apaar_id:
-                apaar_id = str(apaar_id).split(".")[0].strip()
-
-            # ================= DATE FIX =================
-            dob = row.get("dob")
-
-            if dob:
-                try:
-                    if hasattr(dob, "strftime"):
-                        dob = dob.strftime("%Y-%m-%d")
-                    else:
-                        dob = pd.to_datetime(str(dob), dayfirst=True).strftime(
-                            "%Y-%m-%d"
-                        )
-                except:
-                    dob = None
-
-            admission_date = row.get("admission_date")
-
-            if admission_date:
-                try:
-                    if hasattr(admission_date, "strftime"):
-                        admission_date = admission_date.strftime("%Y-%m-%d")
-                    else:
-                        admission_date = pd.to_datetime(
-                            str(admission_date), dayfirst=True
-                        ).strftime("%Y-%m-%d")
-                except:
-                    admission_date = None
-
-            # ================= OTHER FIELDS =================
-            caste = row.get("caste")
-            father_name = row.get("father_name")
-            mother_name = row.get("mother_name")
-            aadhaar = row.get("aadhaar")
-
-            if aadhaar:
-                aadhaar = str(aadhaar).split(".")[0].strip()
-            else:
-                aadhaar = None
-
-            birth_place = row.get("birth_place")
-            nationality = row.get("nationality")
-            mother_tongue = row.get("mother_tongue")
-            religion = row.get("religion")
-
-            city = row.get("city")
-            taluka = row.get("taluka")
-            district = row.get("district")
-            state = row.get("state")
-
-            section = row.get("section")
-            previous_school = row.get("previous_school")
-
-            last_exam = row.get("last_exam")
-            result_status = row.get("result_status")
-
-            progress = row.get("progress")
-            conduct = row.get("conduct")
-
-            primary_mobile = row.get("primary_mobile")
-            alternate_mobile = row.get("alternate_mobile")
-
-            email = row.get("email")
-
-            if email:
-                email = str(email).strip().lower()
-
-                if not is_valid_email(email):
-                    print("⚠️ Invalid email skipped")
-                    continue
-
-            occupation = row.get("occupation")
-
-            income = row.get("income")
-
-            if income:
-                income = str(income).replace(",", "").strip()
-                try:
-                    income = int(float(income))
-                except:
-                    income = None
-            else:
-                income = None
-
-            guardian_name = row.get("guardian_name")
-            guardian_mobile = row.get("guardian_mobile")
-
-            # ================= AADHAAR VALIDATION =================
-            if aadhaar:
-                aadhaar = str(aadhaar).strip()
-
-                if not aadhaar.isdigit() or len(aadhaar) != 12:
-                    print("⚠️ Invalid Aadhaar skipped")
-                    continue
-
-            # ================= MOBILE CLEANUP =================
-            if primary_mobile:
-                primary_mobile = str(primary_mobile).split(".")[0].strip()
-
-            if alternate_mobile:
-                alternate_mobile = str(alternate_mobile).split(".")[0].strip()
-
-            if guardian_mobile:
-                guardian_mobile = str(guardian_mobile).split(".")[0].strip()
-
-            print("Processing:", name)
-
-            # ================= DUPLICATE CHECK (FIXED) =================
-            existing_student = None
-
-            # check aadhaar only if valid and exists
-            if aadhaar:
-                cursor.execute(
-                    """
-                    SELECT id
-                    FROM students
-                    WHERE school_id = %s
-                    AND aadhaar = %s
-                               LIMIT 1
-                """,
-                    (school_id, aadhaar),
-                )
-                existing_student = cursor.fetchone()
-
-            # check student uid only if aadhaar not matched
-            if not existing_student and student_uid:
-                cursor.execute(
-                    """
-                    SELECT id
-                    FROM students
-                    WHERE school_id = %s
-                    AND student_uid = %s
-                     LIMIT 1  
-                """,
-                    (school_id, student_uid),
-                )
-                existing_student = cursor.fetchone()
-
-            # skip only real duplicates
-            if existing_student:
-                print("⚠️ Duplicate student skipped:", name, aadhaar, student_uid)
-                continue
-            # ================= SAFE ATOMIC ADMISSION =================
-            admission_no = generate_admission_no(school_id)
-
-            # ================= INSERT =================
             cursor.execute(
                 """
                 INSERT INTO students (
@@ -18149,70 +20600,146 @@ def import_students():
                     guardian_mobile,
                     email
                 )
-                VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """,
+                VALUES (
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s
+                )
+                """,
                 (
                     school_id,
-                    school_register_no,
-                    name,
-                    father_name,
-                    mother_name,
-                    student_uid,
-                    aadhaar,
-                    apaar_id,
-                    dob,
-                    birth_place,
-                    nationality,
-                    mother_tongue,
-                    religion,
-                    caste,
-                    city,
-                    taluka,
-                    district,
-                    state,
+                    student["school_register_no"],
+                    student["name"],
+                    student["father_name"],
+                    student["mother_name"],
+                    student["student_uid"],
+                    student["aadhaar"],
+                    student["apaar_id"],
+                    student["dob"],
+                    student["birth_place"],
+                    student["nationality"],
+                    student["mother_tongue"],
+                    student["religion"],
+                    student["caste"],
+                    student["city"],
+                    student["taluka"],
+                    student["district"],
+                    student["state"],
                     admission_no,
-                    admission_date,
-                    class_name,
-                    section,
-                    previous_school,
-                    last_exam,
-                    result_status,
-                    progress,
-                    conduct,
-                    primary_mobile,
-                    alternate_mobile,
-                    occupation,
-                    income,
-                    guardian_name,
-                    guardian_mobile,
-                    email,
+                    student["admission_date"],
+                    student["class"],
+                    student["section"],
+                    student["previous_school"],
+                    student["last_exam"],
+                    student["result_status"],
+                    student["progress"],
+                    student["conduct"],
+                    student["primary_mobile"],
+                    student["alternate_mobile"],
+                    student["occupation"],
+                    student["income"],
+                    student["guardian_name"],
+                    student["guardian_mobile"],
+                    student["email"],
                 ),
             )
 
             inserted_count += 1
 
+        # =================================================
+        # COMMIT
+        # =================================================
+
         conn.commit()
 
-        print("✅ IMPORT SUCCESS:", inserted_count)
+        print(
+            "✅ IMPORT SUCCESS:",
+            inserted_count
+        )
 
-        return redirect(f"/clerk/import-export?success={inserted_count}")
+        # =================================================
+        # SUCCESS MESSAGE
+        # =================================================
 
-    except Exception as e:
+        message = (
+            f"{inserted_count} student(s) imported successfully."
+        )
+
+        if skipped_rows:
+
+            message += (
+                f" {skipped_rows} row(s) skipped."
+            )
+
+        flash(
+            message,
+            "success"
+        )
+
+        # Keep existing success query
+        return redirect(
+            url_for(
+                "import_export_page",
+                success=inserted_count
+            )
+        )
+
+    # =====================================================
+    # EXPECTED EXCEL ERRORS
+    # =====================================================
+
+    except pd.errors.EmptyDataError:
+
         if conn:
             conn.rollback()
 
-        print("❌ IMPORT ERROR:", e)
-        return "Import failed ❌"
+        flash(
+            "The uploaded Excel file contains no readable data.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("import_export_page")
+        )
+
+    # =====================================================
+    # DATABASE / GENERAL ERROR
+    # =====================================================
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        logger.exception(
+            "IMPORT STUDENTS ERROR"
+        )
+
+        flash(
+            "Student import failed. No student records were added. "
+            "Please check the Excel file and try again.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("import_export_page")
+        )
 
     finally:
+
         if cursor:
             cursor.close()
+
         if conn:
             conn.close()
 
 
 # =========================================================
-# EXPORT STUDENTS TO EXCEL
+# 📤 EXPORT STUDENTS TO EXCEL
 # =========================================================
 @app.route("/clerk/export-students")
 @login_required
@@ -18224,30 +20751,124 @@ def export_students():
     cursor = None
 
     try:
+
         import io
         import pandas as pd
         from datetime import datetime
 
-        school_id = session.get("clerk_school_id")
+        # =================================================
+        # SCHOOL SESSION
+        # =================================================
+
+        school_id = session.get(
+            "clerk_school_id"
+        )
 
         if not school_id:
-            return "School session missing ❌"
-            abort(404)
-        cls = (request.args.get("class") or "").strip()
-        month = (request.args.get("month") or "").strip()
-        year = (request.args.get("year") or "").strip()
+
+            flash(
+                "School session expired. Please login again.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("login")
+            )
+
+        # =================================================
+        # FILTERS
+        # =================================================
+
+        cls = (
+            request.args.get("class")
+            or ""
+        ).strip()
+
+        month = (
+            request.args.get("month")
+            or ""
+        ).strip()
+
+        year = (
+            request.args.get("year")
+            or ""
+        ).strip()
+
+        # =================================================
+        # CLASS VALIDATION
+        # =================================================
 
         if cls and not cls.isdigit():
-            return "Invalid class filter ❌"
 
-        if month and (not month.isdigit() or int(month) < 1 or int(month) > 12):
-            return "Invalid month filter ❌"
+            flash(
+                "Invalid class filter.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("import_export_page")
+            )
+
+        # =================================================
+        # MONTH VALIDATION
+        # =================================================
+
+        if month:
+
+            if (
+                not month.isdigit()
+                or int(month) < 1
+                or int(month) > 12
+            ):
+
+                flash(
+                    "Invalid month filter.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("import_export_page")
+                )
+
+        # =================================================
+        # YEAR VALIDATION
+        # =================================================
 
         if year and not year.isdigit():
-            return "Invalid year filter ❌"
+
+            flash(
+                "Invalid year filter.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("import_export_page")
+            )
+
+        # =================================================
+        # DATABASE
+        # =================================================
 
         conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
+
+        if not conn:
+
+            flash(
+                "Database connection failed. Please try again.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("import_export_page")
+            )
+
+        cursor = conn.cursor(
+            dictionary=True
+        )
+
+        # =================================================
+        # BASE QUERY
+        # =================================================
 
         query = """
             SELECT
@@ -18284,87 +20905,231 @@ def export_students():
                 income,
                 guardian_name,
                 guardian_mobile
+
             FROM students
+
             WHERE school_id = %s
+
+            AND is_deleted = 0
         """
 
-        params = [school_id]
+        params = [
+            school_id
+        ]
+
+        # =================================================
+        # CLASS FILTER
+        # =================================================
 
         if cls:
-            query += " AND `class` = %s"
+
+            query += """
+                AND `class` = %s
+            """
+
             params.append(cls)
 
+        # =================================================
+        # MONTH FILTER
+        # =================================================
+
         if month:
-            query += " AND MONTH(admission_date) = %s"
-            params.append(month)
+
+            query += """
+                AND MONTH(admission_date) = %s
+            """
+
+            params.append(
+                int(month)
+            )
+
+        # =================================================
+        # YEAR FILTER
+        # =================================================
 
         if year:
-            query += " AND YEAR(admission_date) = %s"
-            params.append(year)
 
-        query += " ORDER BY id DESC"
+            query += """
+                AND YEAR(admission_date) = %s
+            """
 
-        cursor.execute(query, tuple(params))
+            params.append(
+                int(year)
+            )
+
+        # =================================================
+        # ORDER
+        # =================================================
+
+        query += """
+            ORDER BY id DESC
+        """
+
+        # =================================================
+        # EXECUTE
+        # =================================================
+
+        cursor.execute(
+            query,
+            tuple(params)
+        )
+
         students = cursor.fetchall()
 
+        # =================================================
+        # NO DATA
+        # =================================================
+
         if not students:
-            return "No data found for selected filters ❌"
+
+            flash(
+                "No student records found for the selected filters.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("import_export_page")
+            )
+
+        # =================================================
+        # SAFE DATE FORMAT
+        # =================================================
 
         def safe_date(value):
+
             if not value:
                 return ""
 
             try:
-                return value.strftime("%d-%m-%Y")
+
+                return value.strftime(
+                    "%d-%m-%Y"
+                )
+
             except Exception:
+
                 return str(value)
 
+        # =================================================
+        # EXCEL FORMULA INJECTION PROTECTION
+        # =================================================
+
         def sanitize_excel(value):
+
             if value is None:
                 return ""
 
             if isinstance(value, str):
+
                 value = value.strip()
 
-                if value.startswith(("=", "+", "-", "@")):
+                if value.startswith(
+                    ("=", "+", "-", "@")
+                ):
+
                     return "'" + value
 
             return value
 
+        # =================================================
+        # CLEAN DATA
+        # =================================================
+
         for student in students:
-            student["dob"] = safe_date(student.get("dob"))
-            student["admission_date"] = safe_date(student.get("admission_date"))
+
+            student["dob"] = safe_date(
+                student.get("dob")
+            )
+
+            student["admission_date"] = safe_date(
+                student.get("admission_date")
+            )
 
             for key in student:
-                student[key] = sanitize_excel(student[key])
 
-        df = pd.DataFrame(students)
+                student[key] = sanitize_excel(
+                    student[key]
+                )
+
+        # =================================================
+        # DATAFRAME
+        # =================================================
+
+        df = pd.DataFrame(
+            students
+        )
+
+        # =================================================
+        # CREATE EXCEL FILE
+        # =================================================
 
         output = io.BytesIO()
 
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Students")
+        with pd.ExcelWriter(
+            output,
+            engine="openpyxl"
+        ) as writer:
+
+            df.to_excel(
+                writer,
+                index=False,
+                sheet_name="Students"
+            )
 
         output.seek(0)
+
+        # =================================================
+        # DOWNLOAD
+        # =================================================
+
+        filename = (
+            f"students_export_"
+            f"{school_id}_"
+            f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            f".xlsx"
+        )
 
         return send_file(
             output,
             as_attachment=True,
-            download_name=f"students_export_{school_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            download_name=filename,
+            mimetype=(
+                "application/vnd.openxmlformats-"
+                "officedocument.spreadsheetml.sheet"
+            ),
         )
 
+    # =====================================================
+    # EXPORT ERROR
+    # =====================================================
+
     except Exception as e:
-        print("❌ EXPORT ERROR:", e)
-        return "Export failed ❌"
+
+        logger.exception(
+            "EXPORT STUDENTS ERROR"
+        )
+
+        flash(
+            "Unable to export student records. Please try again.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("import_export_page")
+        )
 
     finally:
+
         if cursor:
             cursor.close()
+
         if conn:
             conn.close()
 
 
+ # =====================================================
+# COMING SOON ROUTE 
+ # =====================================================
 @app.route("/coming-soon/<feature>")
 @login_required
 @subscription_required
