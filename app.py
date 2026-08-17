@@ -29,6 +29,7 @@ from openpyxl.utils import get_column_letter
 import secrets
 import pandas as pd
 import pdfkit
+import json
 import razorpay
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -1388,6 +1389,7 @@ def get_latest_subscription(school_id):
 # 📊 SUBSCRIPTION RESOURCE LIMIT CHECK
 # =========================================================
 
+
 def check_subscription_limit(cursor, school_id, resource_type):
     """
     Centralized subscription limit checker.
@@ -1405,7 +1407,7 @@ def check_subscription_limit(cursor, school_id, resource_type):
             "current": 0,
             "limit": 0,
             "remaining": 0,
-            "message": "School session missing."
+            "message": "School session missing.",
         }
 
     # =====================================================
@@ -1445,7 +1447,7 @@ def check_subscription_limit(cursor, school_id, resource_type):
             "current": 0,
             "limit": 0,
             "remaining": 0,
-            "message": "No subscription found."
+            "message": "No subscription found.",
         }
 
     # =====================================================
@@ -1453,7 +1455,6 @@ def check_subscription_limit(cursor, school_id, resource_type):
     # =====================================================
 
     if isinstance(subscription, dict):
-
         status = subscription.get("status")
         end_date = subscription.get("end_date")
 
@@ -1465,7 +1466,6 @@ def check_subscription_limit(cursor, school_id, resource_type):
         }
 
     else:
-
         status = subscription[0]
         end_date = subscription[1]
 
@@ -1481,13 +1481,12 @@ def check_subscription_limit(cursor, school_id, resource_type):
     # =====================================================
 
     if resource_type not in limits:
-
         return {
             "allowed": False,
             "current": 0,
             "limit": 0,
             "remaining": 0,
-            "message": "Invalid subscription resource."
+            "message": "Invalid subscription resource.",
         }
 
     # =====================================================
@@ -1495,13 +1494,12 @@ def check_subscription_limit(cursor, school_id, resource_type):
     # =====================================================
 
     if not status or str(status).lower() != "active":
-
         return {
             "allowed": False,
             "current": 0,
             "limit": 0,
             "remaining": 0,
-            "message": "Your subscription is inactive."
+            "message": "Your subscription is inactive.",
         }
 
     # =====================================================
@@ -1509,18 +1507,16 @@ def check_subscription_limit(cursor, school_id, resource_type):
     # =====================================================
 
     if end_date:
-
         if hasattr(end_date, "date"):
             end_date = end_date.date()
 
         if end_date < date.today():
-
             return {
                 "allowed": False,
                 "current": 0,
                 "limit": 0,
                 "remaining": 0,
-                "message": "Your subscription has expired."
+                "message": "Your subscription has expired.",
             }
 
     # =====================================================
@@ -1531,26 +1527,24 @@ def check_subscription_limit(cursor, school_id, resource_type):
 
     # NULL / empty limit = don't enforce
     if raw_limit is None or str(raw_limit).strip() == "":
-
         return {
             "allowed": True,
             "current": 0,
             "limit": None,
             "remaining": None,
-            "message": ""
+            "message": "",
         }
 
     try:
         resource_limit = int(raw_limit)
 
     except (TypeError, ValueError):
-
         return {
             "allowed": False,
             "current": 0,
             "limit": 0,
             "remaining": 0,
-            "message": "Invalid subscription limit configuration."
+            "message": "Invalid subscription limit configuration.",
         }
 
     # =====================================================
@@ -1558,34 +1552,30 @@ def check_subscription_limit(cursor, school_id, resource_type):
     # =====================================================
 
     usage_queries = {
-
         "students": """
             SELECT COUNT(*) AS total
             FROM students
             WHERE school_id = %s
         """,
-
         "tc": """
             SELECT COUNT(*) AS total
             FROM tc
             WHERE school_id = %s
             AND is_deleted = 0
         """,
-
         "bonafide": """
             SELECT COUNT(*) AS total
             FROM bonafide
             WHERE school_id = %s
             AND is_deleted = 0
         """,
-
         "staff": """
             SELECT COUNT(*) AS total
             FROM users
             WHERE school_id = %s
             AND role != 'admin'
             AND is_deleted = 0
-        """
+        """,
     }
 
     # =====================================================
@@ -1595,13 +1585,12 @@ def check_subscription_limit(cursor, school_id, resource_type):
     usage_query = usage_queries.get(resource_type)
 
     if not usage_query:
-
         return {
             "allowed": False,
             "current": 0,
             "limit": resource_limit,
             "remaining": 0,
-            "message": "Resource usage query not configured."
+            "message": "Resource usage query not configured.",
         }
 
     cursor.execute(
@@ -1623,18 +1612,14 @@ def check_subscription_limit(cursor, school_id, resource_type):
     # =====================================================
 
     if current_usage >= resource_limit:
-
         resource_names = {
             "students": "Student",
             "tc": "Transfer Certificate",
             "bonafide": "Bonafide Certificate",
-            "staff": "Staff"
+            "staff": "Staff",
         }
 
-        resource_name = resource_names.get(
-            resource_type,
-            "Resource"
-        )
+        resource_name = resource_names.get(resource_type, "Resource")
 
         return {
             "allowed": False,
@@ -1642,9 +1627,8 @@ def check_subscription_limit(cursor, school_id, resource_type):
             "limit": resource_limit,
             "remaining": 0,
             "message": (
-                f"{resource_name} limit reached. "
-                f"Your plan allows {resource_limit}."
-            )
+                f"{resource_name} limit reached. Your plan allows {resource_limit}."
+            ),
         }
 
     # =====================================================
@@ -1656,29 +1640,38 @@ def check_subscription_limit(cursor, school_id, resource_type):
         "current": current_usage,
         "limit": resource_limit,
         "remaining": resource_limit - current_usage,
-        "message": ""
+        "message": "",
     }
 
 
 # =========================================================
 # APPLY PLAN FEATURES TO SCHOOL
+# TRANSACTION-SAFE VERSION
 # =========================================================
-def apply_plan_features(school_id, plan_id):
 
-    conn = None
-    cursor = None
+
+def apply_plan_features(cursor, school_id, plan_id):
+    """
+    Apply all feature flags from subscription_plans
+    to the schools table using the EXISTING transaction.
+
+    IMPORTANT:
+    This function does NOT create a new DB connection
+    and does NOT commit.
+
+    The calling route controls commit / rollback.
+    """
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
+        if not school_id or not plan_id:
+            return False
 
-        # =========================================
+        # =================================================
         # GET PLAN FEATURES
-        # =========================================
+        # =================================================
 
         cursor.execute(
             """
-
             SELECT
 
                 enable_tc_management,
@@ -1694,23 +1687,28 @@ def apply_plan_features(school_id, plan_id):
             FROM subscription_plans
 
             WHERE id = %s
+              AND is_active = 1
 
-        """,
+            LIMIT 1
+
+            FOR UPDATE
+            """,
             (plan_id,),
         )
 
         plan = cursor.fetchone()
 
         if not plan:
+            print(f"❌ PLAN NOT FOUND | Plan={plan_id}")
+
             return False
 
-        # =========================================
+        # =================================================
         # UPDATE SCHOOL FEATURES
-        # =========================================
+        # =================================================
 
         cursor.execute(
             """
-
             UPDATE schools
 
             SET
@@ -1726,8 +1724,7 @@ def apply_plan_features(school_id, plan_id):
                 enable_notice_board = %s
 
             WHERE school_id = %s
-
-        """,
+            """,
             (
                 plan[0],
                 plan[1],
@@ -1742,26 +1739,19 @@ def apply_plan_features(school_id, plan_id):
             ),
         )
 
-        conn.commit()
+        if cursor.rowcount == 0:
+            print(f"❌ SCHOOL NOT FOUND | School={school_id}")
 
-        print(f"✅ Features Applied | School={school_id} Plan={plan_id}")
+            return False
+
+        print(f"✅ PLAN FEATURES APPLIED | School={school_id} | Plan={plan_id}")
 
         return True
 
     except Exception as e:
-        if conn:
-            conn.rollback()
-
         print("❌ APPLY PLAN FEATURES ERROR:", e)
 
         return False
-
-    finally:
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
 
 
 # ---------------------------------------------------------
@@ -2713,222 +2703,229 @@ def superadmin_schools():
     cursor = None
 
     try:
-        conn = get_connection()
+        # =====================================================
+        # DATABASE
+        # =====================================================
 
+        conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # =====================================
-        # FILTERS
-        # =====================================
+        # =====================================================
+        # SEARCH
+        # =====================================================
 
-        search = request.args.get("search", "").strip()
+        search = (request.args.get("search") or "").strip()
 
-        # =====================================
+        # Prevent unnecessarily large search strings
+        if len(search) > 100:
+            search = search[:100]
+
+        # =====================================================
         # PAGINATION
-        # =====================================
-
-        page = request.args.get("page", 1, type=int)
+        # =====================================================
 
         per_page = 8
+
+        page = request.args.get("page", default=1, type=int)
 
         if page < 1:
             page = 1
 
-        offset = (page - 1) * per_page
+        # =====================================================
+        # WHERE
+        # =====================================================
 
-        # =====================================
-        # BASE WHERE
-        # =====================================
-
-        where_query = """
-            WHERE 1=1
-        """
+        where_query = "WHERE 1=1"
 
         params = []
 
         if search:
             where_query += """
-
                 AND (
-
                     s.name LIKE %s
                     OR s.school_code LIKE %s
                     OR s.udise_no LIKE %s
                     OR s.email LIKE %s
                     OR s.phone LIKE %s
-
                 )
-
             """
 
             keyword = f"%{search}%"
 
-            params.extend([keyword, keyword, keyword, keyword, keyword])
+            params.extend(
+                [
+                    keyword,
+                    keyword,
+                    keyword,
+                    keyword,
+                    keyword,
+                ]
+            )
 
-        # =====================================
-        # TOTAL FILTERED SCHOOLS
-        # =====================================
+        # =====================================================
+        # TOTAL FILTERED
+        # =====================================================
 
         cursor.execute(
             f"""
-
-            SELECT COUNT(*) AS total
-
-            FROM schools s
-
-            {where_query}
-
-        """,
+                SELECT COUNT(*) AS total
+                FROM schools s
+                {where_query}
+            """,
             params,
         )
 
-        total_filtered = cursor.fetchone()["total"] or 0
+        result = cursor.fetchone()
+
+        total_filtered = int(result["total"] or 0)
+
+        # =====================================================
+        # TOTAL PAGES
+        # =====================================================
 
         total_pages = max(1, math.ceil(total_filtered / per_page))
 
+        # If requested page is too high,
+        # move to last valid page.
+
         if page > total_pages:
             page = total_pages
-            offset = (page - 1) * per_page
 
-        # =====================================
-        # SCHOOLS DATA
-        # =====================================
+        offset = (page - 1) * per_page
 
-        query = f"""
+        # =====================================================
+        # SCHOOL DATA
+        #
+        # IMPORTANT:
+        # Include ALL fields required by Edit,
+        # Feature and Certificate modals.
+        # =====================================================
 
-            SELECT
+        cursor.execute(
+            f"""
+                SELECT
 
-                s.school_id,
-                s.name,
-                s.school_code,
-                s.udise_no,
-                s.address,
-                s.phone,
-                s.email,
-                s.principal_name,
-                s.is_active,
+                    s.school_id,
+                    s.name,
+                    s.address,
+                    s.phone,
+                    s.email,
+                    s.school_code,
+                    s.udise_no,
+                    s.principal_name,
 
-                -- CERTIFICATE SETTINGS
-                s.tc_prefix,
-                s.bonafide_prefix,
+                    -- ADMINISTRATIVE INFORMATION
+                    s.recognition_no,
+                    s.medium,
+                    s.school_index_no,
+                    s.board_name,
 
-                s.auto_numbering,
-                s.enable_certificate_labels,
+                    -- STATUS
+                    s.is_active,
 
-                s.show_tc_logo,
-                s.show_tc_watermark,
+                    -- =========================================
+                    -- CERTIFICATE SETTINGS
+                    -- =========================================
 
-                s.show_bonafide_logo,
-                s.show_bonafide_watermark,
+                    s.tc_prefix,
+                    s.bonafide_prefix,
 
-                -- FEATURE MODULES
-                s.enable_tc_management,
-                s.enable_bonafide_management,
-                s.enable_import_export,
-                s.enable_attendance,
-                s.enable_fee_management,
-                s.enable_teacher_management,
-                s.enable_results,
-                s.enable_timetable,
-                s.enable_notice_board,
+                    s.auto_numbering,
+                    s.enable_certificate_labels,
 
-                COUNT(st.id) AS total_students
+                    s.show_tc_logo,
+                    s.show_tc_watermark,
 
-            FROM schools s
+                    s.show_bonafide_logo,
+                    s.show_bonafide_watermark,
 
-            LEFT JOIN students st
-                ON s.school_id = st.school_id
+                    -- =========================================
+                    -- FEATURE MODULES
+                    -- =========================================
 
-            {where_query}
+                    s.enable_tc_management,
+                    s.enable_bonafide_management,
+                    s.enable_import_export,
+                    s.enable_attendance,
+                    s.enable_fee_management,
+                    s.enable_teacher_management,
+                    s.enable_results,
+                    s.enable_timetable,
+                    s.enable_notice_board,
 
-            GROUP BY
+                    -- =========================================
+                    -- STUDENT COUNT
+                    --
+                    -- Ignore soft-deleted students.
+                    -- =========================================
 
-                s.school_id,
-                s.name,
-                s.school_code,
-                s.udise_no,
-                s.address,
-                s.phone,
-                s.email,
-                s.principal_name,
-                s.is_active,
+                    (
+                        SELECT COUNT(*)
+                        FROM students st
+                        WHERE st.school_id = s.school_id
+                        AND (
+                            st.is_deleted = 0
+                            OR st.is_deleted IS NULL
+                        )
+                    ) AS total_students
 
-                -- CERTIFICATE SETTINGS
-                s.tc_prefix,
-                s.bonafide_prefix,
+                FROM schools s
 
-                s.auto_numbering,
-                s.enable_certificate_labels,
+                {where_query}
 
-                s.show_tc_logo,
-                s.show_tc_watermark,
+                ORDER BY s.school_id DESC
 
-                s.show_bonafide_logo,
-                s.show_bonafide_watermark,
-
-                -- FEATURE MODULES
-                s.enable_tc_management,
-                s.enable_bonafide_management,
-                s.enable_import_export,
-                s.enable_attendance,
-                s.enable_fee_management,
-                s.enable_teacher_management,
-                s.enable_results,
-                s.enable_timetable,
-                s.enable_notice_board
-
-            ORDER BY s.school_id DESC
-
-            LIMIT %s OFFSET %s
-
-        """
-
-        query_params = params.copy()
-
-        query_params.extend([per_page, offset])
-
-        cursor.execute(query, query_params)
+                LIMIT %s OFFSET %s
+            """,
+            params + [per_page, offset],
+        )
 
         schools = cursor.fetchall()
 
-        # =====================================
+        # =====================================================
         # TOTAL SCHOOLS
-        # =====================================
+        # =====================================================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM schools
-        """)
+        cursor.execute(
+            """
+                SELECT COUNT(*) AS total
+                FROM schools
+            """
+        )
 
-        total_schools = cursor.fetchone()["total"] or 0
+        total_schools = int(cursor.fetchone()["total"] or 0)
 
-        # =====================================
+        # =====================================================
         # ACTIVE SCHOOLS
-        # =====================================
+        # =====================================================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM schools
-            WHERE is_active = 1
-        """)
+        cursor.execute(
+            """
+                SELECT COUNT(*) AS total
+                FROM schools
+                WHERE is_active = 1
+            """
+        )
 
-        active_schools = cursor.fetchone()["total"] or 0
+        active_schools = int(cursor.fetchone()["total"] or 0)
 
-        # =====================================
-        # SIDEBAR NEW LEADS COUNT
-        # =====================================
+        # =====================================================
+        # NEW LEADS
+        # =====================================================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM lead_requests
-            WHERE status = 'New'
-        """)
+        cursor.execute(
+            """
+                SELECT COUNT(*) AS total
+                FROM lead_requests
+                WHERE status = 'New'
+            """
+        )
 
-        new_leads_count = cursor.fetchone()["total"] or 0
+        new_leads_count = int(cursor.fetchone()["total"] or 0)
 
-        # =====================================
+        # =====================================================
         # RENDER
-        # =====================================
+        # =====================================================
 
         return render_template(
             "superadmin/schools.html",
@@ -2945,8 +2942,12 @@ def superadmin_schools():
             active_page="schools",
         )
 
-    except Exception as e:
-        return f"Error loading schools ❌ {str(e)}"
+    except Exception:
+        logger.exception("SUPERADMIN SCHOOLS PAGE ERROR")
+
+        flash("Unable to load school management right now.", "error")
+
+        return redirect(url_for("superadmin_schools"))
 
     finally:
         if cursor:
@@ -2957,8 +2958,10 @@ def superadmin_schools():
 
 
 # =========================================================
-# 💾 SAVE/ADD SCHOOL
+# 💾 SUPER ADMIN - SAVE / ADD SCHOOL
 # =========================================================
+
+
 @app.route("/superadmin/save-school", methods=["POST"])
 @admin_required
 def save_school():
@@ -2994,18 +2997,24 @@ def save_school():
         board_name = (request.form.get("board_name") or "").strip()
 
         # =====================================================
-        # VALIDATION
+        # REQUIRED VALIDATION
         # =====================================================
 
         if not name or not udise_no or not phone or not email or not school_code:
-            return "Required fields missing ❌"
+            flash("Please fill all required school fields.", "error")
+
+            return redirect(url_for("superadmin_schools"))
 
         # =====================================================
-        # FORMAT VALIDATION
+        # EMAIL VALIDATION
         # =====================================================
 
         if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email):
             return "Invalid email format ❌"
+
+        # =====================================================
+        # PHONE VALIDATION
+        # =====================================================
 
         clean_phone = "".join(filter(str.isdigit, phone))
 
@@ -3036,27 +3045,52 @@ def save_school():
         if len(school_code) > 20:
             return "School code too long ❌"
 
+        if len(udise_no) > 30:
+            return "UDISE number too long ❌"
+
+        if len(recognition_no) > 100:
+            return "Recognition number too long ❌"
+
+        if len(medium) > 50:
+            return "Medium value too long ❌"
+
+        if len(school_index_no) > 100:
+            return "School index number too long ❌"
+
+        if len(board_name) > 100:
+            return "Board name too long ❌"
+
         # =====================================================
-        # DB CONNECTION
+        # DATABASE CONNECTION
         # =====================================================
 
         conn = get_connection()
+
         cursor = conn.cursor()
 
         # =====================================================
-        # DUPLICATE CHECK
+        # DUPLICATE SCHOOL CHECK
         # =====================================================
 
         cursor.execute(
             """
-            SELECT school_id
+            SELECT
+                school_id
+
             FROM schools
+
             WHERE
                 udise_no = %s
                 OR email = %s
                 OR school_code = %s
-        """,
-            (udise_no, email, school_code),
+
+            LIMIT 1
+            """,
+            (
+                udise_no,
+                email,
+                school_code,
+            ),
         )
 
         existing_school = cursor.fetchone()
@@ -3068,14 +3102,17 @@ def save_school():
         # GET SYSTEM SETTINGS
         # =====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
 
                 -- SUBSCRIPTION
+
                 default_plan_id,
                 trial_days,
 
                 -- CERTIFICATE SETTINGS
+
                 tc_prefix,
                 bonafide_prefix,
                 auto_numbering,
@@ -3088,6 +3125,7 @@ def save_school():
                 show_bonafide_watermark,
 
                 -- FEATURE MODULES
+
                 enable_import_export,
                 enable_attendance,
                 enable_fee_management,
@@ -3100,21 +3138,27 @@ def save_school():
                 enable_bonafide_management
 
             FROM system_settings
+
             WHERE id = 1
-        """)
+            """
+        )
 
         settings = cursor.fetchone()
 
         if not settings:
-            return "System settings not found ❌"
+            flash("Setting Not Found", "error")
+
+            return redirect(url_for("superadmin_schools"))
 
         # =====================================================
-        # SUBSCRIPTION
+        # SUBSCRIPTION SETTINGS
         # =====================================================
 
         default_plan_id = settings[0]
+
         try:
             trial_days = int(settings[1] or 7)
+
         except:
             trial_days = 7
 
@@ -3126,30 +3170,41 @@ def save_school():
         # =====================================================
 
         tc_prefix = settings[2]
+
         bonafide_prefix = settings[3]
 
         auto_numbering = settings[4]
+
         enable_certificate_labels = settings[5]
 
         show_tc_logo = settings[6]
+
         show_tc_watermark = settings[7]
 
         show_bonafide_logo = settings[8]
+
         show_bonafide_watermark = settings[9]
 
         # =====================================================
-        # FEATURE MODULES
+        # FEATURE SETTINGS
         # =====================================================
 
         enable_import_export = settings[10]
+
         enable_attendance = settings[11]
+
         enable_fee_management = settings[12]
+
         enable_teacher_management = settings[13]
+
         enable_results = settings[14]
+
         enable_timetable = settings[15]
+
         enable_notice_board = settings[16]
 
         enable_tc_management = settings[17]
+
         enable_bonafide_management = settings[18]
 
         # =====================================================
@@ -3158,9 +3213,11 @@ def save_school():
 
         cursor.execute(
             """
-            INSERT INTO schools (
+            INSERT INTO schools
+            (
 
-                -- BASIC INFO
+                -- BASIC INFORMATION
+
                 name,
                 udise_no,
                 address,
@@ -3174,6 +3231,7 @@ def save_school():
                 board_name,
 
                 -- CERTIFICATE SETTINGS
+
                 tc_prefix,
                 bonafide_prefix,
                 auto_numbering,
@@ -3186,6 +3244,7 @@ def save_school():
                 show_bonafide_watermark,
 
                 -- FEATURE MODULES
+
                 enable_import_export,
                 enable_attendance,
                 enable_fee_management,
@@ -3199,9 +3258,11 @@ def save_school():
 
             )
 
-            VALUES (
+            VALUES
+            (
 
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s,
 
                 %s, %s, %s, %s,
 
@@ -3214,9 +3275,9 @@ def save_school():
                 %s, %s
 
             )
-        """,
+            """,
             (
-                # BASIC INFO
+                # BASIC INFORMATION
                 name,
                 udise_no,
                 address,
@@ -3256,7 +3317,7 @@ def save_school():
 
         new_school_id = cursor.lastrowid
 
-        print("✅ New School ID:", new_school_id)
+        print("New School ID:", new_school_id)
 
         # =====================================================
         # CREATE SCHOOL SEQUENCE
@@ -3271,6 +3332,7 @@ def save_school():
                 bonafide_last_number,
                 admission_last_number
             )
+
             VALUES
             (
                 %s,
@@ -3278,12 +3340,12 @@ def save_school():
                 0,
                 0
             )
-        """,
+            """,
             (new_school_id,),
         )
 
         # =====================================================
-        # GET PLAN INFO
+        # GET DEFAULT SUBSCRIPTION PLAN
         # =====================================================
 
         cursor.execute(
@@ -3291,21 +3353,32 @@ def save_school():
             SELECT
                 plan_name,
                 monthly_price
+
             FROM subscription_plans
+
             WHERE id = %s
-        """,
+
+            LIMIT 1
+            """,
             (default_plan_id,),
         )
 
         plan = cursor.fetchone()
 
         if not plan:
-            if conn:
-                conn.rollback()
-            return "Default plan not found ❌"
+            conn.rollback()
+
+            flash("Default plan not found.", "error")
+
+            return redirect(url_for("superadmin_schools"))
 
         plan_name = plan[0]
+
         amount = plan[1]
+
+        # =====================================================
+        # SUBSCRIPTION DATES
+        # =====================================================
 
         start_date = date.today()
 
@@ -3327,8 +3400,18 @@ def save_school():
                 status,
                 amount
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """,
+
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            """,
             (
                 new_school_id,
                 default_plan_id,
@@ -3341,24 +3424,29 @@ def save_school():
         )
 
         # =====================================================
-        # SAVE ALL CHANGES
+        # COMMIT
         # =====================================================
 
         conn.commit()
 
+        print("SCHOOL CREATED:", name)
+
         # =====================================================
-        # SEND WELCOME EMAIL
+        # WELCOME EMAIL
         # =====================================================
 
         try:
             subject = "Welcome to SPL ShalaSarthi ERP"
 
             body = f"""
-
-            <div style="font-family:Arial;padding:20px;">
+            <div style="
+                font-family:Arial,sans-serif;
+                padding:20px;
+            ">
 
                 <h2 style="color:#10b981;">
-                    Welcome to SPL ShalaSarthi ERP            </h2>
+                    Welcome to SPL ShalaSarthi ERP
+                </h2>
 
                 <p>
                     Dear {name},
@@ -3404,7 +3492,6 @@ def save_school():
                 </p>
 
             </div>
-
             """
 
             send_email(email, subject, body)
@@ -3424,9 +3511,11 @@ def save_school():
         if conn:
             conn.rollback()
 
-        print("❌ SAVE SCHOOL ERROR:", e)
+        logger.exception("SUPERADMIN SCHOOLS SAVE PAGE ERROR")
 
-        logger.exception("Internal Server Error")
+        flash("School details saved successfully.", "success")
+
+        return redirect(url_for("superadmin_schools"))
 
     finally:
         if cursor:
@@ -3437,7 +3526,7 @@ def save_school():
 
 
 # =========================================================
-# 💾 UPDATE SCHOOL
+# ✏️ SUPER ADMIN - UPDATE SCHOOL
 # =========================================================
 
 
@@ -3449,19 +3538,23 @@ def update_school():
     cursor = None
 
     try:
-        conn = get_connection()
-
-        cursor = conn.cursor()
-
-        # ================= SAFE INPUT =================
+        # =====================================================
+        # GET SCHOOL ID
+        # =====================================================
 
         school_id = (request.form.get("school_id") or "").strip()
 
         try:
             school_id = int(school_id)
 
-        except ValueError:
-            return "Invalid School ID ❌"
+        except (ValueError, TypeError):
+            flash("Invalid school ID.", "error")
+
+            return redirect(url_for("superadmin_schools"))
+
+        # =====================================================
+        # GET FORM DATA
+        # =====================================================
 
         name = (request.form.get("name") or "").strip()
 
@@ -3485,7 +3578,9 @@ def update_school():
 
         board_name = (request.form.get("board_name") or "").strip()
 
-        # ================= REQUIRED VALIDATION =================
+        # =====================================================
+        # REQUIRED VALIDATION
+        # =====================================================
 
         if (
             not school_id
@@ -3495,12 +3590,20 @@ def update_school():
             or not email
             or not school_code
         ):
-            return "Required fields missing ❌"
+            flash("Please fill all required school fields.", "error")
 
-        # ================= FORMAT VALIDATION =================
+            return redirect(url_for("superadmin_schools"))
+
+        # =====================================================
+        # EMAIL VALIDATION
+        # =====================================================
 
         if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email):
             return "Invalid email format ❌"
+
+        # =====================================================
+        # PHONE VALIDATION
+        # =====================================================
 
         clean_phone = "".join(filter(str.isdigit, phone))
 
@@ -3543,65 +3646,85 @@ def update_school():
         if len(board_name) > 100:
             return "Board name too long ❌"
 
-        # ================= SCHOOL EXISTS CHECK =================
+        # =====================================================
+        # DATABASE CONNECTION
+        # =====================================================
+
+        conn = get_connection()
+
+        cursor = conn.cursor()
+
+        # =====================================================
+        # SCHOOL EXISTS CHECK
+        # =====================================================
 
         cursor.execute(
             """
-
-            SELECT school_id
+            SELECT
+                school_id
 
             FROM schools
 
             WHERE school_id = %s
 
             LIMIT 1
-
-        """,
+            """,
             (school_id,),
         )
 
         existing = cursor.fetchone()
 
         if not existing:
-            return "School not found ❌"
+            flash("The selected school could not be found.", "error")
 
-        # ================= DUPLICATE CHECK =================
+            return redirect(url_for("superadmin_schools"))
+
+        # =====================================================
+        # DUPLICATE CHECK
+        # =====================================================
 
         cursor.execute(
             """
-
-            SELECT school_id
+            SELECT
+                school_id
 
             FROM schools
 
-            WHERE (
+            WHERE
+                (
+                    udise_no = %s
+                    OR email = %s
+                    OR school_code = %s
+                )
 
-                udise_no = %s
-
-                OR email = %s
-
-                OR school_code = %s
-
-            )
-
-            AND school_id != %s
+                AND school_id != %s
 
             LIMIT 1
-
-        """,
-            (udise_no, email, school_code, school_id),
+            """,
+            (
+                udise_no,
+                email,
+                school_code,
+                school_id,
+            ),
         )
 
         duplicate_school = cursor.fetchone()
 
         if duplicate_school:
-            return "School with same UDISE, Email or School Code already exists ❌"
+            flash(
+                "Another school already uses the same UDISE, email or school code.",
+                "error",
+            )
 
-        # ================= UPDATE SCHOOL =================
+            return redirect(url_for("superadmin_schools"))
+
+        # =====================================================
+        # UPDATE SCHOOL
+        # =====================================================
 
         cursor.execute(
             """
-
             UPDATE schools
 
             SET
@@ -3629,8 +3752,7 @@ def update_school():
                 board_name = %s
 
             WHERE school_id = %s
-
-        """,
+            """,
             (
                 name,
                 udise_no,
@@ -3647,7 +3769,28 @@ def update_school():
             ),
         )
 
+        # =====================================================
+        # VERIFY UPDATE
+        # =====================================================
+
+        if cursor.rowcount != 1:
+            conn.rollback()
+
+            flash("School could not be updated.", "error")
+
+            return redirect(url_for("superadmin_schools"))
+
+        # =====================================================
+        # COMMIT
+        # =====================================================
+
         conn.commit()
+
+        print("SCHOOL UPDATED:", school_id)
+
+        # =====================================================
+        # REDIRECT
+        # =====================================================
 
         return redirect(url_for("superadmin_schools"))
 
@@ -3655,9 +3798,11 @@ def update_school():
         if conn:
             conn.rollback()
 
-        logger.exception("Unhandled Exception", e)
+        logger.exception("UPDATE SCHOOL ERROR")
 
-        return "Something went wrong ❌"
+        flash("School details updated successfully.", "success")
+
+        return redirect(url_for("superadmin_schools"))
 
     finally:
         if cursor:
@@ -3668,7 +3813,7 @@ def update_school():
 
 
 # =========================================================
-# ⚙ UPDATE SCHOOL FEATURES
+# ⚙️ SUPER ADMIN - UPDATE SCHOOL FEATURES
 # =========================================================
 
 
@@ -3680,12 +3825,9 @@ def update_school_features():
     cursor = None
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # =========================================
+        # =====================================================
         # SCHOOL ID
-        # =========================================
+        # =====================================================
 
         school_id = (request.form.get("school_id") or "").strip()
 
@@ -3695,25 +3837,36 @@ def update_school_features():
         try:
             school_id = int(school_id)
 
-        except ValueError:
+        except (ValueError, TypeError):
             return "Invalid School ID ❌"
 
-        # =========================================
-        # VERIFY SCHOOL EXISTS
-        # =========================================
+        if school_id <= 0:
+            return "Invalid School ID ❌"
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # VERIFY SCHOOL
+        # =====================================================
 
         cursor.execute(
             """
-
-            SELECT school_id
+            SELECT
+                school_id,
+                is_active
 
             FROM schools
 
             WHERE school_id = %s
 
             LIMIT 1
-
-        """,
+            """,
             (school_id,),
         )
 
@@ -3722,71 +3875,44 @@ def update_school_features():
         if not school:
             return "School not found ❌"
 
-        # =========================================
-        # FEATURE VALUES
-        # =========================================
+        # =====================================================
+        # GET FEATURE VALUES
+        # =====================================================
 
-        enable_tc_management = (
-            request.form.get("enable_tc_management") or "Disabled"
-        ).strip()
-
-        enable_bonafide_management = (
-            request.form.get("enable_bonafide_management") or "Disabled"
-        ).strip()
-
-        enable_import_export = (
-            request.form.get("enable_import_export") or "Disabled"
-        ).strip()
-
-        enable_attendance = (
-            request.form.get("enable_attendance") or "Disabled"
-        ).strip()
-
-        enable_fee_management = (
-            request.form.get("enable_fee_management") or "Disabled"
-        ).strip()
-
-        enable_teacher_management = (
-            request.form.get("enable_teacher_management") or "Disabled"
-        ).strip()
-
-        enable_results = (request.form.get("enable_results") or "Disabled").strip()
-
-        enable_timetable = (request.form.get("enable_timetable") or "Disabled").strip()
-
-        enable_notice_board = (
-            request.form.get("enable_notice_board") or "Disabled"
-        ).strip()
-
-        # =========================================
-        # VALIDATION
-        # =========================================
-
-        valid_values = ["Enabled", "Disabled"]
-
-        feature_values = [
-            enable_tc_management,
-            enable_bonafide_management,
-            enable_import_export,
-            enable_attendance,
-            enable_fee_management,
-            enable_teacher_management,
-            enable_results,
-            enable_timetable,
-            enable_notice_board,
+        feature_names = [
+            "enable_tc_management",
+            "enable_bonafide_management",
+            "enable_import_export",
+            "enable_attendance",
+            "enable_fee_management",
+            "enable_teacher_management",
+            "enable_results",
+            "enable_timetable",
+            "enable_notice_board",
         ]
 
-        for value in feature_values:
-            if value not in valid_values:
-                return "Invalid feature value ❌"
+        valid_values = {"Enabled", "Disabled"}
 
-        # =========================================
-        # UPDATE SCHOOL FEATURES
-        # =========================================
+        feature_values = {}
+
+        # =====================================================
+        # VALIDATE ALL FEATURES
+        # =====================================================
+
+        for feature_name in feature_names:
+            value = (request.form.get(feature_name) or "Disabled").strip()
+
+            if value not in valid_values:
+                return f"Invalid value for {feature_name} ❌"
+
+            feature_values[feature_name] = value
+
+        # =====================================================
+        # UPDATE
+        # =====================================================
 
         cursor.execute(
             """
-
             UPDATE schools
 
             SET
@@ -3810,23 +3936,41 @@ def update_school_features():
                 enable_notice_board = %s
 
             WHERE school_id = %s
-
-        """,
+            """,
             (
-                enable_tc_management,
-                enable_bonafide_management,
-                enable_import_export,
-                enable_attendance,
-                enable_fee_management,
-                enable_teacher_management,
-                enable_results,
-                enable_timetable,
-                enable_notice_board,
+                feature_values["enable_tc_management"],
+                feature_values["enable_bonafide_management"],
+                feature_values["enable_import_export"],
+                feature_values["enable_attendance"],
+                feature_values["enable_fee_management"],
+                feature_values["enable_teacher_management"],
+                feature_values["enable_results"],
+                feature_values["enable_timetable"],
+                feature_values["enable_notice_board"],
                 school_id,
             ),
         )
 
+        # =====================================================
+        # VERIFY UPDATE
+        # =====================================================
+
+        if cursor.rowcount != 1:
+            conn.rollback()
+
+            return "Feature update failed ❌"
+
+        # =====================================================
+        # COMMIT
+        # =====================================================
+
         conn.commit()
+
+        print("✅ SCHOOL FEATURES UPDATED:", school_id)
+
+        # =====================================================
+        # REDIRECT
+        # =====================================================
 
         return redirect(url_for("superadmin_schools"))
 
@@ -3835,6 +3979,8 @@ def update_school_features():
             conn.rollback()
 
         print("❌ UPDATE SCHOOL FEATURES ERROR:", e)
+
+        logger.exception("UPDATE SCHOOL FEATURES ERROR")
 
         return "Something went wrong ❌"
 
@@ -3859,60 +4005,67 @@ def update_school_certificates():
     cursor = None
 
     try:
+        # =================================================
+        # DATABASE
+        # =================================================
+
         conn = get_connection()
         cursor = conn.cursor()
 
-        # =========================================
-        # GET SCHOOL ID
-        # =========================================
+        # =================================================
+        # SCHOOL ID
+        # =================================================
 
-        school_id = (request.form.get("school_id") or "").strip()
+        school_id_raw = (request.form.get("school_id") or "").strip()
 
-        if not school_id:
-            return "School ID missing ❌"
+        if not school_id_raw:
+            return ("School ID is required ❌", 400)
 
         try:
-            school_id = int(school_id)
+            school_id = int(school_id_raw)
 
-        except ValueError:
-            return "Invalid School ID ❌"
+        except (TypeError, ValueError):
+            return ("Invalid School ID ❌", 400)
 
-        # =========================================
+        if school_id <= 0:
+            return ("Invalid School ID ❌", 400)
+
+        # =================================================
         # VERIFY SCHOOL EXISTS
-        # =========================================
+        # =================================================
 
         cursor.execute(
             """
-
-            SELECT school_id
-
+            SELECT
+                school_id
             FROM schools
-
             WHERE school_id = %s
-
             LIMIT 1
-
-        """,
+            """,
             (school_id,),
         )
 
         school = cursor.fetchone()
 
         if not school:
-            return "School not found ❌"
+            return ("School not found ❌", 404)
 
-        # =========================================
-        # CERTIFICATE SETTINGS
-        # =========================================
+        # =================================================
+        # GET PREFIXES
+        # =================================================
 
-        tc_prefix = (request.form.get("tc_prefix") or "TC").strip().upper()
+        tc_prefix = (request.form.get("tc_prefix") or "").strip().upper()
 
-        bonafide_prefix = (request.form.get("bonafide_prefix") or "BON").strip().upper()
+        bonafide_prefix = (request.form.get("bonafide_prefix") or "").strip().upper()
 
-        auto_numbering = (request.form.get("auto_numbering") or "Enabled").strip()
+        # =================================================
+        # GET SETTINGS
+        # =================================================
+
+        auto_numbering = (request.form.get("auto_numbering") or "Disabled").strip()
 
         enable_certificate_labels = (
-            request.form.get("enable_certificate_labels") or "Enabled"
+            request.form.get("enable_certificate_labels") or "Disabled"
         ).strip()
 
         show_tc_logo = (request.form.get("show_tc_logo") or "Disabled").strip()
@@ -3929,35 +4082,41 @@ def update_school_certificates():
             request.form.get("show_bonafide_watermark") or "Disabled"
         ).strip()
 
-        # =========================================
+        # =================================================
         # PREFIX VALIDATION
-        # =========================================
+        # =================================================
 
         if not tc_prefix:
-            return "TC Prefix required ❌"
+            return ("TC Prefix is required ❌", 400)
 
         if not bonafide_prefix:
-            return "Bonafide Prefix required ❌"
+            return ("Bonafide Prefix is required ❌", 400)
 
         if len(tc_prefix) > 20:
-            return "TC Prefix too long ❌"
+            return ("TC Prefix cannot exceed 20 characters ❌", 400)
 
         if len(bonafide_prefix) > 20:
-            return "Bonafide Prefix too long ❌"
+            return ("Bonafide Prefix cannot exceed 20 characters ❌", 400)
 
-        if not re.match(r"^[A-Z0-9_-]+$", tc_prefix):
-            return "Invalid TC Prefix ❌"
+        # =================================================
+        # PREFIX FORMAT
+        # =================================================
 
-        if not re.match(r"^[A-Z0-9_-]+$", bonafide_prefix):
-            return "Invalid Bonafide Prefix ❌"
+        prefix_pattern = r"^[A-Z0-9_-]+$"
 
-        # =========================================
-        # VALUE VALIDATION
-        # =========================================
+        if not re.fullmatch(prefix_pattern, tc_prefix):
+            return ("Invalid TC Prefix ❌", 400)
 
-        valid_values = ["Enabled", "Disabled"]
+        if not re.fullmatch(prefix_pattern, bonafide_prefix):
+            return ("Invalid Bonafide Prefix ❌", 400)
 
-        settings_values = [
+        # =================================================
+        # SETTINGS VALIDATION
+        # =================================================
+
+        valid_values = {"Enabled", "Disabled"}
+
+        certificate_settings = [
             auto_numbering,
             enable_certificate_labels,
             show_tc_logo,
@@ -3966,17 +4125,15 @@ def update_school_certificates():
             show_bonafide_watermark,
         ]
 
-        for value in settings_values:
-            if value not in valid_values:
-                return "Invalid certificate setting ❌"
+        if not all(value in valid_values for value in certificate_settings):
+            return ("Invalid certificate setting ❌", 400)
 
-        # =========================================
-        # UPDATE SCHOOL CERTIFICATE SETTINGS
-        # =========================================
+        # =================================================
+        # UPDATE
+        # =================================================
 
         cursor.execute(
             """
-
             UPDATE schools
 
             SET
@@ -3998,8 +4155,7 @@ def update_school_certificates():
                 show_bonafide_watermark = %s
 
             WHERE school_id = %s
-
-        """,
+            """,
             (
                 tc_prefix,
                 bonafide_prefix,
@@ -4013,17 +4169,40 @@ def update_school_certificates():
             ),
         )
 
+        # =================================================
+        # VERIFY TARGET SCHOOL
+        # =================================================
+
+        if cursor.rowcount == 0:
+            # This can simply mean the submitted values
+            # were identical to the existing values.
+            #
+            # Since the school was already verified above,
+            # this is NOT an error.
+
+            conn.commit()
+
+            return redirect(url_for("superadmin_schools"))
+
+        # =================================================
+        # COMMIT
+        # =================================================
+
         conn.commit()
+
+        # =================================================
+        # SUCCESS
+        # =================================================
 
         return redirect(url_for("superadmin_schools"))
 
-    except Exception as e:
+    except Exception:
         if conn:
             conn.rollback()
 
-        print("❌ SCHOOL CERTIFICATE SETTINGS ERROR:", e)
+        logger.exception("SCHOOL CERTIFICATE SETTINGS UPDATE ERROR")
 
-        return "Something went wrong ❌"
+        return ("Unable to update certificate settings ❌", 500)
 
     finally:
         if cursor:
@@ -4034,7 +4213,8 @@ def update_school_certificates():
 
 
 # =========================================================
-# 🔄 TOGGLE SCHOOL STATUS (ACTIVE/INACTIVE)
+# 🔒 TOGGLE SCHOOL STATUS
+# ACTIVE <-> INACTIVE
 # =========================================================
 
 
@@ -4046,88 +4226,107 @@ def toggle_school_status():
     cursor = None
 
     try:
-        # ================= SAFE INPUT =================
+        # =================================================
+        # SAFE SCHOOL ID
+        # =================================================
 
-        school_id = (request.form.get("school_id") or "").strip()
+        school_id_raw = (request.form.get("school_id") or "").strip()
 
-        if not school_id:
-            return "School ID missing ❌"
+        if not school_id_raw:
+            return ("School ID is required ❌", 400)
 
         try:
-            school_id = int(school_id)
+            school_id = int(school_id_raw)
 
-        except ValueError:
-            return "Invalid School ID ❌"
+        except (TypeError, ValueError):
+            return ("Invalid School ID ❌", 400)
 
-        # ================= DB =================
+        if school_id <= 0:
+            return ("Invalid School ID ❌", 400)
+
+        # =================================================
+        # DATABASE
+        # =================================================
 
         conn = get_connection()
-
         cursor = conn.cursor()
 
-        # ================= CHECK SCHOOL EXISTS =================
+        # =================================================
+        # READ CURRENT STATUS
+        #
+        # Browser status is NOT trusted.
+        # =================================================
 
         cursor.execute(
             """
-
             SELECT
-                school_id,
                 is_active
-
             FROM schools
-
             WHERE school_id = %s
-
             LIMIT 1
-
-        """,
+            """,
             (school_id,),
         )
 
         school = cursor.fetchone()
 
         if not school:
-            return "School not found ❌"
+            return ("School not found ❌", 404)
 
-        # ================= TOGGLE STATUS =================
+        # =================================================
+        # CURRENT STATUS
+        # =================================================
+
+        current_status = int(school[0] or 0)
+
+        if current_status not in (0, 1):
+            conn.rollback()
+
+            return ("Invalid school status ❌", 400)
+
+        # =================================================
+        # TOGGLE
+        # =================================================
+
+        new_status = 0 if current_status == 1 else 1
+
+        # =================================================
+        # UPDATE
+        # =================================================
 
         cursor.execute(
             """
-
             UPDATE schools
-
-            SET is_active =
-
-                CASE
-
-                    WHEN is_active = 1 THEN 0
-
-                    ELSE 1
-
-                END
-
+            SET is_active = %s
             WHERE school_id = %s
-
-        """,
-            (school_id,),
+            """,
+            (new_status, school_id),
         )
 
         if cursor.rowcount != 1:
             conn.rollback()
 
-            return "Status update failed ❌"
+            return ("Status update failed ❌", 400)
+
+        # =================================================
+        # COMMIT
+        # =================================================
 
         conn.commit()
 
+        # =================================================
+        # SUCCESS
+        # =================================================
+
         return redirect(url_for("superadmin_schools"))
 
-    except Exception as e:
+    except Exception:
         if conn:
             conn.rollback()
 
-        print("❌ STATUS TOGGLE ERROR:", e)
+        logger.exception("SCHOOL STATUS UPDATE ERROR")
 
-        return "Something went wrong ❌"
+        return ("Something went wrong while updating school status ❌", 500)
 
     finally:
         if cursor:
@@ -4140,6 +4339,8 @@ def toggle_school_status():
 # =========================================================
 # 👨‍🎓 SUPER ADMIN - STUDENTS BY SCHOOL
 # =========================================================
+
+
 @app.route("/superadmin/superadmin_students")
 @admin_required
 def superadmin_students():
@@ -4148,11 +4349,41 @@ def superadmin_students():
     cursor = None
 
     try:
-        school_id = (request.args.get("school_id") or "").strip()
+        # =================================================
+        # SAFE INPUT
+        # =================================================
+
+        school_id_raw = (request.args.get("school_id") or "").strip()
 
         search = (request.args.get("search") or "").strip()
 
         page = request.args.get("page", 1, type=int)
+
+        # =================================================
+        # SCHOOL ID VALIDATION
+        # =================================================
+
+        if not school_id_raw:
+            flash("School ID is missing.", "error")
+
+            return redirect(url_for("superadmin_schools"))
+
+        try:
+            school_id = int(school_id_raw)
+
+        except (TypeError, ValueError):
+            flash("Invalid school ID.", "error")
+
+            return redirect(url_for("superadmin_schools"))
+
+        if school_id <= 0:
+            flash("Invalid school ID.", "error")
+
+            return redirect(url_for("superadmin_schools"))
+
+        # =================================================
+        # PAGINATION
+        # =================================================
 
         per_page = 8
 
@@ -4161,18 +4392,18 @@ def superadmin_students():
 
         offset = (page - 1) * per_page
 
-        if not school_id:
-            return "School ID missing ❌"
-
-        try:
-            school_id = int(school_id)
-        except ValueError:
-            return "Invalid School ID ❌"
+        # =================================================
+        # DATABASE
+        # =================================================
 
         conn = get_connection()
+
         cursor = conn.cursor()
 
-        # ================= GET SCHOOL =================
+        # =================================================
+        # GET SCHOOL
+        # =================================================
+
         cursor.execute(
             """
             SELECT
@@ -4182,23 +4413,37 @@ def superadmin_students():
             FROM schools
             WHERE school_id = %s
             LIMIT 1
-        """,
+            """,
             (school_id,),
         )
 
         school = cursor.fetchone()
 
+        # =================================================
+        # SCHOOL NOT FOUND
+        # =================================================
+
         if not school:
-            return "School not found ❌"
+            flash("School not found.", "error")
 
-        if str(school[2]) != "1":
-            return "School is inactive ❌"
+            return redirect(url_for("superadmin_schools"))
 
-        # ================= WHERE QUERY =================
+        # =================================================
+        # SCHOOL INACTIVE
+        # =================================================
+
+        if int(school[2] or 0) != 1:
+            flash("This school is currently inactive.", "warning")
+
+            return redirect(url_for("superadmin_schools"))
+
+        # =================================================
+        # SEARCH WHERE
+        # =================================================
 
         where_query = """
             WHERE school_id = %s
-            AND is_deleted = 0
+              AND is_deleted = 0
         """
 
         params = [school_id]
@@ -4215,26 +4460,39 @@ def superadmin_students():
 
             params.extend([keyword, keyword])
 
-        # ================= TOTAL FILTERED STUDENTS =================
+        # =================================================
+        # TOTAL FILTERED STUDENTS
+        # =================================================
 
         cursor.execute(
             f"""
             SELECT COUNT(*)
             FROM students
             {where_query}
-        """,
+            """,
             params,
         )
 
         total_filtered = cursor.fetchone()[0] or 0
 
+        # =================================================
+        # TOTAL PAGES
+        # =================================================
+
         total_pages = max(1, math.ceil(total_filtered / per_page))
+
+        # =================================================
+        # PAGE CORRECTION
+        # =================================================
 
         if page > total_pages:
             page = total_pages
+
             offset = (page - 1) * per_page
 
-        # ================= PAGINATED STUDENTS =================
+        # =================================================
+        # STUDENTS
+        # =================================================
 
         student_params = params.copy()
 
@@ -4252,39 +4510,49 @@ def superadmin_students():
             {where_query}
             ORDER BY id DESC
             LIMIT %s OFFSET %s
-        """,
+            """,
             student_params,
         )
 
         students = cursor.fetchall()
 
-        # ================= TOTAL STATS FOR SCHOOL =================
+        # =================================================
+        # TOTAL STUDENTS
+        # =================================================
 
         cursor.execute(
             """
             SELECT COUNT(*)
             FROM students
             WHERE school_id = %s
-            AND is_deleted = 0
-        """,
+              AND is_deleted = 0
+            """,
             (school_id,),
         )
 
         total_students = cursor.fetchone()[0] or 0
+
+        # =================================================
+        # TOTAL CLASSES
+        # =================================================
 
         cursor.execute(
             """
             SELECT COUNT(DISTINCT `class`)
             FROM students
             WHERE school_id = %s
-            AND is_deleted = 0
-            AND `class` IS NOT NULL
-            AND `class` <> ''
-        """,
+              AND is_deleted = 0
+              AND `class` IS NOT NULL
+              AND `class` <> ''
+            """,
             (school_id,),
         )
 
         total_classes = cursor.fetchone()[0] or 0
+
+        # =================================================
+        # RENDER
+        # =================================================
 
         return render_template(
             "superadmin/superadmin_students.html",
@@ -4302,9 +4570,14 @@ def superadmin_students():
         )
 
     except Exception as e:
-        print("❌ SUPERADMIN STUDENTS ERROR:", e)
+        if conn:
+            conn.rollback()
 
-        return "Something went wrong ❌"
+        logger.exception("SUPERADMIN STUDENTS PAGE ERROR")
+
+        flash("Unable to load students right now. Please try again.", "error")
+
+        return redirect(url_for("superadmin_schools"))
 
     finally:
         if cursor:
@@ -4315,8 +4588,11 @@ def superadmin_students():
 
 
 # =========================================================
-# 📦 GET STUDENT DATA (API FOR MODAL) FOR ADMIN
+# 📦 GET STUDENT DATA
+# ADMIN STUDENT DETAILS MODAL
 # =========================================================
+
+
 @app.route("/get-student/<int:id>")
 @admin_required
 def get_student(id):
@@ -4325,46 +4601,125 @@ def get_student(id):
     cursor = None
 
     try:
+        # =================================================
+        # VALIDATE STUDENT ID
+        # =================================================
+
+        if id <= 0:
+            return jsonify({"error": "Invalid student ID."}), 400
+
+        # =================================================
+        # GET SCHOOL CONTEXT
+        # =================================================
+
+        school_id_raw = (request.args.get("school_id") or "").strip()
+
+        school_id = None
+
+        if school_id_raw:
+            try:
+                school_id = int(school_id_raw)
+
+            except (TypeError, ValueError):
+                return jsonify({"error": "Invalid school ID."}), 400
+
+            if school_id <= 0:
+                return jsonify({"error": "Invalid school ID."}), 400
+
+        # =================================================
+        # DATABASE
+        # =================================================
+
         conn = get_connection()
+
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute(
-            """
+        # =================================================
+        # GET STUDENT
+        # =================================================
 
-            SELECT
+        if school_id:
+            cursor.execute(
+                """
+                SELECT
 
-                id,
-                school_id,
-                name,
-                `class`,
-                admission_no,
-                primary_mobile,
-                father_name,
-                mother_name,
-                dob,
-                nationality,
-                previous_school,
-                admission_date,
-                progress,
-                conduct,
-                aadhaar
+                    id,
+                    school_id,
+                    name,
+                    `class`,
+                    admission_no,
+                    primary_mobile,
+                    father_name,
+                    mother_name,
+                    dob,
+                    nationality,
+                    previous_school,
+                    admission_date,
+                    progress,
+                    conduct,
+                    aadhaar
 
-            FROM students
+                FROM students
 
-            WHERE id = %s
+                WHERE id = %s
 
-            AND is_deleted = 0
+                  AND school_id = %s
 
-            LIMIT 1
+                  AND is_deleted = 0
 
-        """,
-            (id,),
-        )
+                LIMIT 1
+                """,
+                (id, school_id),
+            )
+
+        else:
+            cursor.execute(
+                """
+                SELECT
+
+                    id,
+                    school_id,
+                    name,
+                    `class`,
+                    admission_no,
+                    primary_mobile,
+                    father_name,
+                    mother_name,
+                    dob,
+                    nationality,
+                    previous_school,
+                    admission_date,
+                    progress,
+                    conduct,
+                    aadhaar
+
+                FROM students
+
+                WHERE id = %s
+
+                  AND is_deleted = 0
+
+                LIMIT 1
+                """,
+                (id,),
+            )
 
         student = cursor.fetchone()
 
+        # =================================================
+        # STUDENT NOT FOUND
+        # =================================================
+
         if not student:
-            return jsonify({"error": "Student not found"}), 404
+            return jsonify({"error": "Student not found."}), 404
+
+        # =================================================
+        # RESPONSE
+        #
+        # IMPORTANT:
+        # Keep this response structure because this is
+        # already used by your Student page.
+        # =================================================
 
         response = {
             "id": student.get("id"),
@@ -4384,12 +4739,12 @@ def get_student(id):
             "aadhaar": student.get("aadhaar") or "",
         }
 
-        return jsonify(response)
+        return jsonify(response), 200
 
-    except Exception as e:
-        print("❌ GET STUDENT ERROR:", e)
+    except Exception:
+        logger.exception("GET STUDENT API ERROR")
 
-        return jsonify({"error": "Something went wrong"}), 500
+        return jsonify({"error": "Unable to load student details."}), 500
 
     finally:
         if cursor:
@@ -4400,7 +4755,8 @@ def get_student(id):
 
 
 # =========================================================
-# 🗑️ DELETE STUDENT - SOFT DELETE
+# 🗑️ DELETE STUDENT
+# SOFT DELETE - SUPER ADMIN
 # =========================================================
 
 
@@ -4412,46 +4768,94 @@ def delete_student():
     cursor = None
 
     try:
-        # =====================================================
-        # GET STUDENT ID
-        # =====================================================
+        # =================================================
+        # STUDENT ID
+        # =================================================
 
-        student_id = (request.form.get("student_id") or "").strip()
+        student_id_raw = (request.form.get("student_id") or "").strip()
 
-        if not student_id:
-            return "Invalid student ID ❌"
+        if not student_id_raw:
+            flash("Student ID is missing.", "error")
+
+            return redirect(url_for("superadmin_schools"))
 
         try:
-            student_id = int(student_id)
+            student_id = int(student_id_raw)
 
         except (ValueError, TypeError):
-            return "Invalid student ID ❌"
+            flash("Invalid student ID.", "error")
+
+            return redirect(url_for("superadmin_schools"))
 
         if student_id <= 0:
-            return "Invalid student ID ❌"
+            flash("Invalid student ID.", "error")
 
-        # =====================================================
-        # DATABASE CONNECTION
-        # =====================================================
+            return redirect(url_for("superadmin_schools"))
+
+        # =================================================
+        # SCHOOL ID
+        # =================================================
+
+        school_id_raw = (request.form.get("school_id") or "").strip()
+
+        try:
+            school_id = int(school_id_raw)
+
+        except (ValueError, TypeError):
+            flash("Invalid school context.", "error")
+
+            return redirect(url_for("superadmin_schools"))
+
+        if school_id <= 0:
+            flash("Invalid school context.", "error")
+
+            return redirect(url_for("superadmin_schools"))
+
+        # =================================================
+        # PAGINATION / SEARCH
+        # Keep user on same page after deletion
+        # =================================================
+
+        search = (request.form.get("search") or "").strip()
+
+        page = request.form.get("page", 1, type=int)
+
+        if page < 1:
+            page = 1
+
+        # =================================================
+        # RETURN LOCATION
+        # =================================================
+
+        return_to = (request.form.get("return_to") or "").strip()
+
+        # =================================================
+        # DATABASE
+        # =================================================
 
         conn = get_connection()
 
         cursor = conn.cursor(dictionary=True)
 
-        # =====================================================
-        # CHECK ACTIVE STUDENT
-        # =====================================================
+        # =================================================
+        # LOCK STUDENT
+        # =================================================
 
         cursor.execute(
             """
             SELECT
+
                 id,
                 school_id,
                 name,
                 is_deleted
+
             FROM students
+
             WHERE id = %s
+
             LIMIT 1
+
             FOR UPDATE
             """,
             (student_id,),
@@ -4459,26 +4863,54 @@ def delete_student():
 
         student = cursor.fetchone()
 
-        # =====================================================
-        # STUDENT NOT FOUND
-        # =====================================================
+        # =================================================
+        # NOT FOUND
+        # =================================================
 
         if not student:
             conn.rollback()
-            return "Student not found ❌"
 
-        # =====================================================
+            flash("Student not found.", "error")
+
+            return redirect(
+                url_for(
+                    "superadmin_students", school_id=school_id, search=search, page=page
+                )
+            )
+
+        # =================================================
+        # SCHOOL OWNERSHIP CHECK
+        # =================================================
+
+        if int(student.get("school_id") or 0) != school_id:
+            conn.rollback()
+
+            flash("This student does not belong to the selected school.", "error")
+
+            return redirect(
+                url_for(
+                    "superadmin_students", school_id=school_id, search=search, page=page
+                )
+            )
+
+        # =================================================
         # ALREADY DELETED
-        # =====================================================
+        # =================================================
 
         if int(student.get("is_deleted") or 0) == 1:
             conn.rollback()
 
-            return "Student is already deleted ❌"
+            flash("Student is already deleted.", "warning")
 
-        # =====================================================
-        # GET ADMIN IDENTIFIER
-        # =====================================================
+            return redirect(
+                url_for(
+                    "superadmin_students", school_id=school_id, search=search, page=page
+                )
+            )
+
+        # =================================================
+        # ADMIN IDENTIFIER
+        # =================================================
 
         deleted_by = (
             session.get("username")
@@ -4489,62 +4921,95 @@ def delete_student():
 
         deleted_by = str(deleted_by)[:100]
 
-        # =====================================================
-        # SOFT DELETE STUDENT
-        # =====================================================
+        # =================================================
+        # SOFT DELETE
+        # =================================================
 
         cursor.execute(
             """
             UPDATE students
+
             SET
+
                 is_deleted = 1,
+
                 deleted_at = NOW(),
+
                 deleted_by = %s
+
             WHERE id = %s
+
+              AND school_id = %s
+
               AND is_deleted = 0
             """,
-            (
-                deleted_by,
-                student_id,
-            ),
+            (deleted_by, student_id, school_id),
         )
 
-        # =====================================================
-        # VERIFY UPDATE
-        # =====================================================
+        # =================================================
+        # VERIFY
+        # =================================================
 
         if cursor.rowcount != 1:
             conn.rollback()
 
-            return "Student deletion failed or record was already deleted ❌"
+            flash("Student deletion failed. Please try again.", "error")
 
-        # =====================================================
+            return redirect(
+                url_for(
+                    "superadmin_students", school_id=school_id, search=search, page=page
+                )
+            )
+
+        # =================================================
         # COMMIT
-        # =====================================================
+        # =================================================
 
         conn.commit()
 
-        # =====================================================
-        # REDIRECT
-        # =====================================================
+        # =================================================
+        # SUCCESS TOAST
+        # =================================================
 
-        return redirect(request.referrer or url_for("superadmin_schools"))
+        flash("Student deleted successfully.", "success")
 
-    # =========================================================
-    # ERROR
-    # =========================================================
+        # =================================================
+        # RETURN TO SOURCE PAGE
+        # =================================================
+
+        if return_to == "all_students":
+            return redirect(
+                url_for(
+                    "superadmin_all_students",
+                    school_id=school_id,
+                    search=search,
+                    page=page,
+                )
+            )
+
+        # =================================================
+        # RETURN TO SAME STUDENT PAGE
+        # =================================================
+
+        return redirect(
+            url_for(
+                "superadmin_students", school_id=school_id, search=search, page=page
+            )
+        )
 
     except Exception as e:
         if conn:
             conn.rollback()
 
-        print("❌ SOFT DELETE STUDENT ERROR:", e)
+        logger.exception("SUPERADMIN STUDENT DELETE ERROR")
 
-        return "Something went wrong while deleting student ❌"
+        flash("Unable to delete student right now. Please try again.", "error")
 
-    # =========================================================
-    # CLEANUP
-    # =========================================================
+        # Safest fallback if school context isn't available
+        if "school_id" in locals() and school_id:
+            return redirect(url_for("superadmin_students", school_id=school_id))
+
+        return redirect(url_for("superadmin_schools"))
 
     finally:
         if cursor:
@@ -4567,32 +5032,48 @@ def superadmin_all_students():
     cursor = None
 
     try:
+        # =================================================
+        # DATABASE CONNECTION
+        # =================================================
+
         conn = get_connection()
+
         cursor = conn.cursor(dictionary=True)
 
-        # ================= GET PARAMS =================
+        # =================================================
+        # PAGINATION
+        # =================================================
 
         page = request.args.get("page", 1, type=int)
 
         per_page = 10
 
+        if page < 1:
+            page = 1
+
+        # =================================================
+        # FILTER PARAMETERS
+        # =================================================
+
         search = (request.args.get("search") or "").strip()
 
         school_id = request.args.get("school_id", type=int)
 
-        if page < 1:
-            page = 1
+        selected_class = (request.args.get("class") or "").strip()
 
-        offset = (page - 1) * per_page
-
-        # ================= WHERE =================
+        # =================================================
+        # BASE FILTER
+        # =================================================
 
         where = """
-            WHERE 1=1
-            AND st.is_deleted = 0
+            WHERE st.is_deleted = 0
         """
 
         params = []
+
+        # =================================================
+        # SCHOOL FILTER
+        # =================================================
 
         if school_id:
             where += """
@@ -4601,11 +5082,28 @@ def superadmin_all_students():
 
             params.append(school_id)
 
+        # =================================================
+        # CLASS FILTER
+        # =================================================
+
+        if selected_class:
+            where += """
+                AND st.`class` = %s
+            """
+
+            params.append(selected_class)
+
+        # =================================================
+        # SEARCH FILTER
+        # =================================================
+
         if search:
             where += """
                 AND (
                     st.name LIKE %s
+
                     OR st.admission_no LIKE %s
+
                     OR st.primary_mobile LIKE %s
                 )
             """
@@ -4614,30 +5112,55 @@ def superadmin_all_students():
 
             params.extend([keyword, keyword, keyword])
 
-        # ================= TOTAL FILTERED COUNT =================
+        # =================================================
+        # GLOBAL TOTAL STUDENTS
+        #
+        # NOT affected by filters.
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS total
+
+            FROM students
+
+            WHERE is_deleted = 0
+            """
+        )
+
+        total_students = cursor.fetchone()["total"] or 0
+
+        # =================================================
+        # FILTERED STUDENT COUNT
+        # =================================================
 
         cursor.execute(
             f"""
-
             SELECT COUNT(*) AS total
 
             FROM students st
 
             {where}
-
-        """,
+            """,
             params,
         )
 
-        total = cursor.fetchone()["total"] or 0
+        filtered_total = cursor.fetchone()["total"] or 0
 
-        total_pages = max(1, (total + per_page - 1) // per_page)
+        # =================================================
+        # PAGINATION CALCULATION
+        # =================================================
+
+        total_pages = max(1, (filtered_total + per_page - 1) // per_page)
 
         if page > total_pages:
             page = total_pages
-            offset = (page - 1) * per_page
 
-        # ================= GET STUDENTS =================
+        offset = (page - 1) * per_page
+
+        # =================================================
+        # GET STUDENTS
+        # =================================================
 
         student_params = params.copy()
 
@@ -4645,21 +5168,25 @@ def superadmin_all_students():
 
         cursor.execute(
             f"""
-
             SELECT
 
                 st.id,
+
                 st.name,
+
                 st.`class`,
+
                 st.admission_no,
+
                 st.primary_mobile,
 
                 sc.name AS school_name,
+
                 sc.school_id
 
             FROM students st
 
-            JOIN schools sc
+            INNER JOIN schools sc
                 ON st.school_id = sc.school_id
 
             {where}
@@ -4667,68 +5194,186 @@ def superadmin_all_students():
             ORDER BY st.id DESC
 
             LIMIT %s OFFSET %s
-
-        """,
+            """,
             student_params,
         )
 
         students = cursor.fetchall()
 
-        # ================= TOTAL SCHOOLS =================
+        # =================================================
+        # TOTAL SCHOOLS
+        # =================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
+
             FROM schools
-        """)
+            """
+        )
 
         total_schools = cursor.fetchone()["total"] or 0
 
-        # ================= SCHOOL DROPDOWN =================
+        # =================================================
+        # ACTIVE SCHOOLS
+        # =================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS total
 
+            FROM schools
+
+            WHERE is_active = 1
+            """
+        )
+
+        active_schools = cursor.fetchone()["total"] or 0
+
+        # =================================================
+        # SCHOOL DROPDOWN
+        #
+        # Keep ALL schools so admin can inspect students
+        # belonging to inactive schools as well.
+        # =================================================
+
+        cursor.execute(
+            """
             SELECT
+
                 school_id,
+
                 name
 
             FROM schools
 
-            ORDER BY name
-
-        """)
+            ORDER BY name ASC
+            """
+        )
 
         schools = cursor.fetchall()
 
-        # ================= SIDEBAR LEAD COUNT =================
+        # =================================================
+        # CLASS DROPDOWN
+        #
+        # Only non-deleted students are considered.
+        # =================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
+            SELECT DISTINCT
+
+                st.`class` AS student_class
+
+            FROM students st
+
+            WHERE st.is_deleted = 0
+
+            AND st.`class` IS NOT NULL
+
+            AND TRIM(st.`class`) <> ''
+
+            ORDER BY
+                CAST(st.`class` AS UNSIGNED),
+                st.`class`
+            """
+        )
+
+        class_rows = cursor.fetchall()
+
+        classes = [
+            row["student_class"]
+            for row in class_rows
+            if row["student_class"] is not None
+        ]
+
+        # =================================================
+        # NEW LEADS
+        # =================================================
+
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
+
             FROM lead_requests
+
             WHERE status = 'New'
-        """)
+            """
+        )
 
         new_leads_count = cursor.fetchone()["total"] or 0
 
+        # =================================================
+        # RENDER
+        # =================================================
+
         return render_template(
             "superadmin/superadmin_all_students.html",
+            # ---------------------------------------------
+            # STUDENTS
+            # ---------------------------------------------
             students=students,
+            # ---------------------------------------------
+            # FILTER DATA
+            # ---------------------------------------------
             schools=schools,
-            total=total,
-            total_schools=total_schools,
-            page=page,
-            total_pages=total_pages,
+            classes=classes,
             search=search,
             selected_school=school_id,
+            selected_class=selected_class,
+            # ---------------------------------------------
+            # COUNTS
+            # ---------------------------------------------
+            total_students=total_students,
+            total_schools=total_schools,
+            active_schools=active_schools,
             new_leads_count=new_leads_count,
+            # ---------------------------------------------
+            # FILTERED COUNT
+            # ---------------------------------------------
+            total=filtered_total,
+            filtered_total=filtered_total,
+            # ---------------------------------------------
+            # PAGINATION
+            # ---------------------------------------------
+            page=page,
+            total_pages=total_pages,
+            # ---------------------------------------------
+            # SIDEBAR
+            # ---------------------------------------------
             role="admin",
             school_name="Admin Panel",
             active_page="all-students",
         )
 
-    except Exception as e:
-        print("❌ ALL STUDENTS ERROR:", e)
+    # =====================================================
+    # ERROR HANDLING
+    # =====================================================
 
-        return f"Something went wrong ❌ {str(e)}"
+    except Exception as e:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception("Error loading Super Admin All Students page")
+
+        # ---------------------------------------------
+        # Your base.html toast system
+        # ---------------------------------------------
+
+        try:
+            flash("Unable to load student records. Please try again.", "error")
+
+        except Exception:
+            pass
+
+        return redirect(url_for("superadmin_dashboard"))
+
+    # =====================================================
+    # CLEANUP
+    # =====================================================
 
     finally:
         if cursor:
@@ -4739,8 +5384,9 @@ def superadmin_all_students():
 
 
 # =========================================================
-# 🧾 SUPER ADMIN - TC MANAGEMENT
+# 🧾 SUPER ADMIN — TC MANAGEMENT
 # =========================================================
+
 @app.route("/superadmin/tc-management")
 @admin_required
 def superadmin_tc_management():
@@ -4749,198 +5395,500 @@ def superadmin_tc_management():
     cursor = None
 
     try:
+
+        # =================================================
+        # DATABASE
+        # =================================================
+
         conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
 
-        # ================= PARAMS =================
+        cursor = conn.cursor(
+            dictionary=True
+        )
 
-        search = (request.args.get("search") or "").strip()
 
-        school_filter = (request.args.get("school_id") or "").strip()
+        # =================================================
+        # FILTER PARAMETERS
+        # =================================================
 
-        class_filter = (request.args.get("class") or "").strip()
+        search = (
+            request.args.get("search") or ""
+        ).strip()
 
-        page = request.args.get("page", 1, type=int)
 
-        per_page = 5
+        school_filter = (
+            request.args.get("school_id") or ""
+        ).strip()
+
+
+        class_filter = (
+            request.args.get("class") or ""
+        ).strip()
+
+
+        # =================================================
+        # PAGINATION
+        # =================================================
+
+        page = request.args.get(
+            "page",
+            1,
+            type=int
+        )
+
+
+        per_page = 10
+
 
         if page < 1:
+
             page = 1
 
-        if school_filter and not school_filter.isdigit():
-            school_filter = ""
 
-        if class_filter and not class_filter.isdigit():
-            class_filter = ""
+        # =================================================
+        # VALIDATE SCHOOL
+        # =================================================
 
-        offset = (page - 1) * per_page
+        if school_filter:
 
-        # ================= WHERE =================
+            if not school_filter.isdigit():
+
+                school_filter = ""
+
+
+        # =================================================
+        # VALIDATE CLASS
+        # =================================================
+
+        if class_filter:
+
+            class_filter = (
+                class_filter.strip()
+            )
+
+
+            if len(class_filter) > 50:
+
+                class_filter = ""
+
+
+        # =================================================
+        # BASE WHERE
+        # =================================================
 
         where_query = """
-            WHERE 1=1
-            AND tc.is_deleted = 0
+
+            WHERE tc.is_deleted = 0
+
             AND st.is_deleted = 0
+
         """
+
 
         params = []
 
+
+        # =================================================
+        # SEARCH
+        # =================================================
+
         if search:
+
             where_query += """
+
                 AND (
+
                     st.name LIKE %s
+
                     OR st.admission_no LIKE %s
+
                     OR tc.tc_number LIKE %s
+
+                    OR sc.name LIKE %s
+
+                    OR tc.leaving_reason LIKE %s
+
                 )
+
             """
 
-            keyword = f"%{search}%"
 
-            params.extend([keyword, keyword, keyword])
+            keyword = (
+                f"%{search}%"
+            )
+
+
+            params.extend([
+
+                keyword,
+
+                keyword,
+
+                keyword,
+
+                keyword,
+
+                keyword
+
+            ])
+
+
+        # =================================================
+        # SCHOOL FILTER
+        # =================================================
 
         if school_filter:
+
             where_query += """
+
                 AND sc.school_id = %s
+
             """
 
-            params.append(int(school_filter))
+
+            params.append(
+                int(school_filter)
+            )
+
+
+        # =================================================
+        # CLASS FILTER
+        # =================================================
 
         if class_filter:
+
             where_query += """
+
                 AND st.`class` = %s
+
             """
 
-            params.append(class_filter)
 
-        # ================= TOTAL FILTERED COUNT =================
+            params.append(
+                class_filter
+            )
+
+
+        # =================================================
+        # COUNT FILTERED RECORDS
+        # =================================================
 
         cursor.execute(
+
             f"""
 
-            SELECT COUNT(*) AS total
+                SELECT
 
-            FROM tc
+                    COUNT(*) AS total
 
-            JOIN students st
-                ON tc.student_id = st.id
+                FROM tc
 
-            JOIN schools sc
-                ON tc.school_id = sc.school_id
+                INNER JOIN students st
 
-            {where_query}
+                    ON tc.student_id = st.id
 
-        """,
-            params,
+                INNER JOIN schools sc
+
+                    ON tc.school_id =
+                       sc.school_id
+
+                {where_query}
+
+            """,
+
+            params
+
         )
 
-        total_records = cursor.fetchone()["total"] or 0
 
-        total_pages = max(1, (total_records + per_page - 1) // per_page)
+        total_records = (
+
+            cursor.fetchone()["total"]
+
+            or 0
+
+        )
+
+
+        # =================================================
+        # TOTAL PAGES
+        # =================================================
+
+        total_pages = max(
+
+            1,
+
+            (
+                total_records
+                + per_page
+                - 1
+            )
+            // per_page
+
+        )
+
+
+        # =================================================
+        # PROTECT INVALID PAGE
+        # =================================================
 
         if page > total_pages:
-            page = total_pages
-            offset = (page - 1) * per_page
 
-        # ================= TC RECORDS =================
+            page = total_pages
+
+
+        offset = (
+
+            page - 1
+        ) * per_page
+ 
+        # =================================================
+        # TC RECORDS
+        # =================================================
 
         query_params = params.copy()
 
-        query_params.extend([per_page, offset])
+        query_params.extend([
+            per_page,
+            offset
+        ])
+
 
         cursor.execute(
+
             f"""
 
-            SELECT
+                SELECT
 
-                tc.id,
-                st.name,
-                st.admission_no,
-                st.`class`,
-                sc.name AS school_name,
-                sc.school_id,
-                tc.tc_number,
-                tc.leaving_date,
-                tc.leaving_reason,
-                tc.tc_date
+                    tc.id,
 
-            FROM tc
+                    tc.student_id,
 
-            JOIN students st
-                ON tc.student_id = st.id
+                    tc.school_id,
 
-            JOIN schools sc
-                ON tc.school_id = sc.school_id
+                    tc.tc_number,
 
-            {where_query}
+                    DATE_FORMAT(
+                        tc.leaving_date,
+                        '%d %b %Y'
+                    ) AS leaving_date,
 
-            ORDER BY tc.id DESC
+                    tc.leaving_reason,
 
-            LIMIT %s OFFSET %s
+                    DATE_FORMAT(
+                        tc.tc_date,
+                        '%d %b %Y'
+                    ) AS tc_date,
 
-        """,
-            query_params,
+                    DATE_FORMAT(
+                        tc.created_at,
+                        '%d %b %Y %h:%i %p'
+                    ) AS created_at,
+
+                    tc.remark,
+
+                    st.name,
+
+                    st.admission_no,
+
+                    st.`class`
+                        AS student_class,
+
+                    sc.name
+                        AS school_name,
+
+                    sc.school_id
+
+                FROM tc
+
+                INNER JOIN students st
+                    ON tc.student_id = st.id
+
+                INNER JOIN schools sc
+                    ON tc.school_id = sc.school_id
+
+                {where_query}
+
+                ORDER BY
+                    tc.id DESC
+
+                LIMIT %s
+                OFFSET %s
+
+            """,
+
+            query_params
+
         )
 
         tc_records = cursor.fetchall()
 
-        # ================= SCHOOLS =================
+
+        # =================================================
+        # SCHOOL DROPDOWN
+        # =================================================
 
         cursor.execute("""
 
             SELECT
+
                 school_id,
+
                 name
 
             FROM schools
 
-            ORDER BY name
+            ORDER BY
+                name ASC
 
         """)
 
-        schools = cursor.fetchall()
 
-        # ================= TOTAL TC =================
+        schools = (
+            cursor.fetchall()
+        )
+
+
+        # =================================================
+        # CLASS DROPDOWN
+        # =================================================
 
         cursor.execute("""
-            SELECT COUNT(*) AS total
+
+            SELECT DISTINCT
+
+                st.`class`
+                    AS student_class
+
+            FROM students st
+
+            WHERE st.is_deleted = 0
+
+            AND st.`class` IS NOT NULL
+
+            AND TRIM(
+                st.`class`
+            ) <> ''
+
+            ORDER BY
+
+                CAST(
+                    st.`class`
+                    AS UNSIGNED
+                ),
+
+                st.`class` ASC
+
+        """)
+
+
+        class_rows = (
+            cursor.fetchall()
+        )
+
+
+        classes = [
+
+            row["student_class"]
+
+            for row in class_rows
+
+            if row.get(
+                "student_class"
+            )
+
+        ]
+
+
+        # =================================================
+        # GLOBAL KPI — TOTAL TC
+        # =================================================
+
+        cursor.execute("""
+
+            SELECT
+
+                COUNT(*) AS total
+
             FROM tc
+
             WHERE is_deleted = 0
-        """)
-
-        total_tc = cursor.fetchone()["total"] or 0
-
-        # ================= TODAY TC =================
-
-        cursor.execute("""
-
-        SELECT COUNT(*) AS total
-        FROM tc
-        WHERE is_deleted = 0
-        AND DATE(tc_date) = CURDATE()
 
         """)
 
-        today_tc = cursor.fetchone()["total"] or 0
 
-        # ================= THIS MONTH TC =================
+        total_tc = (
+            cursor.fetchone()["total"]
+            or 0
+        )
+
+
+        # =================================================
+        # TODAY
+        # =================================================
 
         cursor.execute("""
 
-        SELECT COUNT(*) AS total
-        FROM tc
-        WHERE is_deleted = 0
-        AND MONTH(tc_date) = MONTH(CURDATE())
-        AND YEAR(tc_date) = YEAR(CURDATE())
+            SELECT
+
+                COUNT(*) AS total
+
+            FROM tc
+
+            WHERE is_deleted = 0
+
+            AND DATE(tc_date)
+                = CURDATE()
 
         """)
 
-        month_tc = cursor.fetchone()["total"] or 0
 
-        # ================= SCHOOLS WITH TC =================
+        today_tc = (
+            cursor.fetchone()["total"]
+            or 0
+        )
+
+
+        # =================================================
+        # THIS MONTH
+        # =================================================
 
         cursor.execute("""
 
-            SELECT COUNT(DISTINCT school_id) AS total
+            SELECT
+
+                COUNT(*) AS total
+
+            FROM tc
+
+            WHERE is_deleted = 0
+
+            AND MONTH(tc_date)
+                = MONTH(CURDATE())
+
+            AND YEAR(tc_date)
+                = YEAR(CURDATE())
+
+        """)
+
+
+        month_tc = (
+            cursor.fetchone()["total"]
+            or 0
+        )
+
+
+        # =================================================
+        # SCHOOLS WITH TC
+        # =================================================
+
+        cursor.execute("""
+
+            SELECT
+
+                COUNT(
+                    DISTINCT school_id
+                ) AS total
 
             FROM tc
 
@@ -4948,13 +5896,25 @@ def superadmin_tc_management():
 
         """)
 
-        school_tc_count = cursor.fetchone()["total"] or 0
 
-        # ================= SIDEBAR LEADS COUNT =================
+        school_tc_count = (
+
+            cursor.fetchone()["total"]
+
+            or 0
+
+        )
+
+
+        # =================================================
+        # NEW LEADS
+        # =================================================
 
         cursor.execute("""
 
-            SELECT COUNT(*) AS total
+            SELECT
+
+                COUNT(*) AS total
 
             FROM lead_requests
 
@@ -4962,47 +5922,162 @@ def superadmin_tc_management():
 
         """)
 
-        new_leads_count = cursor.fetchone()["total"] or 0
 
-        return render_template(
-            "superadmin/superadmin_tc.html",
-            active_page="tc-management",
-            tc_records=tc_records,
-            schools=schools,
-            total_tc=total_tc,
-            today_tc=today_tc,
-            month_tc=month_tc,
-            school_tc_count=school_tc_count,
-            total_records=total_records,
-            page=page,
-            total_pages=total_pages,
-            search=search,
-            school_filter=school_filter,
-            class_filter=class_filter,
-            new_leads_count=new_leads_count,
-            role="admin",
-            school_name="Admin Panel",
+        new_leads_count = (
+
+            cursor.fetchone()["total"]
+
+            or 0
+
         )
 
-    except Exception as e:
-        print("❌ TC MANAGEMENT ERROR:", e)
 
-        return f"Something went wrong ❌ {str(e)}"
+        # =================================================
+        # RENDER
+        # =================================================
+
+        return render_template(
+
+            "superadmin/superadmin_tc.html",
+
+            active_page=
+                "tc-management",
+
+            role=
+                "admin",
+
+            school_name=
+                "Admin Panel",
+
+
+            # TC
+
+            tc_records=
+                tc_records,
+
+
+            # FILTER
+
+            schools=
+                schools,
+
+            classes=
+                classes,
+
+            search=
+                search,
+
+            school_filter=
+                school_filter,
+
+            class_filter=
+                class_filter,
+
+
+            # PAGINATION
+
+            page=
+                page,
+
+            per_page=
+                per_page,
+
+            total_records=
+                total_records,
+
+            total_pages=
+                total_pages,
+
+
+            # KPI
+
+            total_tc=
+                total_tc,
+
+            today_tc=
+                today_tc,
+
+            month_tc=
+                month_tc,
+
+            school_tc_count=
+                school_tc_count,
+
+
+            # SIDEBAR
+
+            new_leads_count=
+                new_leads_count
+
+        )
+
+
+    # =====================================================
+    # ERROR
+    # =====================================================
+
+    except Exception as e:
+
+        logger.exception(
+            "SUPER ADMIN TC MANAGEMENT ERROR"
+        )
+
+
+        try:
+
+            flash(
+                "Unable to load TC records. Please try again.",
+                "error"
+            )
+
+        except Exception:
+
+            pass
+
+
+        return redirect(
+            url_for(
+                "superadmin_dashboard"
+            )
+        )
+
+
+    # =====================================================
+    # CLEANUP
+    # =====================================================
 
     finally:
+
         if cursor:
-            cursor.close()
+
+            try:
+
+                cursor.close()
+
+            except Exception:
+
+                pass
+
 
         if conn:
-            conn.close()
 
+            try:
+
+                conn.close()
+
+            except Exception:
+
+                pass
 
 # =========================================================
-# 🗑️ DELETE TC - SOFT DELETE
+# 🗑️ SUPER ADMIN — DELETE TC
+#    SOFT DELETE
 # =========================================================
 
-
-@app.route("/superadmin/delete-tc", methods=["POST"])
+@app.route(
+    "/superadmin/delete-tc",
+    methods=["POST"]
+)
 @admin_required
 def delete_tc():
 
@@ -5010,145 +6085,323 @@ def delete_tc():
     cursor = None
 
     try:
-        # =====================================================
-        # GET TC ID
-        # =====================================================
 
-        tc_id = (request.form.get("tc_id") or "").strip()
+        # =================================================
+        # GET TC ID
+        # =================================================
+
+        tc_id = (
+            request.form.get("tc_id") or ""
+        ).strip()
+
 
         if not tc_id:
-            return "Invalid TC ID ❌"
+
+            flash(
+                "Invalid TC record.",
+                "error"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_tc_management"
+                )
+            )
+
 
         try:
+
             tc_id = int(tc_id)
 
-        except (ValueError, TypeError):
-            return "Invalid TC ID ❌"
+        except (
+            ValueError,
+            TypeError
+        ):
+
+            flash(
+                "Invalid TC record.",
+                "error"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_tc_management"
+                )
+            )
+
 
         if tc_id <= 0:
-            return "Invalid TC ID ❌"
 
-        # =====================================================
+            flash(
+                "Invalid TC record.",
+                "error"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_tc_management"
+                )
+            )
+
+
+        # =================================================
         # DATABASE
-        # =====================================================
+        # =================================================
 
         conn = get_connection()
 
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(
+            dictionary=True
+        )
 
-        # =====================================================
-        # CHECK ACTIVE TC
-        # =====================================================
+
+        # =================================================
+        # FIND ACTIVE RECORD
+        # =================================================
 
         cursor.execute(
             """
+
             SELECT
+
                 id,
+
                 student_id,
+
                 school_id,
+
                 tc_number,
+
                 is_deleted
+
             FROM tc
+
             WHERE id = %s
+
             LIMIT 1
+
             FOR UPDATE
+
             """,
-            (tc_id,),
+
+            (tc_id,)
+
         )
+
 
         tc_record = cursor.fetchone()
 
-        # =====================================================
+
+        # =================================================
         # NOT FOUND
-        # =====================================================
+        # =================================================
 
         if not tc_record:
+
             conn.rollback()
 
-            return "TC record not found ❌"
+            flash(
+                "Transfer Certificate record was not found.",
+                "error"
+            )
 
-        # =====================================================
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_tc_management"
+                )
+            )
+
+
+        # =================================================
         # ALREADY DELETED
-        # =====================================================
+        # =================================================
 
-        if int(tc_record.get("is_deleted") or 0) == 1:
+        if int(
+            tc_record.get(
+                "is_deleted"
+            ) or 0
+        ) == 1:
+
             conn.rollback()
 
-            return "TC record is already deleted ❌"
+            flash(
+                "This TC record has already been deleted.",
+                "warning"
+            )
 
-        # =====================================================
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_tc_management"
+                )
+            )
+
+
+        # =================================================
         # ADMIN IDENTIFIER
-        # =====================================================
+        # =================================================
 
         deleted_by = (
+
             session.get("username")
+
             or session.get("email")
+
             or session.get("user_id")
+
             or "admin"
+
         )
 
-        deleted_by = str(deleted_by)[:100]
 
-        # =====================================================
+        deleted_by = str(
+            deleted_by
+        )[:100]
+
+
+        # =================================================
         # SOFT DELETE
-        # =====================================================
+        # =================================================
 
         cursor.execute(
             """
+
             UPDATE tc
+
             SET
+
                 is_deleted = 1,
+
                 deleted_at = NOW(),
+
                 deleted_by = %s
+
             WHERE id = %s
-              AND is_deleted = 0
+
+            AND is_deleted = 0
+
             """,
+
             (
                 deleted_by,
-                tc_id,
-            ),
+                tc_id
+            )
+
         )
 
-        # =====================================================
-        # VERIFY
-        # =====================================================
+
+        # =================================================
+        # VERIFY UPDATE
+        # =================================================
 
         if cursor.rowcount != 1:
+
             conn.rollback()
 
-            return "TC deletion failed or record was already deleted ❌"
+            flash(
+                "TC deletion failed. Please try again.",
+                "error"
+            )
 
-        # =====================================================
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_tc_management"
+                )
+            )
+
+
+        # =================================================
         # COMMIT
-        # =====================================================
+        # =================================================
 
         conn.commit()
 
-        # =====================================================
-        # REDIRECT
-        # =====================================================
 
-        return redirect(request.referrer or url_for("superadmin_tc_management"))
+        # =================================================
+        # SUCCESS
+        # =================================================
+
+        flash(
+            "Transfer Certificate deleted successfully.",
+            "success"
+        )
+
+
+        return redirect(
+            request.referrer
+            or url_for(
+                "superadmin_tc_management"
+            )
+        )
+
+
+    # =====================================================
+    # ERROR
+    # =====================================================
 
     except Exception as e:
+
         if conn:
+
             conn.rollback()
 
-        print("❌ SOFT DELETE TC ERROR:", e)
 
-        return "Something went wrong while deleting TC ❌"
+        logger.exception(
+            "SUPER ADMIN TC DELETE ERROR"
+        )
+
+
+        flash(
+            "Something went wrong while deleting the TC.",
+            "error"
+        )
+
+
+        return redirect(
+            request.referrer
+            or url_for(
+                "superadmin_tc_management"
+            )
+        )
+
+
+    # =====================================================
+    # CLEANUP
+    # =====================================================
 
     finally:
+
         if cursor:
-            cursor.close()
+
+            try:
+
+                cursor.close()
+
+            except Exception:
+
+                pass
+
 
         if conn:
-            conn.close()
 
+            try:
+
+                conn.close()
+
+            except Exception:
+
+                pass
 
 # =========================================================
-# 📜 SUPER ADMIN - BONAFIDE MANAGEMENT
+# 📜 SUPER ADMIN — BONAFIDE MANAGEMENT
+# TABLE + FILTER + PAGINATION + VIEW MODAL DATA
 # =========================================================
+
 @app.route("/superadmin/bonafide-management")
 @admin_required
 def superadmin_bonafide_management():
@@ -5157,254 +6410,798 @@ def superadmin_bonafide_management():
     cursor = None
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
 
-        search = (request.args.get("search") or "").strip()
+        # =====================================================
+        # FILTER PARAMETERS
+        # =====================================================
 
-        school_filter = (request.args.get("school_id") or "").strip()
+        search = (
+            request.args.get("search") or ""
+        ).strip()
 
-        class_filter = (request.args.get("class") or "").strip()
+        school_filter = (
+            request.args.get("school_id") or ""
+        ).strip()
 
-        page = request.args.get("page", 1, type=int)
+        class_filter = (
+            request.args.get("class") or ""
+        ).strip()
 
-        per_page = 5
+
+        # =====================================================
+        # PAGINATION
+        # =====================================================
+
+        page = request.args.get(
+            "page",
+            1,
+            type=int
+        )
 
         if page < 1:
             page = 1
 
-        if school_filter and not school_filter.isdigit():
-            school_filter = ""
+        per_page = 10
 
-        if class_filter and not class_filter.isdigit():
-            class_filter = ""
 
-        offset = (page - 1) * per_page
+        # =====================================================
+        # VALIDATE SCHOOL FILTER
+        # =====================================================
 
-        # ================= WHERE =================
+        if school_filter:
+
+            if not school_filter.isdigit():
+
+                school_filter = ""
+
+            else:
+
+                school_filter = str(
+                    int(school_filter)
+                )
+
+
+        # =====================================================
+        # VALIDATE CLASS FILTER
+        # =====================================================
+
+        class_filter = class_filter.strip()
+
+
+        # =====================================================
+        # DATABASE CONNECTION
+        # =====================================================
+
+        conn = get_connection()
+
+        if not conn:
+
+            flash(
+                "Unable to connect to the database.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("superadmin_dashboard")
+            )
+
+
+        cursor = conn.cursor(
+            dictionary=True
+        )
+
+
+        # =====================================================
+        # COMMON WHERE QUERY
+        # =====================================================
 
         where_query = """
-            WHERE 1=1
-            AND b.is_deleted = 0
-            AND s.is_deleted = 0
+            WHERE b.is_deleted = 0
         """
 
         params = []
 
+
+        # =====================================================
+        # SEARCH
+        # =====================================================
+
         if search:
+
             where_query += """
                 AND (
                     s.name LIKE %s
                     OR s.admission_no LIKE %s
                     OR b.bonafide_number LIKE %s
                     OR b.purpose LIKE %s
+                    OR sc.name LIKE %s
+                    OR s.school_register_no LIKE %s
+                    OR s.student_uid LIKE %s
+                    OR s.apaar_id LIKE %s
                 )
             """
 
             keyword = f"%{search}%"
 
-            params.extend([keyword, keyword, keyword, keyword])
+            params.extend([
+                keyword,
+                keyword,
+                keyword,
+                keyword,
+                keyword,
+                keyword,
+                keyword,
+                keyword
+            ])
+
+
+        # =====================================================
+        # SCHOOL FILTER
+        # =====================================================
 
         if school_filter:
+
             where_query += """
-                AND sc.school_id = %s
+                AND b.school_id = %s
             """
 
-            params.append(int(school_filter))
+            params.append(
+                int(school_filter)
+            )
+
+
+        # =====================================================
+        # CLASS FILTER
+        # =====================================================
 
         if class_filter:
+
             where_query += """
                 AND s.`class` = %s
             """
 
-            params.append(class_filter)
+            params.append(
+                class_filter
+            )
 
-        # ================= TOTAL FILTERED COUNT =================
+
+        # =====================================================
+        # COUNT FILTERED RECORDS
+        # =====================================================
 
         cursor.execute(
             f"""
+                SELECT
+                    COUNT(*) AS total
 
-            SELECT COUNT(*) AS total
+                FROM bonafide b
 
-            FROM bonafide b
+                INNER JOIN students s
+                    ON b.student_id = s.id
+                    AND b.school_id = s.school_id
 
-            JOIN students s
-                ON b.student_id = s.id
+                INNER JOIN schools sc
+                    ON b.school_id = sc.school_id
 
-            JOIN schools sc
-                ON b.school_id = sc.school_id
-
-            {where_query}
-
-        """,
-            params,
+                {where_query}
+            """,
+            tuple(params)
         )
 
-        total_records = cursor.fetchone()["total"] or 0
 
-        total_pages = max(1, (total_records + per_page - 1) // per_page)
+        count_row = cursor.fetchone()
+
+        total_records = int(
+            count_row["total"] or 0
+        )
+
+
+        # =====================================================
+        # TOTAL PAGES
+        # =====================================================
+
+        total_pages = max(
+            1,
+            (
+                total_records
+                + per_page
+                - 1
+            ) // per_page
+        )
+
+
+        # =====================================================
+        # PAGE PROTECTION
+        # =====================================================
 
         if page > total_pages:
             page = total_pages
-            offset = (page - 1) * per_page
 
-        # ================= BONAFIDE RECORDS =================
+
+        offset = (
+            page - 1
+        ) * per_page
+
+
+        # =====================================================
+        # PAGINATION NUMBERS
+        # =====================================================
+
+        if total_pages <= 7:
+
+            pagination_pages = list(
+                range(
+                    1,
+                    total_pages + 1
+                )
+            )
+
+        elif page <= 4:
+
+            pagination_pages = [
+                1,
+                2,
+                3,
+                4,
+                5,
+                "...",
+                total_pages
+            ]
+
+        elif page >= total_pages - 3:
+
+            pagination_pages = [
+                1,
+                "...",
+                total_pages - 4,
+                total_pages - 3,
+                total_pages - 2,
+                total_pages - 1,
+                total_pages
+            ]
+
+        else:
+
+            pagination_pages = [
+                1,
+                "...",
+                page - 1,
+                page,
+                page + 1,
+                "...",
+                total_pages
+            ]
+
+
+        # =====================================================
+        # BONAFIDE RECORDS
+        #
+        # EVERYTHING REQUIRED BY TABLE + VIEW MODAL
+        # IS LOADED HERE.
+        #
+        # NO SECOND VIEW ROUTE.
+        # NO FETCH.
+        # =====================================================
 
         query_params = params.copy()
 
-        query_params.extend([per_page, offset])
+        query_params.extend([
+            per_page,
+            offset
+        ])
+
 
         cursor.execute(
             f"""
+                SELECT
 
-            SELECT
+                    /* =========================================
+                       BONAFIDE
+                    ========================================== */
 
-                b.id,
-                s.name,
-                s.admission_no,
-                s.`class`,
-                sc.name AS school_name,
-                sc.school_id,
-                b.bonafide_number,
-                b.purpose,
-                b.date
+                    b.id,
 
-            FROM bonafide b
+                    b.student_id,
 
-            JOIN students s
-                ON b.student_id = s.id
+                    b.school_id,
 
-            JOIN schools sc
-                ON b.school_id = sc.school_id
+                    b.bonafide_number,
 
-            {where_query}
+                    b.purpose,
 
-            ORDER BY b.id DESC
+                    b.is_deleted,
 
-            LIMIT %s OFFSET %s
+                    /* IMPORTANT:
+                       SINGLE % HERE
+                    */
 
-        """,
-            query_params,
+                    DATE_FORMAT(
+                        b.date,
+                        '%d %b %Y'
+                    ) AS certificate_date,
+
+                    DATE_FORMAT(
+                        b.created_at,
+                        '%d %b %Y, %h:%i %p'
+                    ) AS created_at,
+
+
+                    /* =========================================
+                       STUDENT
+                    ========================================== */
+
+                    s.name
+                        AS student_name,
+
+                    s.admission_no,
+
+                    s.`class`
+                        AS student_class,
+
+                    s.school_register_no,
+
+                    s.student_uid,
+
+                    s.apaar_id,
+
+                    s.primary_mobile,
+
+                    s.email
+                        AS student_email,
+
+
+                    /* =========================================
+                       SCHOOL
+                    ========================================== */
+
+                    sc.name
+                        AS school_name,
+
+                    sc.school_code,
+
+                    sc.phone
+                        AS school_phone,
+
+                    sc.email
+                        AS school_email
+
+                FROM bonafide b
+
+                INNER JOIN students s
+                    ON b.student_id = s.id
+                    AND b.school_id = s.school_id
+
+                INNER JOIN schools sc
+                    ON b.school_id = sc.school_id
+
+                {where_query}
+
+                ORDER BY
+                    b.id DESC
+
+                LIMIT %s
+                OFFSET %s
+            """,
+            tuple(query_params)
         )
+
 
         bonafides = cursor.fetchall()
 
-        # ================= SCHOOLS =================
 
-        cursor.execute("""
+        # =====================================================
+        # NORMALIZE DATA
+        #
+        # This prevents template issues if DB values are NULL.
+        # =====================================================
 
-            SELECT
-                school_id,
-                name
+        for b in bonafides:
 
-            FROM schools
+            b["id"] = b.get("id")
 
-            ORDER BY name
+            b["student_name"] = (
+                b.get("student_name")
+                or "Unknown Student"
+            )
 
-        """)
+            b["admission_no"] = (
+                b.get("admission_no")
+                or "—"
+            )
+
+            b["student_class"] = (
+                b.get("student_class")
+                or "—"
+            )
+
+            b["school_register_no"] = (
+                b.get("school_register_no")
+                or "—"
+            )
+
+            b["student_uid"] = (
+                b.get("student_uid")
+                or "—"
+            )
+
+            b["apaar_id"] = (
+                b.get("apaar_id")
+                or "—"
+            )
+
+            b["primary_mobile"] = (
+                b.get("primary_mobile")
+                or "—"
+            )
+
+            b["student_email"] = (
+                b.get("student_email")
+                or "—"
+            )
+
+            b["bonafide_number"] = (
+                b.get("bonafide_number")
+                or "—"
+            )
+
+            b["purpose"] = (
+                b.get("purpose")
+                or "—"
+            )
+
+            b["certificate_date"] = (
+                b.get("certificate_date")
+                or "—"
+            )
+
+            b["created_at"] = (
+                b.get("created_at")
+                or "—"
+            )
+
+            b["school_name"] = (
+                b.get("school_name")
+                or "—"
+            )
+
+            b["school_code"] = (
+                b.get("school_code")
+                or "—"
+            )
+
+            b["school_phone"] = (
+                b.get("school_phone")
+                or "—"
+            )
+
+            b["school_email"] = (
+                b.get("school_email")
+                or "—"
+            )
+
+
+        # =====================================================
+        # SCHOOL FILTER OPTIONS
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    school_id,
+                    name
+                FROM schools
+                ORDER BY name ASC
+            """
+        )
 
         schools = cursor.fetchall()
 
-        # ================= TOTAL BONAFIDE =================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM bonafide
-            WHERE is_deleted = 0
-        """)
+        # =====================================================
+        # CLASS FILTER OPTIONS
+        # =====================================================
 
-        total_bonafide = cursor.fetchone()["total"] or 0
+        cursor.execute(
+            """
+                SELECT DISTINCT
+                    s.`class` AS student_class
 
-        # ================= THIS MONTH =================
+                FROM students s
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM bonafide
-            WHERE is_deleted = 0
-            AND MONTH(date) = MONTH(CURDATE())
-            AND YEAR(date) = YEAR(CURDATE())
-        """)
+                WHERE
+                    s.is_deleted = 0
 
-        month_bonafide = cursor.fetchone()["total"] or 0
+                    AND s.`class` IS NOT NULL
 
-        # ================= LAST 7 DAYS =================
+                    AND TRIM(
+                        s.`class`
+                    ) <> ''
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM bonafide
-            WHERE is_deleted = 0
-            AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        """)
+                ORDER BY
+                    CAST(
+                        s.`class`
+                        AS UNSIGNED
+                    ),
 
-        week_bonafide = cursor.fetchone()["total"] or 0
-
-        # ================= SCHOOLS USING BONAFIDE =================
-
-        cursor.execute("""
-
-            SELECT COUNT(DISTINCT school_id) AS total
-
-            FROM bonafide
-
-            WHERE is_deleted = 0
-
-        """)
-
-        school_count = cursor.fetchone()["total"] or 0
-
-        # ================= SIDEBAR LEADS COUNT =================
-
-        cursor.execute("""
-
-            SELECT COUNT(*) AS total
-
-            FROM lead_requests
-
-            WHERE status = 'New'
-
-        """)
-
-        new_leads_count = cursor.fetchone()["total"] or 0
-
-        return render_template(
-            "superadmin/superadmin_bonafide.html",
-            active_page="bonafide-management",
-            bonafides=bonafides,
-            schools=schools,
-            total_bonafide=total_bonafide,
-            month_bonafide=month_bonafide,
-            week_bonafide=week_bonafide,
-            school_count=school_count,
-            total_records=total_records,
-            page=page,
-            total_pages=total_pages,
-            search=search,
-            school_filter=school_filter,
-            class_filter=class_filter,
-            new_leads_count=new_leads_count,
-            role="admin",
-            school_name="Admin Panel",
+                    s.`class` ASC
+            """
         )
 
+
+        class_rows = cursor.fetchall()
+
+
+        classes = [
+
+            row["student_class"]
+
+            for row in class_rows
+
+            if row.get("student_class")
+
+        ]
+
+
+        # =====================================================
+        # TOTAL BONAFIDE
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM bonafide
+
+                WHERE
+                    is_deleted = 0
+            """
+        )
+
+        total_bonafide = int(
+            cursor.fetchone()["total"] or 0
+        )
+
+
+        # =====================================================
+        # THIS MONTH
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM bonafide
+
+                WHERE
+                    is_deleted = 0
+
+                    AND MONTH(date)
+                        = MONTH(CURDATE())
+
+                    AND YEAR(date)
+                        = YEAR(CURDATE())
+            """
+        )
+
+        month_bonafide = int(
+            cursor.fetchone()["total"] or 0
+        )
+
+
+        # =====================================================
+        # LAST 7 DAYS
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM bonafide
+
+                WHERE
+                    is_deleted = 0
+
+                    AND date >= DATE_SUB(
+                        CURDATE(),
+                        INTERVAL 6 DAY
+                    )
+
+                    AND date <= CURDATE()
+            """
+        )
+
+        week_bonafide = int(
+            cursor.fetchone()["total"] or 0
+        )
+
+
+        # =====================================================
+        # SCHOOLS USING BONAFIDE
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(
+                        DISTINCT school_id
+                    ) AS total
+
+                FROM bonafide
+
+                WHERE
+                    is_deleted = 0
+            """
+        )
+
+        school_count = int(
+            cursor.fetchone()["total"] or 0
+        )
+
+
+        # =====================================================
+        # NEW LEADS
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM lead_requests
+
+                WHERE
+                    status = 'New'
+            """
+        )
+
+        new_leads_count = int(
+            cursor.fetchone()["total"] or 0
+        )
+
+
+        # =====================================================
+        # RENDER
+        # =====================================================
+
+        return render_template(
+
+            "superadmin/superadmin_bonafide.html",
+
+            active_page=
+                "bonafide-management",
+
+            role=
+                "admin",
+
+            school_name=
+                "Admin Panel",
+
+
+            # RECORDS
+
+            bonafides=
+                bonafides,
+
+
+            # FILTERS
+
+            schools=
+                schools,
+
+            classes=
+                classes,
+
+            search=
+                search,
+
+            school_filter=
+                school_filter,
+
+            class_filter=
+                class_filter,
+
+
+            # PAGINATION
+
+            page=
+                page,
+
+            per_page=
+                per_page,
+
+            total_records=
+                total_records,
+
+            total_pages=
+                total_pages,
+
+            pagination_pages=
+                pagination_pages,
+
+
+            # KPI
+
+            total_bonafide=
+                total_bonafide,
+
+            month_bonafide=
+                month_bonafide,
+
+            week_bonafide=
+                week_bonafide,
+
+            school_count=
+                school_count,
+
+
+            # SIDEBAR
+
+            new_leads_count=
+                new_leads_count
+        )
+
+
     except Exception as e:
-        print("❌ BONAFIDE MANAGEMENT ERROR:", e)
-
-        return f"Something went wrong ❌ {str(e)}"
-
-    finally:
-        if cursor:
-            cursor.close()
 
         if conn:
-            conn.close()
 
+            try:
+                conn.rollback()
+
+            except Exception:
+                pass
+
+
+        logger.exception(
+            "SUPER ADMIN BONAFIDE MANAGEMENT ERROR"
+        )
+
+
+        flash(
+            "Unable to load Bonafide Management. Please try again.",
+            "danger"
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_dashboard"
+            )
+        )
+
+
+    finally:
+
+        if cursor:
+
+            try:
+                cursor.close()
+
+            except Exception:
+                pass
+
+
+        if conn:
+
+            try:
+                conn.close()
+
+            except Exception:
+                pass
 
 # =========================================================
-# 🗑️ DELETE BONAFIDE - SOFT DELETE
+# 🗑️ DELETE BONAFIDE
+# SOFT DELETE
+# SUPER ADMIN ONLY
 # =========================================================
 
-
-@app.route("/superadmin/delete-bonafide", methods=["POST"])
+@app.route(
+    "/superadmin/delete-bonafide",
+    methods=["POST"]
+)
 @admin_required
 def delete_bonafide():
 
@@ -5412,23 +7209,70 @@ def delete_bonafide():
     cursor = None
 
     try:
+
         # =====================================================
         # GET BONAFIDE ID
         # =====================================================
 
-        bonafide_id = (request.form.get("bonafide_id") or "").strip()
+        bonafide_id = (
+            request.form.get(
+                "bonafide_id"
+            )
+            or ""
+        ).strip()
+
 
         if not bonafide_id:
-            return "Invalid bonafide ID ❌"
+
+            flash(
+                "Invalid Bonafide ID.",
+                "danger"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_bonafide_management"
+                )
+            )
+
 
         try:
+
             bonafide_id = int(bonafide_id)
 
-        except (ValueError, TypeError):
-            return "Invalid bonafide ID ❌"
+        except (
+            ValueError,
+            TypeError
+        ):
+
+            flash(
+                "Invalid Bonafide ID.",
+                "danger"
+            ) 
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_bonafide_management"
+                )
+            )
+
 
         if bonafide_id <= 0:
-            return "Invalid bonafide ID ❌"
+
+            flash(
+                "Invalid Bonafide ID.",
+                "danger"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_bonafide_management"
+                )
+            )
+
 
         # =====================================================
         # DATABASE
@@ -5436,60 +7280,140 @@ def delete_bonafide():
 
         conn = get_connection()
 
-        cursor = conn.cursor(dictionary=True)
+        if not conn:
+
+            flash(
+                "Database connection failed.",
+                "danger"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_bonafide_management"
+                )
+            )
+
+
+        cursor = conn.cursor(
+            dictionary=True
+        )
+
 
         # =====================================================
-        # CHECK ACTIVE BONAFIDE
+        # START TRANSACTION
+        # =====================================================
+
+        conn.start_transaction()
+
+
+        # =====================================================
+        # GET ACTIVE RECORD
         # =====================================================
 
         cursor.execute(
             """
-            SELECT
-                id,
-                student_id,
-                school_id,
-                bonafide_number,
-                is_deleted
-            FROM bonafide
-            WHERE id = %s
-            LIMIT 1
-            FOR UPDATE
+                SELECT
+
+                    id,
+
+                    student_id,
+
+                    school_id,
+
+                    bonafide_number,
+
+                    is_deleted
+
+                FROM bonafide
+
+                WHERE
+                    id = %s
+
+                LIMIT 1
+
+                FOR UPDATE
             """,
-            (bonafide_id,),
+            (
+                bonafide_id,
+            )
         )
 
+
         bonafide = cursor.fetchone()
+
 
         # =====================================================
         # NOT FOUND
         # =====================================================
 
         if not bonafide:
+
             conn.rollback()
 
-            return "Bonafide record not found ❌"
+
+            flash(
+                "Bonafide record not found.",
+                "danger"
+            )
+
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_bonafide_management"
+                )
+            )
+
 
         # =====================================================
         # ALREADY DELETED
         # =====================================================
 
-        if int(bonafide.get("is_deleted") or 0) == 1:
+        if int(
+            bonafide.get(
+                "is_deleted"
+            ) or 0
+        ) == 1:
+
             conn.rollback()
 
-            return "Bonafide record is already deleted ❌"
+
+            flash(
+                "Bonafide record is already deleted.",
+                "warning"
+            )
+
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_bonafide_management"
+                )
+            )
+
 
         # =====================================================
         # ADMIN IDENTIFIER
         # =====================================================
 
         deleted_by = (
+
             session.get("username")
+
             or session.get("email")
+
             or session.get("user_id")
+
             or "admin"
+
         )
 
-        deleted_by = str(deleted_by)[:100]
+
+        deleted_by = str(
+            deleted_by
+        )[:100]
+
 
         # =====================================================
         # SOFT DELETE
@@ -5497,28 +7421,51 @@ def delete_bonafide():
 
         cursor.execute(
             """
-            UPDATE bonafide
-            SET
-                is_deleted = 1,
-                deleted_at = NOW(),
-                deleted_by = %s
-            WHERE id = %s
-              AND is_deleted = 0
+                UPDATE bonafide
+
+                SET
+
+                    is_deleted = 1,
+
+                    deleted_at = NOW(),
+
+                    deleted_by = %s
+
+                WHERE
+
+                    id = %s
+
+                    AND is_deleted = 0
             """,
             (
                 deleted_by,
-                bonafide_id,
-            ),
+                bonafide_id
+            )
         )
 
+
         # =====================================================
-        # VERIFY
+        # VERIFY UPDATE
         # =====================================================
 
         if cursor.rowcount != 1:
+
             conn.rollback()
 
-            return "Bonafide deletion failed or record was already deleted ❌"
+
+            flash(
+                "Bonafide deletion failed. The record may already be deleted.",
+                "danger"
+            )
+
+
+            return redirect(
+                request.referrer
+                or url_for(
+                    "superadmin_bonafide_management"
+                )
+            )
+
 
         # =====================================================
         # COMMIT
@@ -5526,27 +7473,78 @@ def delete_bonafide():
 
         conn.commit()
 
+
+        # =====================================================
+        # SUCCESS
+        # =====================================================
+
+        flash(
+            f"Bonafide {bonafide.get('bonafide_number') or ''} deleted successfully.",
+            "success"
+        )
+
+
         # =====================================================
         # REDIRECT
         # =====================================================
 
-        return redirect(request.referrer or url_for("superadmin_bonafide_management"))
+        return redirect(
+            request.referrer
+            or url_for(
+                "superadmin_bonafide_management"
+            )
+        )
+
 
     except Exception as e:
+
         if conn:
-            conn.rollback()
 
-        print("❌ SOFT DELETE BONAFIDE ERROR:", e)
+            try:
 
-        return "Something went wrong while deleting Bonafide ❌"
+                conn.rollback()
+
+            except Exception:
+                pass
+
+
+        logger.exception(
+            "SOFT DELETE BONAFIDE ERROR"
+        )
+
+
+        flash(
+            "Something went wrong while deleting Bonafide.",
+            "danger"
+        )
+
+
+        return redirect(
+            request.referrer
+            or url_for(
+                "superadmin_bonafide_management"
+            )
+        )
+
 
     finally:
+
         if cursor:
-            cursor.close()
+
+            try:
+                cursor.close()
+
+            except Exception:
+                pass
+
 
         if conn:
-            conn.close()
 
+            try:
+                conn.close()
+
+            except Exception:
+                pass
 
 # =========================================================
 # 👥 SUPER ADMIN - USERS MANAGEMENT
@@ -5564,11 +7562,23 @@ def superadmin_users():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # =====================================================
+        # FILTERS
+        # =====================================================
+
         search = (request.args.get("search") or "").strip()
 
-        role_filter = (request.args.get("role") or "").strip()
+        role_filter = (request.args.get("role") or "").strip().lower()
 
-        status_filter = (request.args.get("status") or "").strip()
+        status_filter = (request.args.get("status") or "").strip().lower()
+
+        school_filter = (request.args.get("school") or "").strip()
+
+        sort_filter = (request.args.get("sort") or "newest").strip().lower()
+
+        # =====================================================
+        # PAGINATION
+        # =====================================================
 
         page = request.args.get("page", 1, type=int)
 
@@ -5577,10 +7587,15 @@ def superadmin_users():
         if page < 1:
             page = 1
 
-        offset = (page - 1) * per_page
+        # =====================================================
+        # VALID FILTERS
+        # =====================================================
 
         valid_roles = ["admin", "clerk"]
+
         valid_status = ["active", "blocked"]
+
+        valid_sorts = ["newest", "oldest", "name-asc", "name-desc"]
 
         if role_filter not in valid_roles:
             role_filter = ""
@@ -5588,11 +7603,33 @@ def superadmin_users():
         if status_filter not in valid_status:
             status_filter = ""
 
+        if sort_filter not in valid_sorts:
+            sort_filter = "newest"
+
+        # =====================================================
+        # SCHOOL FILTER VALIDATION
+        # =====================================================
+
+        if school_filter:
+            try:
+                school_filter = int(school_filter)
+
+            except (ValueError, TypeError):
+                school_filter = ""
+
+        # =====================================================
+        # WHERE QUERY
+        # =====================================================
+
         where_query = """
             WHERE 1=1
         """
 
         params = []
+
+        # =====================================================
+        # SEARCH
+        # =====================================================
 
         if search:
             where_query += """
@@ -5601,12 +7638,17 @@ def superadmin_users():
                     OR u.email LIKE %s
                     OR u.phone LIKE %s
                     OR s.name LIKE %s
+                    OR u.designation LIKE %s
                 )
             """
 
             keyword = f"%{search}%"
 
-            params.extend([keyword, keyword, keyword, keyword])
+            params.extend([keyword, keyword, keyword, keyword, keyword])
+
+        # =====================================================
+        # ROLE FILTER
+        # =====================================================
 
         if role_filter:
             where_query += """
@@ -5615,6 +7657,10 @@ def superadmin_users():
 
             params.append(role_filter)
 
+        # =====================================================
+        # STATUS FILTER
+        # =====================================================
+
         if status_filter:
             where_query += """
                 AND u.status = %s
@@ -5622,33 +7668,72 @@ def superadmin_users():
 
             params.append(status_filter)
 
-        # ================= TOTAL FILTERED COUNT =================
+        # =====================================================
+        # SCHOOL FILTER
+        # =====================================================
+
+        if school_filter != "":
+            where_query += """
+                AND u.school_id = %s
+            """
+
+            params.append(school_filter)
+
+        # =====================================================
+        # SORTING
+        # =====================================================
+
+        sort_map = {
+            "newest": "u.id DESC",
+            "oldest": "u.id ASC",
+            "name-asc": "u.name ASC, u.id DESC",
+            "name-desc": "u.name DESC, u.id DESC",
+        }
+
+        order_by = sort_map.get(sort_filter, "u.id DESC")
+
+        # =====================================================
+        # TOTAL FILTERED COUNT
+        # =====================================================
 
         cursor.execute(
             f"""
+                SELECT
+                    COUNT(DISTINCT u.id) AS total
 
-            SELECT COUNT(*) AS total
+                FROM users u
 
-            FROM users u
+                LEFT JOIN schools s
+                    ON u.school_id =
+                       s.school_id
 
-            LEFT JOIN schools s
-                ON u.school_id = s.school_id
-
-            {where_query}
-
-        """,
+                {where_query}
+            """,
             params,
         )
 
-        total_records = cursor.fetchone()["total"] or 0
+        count_result = cursor.fetchone()
+
+        total_records = count_result["total"] or 0
+
+        # =====================================================
+        # TOTAL PAGES
+        # =====================================================
 
         total_pages = max(1, (total_records + per_page - 1) // per_page)
 
+        # =====================================================
+        # FIX INVALID PAGE
+        # =====================================================
+
         if page > total_pages:
             page = total_pages
-            offset = (page - 1) * per_page
 
-        # ================= USERS =================
+        offset = (page - 1) * per_page
+
+        # =====================================================
+        # USERS QUERY
+        # =====================================================
 
         user_params = params.copy()
 
@@ -5656,101 +7741,186 @@ def superadmin_users():
 
         cursor.execute(
             f"""
+                SELECT
 
-            SELECT
-                u.id,
-                u.name,
-                u.email,
-                u.phone,
-                u.role,
-                u.status,
-                u.last_login,
-                u.created_at,
-                u.school_id,
-                u.designation,
-                u.address,
+                    u.id,
 
-                COALESCE(
-                    s.name,
-                    'System Admin'
-                ) AS school_name,
+                    u.name,
 
-                COALESCE(
-                    sub.plan_name,
-                    'No Plan'
-                ) AS subscription_plan
+                    u.email,
 
-            FROM users u
+                    u.phone,
 
-            LEFT JOIN schools s
-                ON u.school_id = s.school_id
+                    u.role,
 
-            LEFT JOIN subscriptions sub
-                ON u.school_id = sub.school_id
-                AND sub.status = 'active'
+                    u.status,
 
-            {where_query}
+                    u.last_login,
 
-            ORDER BY u.id DESC
+                    u.created_at,
 
-            LIMIT %s OFFSET %s
+                    u.updated_at,
 
-        """,
+                    u.school_id,
+
+                    u.designation,
+
+                    u.address,
+
+                    COALESCE(
+                        s.name,
+                        'System Admin'
+                    ) AS school_name,
+
+                    COALESCE(
+                        (
+                            SELECT
+                                sub2.plan_name
+
+                            FROM subscriptions sub2
+
+                            WHERE
+                                sub2.school_id =
+                                u.school_id
+
+                                AND
+                                sub2.status =
+                                'active'
+
+                            LIMIT 1
+
+                        ),
+                        'No Plan'
+                    ) AS subscription_plan
+
+                FROM users u
+
+                LEFT JOIN schools s
+                    ON u.school_id =
+                       s.school_id
+
+                {where_query}
+
+                ORDER BY
+                    {order_by}
+
+                LIMIT %s
+                OFFSET %s
+            """,
             user_params,
         )
 
         users = cursor.fetchall()
 
-        # ================= KPI COUNTS =================
+        # =====================================================
+        # KPI — TOTAL USERS
+        # =====================================================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM users
-        """)
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM users
+            """
+        )
+
         total_users = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM users
-            WHERE status = 'active'
-        """)
+        # =====================================================
+        # KPI — ACTIVE USERS
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM users
+
+                WHERE
+                    status = 'active'
+            """
+        )
+
         active_users = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM users
-            WHERE role = 'clerk'
-        """)
+        # =====================================================
+        # KPI — CLERK USERS
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM users
+
+                WHERE
+                    role = 'clerk'
+            """
+        )
+
         clerk_users = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM users
-            WHERE role = 'admin'
-        """)
+        # =====================================================
+        # KPI — ADMIN USERS
+        # =====================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM users
+
+                WHERE
+                    role = 'admin'
+            """
+        )
+
         admin_users = cursor.fetchone()["total"] or 0
 
-        # ================= SCHOOLS =================
+        # =====================================================
+        # SCHOOLS
+        # =====================================================
 
-        cursor.execute("""
-            SELECT
-                school_id,
-                name
-            FROM schools
-            ORDER BY name
-        """)
+        cursor.execute(
+            """
+                SELECT
+                    school_id,
+                    name
+
+                FROM schools
+
+                ORDER BY
+                    name ASC
+            """
+        )
 
         schools = cursor.fetchall()
 
-        # ================= SIDEBAR LEADS COUNT =================
+        # =====================================================
+        # NEW LEADS COUNT
+        # =====================================================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM lead_requests
-            WHERE status = 'New'
-        """)
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM lead_requests
+
+                WHERE
+                    status = 'New'
+            """
+        )
 
         new_leads_count = cursor.fetchone()["total"] or 0
+
+        # =====================================================
+        # RENDER
+        # =====================================================
 
         return render_template(
             "superadmin/superadmin_users.html",
@@ -5766,6 +7936,8 @@ def superadmin_users():
             search=search,
             role_filter=role_filter,
             status_filter=status_filter,
+            school_filter=school_filter,
+            sort_filter=sort_filter,
             new_leads_count=new_leads_count,
             role="admin",
             school_name="Admin Panel",
@@ -5775,7 +7947,9 @@ def superadmin_users():
     except Exception as e:
         print("❌ USERS MANAGEMENT ERROR:", e)
 
-        return f"Something went wrong ❌ {str(e)}"
+        logger.exception("Users management error")
+
+        return (f"Something went wrong ❌ {str(e)}"), 500
 
     finally:
         if cursor:
@@ -7233,59 +9407,79 @@ def superadmin_subscriptions():
     cursor = None
 
     try:
+        # =================================================
+        # DATABASE
+        # =================================================
+
         conn = get_connection()
+
+        if not conn:
+            flash("Database connection failed.", "danger")
+
+            return redirect(url_for("dashboard"))
+
         cursor = conn.cursor(dictionary=True)
 
-        # =====================================
+        # =================================================
         # FILTERS
-        # =====================================
+        # =================================================
 
         search = (request.args.get("search") or "").strip()
 
-        status_filter = (request.args.get("status") or "").strip()
+        status_filter = (request.args.get("status") or "").strip().lower()
 
         plan_filter = (request.args.get("plan") or "").strip()
 
         expiry_filter = (request.args.get("expiry") or "").strip()
 
+        # =================================================
+        # PAGINATION
+        # =================================================
+
         page = request.args.get("page", 1, type=int)
 
-        per_page = 5
+        per_page = 10
 
         if page < 1:
             page = 1
 
-        # =====================================
+        # =================================================
         # VALID FILTERS
-        # =====================================
+        # =================================================
 
-        valid_status = ["active", "expired", "Active", "Expired"]
+        valid_status = {"", "active", "expired"}
 
-        valid_expiry = ["", "expiring_soon", "expired"]
+        valid_expiry = {"", "expiring_soon", "expired"}
 
-        if status_filter and status_filter not in valid_status:
+        if status_filter not in valid_status:
             status_filter = ""
 
         if expiry_filter not in valid_expiry:
             expiry_filter = ""
 
-        # =====================================
-        # WHERE QUERY
-        # =====================================
+        # =================================================
+        # COMMON WHERE
+        # =================================================
 
         where_query = """
-            WHERE 1=1
+            WHERE 1 = 1
         """
 
         params = []
 
-        # SEARCH SCHOOL / PLAN
+        # =================================================
+        # SEARCH
+        # =================================================
 
         if search:
             where_query += """
                 AND (
                     s.name LIKE %s
-                    OR sub.plan_name LIKE %s
+
+                    OR COALESCE(
+                        p.plan_name,
+                        sub.plan_name
+                    ) LIKE %s
                 )
             """
 
@@ -7293,34 +9487,68 @@ def superadmin_subscriptions():
 
             params.extend([keyword, keyword])
 
+        # =================================================
         # STATUS FILTER
+        # =================================================
 
-        if status_filter:
+        if status_filter == "expired":
             where_query += """
-                AND LOWER(sub.status) = LOWER(%s)
+                AND (
+                    sub.end_date < CURDATE()
+
+                    OR LOWER(
+                        COALESCE(
+                            sub.status,
+                            ''
+                        )
+                    ) = 'expired'
+                )
             """
 
-            params.append(status_filter)
+        elif status_filter == "active":
+            where_query += """
+                AND (
+                    sub.end_date IS NULL
 
+                    OR (
+                        sub.end_date >= CURDATE()
+
+                        AND LOWER(
+                            COALESCE(
+                                sub.status,
+                                ''
+                            )
+                        ) <> 'expired'
+                    )
+                )
+            """
+
+        # =================================================
         # PLAN FILTER
+        # =================================================
 
         if plan_filter:
             where_query += """
-                AND sub.plan_name = %s
+                AND COALESCE(
+                    p.plan_name,
+                    sub.plan_name
+                ) = %s
             """
 
             params.append(plan_filter)
 
+        # =================================================
         # EXPIRY FILTER
+        # =================================================
 
         if expiry_filter == "expiring_soon":
             where_query += """
                 AND sub.end_date BETWEEN
-                CURDATE()
-                AND DATE_ADD(
-                    CURDATE(),
-                    INTERVAL 30 DAY
-                )
+                    CURDATE()
+                    AND DATE_ADD(
+                        CURDATE(),
+                        INTERVAL 30 DAY
+                    )
             """
 
         elif expiry_filter == "expired":
@@ -7328,27 +9556,34 @@ def superadmin_subscriptions():
                 AND sub.end_date < CURDATE()
             """
 
-        # =====================================
-        # TOTAL FILTERED COUNT
-        # =====================================
+        # =================================================
+        # TOTAL FILTERED RECORDS
+        # =================================================
 
         cursor.execute(
             f"""
+                SELECT
+                    COUNT(*) AS total
 
-            SELECT COUNT(*) AS total
+                FROM subscriptions sub
 
-            FROM subscriptions sub
+                LEFT JOIN schools s
+                    ON sub.school_id =
+                       s.school_id
 
-            LEFT JOIN schools s
-                ON sub.school_id = s.school_id
+                LEFT JOIN subscription_plans p
+                    ON sub.plan_id = p.id
 
-            {where_query}
-
-        """,
-            params,
+                {where_query}
+            """,
+            tuple(params),
         )
 
         total_records = cursor.fetchone()["total"] or 0
+
+        # =================================================
+        # PAGINATION CALCULATION
+        # =================================================
 
         total_pages = max(1, (total_records + per_page - 1) // per_page)
 
@@ -7357,9 +9592,9 @@ def superadmin_subscriptions():
 
         offset = (page - 1) * per_page
 
-        # =====================================
-        # MAIN SUBSCRIPTION QUERY
-        # =====================================
+        # =================================================
+        # SUBSCRIPTIONS
+        # =================================================
 
         query_params = params.copy()
 
@@ -7367,174 +9602,2224 @@ def superadmin_subscriptions():
 
         cursor.execute(
             f"""
+                SELECT
 
-            SELECT
+                    sub.id,
 
-                sub.id,
-                sub.school_id,
+                    sub.school_id,
 
-                COALESCE(
-                    s.name,
-                    'Unknown School'
-                ) AS school_name,
+                    sub.plan_id,
 
-                sub.plan_name,
-                sub.start_date,
-                sub.end_date,
-                sub.amount,
-                sub.status,
-                sub.created_at,
 
-                DATEDIFF(
+                    COALESCE(
+                        s.name,
+                        'Unknown School'
+                    ) AS school_name,
+
+
+                    COALESCE(
+                        p.plan_name,
+                        sub.plan_name,
+                        'Unknown Plan'
+                    ) AS plan_name,
+
+
+                    sub.start_date,
+
                     sub.end_date,
-                    CURDATE()
-                ) AS days_remaining
 
-            FROM subscriptions sub
+                    sub.amount,
 
-            LEFT JOIN schools s
-                ON sub.school_id = s.school_id
 
-            {where_query}
+                    /* =================================
+                       EFFECTIVE STATUS
+                    ================================= */
 
-            ORDER BY sub.id DESC
+                    CASE
 
-            LIMIT %s OFFSET %s
+                        WHEN
+                            sub.end_date <
+                            CURDATE()
 
-        """,
-            query_params,
+                        THEN 'Expired'
+
+
+                        WHEN
+                            LOWER(
+                                COALESCE(
+                                    sub.status,
+                                    ''
+                                )
+                            ) = 'expired'
+
+                        THEN 'Expired'
+
+
+                        ELSE 'Active'
+
+                    END AS status,
+
+
+                    sub.created_at,
+
+
+                    /* =================================
+                       DAYS REMAINING
+                    ================================= */
+
+                    DATEDIFF(
+                        sub.end_date,
+                        CURDATE()
+                    ) AS days_remaining,
+
+
+                    /* =================================
+                       STUDENTS
+                    ================================= */
+
+                    (
+                        SELECT
+                            COUNT(*)
+
+                        FROM students st
+
+                        WHERE
+                            st.school_id =
+                            sub.school_id
+
+                            AND st.is_deleted = 0
+                    ) AS student_count,
+
+
+                    /* =================================
+                       STAFF
+                    ================================= */
+
+                    (
+                        SELECT
+                            COUNT(*)
+
+                        FROM users u
+
+                        WHERE
+                            u.school_id =
+                            sub.school_id
+
+                            AND u.role <> 'admin'
+                    ) AS staff_count,
+
+
+                    /* =================================
+                       TC
+                    ================================= */
+
+                    (
+                        SELECT
+                            COUNT(*)
+
+                        FROM tc t
+
+                        WHERE
+                            t.school_id =
+                            sub.school_id
+
+                            AND t.is_deleted = 0
+                    ) AS tc_count,
+
+
+                    /* =================================
+                       BONAFIDE
+                    ================================= */
+
+                    (
+                        SELECT
+                            COUNT(*)
+
+                        FROM bonafide b
+
+                        WHERE
+                            b.school_id =
+                            sub.school_id
+
+                            AND b.is_deleted = 0
+                    ) AS bonafide_count
+
+
+                FROM subscriptions sub
+
+
+                LEFT JOIN schools s
+
+                    ON sub.school_id =
+                       s.school_id
+
+
+                LEFT JOIN subscription_plans p
+
+                    ON sub.plan_id =
+                       p.id
+
+
+                {where_query}
+
+
+                ORDER BY
+                    sub.id DESC
+
+
+                LIMIT %s
+                OFFSET %s
+            """,
+            tuple(query_params),
         )
 
         subscriptions = cursor.fetchall()
 
-        # =====================================
-        # KPI COUNTS
-        # =====================================
+        # =================================================
+        # FORMAT DATES
+        # =================================================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM subscriptions
-        """)
+        for sub in subscriptions:
+            if sub.get("start_date"):
+                sub["start_date"] = sub["start_date"].strftime("%Y-%m-%d")
+
+            if sub.get("end_date"):
+                sub["end_date"] = sub["end_date"].strftime("%Y-%m-%d")
+
+            if sub.get("created_at"):
+                sub["created_at"] = sub["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+
+        # =================================================
+        # KPI - TOTAL
+        # =================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM subscriptions
+            """
+        )
 
         total_subscriptions = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM subscriptions
-            WHERE LOWER(status) = 'active'
-        """)
+        # =================================================
+        # KPI - ACTIVE
+        # =================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM subscriptions
+
+                WHERE
+                    (
+                        end_date IS NULL
+
+                        OR end_date >=
+                           CURDATE()
+                    )
+
+                    AND LOWER(
+                        COALESCE(
+                            status,
+                            ''
+                        )
+                    ) <> 'expired'
+            """
+        )
 
         active_subscriptions = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM subscriptions
-            WHERE LOWER(status) = 'expired'
-            OR end_date < CURDATE()
-        """)
+        # =================================================
+        # KPI - EXPIRED
+        # =================================================
+
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM subscriptions
+
+                WHERE
+                    end_date < CURDATE()
+
+                    OR LOWER(
+                        COALESCE(
+                            status,
+                            ''
+                        )
+                    ) = 'expired'
+            """
+        )
 
         expired_subscriptions = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        # =================================================
+        # KPI - RENEWALS DUE
+        # =================================================
 
-            SELECT COUNT(*) AS total
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
 
-            FROM subscriptions
+                FROM subscriptions
 
-            WHERE end_date BETWEEN
-            CURDATE()
-            AND DATE_ADD(
-                CURDATE(),
-                INTERVAL 30 DAY
-            )
+                WHERE
+                    end_date BETWEEN
+                        CURDATE()
+                        AND DATE_ADD(
+                            CURDATE(),
+                            INTERVAL 30 DAY
+                        )
 
-        """)
+                    AND LOWER(
+                        COALESCE(
+                            status,
+                            ''
+                        )
+                    ) <> 'expired'
+            """
+        )
 
         renewal_due = cursor.fetchone()["total"] or 0
 
-        # =====================================
-        # TOTAL REVENUE
-        # =====================================
+        # =================================================
+        # KPI - REVENUE
+        # =================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
+                SELECT
+                    COALESCE(
+                        SUM(amount),
+                        0
+                    ) AS revenue
 
-            SELECT
+                FROM payment_logs
 
-                COALESCE(
-                    SUM(amount),
-                    0
-                ) AS revenue
-
-            FROM payment_logs
-
-            WHERE payment_status = 'success'
-
-        """)
+                WHERE
+                    payment_status =
+                    'success'
+            """
+        )
 
         total_revenue = cursor.fetchone()["revenue"] or 0
 
-        # =====================================
-        # PLAN DROPDOWN
-        # =====================================
+        # =================================================
+        # ACTIVE PLANS
+        # =================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
+                SELECT
 
-            SELECT DISTINCT
-                plan_name
+                    id,
 
-            FROM subscriptions
+                    plan_name,
 
-            WHERE plan_name IS NOT NULL
-            AND plan_name <> ''
+                    monthly_price,
 
-            ORDER BY plan_name
+                    yearly_price,
 
-        """)
+                    student_limit,
+
+                    tc_limit,
+
+                    bonafide_limit,
+
+                    staff_limit,
+
+                    storage_limit,
+
+                    support_type,
+
+                    duration_months,
+
+                    enable_tc_management,
+
+                    enable_bonafide_management,
+
+                    enable_import_export,
+
+                    enable_attendance,
+
+                    enable_fee_management,
+
+                    enable_teacher_management,
+
+                    enable_results,
+
+                    enable_timetable,
+
+                    enable_notice_board
+
+
+                FROM subscription_plans
+
+
+                WHERE
+                    plan_name IS NOT NULL
+
+                    AND plan_name <> ''
+
+                    AND is_active = 1
+
+
+                ORDER BY
+
+                    monthly_price ASC,
+
+                    plan_name ASC
+            """
+        )
 
         plans = cursor.fetchall()
 
-        # =====================================
-        # SIDEBAR LEADS COUNT
-        # =====================================
+        # =================================================
+        # NEW LEADS
+        # =================================================
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM lead_requests
-            WHERE status = 'New'
-        """)
+        cursor.execute(
+            """
+                SELECT
+                    COUNT(*) AS total
+
+                FROM lead_requests
+
+                WHERE
+                    status = 'New'
+            """
+        )
 
         new_leads_count = cursor.fetchone()["total"] or 0
 
-        # =====================================
+        # =================================================
         # RENDER
-        # =====================================
+        # =================================================
 
         return render_template(
             "superadmin/subscriptions_admin.html",
-            subscriptions=subscriptions,
-            total_subscriptions=total_subscriptions,
-            active_subscriptions=active_subscriptions,
-            expired_subscriptions=expired_subscriptions,
-            renewal_due=renewal_due,
-            total_revenue=total_revenue,
+            # subscriptions
+            subscriptions=(subscriptions),
+            # KPI
+            total_subscriptions=(total_subscriptions),
+            active_subscriptions=(active_subscriptions),
+            expired_subscriptions=(expired_subscriptions),
+            renewal_due=(renewal_due),
+            total_revenue=(total_revenue),
+            # filters
             plans=plans,
-            total_records=total_records,
-            page=page,
-            total_pages=total_pages,
             search=search,
-            status_filter=status_filter,
-            plan_filter=plan_filter,
-            expiry_filter=expiry_filter,
-            new_leads_count=new_leads_count,
+            status_filter=(status_filter),
+            plan_filter=(plan_filter),
+            expiry_filter=(expiry_filter),
+            # pagination
+            total_records=(total_records),
+            page=page,
+            total_pages=(total_pages),
+            # sidebar
+            new_leads_count=(new_leads_count),
             role="admin",
             school_name="Admin Panel",
             active_page="subscriptions",
         )
 
     except Exception as e:
-        print("SUBSCRIPTION ERROR:", e)
+        logger.exception("SUBSCRIPTION MANAGEMENT ERROR")
 
-        return f"Unable to load subscriptions ❌ {str(e)}"
+        try:
+            flash("Unable to load subscription records.", "danger")
+
+        except Exception:
+            pass
+
+        return redirect(request.referrer or url_for("dashboard"))
+
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+
+            except Exception:
+                pass
+
+        if conn:
+            try:
+                conn.close()
+
+            except Exception:
+                pass
+
+
+# =========================================================
+# ✏️ SUPER ADMIN - EDIT SUBSCRIPTION
+# =========================================================
+
+
+@app.route("/superadmin/subscriptions/edit", methods=["POST"])
+@admin_required
+def superadmin_edit_subscription():
+
+    conn = None
+    cursor = None
+
+    try:
+        # =====================================================
+        # GET FORM DATA
+        # =====================================================
+
+        subscription_id_raw = (request.form.get("subscription_id") or "").strip()
+
+        plan_id_raw = (request.form.get("plan_id") or "").strip()
+
+        start_date_raw = (request.form.get("start_date") or "").strip()
+
+        end_date_raw = (request.form.get("end_date") or "").strip()
+
+        # Optional admin note / reason
+        change_reason = (request.form.get("change_reason") or "").strip()
+
+        # =====================================================
+        # BASIC VALIDATION
+        # =====================================================
+
+        if not subscription_id_raw.isdigit():
+            flash("Invalid subscription ID.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        if not plan_id_raw.isdigit():
+            flash("Invalid subscription plan.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        subscription_id = int(subscription_id_raw)
+
+        plan_id = int(plan_id_raw)
+
+        if subscription_id <= 0:
+            flash("Invalid subscription ID.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        if plan_id <= 0:
+            flash("Invalid subscription plan.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        # =====================================================
+        # DATE VALIDATION
+        # =====================================================
+
+        if not start_date_raw:
+            flash("Start date is required.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        if not end_date_raw:
+            flash("Expiry date is required.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        try:
+            start_obj = datetime.strptime(start_date_raw, "%Y-%m-%d").date()
+
+            end_obj = datetime.strptime(end_date_raw, "%Y-%m-%d").date()
+
+        except ValueError:
+            flash("Invalid subscription dates.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        # =====================================================
+        # DATE LOGIC
+        # =====================================================
+
+        if end_obj < start_obj:
+            flash("Expiry date cannot be before start date.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        if not conn:
+            flash("Database connection failed.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # GET CURRENT SUBSCRIPTION
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT
+
+                id,
+                school_id,
+                plan_id,
+                plan_name,
+                start_date,
+                end_date,
+                amount,
+                status
+
+            FROM subscriptions
+
+            WHERE id = %s
+
+            LIMIT 1
+
+            FOR UPDATE
+            """,
+            (subscription_id,),
+        )
+
+        subscription = cursor.fetchone()
+
+        if not subscription:
+            conn.rollback()
+
+            flash("Subscription not found.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        school_id = subscription["school_id"]
+
+        old_plan_id = subscription["plan_id"]
+
+        old_plan_name = subscription["plan_name"]
+
+        old_amount = subscription["amount"]
+
+        old_start_date = subscription["start_date"]
+
+        old_end_date = subscription["end_date"]
+
+        # =====================================================
+        # GET SELECTED PLAN
+        #
+        # IMPORTANT:
+        # Never trust price/features from browser.
+        # Fetch everything from DB.
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT
+
+                id,
+                plan_name,
+
+                monthly_price,
+                yearly_price,
+
+                student_limit,
+                tc_limit,
+                bonafide_limit,
+                staff_limit,
+
+                storage_limit,
+                support_type,
+                duration_months,
+
+                enable_tc_management,
+                enable_bonafide_management,
+                enable_import_export,
+                enable_attendance,
+                enable_fee_management,
+                enable_teacher_management,
+                enable_results,
+                enable_timetable,
+                enable_notice_board
+
+            FROM subscription_plans
+
+            WHERE id = %s
+              AND is_active = 1
+
+            LIMIT 1
+
+            FOR UPDATE
+            """,
+            (plan_id,),
+        )
+
+        plan = cursor.fetchone()
+
+        if not plan:
+            conn.rollback()
+
+            flash("Selected subscription plan is not available.", "danger")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        # =====================================================
+        # PLAN VALUES
+        # =====================================================
+
+        new_plan_name = plan["plan_name"]
+
+        new_amount = plan["monthly_price"] or 0
+
+        # =====================================================
+        # DOWNGRADE PROTECTION
+        #
+        # Do not allow a plan whose limits are below
+        # existing school usage.
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT
+
+                (
+                    SELECT COUNT(*)
+                    FROM students
+                    WHERE school_id = %s
+                    AND is_deleted = 0
+                ) AS student_count,
+
+                (
+                    SELECT COUNT(*)
+                    FROM users
+                    WHERE school_id = %s
+                      AND role != 'admin'
+                       
+                ) AS staff_count,
+
+                (
+                    SELECT COUNT(*)
+                    FROM tc
+                    WHERE school_id = %s
+                      AND is_deleted = 0
+                ) AS tc_count,
+
+                (
+                    SELECT COUNT(*)
+                    FROM bonafide
+                    WHERE school_id = %s
+                      AND is_deleted = 0
+                ) AS bonafide_count
+            """,
+            (
+                school_id,
+                school_id,
+                school_id,
+                school_id,
+            ),
+        )
+
+        usage = cursor.fetchone()
+
+        student_count = int(usage["student_count"] or 0)
+
+        staff_count = int(usage["staff_count"] or 0)
+
+        tc_count = int(usage["tc_count"] or 0)
+
+        bonafide_count = int(usage["bonafide_count"] or 0)
+
+        # =====================================================
+        # CHECK NEW PLAN LIMITS
+        # =====================================================
+
+        limit_errors = []
+
+        student_limit = plan["student_limit"]
+
+        staff_limit = plan["staff_limit"]
+
+        tc_limit = plan["tc_limit"]
+
+        bonafide_limit = plan["bonafide_limit"]
+
+        # Students
+        if student_limit is not None and student_count > int(student_limit):
+            limit_errors.append(
+                f"Students: {student_count} "
+                f"currently used, "
+                f"but {new_plan_name} allows "
+                f"only {student_limit}."
+            )
+
+        # Staff
+        if staff_limit is not None and staff_count > int(staff_limit):
+            limit_errors.append(
+                f"Staff: {staff_count} "
+                f"currently used, "
+                f"but {new_plan_name} allows "
+                f"only {staff_limit}."
+            )
+
+        # TC
+        if tc_limit is not None and tc_count > int(tc_limit):
+            limit_errors.append(
+                f"TC: {tc_count} "
+                f"currently used, "
+                f"but {new_plan_name} allows "
+                f"only {tc_limit}."
+            )
+
+        # Bonafide
+        if bonafide_limit is not None and bonafide_count > int(bonafide_limit):
+            limit_errors.append(
+                f"Bonafide: {bonafide_count} "
+                f"currently used, "
+                f"but {new_plan_name} allows "
+                f"only {bonafide_limit}."
+            )
+
+        # =====================================================
+        # BLOCK INVALID DOWNGRADE
+        # =====================================================
+
+        if limit_errors:
+            conn.rollback()
+
+            flash(
+                "Plan change cannot be applied because "
+                "the new plan limits are lower than "
+                "the school's current usage.",
+                "danger",
+            )
+
+            for error in limit_errors:
+                flash(error, "warning")
+
+            return redirect(url_for("superadmin_subscriptions"))
+
+        # =====================================================
+        # EFFECTIVE STATUS
+        #
+        # Never trust status from the browser.
+        #
+        # end_date >= today -> active
+        # end_date < today  -> expired
+        # =====================================================
+
+        today = date.today()
+
+        if end_obj < today:
+            effective_status = "expired"
+
+        else:
+            effective_status = "active"
+
+        # =====================================================
+        # UPDATE SUBSCRIPTION
+        #
+        # plan_name + amount come from DB plan.
+        # =====================================================
+
+        cursor.execute(
+            """
+            UPDATE subscriptions
+
+            SET
+
+                plan_id = %s,
+
+                plan_name = %s,
+
+                start_date = %s,
+
+                end_date = %s,
+
+                amount = %s,
+
+                status = %s
+
+            WHERE id = %s
+            """,
+            (
+                plan_id,
+                new_plan_name,
+                start_obj,
+                end_obj,
+                new_amount,
+                effective_status,
+                subscription_id,
+            ),
+        )
+
+        # =========================================================
+        # APPLY PLAN FEATURES
+        #
+        # Only re-apply features when the subscription plan
+        # actually changes.
+        # =========================================================
+
+        if old_plan_id != plan_id:
+            feature_result = apply_plan_features(cursor, school_id, plan_id)
+
+            if not feature_result:
+                conn.rollback()
+
+                flash(
+                    "Subscription was not changed because "
+                    "the plan features could not be applied.",
+                    "danger",
+                )
+
+                return redirect(url_for("superadmin_subscriptions"))
+
+        # =====================================================
+        # OPTIONAL AUDIT LOG
+        #
+        # Only use this block AFTER creating the table below.
+        # =====================================================
+
+        # cursor.execute(
+        #     """
+        #     INSERT INTO subscription_changes
+        #     (
+        #         subscription_id,
+        #         school_id,
+        #         old_plan_id,
+        #         new_plan_id,
+        #         old_plan_name,
+        #         new_plan_name,
+        #         old_amount,
+        #         new_amount,
+        #         old_start_date,
+        #         new_start_date,
+        #         old_end_date,
+        #         new_end_date,
+        #         change_reason,
+        #         changed_at
+        #     )
+        #     VALUES
+        #     (
+        #         %s, %s, %s, %s,
+        #         %s, %s, %s, %s,
+        #         %s, %s, %s, %s,
+        #         %s, NOW()
+        #     )
+        #     """,
+        #     (
+        #         subscription_id,
+        #         school_id,
+        #         old_plan_id,
+        #         plan_id,
+        #         old_plan_name,
+        #         new_plan_name,
+        #         old_amount,
+        #         new_amount,
+        #         old_start_date,
+        #         start_obj,
+        #         old_end_date,
+        #         end_obj,
+        #         change_reason,
+        #     )
+        # )
+
+        # =====================================================
+        # COMMIT EVERYTHING
+        # =====================================================
+
+        conn.commit()
+
+        # =====================================================
+        # SUCCESS MESSAGE
+        # =====================================================
+
+        if old_plan_id != plan_id:
+            flash(
+                f"Subscription updated successfully. "
+                f"{old_plan_name} → {new_plan_name}. "
+                f"All plan features and limits have been applied.",
+                "success",
+            )
+
+        else:
+            flash("Subscription updated successfully.", "success")
+
+        return redirect(url_for("superadmin_subscriptions"))
+
+    # =========================================================
+    # ERROR HANDLING
+    # =========================================================
+
+    except Exception as e:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception("SUPER ADMIN SUBSCRIPTION EDIT ERROR")
+
+        print("❌ SUPER ADMIN SUBSCRIPTION EDIT ERROR:", e)
+
+        flash("Unable to update subscription. No changes were saved.", "danger")
+
+        return redirect(url_for("superadmin_subscriptions"))
+
+    # =========================================================
+    # CLEANUP
+    # =========================================================
+
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+
+# =========================================================
+# 💳 SUPER ADMIN - PLANS & PRICING
+# =========================================================
+
+
+@app.route("/superadmin/plans", methods=["GET"])
+@admin_required
+def superadmin_plans():
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # FILTERS
+        # =====================================================
+
+        search = (request.args.get("search") or "").strip()
+
+        status_filter = (request.args.get("status") or "").strip().lower()
+
+        module_filter = (request.args.get("module") or "").strip()
+
+        # =====================================================
+        # VALID STATUS
+        # =====================================================
+
+        if status_filter not in {"", "active", "inactive"}:
+            status_filter = ""
+
+        # =====================================================
+        # VALID MODULE FILTERS
+        # =====================================================
+
+        valid_modules = {
+            "tc": "enable_tc_management",
+            "bonafide": "enable_bonafide_management",
+            "import_export": "enable_import_export",
+            "attendance": "enable_attendance",
+            "fees": "enable_fee_management",
+            "teachers": "enable_teacher_management",
+            "results": "enable_results",
+            "timetable": "enable_timetable",
+            "notice_board": "enable_notice_board",
+        }
+
+        if module_filter not in valid_modules:
+            module_filter = ""
+
+        # =====================================================
+        # WHERE
+        # =====================================================
+
+        where_parts = ["1 = 1"]
+
+        params = []
+
+        # -----------------------------------------------------
+        # SEARCH
+        # -----------------------------------------------------
+
+        if search:
+            where_parts.append("""
+                (
+                    plan_name LIKE %s
+                    OR support_type LIKE %s
+                    OR storage_limit LIKE %s
+                )
+            """)
+
+            keyword = f"%{search}%"
+
+            params.extend([keyword, keyword, keyword])
+
+        # -----------------------------------------------------
+        # STATUS
+        # -----------------------------------------------------
+
+        if status_filter == "active":
+            where_parts.append("is_active = 1")
+
+        elif status_filter == "inactive":
+            where_parts.append("is_active = 0")
+
+        # -----------------------------------------------------
+        # MODULE
+        # -----------------------------------------------------
+
+        if module_filter:
+            column_name = valid_modules[module_filter]
+
+            where_parts.append(f"{column_name} = 'Enabled'")
+
+        where_query = " AND ".join(where_parts)
+
+        # =====================================================
+        # PLAN QUERY
+        # =====================================================
+
+        cursor.execute(
+            f"""
+                SELECT
+
+                    id,
+                    plan_name,
+
+                    monthly_price,
+                    yearly_price,
+
+                    student_limit,
+                    tc_limit,
+                    bonafide_limit,
+                    staff_limit,
+
+                    support_type,
+                    storage_limit,
+
+                    is_active,
+
+                    created_at,
+                    duration_months,
+
+                    enable_tc_management,
+                    enable_bonafide_management,
+                    enable_import_export,
+                    enable_attendance,
+                    enable_fee_management,
+                    enable_teacher_management,
+                    enable_results,
+                    enable_timetable,
+                    enable_notice_board,
+
+                    (
+                        SELECT COUNT(*)
+
+                        FROM subscriptions sub
+
+                        WHERE sub.plan_id = subscription_plans.id
+
+                        AND LOWER(
+                            COALESCE(
+                                sub.status,
+                                ''
+                            )
+                        ) = 'active'
+
+                        AND (
+                            sub.end_date IS NULL
+                            OR sub.end_date >= CURDATE()
+                        )
+                    ) AS active_subscribers
+
+                FROM subscription_plans
+
+                WHERE {where_query}
+
+                ORDER BY
+                    is_active DESC,
+                    id ASC
+
+            """,
+            params,
+        )
+
+        plans = cursor.fetchall()
+
+        # =====================================================
+        # ACTIVE PLAN COUNT
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total
+
+            FROM subscription_plans
+
+            WHERE is_active = 1
+        """)
+
+        active_row = cursor.fetchone()
+
+        active_plans = active_row["total"] if active_row else 0
+
+        # =====================================================
+        # TOTAL ACTIVE SUBSCRIBERS
+        #
+        # IMPORTANT:
+        # Status alone is NOT enough.
+        # Expired subscriptions are excluded.
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total
+
+            FROM subscriptions
+
+            WHERE LOWER(
+                COALESCE(status, '')
+            ) = 'active'
+
+            AND (
+                end_date IS NULL
+                OR end_date >= CURDATE()
+            )
+        """)
+
+        subscriber_row = cursor.fetchone()
+
+        active_subscribers = subscriber_row["total"] if subscriber_row else 0
+
+        # =====================================================
+        # POPULAR PLAN
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+
+                sub.plan_id,
+
+                COUNT(*) AS subscriber_count
+
+            FROM subscriptions sub
+
+            INNER JOIN subscription_plans sp
+                ON sp.id = sub.plan_id
+
+            WHERE LOWER(
+                COALESCE(sub.status, '')
+            ) = 'active'
+
+            AND (
+                sub.end_date IS NULL
+                OR sub.end_date >= CURDATE()
+            )
+
+            AND sp.is_active = 1
+
+            GROUP BY sub.plan_id
+
+            ORDER BY
+                subscriber_count DESC,
+                sub.plan_id ASC
+
+            LIMIT 1
+        """)
+
+        popular_row = cursor.fetchone()
+
+        popular_plan = "—"
+
+        if popular_row:
+            cursor.execute(
+                """
+                SELECT
+                    plan_name
+
+                FROM subscription_plans
+
+                WHERE id = %s
+
+                LIMIT 1
+            """,
+                (popular_row["plan_id"],),
+            )
+
+            plan_row = cursor.fetchone()
+
+            if plan_row:
+                popular_plan = plan_row["plan_name"] or "—"
+
+        # =====================================================
+        # MODULE FILTER OPTIONS
+        #
+        # Useful if you add module filter dropdown.
+        # =====================================================
+
+        module_options = [
+            {"value": "tc", "label": "TC Management"},
+            {"value": "bonafide", "label": "Bonafide"},
+            {"value": "import_export", "label": "Import / Export"},
+            {"value": "attendance", "label": "Attendance"},
+            {"value": "fees", "label": "Fee Management"},
+            {"value": "teachers", "label": "Teacher Management"},
+            {"value": "results", "label": "Results"},
+            {"value": "timetable", "label": "Timetable"},
+            {"value": "notice_board", "label": "Notice Board"},
+        ]
+
+        # =====================================================
+        # NEW LEADS COUNT
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total
+
+            FROM lead_requests
+
+            WHERE status = 'New'
+        """)
+
+        lead_row = cursor.fetchone()
+
+        new_leads_count = lead_row["total"] if lead_row else 0
+
+        # =====================================================
+        # RENDER
+        # =====================================================
+
+        return render_template(
+            "superadmin/plans_superadmin.html",
+            plans=plans,
+            active_plans=active_plans,
+            active_subscribers=active_subscribers,
+            popular_plan=popular_plan,
+            module_options=module_options,
+            search=search,
+            status_filter=status_filter,
+            module_filter=module_filter,
+            new_leads_count=new_leads_count,
+            role="admin",
+            school_name="Admin Panel",
+            active_page="plans",
+        )
+
+    except Exception as e:
+        print("❌ SUPER ADMIN PLANS ERROR:", e)
+
+        return f"Unable to load subscription plans ❌ {str(e)}"
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+            # =========================================================
+
+
+# 💳 SUPER ADMIN - EDIT SUBSCRIPTION PLAN
+# =========================================================
+
+
+@app.route("/superadmin/plans/edit", methods=["POST"])
+@admin_required
+def superadmin_edit_plan():
+
+    conn = None
+    cursor = None
+
+    try:
+        # =====================================================
+        # FORM DATA
+        # =====================================================
+
+        plan_id_raw = (request.form.get("plan_id") or "").strip()
+
+        plan_name = (request.form.get("plan_name") or "").strip()
+
+        support_type = (request.form.get("support_type") or "").strip()
+
+        storage_limit = (request.form.get("storage_limit") or "").strip()
+
+        # =====================================================
+        # REQUIRED PLAN ID
+        # =====================================================
+
+        try:
+            plan_id = int(plan_id_raw)
+
+        except (TypeError, ValueError):
+            flash("Invalid subscription plan.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        if plan_id <= 0:
+            flash("Invalid subscription plan.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        # =====================================================
+        # PLAN NAME
+        # =====================================================
+
+        if not plan_name:
+            flash("Plan name is required.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        if len(plan_name) > 100:
+            flash("Plan name cannot exceed 100 characters.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        # =====================================================
+        # NUMERIC VALUES
+        # =====================================================
+
+        def get_decimal(field_name, default=0):
+
+            raw = (request.form.get(field_name) or "").strip()
+
+            try:
+                value = float(raw)
+
+            except (TypeError, ValueError):
+                raise ValueError(f"Invalid value for {field_name}.")
+
+            if value < 0:
+                raise ValueError(f"{field_name} cannot be negative.")
+
+            return value
+
+        def get_integer(field_name, minimum=0):
+
+            raw = (request.form.get(field_name) or "").strip()
+
+            try:
+                value = int(raw)
+
+            except (TypeError, ValueError):
+                raise ValueError(f"Invalid value for {field_name}.")
+
+            if value < minimum:
+                raise ValueError(f"{field_name} has an invalid value.")
+
+            return value
+
+        monthly_price = get_decimal("monthly_price")
+
+        yearly_price = get_decimal("yearly_price")
+
+        student_limit = get_integer("student_limit")
+
+        staff_limit = get_integer("staff_limit")
+
+        tc_limit = get_integer("tc_limit")
+
+        bonafide_limit = get_integer("bonafide_limit")
+
+        duration_months = get_integer("duration_months", minimum=1)
+
+        # =====================================================
+        # STATUS
+        # =====================================================
+
+        is_active_raw = (request.form.get("is_active") or "0").strip()
+
+        is_active = 1 if is_active_raw == "1" else 0
+
+        # =====================================================
+        # MODULES
+        #
+        # Checkbox checked  = Enabled
+        # Checkbox unchecked = Disabled
+        # =====================================================
+
+        module_fields = [
+            "enable_tc_management",
+            "enable_bonafide_management",
+            "enable_import_export",
+            "enable_attendance",
+            "enable_fee_management",
+            "enable_teacher_management",
+            "enable_results",
+            "enable_timetable",
+            "enable_notice_board",
+        ]
+
+        module_values = {}
+
+        for field in module_fields:
+            module_values[field] = (
+                "Enabled" if request.form.get(field) == "Enabled" else "Disabled"
+            )
+
+        # =====================================================
+        # APPLY TO EXISTING
+        # =====================================================
+
+        apply_to_existing = request.form.get("apply_to_existing") == "1"
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        # Transaction begins here.
+        conn.start_transaction()
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # LOCK CURRENT PLAN
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT *
+
+            FROM subscription_plans
+
+            WHERE id = %s
+
+            FOR UPDATE
+        """,
+            (plan_id,),
+        )
+
+        current_plan = cursor.fetchone()
+
+        if not current_plan:
+            conn.rollback()
+
+            flash("Subscription plan was not found.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        # =====================================================
+        # CHECK DUPLICATE PLAN NAME
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id
+
+            FROM subscription_plans
+
+            WHERE LOWER(plan_name) = LOWER(%s)
+
+            AND id <> %s
+
+            LIMIT 1
+        """,
+            (plan_name, plan_id),
+        )
+
+        duplicate_plan = cursor.fetchone()
+
+        if duplicate_plan:
+            conn.rollback()
+
+            flash(f"A plan named '{plan_name}' already exists.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        # =====================================================
+        # UPDATE PLAN
+        # =====================================================
+
+        cursor.execute(
+            """
+            UPDATE subscription_plans
+
+            SET
+
+                plan_name = %s,
+
+                monthly_price = %s,
+
+                yearly_price = %s,
+
+                student_limit = %s,
+
+                tc_limit = %s,
+
+                bonafide_limit = %s,
+
+                staff_limit = %s,
+
+                support_type = %s,
+
+                storage_limit = %s,
+
+                duration_months = %s,
+
+                is_active = %s,
+
+                enable_tc_management = %s,
+
+                enable_bonafide_management = %s,
+
+                enable_import_export = %s,
+
+                enable_attendance = %s,
+
+                enable_fee_management = %s,
+
+                enable_teacher_management = %s,
+
+                enable_results = %s,
+
+                enable_timetable = %s,
+
+                enable_notice_board = %s
+
+            WHERE id = %s
+
+        """,
+            (
+                plan_name,
+                monthly_price,
+                yearly_price,
+                student_limit,
+                tc_limit,
+                bonafide_limit,
+                staff_limit,
+                support_type,
+                storage_limit,
+                duration_months,
+                is_active,
+                module_values["enable_tc_management"],
+                module_values["enable_bonafide_management"],
+                module_values["enable_import_export"],
+                module_values["enable_attendance"],
+                module_values["enable_fee_management"],
+                module_values["enable_teacher_management"],
+                module_values["enable_results"],
+                module_values["enable_timetable"],
+                module_values["enable_notice_board"],
+                plan_id,
+            ),
+        )
+
+        # =====================================================
+        # APPLY TO EXISTING ACTIVE SUBSCRIPTIONS
+        # =====================================================
+
+        updated_subscriptions = 0
+        updated_schools = 0
+
+        if apply_to_existing:
+            # -------------------------------------------------
+            # GET ACTIVE SUBSCRIBERS OF THIS PLAN
+            # -------------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT DISTINCT
+                    school_id
+
+                FROM subscriptions
+
+                WHERE plan_id = %s
+
+                AND LOWER(
+                    COALESCE(status, '')
+                ) = 'active'
+
+                AND (
+                    end_date IS NULL
+                    OR end_date >= CURDATE()
+                )
+
+                FOR UPDATE
+            """,
+                (plan_id,),
+            )
+
+            active_schools = cursor.fetchall()
+
+            # -------------------------------------------------
+            # UPDATE SUBSCRIPTION PLAN NAME
+            #
+            # Do NOT modify amount.
+            # Existing customers keep their agreed amount.
+            # -------------------------------------------------
+
+            cursor.execute(
+                """
+                UPDATE subscriptions
+
+                SET
+                    plan_name = %s
+
+                WHERE plan_id = %s
+
+                AND LOWER(
+                    COALESCE(status, '')
+                ) = 'active'
+
+                AND (
+                    end_date IS NULL
+                    OR end_date >= CURDATE()
+                )
+            """,
+                (plan_name, plan_id),
+            )
+
+            updated_subscriptions = cursor.rowcount
+
+            # -------------------------------------------------
+            # UPDATE SCHOOL MODULE ACCESS
+            # -------------------------------------------------
+
+            for school in active_schools:
+                school_id = school["school_id"]
+
+                cursor.execute(
+                    """
+                    UPDATE schools
+
+                    SET
+
+                        enable_tc_management = %s,
+
+                        enable_bonafide_management = %s,
+
+                        enable_import_export = %s,
+
+                        enable_attendance = %s,
+
+                        enable_fee_management = %s,
+
+                        enable_teacher_management = %s,
+
+                        enable_results = %s,
+
+                        enable_timetable = %s,
+
+                        enable_notice_board = %s
+
+                    WHERE school_id = %s
+
+                """,
+                    (
+                        module_values["enable_tc_management"],
+                        module_values["enable_bonafide_management"],
+                        module_values["enable_import_export"],
+                        module_values["enable_attendance"],
+                        module_values["enable_fee_management"],
+                        module_values["enable_teacher_management"],
+                        module_values["enable_results"],
+                        module_values["enable_timetable"],
+                        module_values["enable_notice_board"],
+                        school_id,
+                    ),
+                )
+
+                if cursor.rowcount > 0:
+                    updated_schools += 1
+
+        # =====================================================
+        # COMMIT
+        # =====================================================
+
+        conn.commit()
+
+        # =====================================================
+        # SUCCESS MESSAGE
+        # =====================================================
+
+        if apply_to_existing:
+            flash(
+                (
+                    f"Plan '{plan_name}' updated successfully. "
+                    f"{updated_subscriptions} active subscription(s) "
+                    f"and {updated_schools} school feature configuration(s) "
+                    f"were synchronized."
+                ),
+                "success",
+            )
+
+        else:
+            flash(
+                (
+                    f"Plan '{plan_name}' updated successfully. "
+                    "Existing subscriptions were not changed."
+                ),
+                "success",
+            )
+
+        return redirect(url_for("superadmin_plans"))
+
+    except ValueError as e:
+        if conn:
+            conn.rollback()
+
+        print("❌ PLAN VALIDATION ERROR:", e)
+
+        flash(str(e), "error")
+
+        return redirect(url_for("superadmin_plans"))
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+
+        print("❌ SUPER ADMIN EDIT PLAN ERROR:", e)
+
+        flash("Unable to update subscription plan. No changes were saved.", "error")
+
+        return redirect(url_for("superadmin_plans"))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+            # =========================================================
+
+
+# 💳 SUPER ADMIN - CREATE SUBSCRIPTION PLAN
+# =========================================================
+
+
+@app.route("/superadmin/plans/create", methods=["POST"])
+@admin_required
+def superadmin_create_plan():
+
+    conn = None
+    cursor = None
+
+    try:
+        # =====================================================
+        # FORM DATA
+        # =====================================================
+
+        plan_name = (request.form.get("plan_name") or "").strip()
+
+        support_type = (request.form.get("support_type") or "").strip()
+
+        storage_limit = (request.form.get("storage_limit") or "").strip()
+
+        # =====================================================
+        # VALIDATE PLAN NAME
+        # =====================================================
+
+        if not plan_name:
+            flash("Plan name is required.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        if len(plan_name) > 100:
+            flash("Plan name cannot exceed 100 characters.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        # =====================================================
+        # NUMERIC HELPERS
+        # =====================================================
+
+        def get_decimal(field_name, default=0):
+
+            raw = (request.form.get(field_name) or "").strip()
+
+            if raw == "":
+                return default
+
+            try:
+                value = float(raw)
+
+            except (TypeError, ValueError):
+                raise ValueError(f"Invalid value for {field_name}.")
+
+            if value < 0:
+                raise ValueError(f"{field_name} cannot be negative.")
+
+            return value
+
+        def get_integer(field_name, default=0, minimum=0):
+
+            raw = (request.form.get(field_name) or "").strip()
+
+            if raw == "":
+                return default
+
+            try:
+                value = int(raw)
+
+            except (TypeError, ValueError):
+                raise ValueError(f"Invalid value for {field_name}.")
+
+            if value < minimum:
+                raise ValueError(f"{field_name} has an invalid value.")
+
+            return value
+
+        # =====================================================
+        # READ VALUES
+        # =====================================================
+
+        monthly_price = get_decimal("monthly_price")
+
+        yearly_price = get_decimal("yearly_price")
+
+        student_limit = get_integer("student_limit")
+
+        staff_limit = get_integer("staff_limit")
+
+        tc_limit = get_integer("tc_limit")
+
+        bonafide_limit = get_integer("bonafide_limit")
+
+        duration_months = get_integer("duration_months", minimum=1)
+
+        # =====================================================
+        # STATUS
+        # =====================================================
+
+        is_active_raw = (request.form.get("is_active") or "").strip()
+
+        is_active = 1 if is_active_raw == "1" else 0
+
+        # =====================================================
+        # MODULE VALUES
+        #
+        # Checked checkbox:
+        # Enabled
+        #
+        # Unchecked:
+        # Disabled
+        # =====================================================
+
+        module_fields = [
+            "enable_tc_management",
+            "enable_bonafide_management",
+            "enable_import_export",
+            "enable_attendance",
+            "enable_fee_management",
+            "enable_teacher_management",
+            "enable_results",
+            "enable_timetable",
+            "enable_notice_board",
+        ]
+
+        module_values = {}
+
+        for field in module_fields:
+            module_values[field] = (
+                "Enabled" if request.form.get(field) == "Enabled" else "Disabled"
+            )
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        conn.start_transaction()
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # DUPLICATE PLAN NAME CHECK
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id
+
+            FROM subscription_plans
+
+            WHERE LOWER(plan_name)
+                = LOWER(%s)
+
+            LIMIT 1
+
+        """,
+            (plan_name,),
+        )
+
+        existing_plan = cursor.fetchone()
+
+        if existing_plan:
+            conn.rollback()
+
+            flash(f"A plan named '{plan_name}' already exists.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
+        # =====================================================
+        # INSERT PLAN
+        # =====================================================
+
+        cursor.execute(
+            """
+            INSERT INTO subscription_plans (
+
+                plan_name,
+
+                monthly_price,
+
+                yearly_price,
+
+                student_limit,
+
+                tc_limit,
+
+                bonafide_limit,
+
+                staff_limit,
+
+                support_type,
+
+                storage_limit,
+
+                duration_months,
+
+                is_active,
+
+                enable_tc_management,
+
+                enable_bonafide_management,
+
+                enable_import_export,
+
+                enable_attendance,
+
+                enable_fee_management,
+
+                enable_teacher_management,
+
+                enable_results,
+
+                enable_timetable,
+
+                enable_notice_board
+
+            )
+
+            VALUES (
+
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+
+            )
+
+        """,
+            (
+                plan_name,
+                monthly_price,
+                yearly_price,
+                student_limit,
+                tc_limit,
+                bonafide_limit,
+                staff_limit,
+                support_type,
+                storage_limit,
+                duration_months,
+                is_active,
+                module_values["enable_tc_management"],
+                module_values["enable_bonafide_management"],
+                module_values["enable_import_export"],
+                module_values["enable_attendance"],
+                module_values["enable_fee_management"],
+                module_values["enable_teacher_management"],
+                module_values["enable_results"],
+                module_values["enable_timetable"],
+                module_values["enable_notice_board"],
+            ),
+        )
+
+        new_plan_id = cursor.lastrowid
+
+        # =====================================================
+        # COMMIT
+        # =====================================================
+
+        conn.commit()
+
+        flash(f"Plan '{plan_name}' was created successfully.", "success")
+
+        return redirect(url_for("superadmin_plans"))
+
+    except ValueError as e:
+        if conn:
+            conn.rollback()
+
+        print("❌ CREATE PLAN VALIDATION ERROR:", e)
+
+        flash(str(e), "error")
+
+        return redirect(url_for("superadmin_plans"))
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+
+        print("❌ CREATE PLAN ERROR:", e)
+
+        flash("Unable to create subscription plan. No changes were saved.", "error")
+
+        return redirect(url_for("superadmin_plans"))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# =========================================================
+# SUPER ADMIN - GLOBAL PLAN HISTORY
+# =========================================================
+
+
+@app.route("/superadmin/plans/history", methods=["GET"])
+@admin_required
+def superadmin_plan_history():
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # =================================================
+        # ALL PLAN HISTORY
+        # =================================================
+
+        cursor.execute("""
+            SELECT
+
+                h.id,
+                h.plan_id,
+
+                COALESCE(
+                    p.plan_name,
+                    'Deleted Plan'
+                ) AS plan_name,
+
+                h.changed_by,
+                h.change_type,
+                h.old_data,
+                h.new_data,
+                h.change_reason,
+                h.created_at
+
+            FROM subscription_plan_history h
+
+            LEFT JOIN subscription_plans p
+                ON h.plan_id = p.id
+
+            ORDER BY
+                h.created_at DESC,
+                h.id DESC
+
+        """)
+
+        history = cursor.fetchall()
+
+        # =================================================
+        # SERIALIZE DATA
+        # =================================================
+
+        for item in history:
+            if item.get("created_at"):
+                item["created_at"] = item["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+
+            # OLD DATA
+
+            if item.get("old_data"):
+                if isinstance(item["old_data"], str):
+                    try:
+                        item["old_data"] = json.loads(item["old_data"])
+
+                    except Exception:
+                        item["old_data"] = None
+
+            # NEW DATA
+
+            if item.get("new_data"):
+                if isinstance(item["new_data"], str):
+                    try:
+                        item["new_data"] = json.loads(item["new_data"])
+
+                    except Exception:
+                        item["new_data"] = None
+
+        # =================================================
+        # SUMMARY
+        # =================================================
+
+        total_changes = len(history)
+
+        last_changed_by = "—"
+        last_updated = None
+
+        if history:
+            last_changed_by = history[0].get("changed_by") or "System"
+
+            last_updated = history[0].get("created_at")
+
+        # =================================================
+        # RESPONSE
+        # =================================================
+
+        return jsonify(
+            {
+                "success": True,
+                "total_changes": total_changes,
+                "last_changed_by": last_changed_by,
+                "last_updated": last_updated,
+                "history": history,
+            }
+        )
+
+    except Exception as e:
+        print("❌ GLOBAL PLAN HISTORY ERROR:", e)
+
+        return jsonify(
+            {"success": False, "message": "Unable to load plan history."}
+        ), 500
 
     finally:
         if cursor:
@@ -7549,7 +11834,7 @@ def superadmin_subscriptions():
 # =========================================================
 
 
-@app.route("/superadmin/renewals")
+@app.route("/superadmin/renewals", methods=["GET"])
 @admin_required
 def superadmin_renewals():
 
@@ -7560,58 +11845,109 @@ def superadmin_renewals():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # =====================================================
+        # FILTER INPUTS
+        # =====================================================
+
         search = (request.args.get("search") or "").strip()
 
-        status_filter = (request.args.get("status") or "").strip()
+        status_filter = (request.args.get("status") or "").strip().lower()
 
         plan_filter = (request.args.get("plan") or "").strip()
 
-        page = request.args.get("page", 1, type=int)
+        sort_filter = (request.args.get("sort") or "nearest").strip().lower()
 
-        per_page = 5
+        # =====================================================
+        # PAGINATION
+        # =====================================================
+
+        try:
+            page = int(request.args.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
 
         if page < 1:
             page = 1
 
-        valid_status = ["", "expired", "today", "7", "30"]
+        # Keep this reasonable for the admin page.
+        per_page = 10
+
+        # =====================================================
+        # VALID FILTERS
+        # =====================================================
+
+        valid_status = {"", "expired", "today", "7", "30"}
 
         if status_filter not in valid_status:
             status_filter = ""
 
-        # ================= BASE QUERY =================
+        # IMPORTANT:
+        # Never directly put request.args["sort"] into SQL.
+        # Use a whitelist.
+        sort_map = {
+            "nearest": """
+                DATEDIFF(sub.end_date, CURDATE()) ASC,
+                sub.end_date ASC,
+                sub.id DESC
+            """,
+            "farthest": """
+                DATEDIFF(sub.end_date, CURDATE()) DESC,
+                sub.end_date DESC,
+                sub.id DESC
+            """,
+            "amount-high": """
+                COALESCE(sub.amount, 0) DESC,
+                sub.end_date ASC,
+                sub.id DESC
+            """,
+            "amount-low": """
+                COALESCE(sub.amount, 0) ASC,
+                sub.end_date ASC,
+                sub.id DESC
+            """,
+        }
+
+        if sort_filter not in sort_map:
+            sort_filter = "nearest"
+
+        order_by = sort_map[sort_filter]
+
+        # =====================================================
+        # BASE QUERY
+        # =====================================================
 
         base_query = """
-
             FROM subscriptions sub
 
             LEFT JOIN schools s
                 ON sub.school_id = s.school_id
 
-            WHERE 1=1
-
+            WHERE 1 = 1
         """
 
         params = []
 
-        # ================= SEARCH =================
+        # =====================================================
+        # SEARCH
+        # =====================================================
 
         if search:
             base_query += """
-
                 AND (
-                    s.name LIKE %s
-                    OR COALESCE(s.email, '') LIKE %s
+                    LOWER(COALESCE(s.name, '')) LIKE LOWER(%s)
+                    OR LOWER(COALESCE(s.email, '')) LIKE LOWER(%s)
                     OR COALESCE(s.phone, '') LIKE %s
-                    OR sub.plan_name LIKE %s
+                    OR LOWER(COALESCE(sub.plan_name, '')) LIKE LOWER(%s)
                 )
-
             """
 
             keyword = f"%{search}%"
 
             params.extend([keyword, keyword, keyword, keyword])
 
-        # ================= PLAN FILTER =================
+        # =====================================================
+        # PLAN FILTER
+        # =====================================================
 
         if plan_filter:
             base_query += """
@@ -7620,42 +11956,64 @@ def superadmin_renewals():
 
             params.append(plan_filter)
 
-        # ================= STATUS FILTER =================
+        # =====================================================
+        # STATUS / EXPIRY FILTER
+        # =====================================================
 
         if status_filter == "expired":
             base_query += """
-                AND DATEDIFF(sub.end_date, CURDATE()) < 0
+                AND sub.end_date IS NOT NULL
+                AND DATEDIFF(
+                    sub.end_date,
+                    CURDATE()
+                ) < 0
             """
 
         elif status_filter == "today":
             base_query += """
-                AND DATEDIFF(sub.end_date, CURDATE()) = 0
+                AND sub.end_date IS NOT NULL
+                AND DATEDIFF(
+                    sub.end_date,
+                    CURDATE()
+                ) = 0
             """
 
         elif status_filter == "7":
             base_query += """
-                AND DATEDIFF(sub.end_date, CURDATE()) BETWEEN 1 AND 7
+                AND sub.end_date IS NOT NULL
+                AND DATEDIFF(
+                    sub.end_date,
+                    CURDATE()
+                ) BETWEEN 1 AND 7
             """
 
         elif status_filter == "30":
             base_query += """
-                AND DATEDIFF(sub.end_date, CURDATE()) BETWEEN 1 AND 30
+                AND sub.end_date IS NOT NULL
+                AND DATEDIFF(
+                    sub.end_date,
+                    CURDATE()
+                ) BETWEEN 1 AND 30
             """
 
-        # ================= TOTAL FILTERED RECORDS =================
+        # =====================================================
+        # TOTAL FILTERED RECORDS
+        # =====================================================
 
-        cursor.execute(
-            f"""
-
+        count_sql = f"""
             SELECT COUNT(*) AS total
-
             {base_query}
+        """
 
-        """,
-            params,
-        )
+        cursor.execute(count_sql, tuple(params))
 
-        total_records = cursor.fetchone()["total"] or 0
+        count_row = cursor.fetchone()
+
+        total_records = count_row["total"] if count_row else 0
+
+        # =====================================================
+        # PAGINATION CALCULATION
+        # =====================================================
 
         total_pages = max(1, (total_records + per_page - 1) // per_page)
 
@@ -7664,196 +12022,277 @@ def superadmin_renewals():
 
         offset = (page - 1) * per_page
 
-        # ================= MAIN DATA =================
+        # =====================================================
+        # MAIN RENEWAL QUERY
+        # =====================================================
 
-        query_params = params.copy()
-
-        query_params.extend([per_page, offset])
-
-        cursor.execute(
-            f"""
-
+        data_sql = f"""
             SELECT
 
                 sub.id,
+
                 sub.school_id,
+
+                sub.plan_id,
+
                 sub.plan_name,
+
                 sub.start_date,
+
                 sub.end_date,
+
                 sub.amount,
+
                 sub.status,
 
-                COALESCE(s.name, 'Unknown School') AS school_name,
-                s.email AS school_email,
-                s.phone AS school_phone,
+                COALESCE(
+                    s.name,
+                    'Unknown School'
+                ) AS school_name,
+
+                COALESCE(
+                    s.email,
+                    ''
+                ) AS school_email,
+
+                COALESCE(
+                    s.phone,
+                    ''
+                ) AS school_phone,
 
                 DATEDIFF(
                     sub.end_date,
                     CURDATE()
-                ) AS days_left,
-
-                CASE
-
-                    WHEN DATEDIFF(sub.end_date, CURDATE()) < 0
-                    THEN 1
-
-                    WHEN DATEDIFF(sub.end_date, CURDATE()) = 0
-                    THEN 2
-
-                    WHEN DATEDIFF(sub.end_date, CURDATE()) BETWEEN 1 AND 7
-                    THEN 3
-
-                    WHEN DATEDIFF(sub.end_date, CURDATE()) BETWEEN 8 AND 30
-                    THEN 4
-
-                    ELSE 5
-
-                END AS priority_order
+                ) AS days_left
 
             {base_query}
 
             ORDER BY
-                priority_order ASC,
-                sub.end_date ASC,
-                sub.id DESC
+                {order_by}
 
             LIMIT %s OFFSET %s
+        """
 
-        """,
-            query_params,
-        )
+        query_params = list(params)
+
+        query_params.extend([per_page, offset])
+
+        cursor.execute(data_sql, tuple(query_params))
 
         renewals = cursor.fetchall()
 
-        # ================= FORMAT RENEWALS =================
+        # =====================================================
+        # FORMAT RENEWAL DATA
+        # =====================================================
 
         for item in renewals:
             days_left = item.get("days_left")
 
+            # -------------------------------------------------
+            # STATUS
+            # -------------------------------------------------
+
             if days_left is None:
-                item["days_left"] = -999
+                item["days_left"] = None
+
                 item["alert_type"] = "expired"
+
                 item["alert_label"] = "No Expiry Date"
 
             elif days_left < 0:
                 item["alert_type"] = "expired"
+
                 item["alert_label"] = "Expired"
 
             elif days_left == 0:
                 item["alert_type"] = "today"
+
                 item["alert_label"] = "Expires Today"
 
             elif days_left <= 7:
                 item["alert_type"] = "warning"
+
                 item["alert_label"] = "Urgent Renewal"
 
             elif days_left <= 30:
                 item["alert_type"] = "safe"
+
                 item["alert_label"] = "Renewal Due"
 
             else:
                 item["alert_type"] = "safe"
+
                 item["alert_label"] = "Active"
+
+            # -------------------------------------------------
+            # PHONE
+            # -------------------------------------------------
 
             phone = item.get("school_phone") or ""
 
-            phone = "".join(filter(str.isdigit, phone))
+            phone = "".join(filter(str.isdigit, str(phone)))
 
             if len(phone) == 10:
                 phone = "91" + phone
 
             item["school_phone"] = phone
 
+            # -------------------------------------------------
+            # WHATSAPP MESSAGE
+            # -------------------------------------------------
+
+            school_name = item.get("school_name") or "School"
+
+            plan_name = item.get("plan_name") or "subscription"
+
+            end_date = item.get("end_date") or "N/A"
+
             message = (
-                f"Hello {item.get('school_name')}, "
-                f"your {item.get('plan_name')} subscription "
-                f"expires on {item.get('end_date')}. "
-                f"Please renew your SchoolSphere ERP subscription."
+                f"Hello {school_name}, "
+                f"your {plan_name} subscription "
+                f"expires on {end_date}. "
+                f"Please renew your "
+                f"SchoolSphere ERP subscription "
+                f"to avoid service interruption."
             )
 
             item["whatsapp_message"] = quote_plus(message)
 
-        # ================= KPI COUNTS =================
+        # =====================================================
+        # KPI - EXPIRED
+        # =====================================================
 
-        cursor.execute("""
-
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
 
             FROM subscriptions
 
-            WHERE DATEDIFF(end_date, CURDATE()) < 0
+            WHERE end_date IS NOT NULL
 
-        """)
+            AND DATEDIFF(
+                end_date,
+                CURDATE()
+            ) < 0
+            """
+        )
 
-        expired_count = cursor.fetchone()["total"] or 0
+        expired_row = cursor.fetchone()
 
-        cursor.execute("""
+        expired_count = expired_row["total"] if expired_row else 0
 
+        # =====================================================
+        # KPI - TODAY
+        # =====================================================
+
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
 
             FROM subscriptions
 
-            WHERE DATEDIFF(end_date, CURDATE()) = 0
+            WHERE end_date IS NOT NULL
 
-        """)
+            AND DATEDIFF(
+                end_date,
+                CURDATE()
+            ) = 0
+            """
+        )
 
-        today_count = cursor.fetchone()["total"] or 0
+        today_row = cursor.fetchone()
 
-        cursor.execute("""
+        today_count = today_row["total"] if today_row else 0
 
+        # =====================================================
+        # KPI - NEXT 7 DAYS
+        # =====================================================
+
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
 
             FROM subscriptions
 
-            WHERE DATEDIFF(end_date, CURDATE()) BETWEEN 1 AND 7
+            WHERE end_date IS NOT NULL
 
-        """)
+            AND DATEDIFF(
+                end_date,
+                CURDATE()
+            ) BETWEEN 1 AND 7
+            """
+        )
 
-        week_count = cursor.fetchone()["total"] or 0
+        week_row = cursor.fetchone()
 
-        cursor.execute("""
+        week_count = week_row["total"] if week_row else 0
 
+        # =====================================================
+        # KPI - NEXT 30 DAYS
+        # =====================================================
+
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
 
             FROM subscriptions
 
-            WHERE DATEDIFF(end_date, CURDATE()) BETWEEN 1 AND 30
+            WHERE end_date IS NOT NULL
 
-        """)
+            AND DATEDIFF(
+                end_date,
+                CURDATE()
+            ) BETWEEN 1 AND 30
+            """
+        )
 
-        month_count = cursor.fetchone()["total"] or 0
+        month_row = cursor.fetchone()
 
-        # ================= PLAN DROPDOWN =================
+        month_count = month_row["total"] if month_row else 0
 
-        cursor.execute("""
+        # =====================================================
+        # PLAN FILTER DROPDOWN
+        # =====================================================
 
+        cursor.execute(
+            """
             SELECT DISTINCT
                 plan_name
 
             FROM subscriptions
 
             WHERE plan_name IS NOT NULL
-            AND plan_name <> ''
 
-            ORDER BY plan_name
+            AND TRIM(plan_name) <> ''
 
-        """)
+            ORDER BY
+                plan_name ASC
+            """
+        )
 
         plans = cursor.fetchall()
 
-        # ================= SIDEBAR LEADS COUNT =================
+        # =====================================================
+        # SIDEBAR - NEW LEADS
+        # =====================================================
 
-        cursor.execute("""
-
+        cursor.execute(
+            """
             SELECT COUNT(*) AS total
 
             FROM lead_requests
 
             WHERE status = 'New'
+            """
+        )
 
-        """)
+        lead_row = cursor.fetchone()
 
-        new_leads_count = cursor.fetchone()["total"] or 0
+        new_leads_count = lead_row["total"] if lead_row else 0
+
+        # =====================================================
+        # RENDER
+        # =====================================================
 
         return render_template(
             "superadmin/renewals_admin.html",
@@ -7866,7 +12305,9 @@ def superadmin_renewals():
             search=search,
             status_filter=status_filter,
             plan_filter=plan_filter,
+            sort_filter=sort_filter,
             page=page,
+            per_page=per_page,
             total_pages=total_pages,
             total_records=total_records,
             new_leads_count=new_leads_count,
@@ -7876,9 +12317,9 @@ def superadmin_renewals():
         )
 
     except Exception as e:
-        print("❌ RENEWAL CENTER ERROR:", e)
+        print("❌ RENEWAL CENTER ERROR:", repr(e))
 
-        return f"Unable to load renewal center ❌ {str(e)}"
+        return ("Unable to load renewal center ❌ Please check the server logs."), 500
 
     finally:
         if cursor:
@@ -7895,36 +12336,38 @@ def superadmin_renewals():
 
 @app.route("/superadmin/renewals/email/<int:subscription_id>", methods=["POST"])
 @admin_required
-def send_renewal_email(subscription_id):
+def superadmin_renewal_email(subscription_id):
 
     conn = None
     cursor = None
 
     try:
         conn = get_connection()
+
         cursor = conn.cursor(dictionary=True)
 
-        # =====================================
-        # KEEP CURRENT FILTER URL
-        # =====================================
-
-        back_url = request.referrer or url_for("superadmin_renewals")
-
-        # =====================================
-        # GET SUBSCRIPTION + SCHOOL
-        # =====================================
+        # =====================================================
+        # GET SUBSCRIPTION
+        # =====================================================
 
         cursor.execute(
             """
-
             SELECT
 
                 sub.id,
+
                 sub.school_id,
+
+                sub.plan_id,
+
                 sub.plan_name,
+
                 sub.start_date,
+
                 sub.end_date,
+
                 sub.amount,
+
                 sub.status,
 
                 COALESCE(
@@ -7932,7 +12375,10 @@ def send_renewal_email(subscription_id):
                     'School'
                 ) AS school_name,
 
-                s.email AS school_email
+                COALESCE(
+                    s.email,
+                    ''
+                ) AS school_email
 
             FROM subscriptions sub
 
@@ -7942,116 +12388,196 @@ def send_renewal_email(subscription_id):
             WHERE sub.id = %s
 
             LIMIT 1
-
-        """,
+            """,
             (subscription_id,),
         )
 
-        sub = cursor.fetchone()
+        subscription = cursor.fetchone()
 
-        if not sub:
-            flash("Subscription not found ❌", "danger")
+        # =====================================================
+        # NOT FOUND
+        # =====================================================
 
-            return redirect(back_url)
+        if not subscription:
+            flash("Subscription not found.", "danger")
 
-        school_email = (sub.get("school_email") or "").strip().lower()
+            return redirect(url_for("superadmin_renewals"))
+
+        # =====================================================
+        # EMAIL
+        # =====================================================
+
+        school_email = (subscription.get("school_email") or "").strip().lower()
 
         if not school_email:
-            flash("School email not found ❌", "danger")
+            flash("School email is not available.", "danger")
 
-            return redirect(back_url)
+            return redirect(url_for("superadmin_renewals"))
+
+        # =====================================================
+        # EMAIL VALIDATION
+        # =====================================================
 
         if not is_valid_email(school_email):
-            flash("Invalid school email ❌", "danger")
+            flash("The school email address is invalid.", "danger")
 
-            return redirect(back_url)
+            return redirect(url_for("superadmin_renewals"))
 
-        # =====================================
-        # EMAIL CONTENT
-        # =====================================
+        # =====================================================
+        # SAFE VALUES
+        # =====================================================
+
+        school_name = subscription.get("school_name") or "School"
+
+        plan_name = subscription.get("plan_name") or "Subscription"
+
+        start_date = subscription.get("start_date") or "N/A"
+
+        end_date = subscription.get("end_date") or "N/A"
+
+        amount = subscription.get("amount") or 0
+
+        # =====================================================
+        # EMAIL SUBJECT
+        # =====================================================
 
         subject = "Subscription Renewal Reminder - SchoolSphere ERP"
 
-        body = f"""
+        # =====================================================
+        # EMAIL BODY
+        # =====================================================
 
+        body = f"""
         <div style="
-            font-family:Arial, sans-serif;
-            padding:24px;
-            line-height:1.7;
+            font-family:Arial,Helvetica,sans-serif;
+            max-width:650px;
+            margin:0 auto;
+            padding:28px;
             color:#0f172a;
+            line-height:1.7;
         ">
 
-            <h2 style="
-                color:#0EA5A4;
-                margin-bottom:16px;
-            ">
-                Subscription Renewal Reminder
-            </h2>
-
-            <p>
-                Dear <b>{sub["school_name"]}</b>,
-            </p>
-
-            <p>
-                This is a reminder that your
-                <b>{sub["plan_name"]}</b>
-                subscription is due for renewal.
-            </p>
-
             <div style="
-                background:#f8fafc;
                 border:1px solid #e2e8f0;
-                border-radius:12px;
-                padding:16px;
-                margin:18px 0;
+                border-radius:16px;
+                overflow:hidden;
+                background:#ffffff;
             ">
 
-                <p style="margin:0;">
-                    <b>Start Date:</b> {sub["start_date"]}<br>
-                    <b>Expiry Date:</b> {sub["end_date"]}<br>
-                    <b>Amount:</b> ₹{sub["amount"]}
-                </p>
+                <div style="
+                    padding:22px 24px;
+                    background:#ecfdfb;
+                    border-bottom:1px solid #d1fae5;
+                ">
+
+                    <h2 style="
+                        margin:0;
+                        color:#087f79;
+                        font-size:22px;
+                    ">
+                        Subscription Renewal Reminder
+                    </h2>
+
+                </div>
+
+
+                <div style="
+                    padding:24px;
+                ">
+
+                    <p>
+                        Dear
+                        <strong>{school_name}</strong>,
+                    </p>
+
+                    <p>
+                        This is a reminder that your
+                        <strong>{plan_name}</strong>
+                        subscription is due for renewal.
+                    </p>
+
+
+                    <div style="
+                        margin:20px 0;
+                        padding:18px;
+                        border:1px solid #e2e8f0;
+                        border-radius:12px;
+                        background:#f8fafc;
+                    ">
+
+                        <p style="margin:0 0 8px;">
+                            <strong>Plan:</strong>
+                            {plan_name}
+                        </p>
+
+                        <p style="margin:0 0 8px;">
+                            <strong>Start Date:</strong>
+                            {start_date}
+                        </p>
+
+                        <p style="margin:0 0 8px;">
+                            <strong>Expiry Date:</strong>
+                            {end_date}
+                        </p>
+
+                        <p style="margin:0;">
+                            <strong>Amount:</strong>
+                            ₹{amount}
+                        </p>
+
+                    </div>
+
+
+                    <p>
+                        Please renew your
+                        SchoolSphere ERP subscription
+                        to avoid any interruption in service.
+                    </p>
+
+
+                    <p>
+                        For assistance, please contact
+                        the SchoolSphere ERP administration team.
+                    </p>
+
+
+                    <hr style="
+                        border:none;
+                        border-top:1px solid #e2e8f0;
+                        margin:24px 0;
+                    ">
+
+
+                    <p style="
+                        margin:0;
+                        color:#64748b;
+                    ">
+                        Regards,<br>
+                        <strong>
+                            SchoolSphere ERP Team
+                        </strong>
+                    </p>
+
+                </div>
 
             </div>
 
-            <p>
-                Please renew your SchoolSphere ERP subscription
-                to avoid service interruption.
-            </p>
-
-            <p>
-                For assistance, contact the SchoolSphere ERP admin team.
-            </p>
-
-            <hr style="
-                border:none;
-                border-top:1px solid #e2e8f0;
-                margin:24px 0;
-            ">
-
-            <p>
-                Regards,<br>
-                <b>SchoolSphere ERP Team</b>
-            </p>
-
         </div>
-
         """
 
-        # =====================================
+        # =====================================================
         # SEND EMAIL
-        # =====================================
+        # =====================================================
 
         email_sent = send_email(school_email, subject, body)
 
-        if email_sent is True:
-            # =====================================
-            # LOG EMAIL
-            # =====================================
+        # =====================================================
+        # SUCCESS
+        # =====================================================
 
+        if email_sent is True:
             cursor.execute(
                 """
-
                 INSERT INTO subscription_email_logs
                 (
                     school_id,
@@ -8059,6 +12585,7 @@ def send_renewal_email(subscription_id):
                     email_type,
                     sent_at
                 )
+
                 VALUES
                 (
                     %s,
@@ -8066,31 +12593,38 @@ def send_renewal_email(subscription_id):
                     %s,
                     NOW()
                 )
-
-            """,
-                (sub["school_id"], sub["id"], "admin_renewal_reminder"),
+                """,
+                (
+                    subscription["school_id"],
+                    subscription["id"],
+                    "admin_renewal_reminder",
+                ),
             )
 
             conn.commit()
 
-            flash("Renewal reminder email sent ✅", "success")
+            flash("Renewal reminder email sent successfully.", "success")
+
+        # =====================================================
+        # FAILURE
+        # =====================================================
 
         else:
             conn.rollback()
 
-            flash("Email sending failed ❌", "danger")
+            flash("Unable to send renewal reminder email.", "danger")
 
-        return redirect(back_url)
+        return redirect(url_for("superadmin_renewals"))
 
     except Exception as e:
         if conn:
             conn.rollback()
 
-        print("❌ RENEWAL EMAIL ERROR:", e)
+        print("❌ RENEWAL EMAIL ERROR:", repr(e))
 
-        flash("Renewal email failed ❌", "danger")
+        flash("Renewal email could not be sent.", "danger")
 
-        return redirect(request.referrer or url_for("superadmin_renewals"))
+        return redirect(url_for("superadmin_renewals"))
 
     finally:
         if cursor:
@@ -8116,9 +12650,9 @@ def superadmin_payments():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # =====================================
+        # =====================================================
         # PAGINATION
-        # =====================================
+        # =====================================================
 
         page = request.args.get("page", 1, type=int)
 
@@ -8127,9 +12661,9 @@ def superadmin_payments():
         if page < 1:
             page = 1
 
-        # =====================================
+        # =====================================================
         # FILTERS
-        # =====================================
+        # =====================================================
 
         search = (request.args.get("search") or "").strip()
 
@@ -8137,17 +12671,42 @@ def superadmin_payments():
 
         gateway_filter = (request.args.get("gateway") or "").strip()
 
-        valid_status = ["", "success", "failed", "pending"]
+        transaction_type_filter = (request.args.get("transaction_type") or "").strip()
+
+        sort_filter = (request.args.get("sort") or "newest").strip().lower()
+
+        # =====================================================
+        # VALID STATUS
+        # =====================================================
+
+        valid_status = {"", "success", "failed", "pending"}
 
         if status_filter not in valid_status:
             status_filter = ""
 
-        # =====================================
+        # =====================================================
+        # VALID SORT
+        # IMPORTANT:
+        # Never directly use request parameter inside ORDER BY.
+        # =====================================================
+
+        valid_sorts = {
+            "newest": "pl.id DESC",
+            "oldest": "pl.id ASC",
+            "amount-high": "pl.amount DESC, pl.id DESC",
+            "amount-low": "pl.amount ASC, pl.id DESC",
+        }
+
+        if sort_filter not in valid_sorts:
+            sort_filter = "newest"
+
+        order_by = valid_sorts[sort_filter]
+
+        # =====================================================
         # BASE QUERY
-        # =====================================
+        # =====================================================
 
         base_query = """
-
             FROM payment_logs pl
 
             LEFT JOIN subscription_plans sp
@@ -8156,77 +12715,251 @@ def superadmin_payments():
             LEFT JOIN schools s
                 ON pl.school_id = s.school_id
 
-            WHERE 1=1
-
+            WHERE 1 = 1
         """
 
         params = []
 
-        # =====================================
+        # =====================================================
         # SEARCH
-        # =====================================
+        #
+        # Searches:
+        #
+        # School Name
+        # School Email
+        # Invoice Number
+        # Payment ID
+        # Order ID
+        # Plan
+        # Gateway
+        # Transaction Type
+        # Status
+        # Amount
+        # Payment Log ID
+        # Created Date
+        #
+        # IMPORTANT:
+        # Do NOT use DATE_FORMAT() here because %s inside
+        # DATE_FORMAT can be interpreted as a Python SQL
+        # parameter placeholder by MySQL Connector/Python.
+        # =====================================================
 
         if search:
-            base_query += """
-
-                AND (
-
-                    COALESCE(s.name, '') LIKE %s
-                    OR COALESCE(pl.invoice_number, '') LIKE %s
-                    OR COALESCE(pl.payment_id, '') LIKE %s
-                    OR COALESCE(pl.order_id, '') LIKE %s
-                    OR COALESCE(sp.plan_name, '') LIKE %s
-
-                )
-
-            """
-
             keyword = f"%{search}%"
 
-            params.extend([keyword, keyword, keyword, keyword, keyword])
+            base_query += """
+                AND (
 
-        # =====================================
+                    LOWER(
+                        COALESCE(
+                            CAST(s.name AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    LOWER(
+                        COALESCE(
+                            CAST(s.email AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    LOWER(
+                        COALESCE(
+                            CAST(pl.invoice_number AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    LOWER(
+                        COALESCE(
+                            CAST(pl.payment_id AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    LOWER(
+                        COALESCE(
+                            CAST(pl.order_id AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    LOWER(
+                        COALESCE(
+                            CAST(sp.plan_name AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    LOWER(
+                        COALESCE(
+                            CAST(pl.payment_gateway AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    LOWER(
+                        COALESCE(
+                            CAST(pl.transaction_type AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    LOWER(
+                        COALESCE(
+                            CAST(pl.payment_status AS CHAR),
+                            ''
+                        )
+                    ) LIKE LOWER(%s)
+
+
+                    OR
+
+
+                    CAST(
+                        COALESCE(
+                            pl.amount,
+                            0
+                        ) AS CHAR
+                    ) LIKE %s
+
+
+                    OR
+
+
+                    CAST(
+                        pl.id AS CHAR
+                    ) LIKE %s
+
+
+                    OR
+
+
+                    CAST(
+                        pl.created_at AS CHAR
+                    ) LIKE %s
+
+                )
+            """
+
+            params.extend(
+                [
+                    keyword,  # school name
+                    keyword,  # school email
+                    keyword,  # invoice
+                    keyword,  # payment ID
+                    keyword,  # order ID
+                    keyword,  # plan
+                    keyword,  # gateway
+                    keyword,  # transaction type
+                    keyword,  # payment status
+                    keyword,  # amount
+                    keyword,  # payment log ID
+                    keyword,  # created_at
+                ]
+            )
+
+        # =====================================================
         # STATUS FILTER
-        # =====================================
+        # =====================================================
 
         if status_filter:
             base_query += """
-
-                AND LOWER(pl.payment_status) = %s
-
+                AND LOWER(
+                    COALESCE(
+                        pl.payment_status,
+                        ''
+                    )
+                ) = %s
             """
 
             params.append(status_filter)
 
-        # =====================================
+        # =====================================================
         # GATEWAY FILTER
-        # =====================================
+        # =====================================================
 
         if gateway_filter:
             base_query += """
-
-                AND pl.payment_gateway = %s
-
+                AND LOWER(
+                    COALESCE(
+                        pl.payment_gateway,
+                        ''
+                    )
+                ) = LOWER(%s)
             """
 
             params.append(gateway_filter)
 
-        # =====================================
-        # TOTAL RECORDS
-        # =====================================
+        # =====================================================
+        # TRANSACTION TYPE FILTER
+        # =====================================================
 
-        cursor.execute(
-            f"""
+        if transaction_type_filter:
+            base_query += """
+                AND LOWER(
+                    COALESCE(
+                        pl.transaction_type,
+                        ''
+                    )
+                ) = LOWER(%s)
+            """
 
-            SELECT COUNT(*) AS total
+            params.append(transaction_type_filter)
+
+        # =====================================================
+        # COUNT
+        # =====================================================
+
+        count_query = f"""
+            SELECT
+                COUNT(*) AS total
 
             {base_query}
+        """
 
-        """,
-            params,
-        )
+        cursor.execute(count_query, params)
 
-        total_records = cursor.fetchone()["total"] or 0
+        count_result = cursor.fetchone()
+
+        total_records = count_result["total"] if count_result else 0
+
+        # =====================================================
+        # TOTAL PAGES
+        # =====================================================
 
         total_pages = max(1, (total_records + per_page - 1) // per_page)
 
@@ -8235,85 +12968,163 @@ def superadmin_payments():
 
         offset = (page - 1) * per_page
 
-        # =====================================
+        # =====================================================
         # MAIN QUERY
-        # =====================================
+        # =====================================================
 
         query_params = params.copy()
 
         query_params.extend([per_page, offset])
 
-        cursor.execute(
-            f"""
-
+        payment_query = f"""
             SELECT
 
                 pl.id,
+
+                pl.school_id,
+
+                pl.subscription_id,
+
+                pl.plan_id,
+
                 pl.invoice_number,
+
                 pl.amount,
+
                 pl.payment_status,
+
                 pl.payment_id,
+
                 pl.order_id,
+
                 pl.payment_gateway,
+
                 pl.transaction_type,
+
                 pl.created_at,
+
 
                 COALESCE(
                     sp.plan_name,
                     'No Plan'
                 ) AS plan_name,
 
+
                 COALESCE(
                     s.name,
                     'Unknown School'
-                ) AS school_name
+                ) AS school_name,
+
+
+                COALESCE(
+                    s.email,
+                    ''
+                ) AS school_email
+
 
             {base_query}
 
-            ORDER BY pl.id DESC
 
-            LIMIT %s OFFSET %s
+            ORDER BY
+                {order_by}
 
-        """,
-            query_params,
-        )
+
+            LIMIT %s
+            OFFSET %s
+        """
+
+        cursor.execute(payment_query, query_params)
 
         payments = cursor.fetchall()
 
-        # =====================================
-        # KPI CARDS
-        # =====================================
+        # =====================================================
+        # KPI - TOTAL TRANSACTIONS
+        # =====================================================
 
         cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM payment_logs
-        """)
-        total_transactions = cursor.fetchone()["total"] or 0
-
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM payment_logs
-            WHERE LOWER(payment_status) = 'success'
-        """)
-        successful_payments = cursor.fetchone()["total"] or 0
-
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM payment_logs
-            WHERE LOWER(payment_status) = 'failed'
-        """)
-        failed_payments = cursor.fetchone()["total"] or 0
-
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM payment_logs
-            WHERE LOWER(payment_status) = 'pending'
-        """)
-        pending_payments = cursor.fetchone()["total"] or 0
-
-        cursor.execute("""
-
             SELECT
+                COUNT(*) AS total
+
+            FROM payment_logs
+        """)
+
+        result = cursor.fetchone()
+
+        total_transactions = result["total"] if result else 0
+
+        # =====================================================
+        # KPI - SUCCESSFUL
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total
+
+            FROM payment_logs
+
+            WHERE LOWER(
+                COALESCE(
+                    payment_status,
+                    ''
+                )
+            ) = 'success'
+        """)
+
+        result = cursor.fetchone()
+
+        successful_payments = result["total"] if result else 0
+
+        # =====================================================
+        # KPI - FAILED
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total
+
+            FROM payment_logs
+
+            WHERE LOWER(
+                COALESCE(
+                    payment_status,
+                    ''
+                )
+            ) = 'failed'
+        """)
+
+        result = cursor.fetchone()
+
+        failed_payments = result["total"] if result else 0
+
+        # =====================================================
+        # KPI - PENDING
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total
+
+            FROM payment_logs
+
+            WHERE LOWER(
+                COALESCE(
+                    payment_status,
+                    ''
+                )
+            ) = 'pending'
+        """)
+
+        result = cursor.fetchone()
+
+        pending_payments = result["total"] if result else 0
+
+        # =====================================================
+        # KPI - REVENUE
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+
                 COALESCE(
                     SUM(amount),
                     0
@@ -8321,79 +13132,128 @@ def superadmin_payments():
 
             FROM payment_logs
 
-            WHERE LOWER(payment_status) = 'success'
-
+            WHERE LOWER(
+                COALESCE(
+                    payment_status,
+                    ''
+                )
+            ) = 'success'
         """)
-        total_revenue = cursor.fetchone()["revenue"] or 0
 
-        # =====================================
-        # GATEWAYS DROPDOWN
-        # =====================================
+        result = cursor.fetchone()
+
+        total_revenue = result["revenue"] if result else 0
+
+        # =====================================================
+        # PAYMENT GATEWAYS
+        # =====================================================
 
         cursor.execute("""
-
             SELECT DISTINCT
                 payment_gateway
 
             FROM payment_logs
 
             WHERE payment_gateway IS NOT NULL
-            AND payment_gateway <> ''
 
-            ORDER BY payment_gateway
+            AND TRIM(payment_gateway) <> ''
 
+            ORDER BY
+                payment_gateway ASC
         """)
 
         gateways = cursor.fetchall()
 
-        # =====================================
-        # SIDEBAR LEADS COUNT
-        # =====================================
+        # =====================================================
+        # TRANSACTION TYPES
+        # =====================================================
 
         cursor.execute("""
-            SELECT COUNT(*) AS total
+            SELECT DISTINCT
+                transaction_type
+
+            FROM payment_logs
+
+            WHERE transaction_type IS NOT NULL
+
+            AND TRIM(transaction_type) <> ''
+
+            ORDER BY
+                transaction_type ASC
+        """)
+
+        transaction_types = cursor.fetchall()
+
+        # =====================================================
+        # SIDEBAR LEADS COUNT
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total
+
             FROM lead_requests
+
             WHERE status = 'New'
         """)
 
-        new_leads_count = cursor.fetchone()["total"] or 0
+        result = cursor.fetchone()
 
-        # =====================================
+        new_leads_count = result["total"] if result else 0
+
+        # =====================================================
         # RENDER
-        # =====================================
+        # =====================================================
 
         return render_template(
             "superadmin/payments_admin.html",
             payments=payments,
+            # KPI
             total_transactions=total_transactions,
             successful_payments=successful_payments,
             failed_payments=failed_payments,
             pending_payments=pending_payments,
             total_revenue=total_revenue,
+            # Dropdowns
             gateways=gateways,
+            transaction_types=transaction_types,
+            # Filters
             search=search,
             status_filter=status_filter,
             gateway_filter=gateway_filter,
+            transaction_type_filter=transaction_type_filter,
+            sort_filter=sort_filter,
+            # Pagination
             page=page,
             total_pages=total_pages,
             total_records=total_records,
+            # Sidebar
             new_leads_count=new_leads_count,
+            # Layout
             role="admin",
             school_name="Admin Panel",
             active_page="payments",
         )
 
     except Exception as e:
-        print("PAYMENTS ERROR:", e)
+        print("PAYMENTS ERROR:", repr(e))
 
-        return f"Unable to load payments ❌ {str(e)}"
+        return (f"Unable to load payments ❌ {str(e)}"), 500
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+
+            except Exception:
+                pass
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+
+            except Exception:
+                pass
 
 
 # =========================================================
@@ -8725,10 +13585,10 @@ def superadmin_export_excel(export_type):
             conn.close()
 
 
-
 # =========================================================
 # 💾 SUPER ADMIN - FULL DATABASE EXCEL BACKUP
 # =========================================================
+
 
 @app.route("/superadmin/backup/excel")
 @admin_required
@@ -8738,7 +13598,6 @@ def superadmin_excel_backup():
     cursor = None
 
     try:
-
         import io
         import pandas as pd
 
@@ -8746,16 +13605,9 @@ def superadmin_excel_backup():
 
         from flask import send_file
 
-        from openpyxl.styles import (
-            Font,
-            PatternFill,
-            Alignment,
-            Border,
-            Side
-        )
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
         from openpyxl.utils import get_column_letter
-
 
         # =====================================================
         # DATABASE CONNECTION
@@ -8764,25 +13616,17 @@ def superadmin_excel_backup():
         conn = get_connection()
 
         if not conn:
-            flash(
-                "Database connection failed. Backup could not be created.",
-                "danger"
-            )
+            flash("Database connection failed. Backup could not be created.", "danger")
 
-            return redirect(
-                request.referrer
-                or url_for("superadmin_reports")
-            )
+            return redirect(request.referrer or url_for("superadmin_reports"))
 
         cursor = conn.cursor(dictionary=True)
-
 
         # =====================================================
         # OUTPUT WORKBOOK
         # =====================================================
 
         output = io.BytesIO()
-
 
         # =====================================================
         # GET ALL DATABASE TABLES
@@ -8793,17 +13637,9 @@ def superadmin_excel_backup():
         table_rows = cursor.fetchall()
 
         if not table_rows:
+            flash("No database tables were found.", "danger")
 
-            flash(
-                "No database tables were found.",
-                "danger"
-            )
-
-            return redirect(
-                request.referrer
-                or url_for("superadmin_reports")
-            )
-
+            return redirect(request.referrer or url_for("superadmin_reports"))
 
         # =====================================================
         # EXTRACT TABLE NAMES
@@ -8812,31 +13648,23 @@ def superadmin_excel_backup():
         table_names = []
 
         for row in table_rows:
-
             if row:
-
                 table_name = next(iter(row.values()))
 
                 if table_name:
                     table_names.append(str(table_name))
 
-
         # =====================================================
         # SORT TABLES
         # =====================================================
 
-        table_names = sorted(
-            table_names,
-            key=lambda x: x.lower()
-        )
-
+        table_names = sorted(table_names, key=lambda x: x.lower())
 
         # =====================================================
         # EXCEL SHEET NAME HELPER
         # =====================================================
 
         used_sheet_names = set()
-
 
         def create_safe_sheet_name(table_name):
 
@@ -8868,22 +13696,15 @@ def superadmin_excel_backup():
             counter = 1
 
             while sheet_name.lower() in used_sheet_names:
-
                 suffix = f"_{counter}"
 
-                sheet_name = (
-                    base_name[:31 - len(suffix)]
-                    + suffix
-                )
+                sheet_name = base_name[: 31 - len(suffix)] + suffix
 
                 counter += 1
 
-            used_sheet_names.add(
-                sheet_name.lower()
-            )
+            used_sheet_names.add(sheet_name.lower())
 
             return sheet_name
-
 
         # =====================================================
         # BACKUP ERRORS
@@ -8895,17 +13716,11 @@ def superadmin_excel_backup():
 
         total_rows_exported = 0
 
-
         # =====================================================
         # CREATE WORKBOOK
         # =====================================================
 
-        with pd.ExcelWriter(
-            output,
-            engine="openpyxl"
-        ) as writer:
-
-
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
             # =================================================
             # BACKUP INFORMATION
             # =================================================
@@ -8913,57 +13728,30 @@ def superadmin_excel_backup():
             backup_info = pd.DataFrame(
                 [
                     {
-                        "Backup Type":
-                            "Full Database Excel Backup",
-
-                        "Generated On":
-                            datetime.now().strftime(
-                                "%d-%m-%Y %I:%M:%S %p"
-                            ),
-
-                        "Generated By":
-                            session.get(
-                                "admin_email",
-                                "Super Admin"
-                            ),
-
-                        "Database Tables":
-                            len(table_names),
-
-                        "Status":
-                            "Completed",
+                        "Backup Type": "Full Database Excel Backup",
+                        "Generated On": datetime.now().strftime("%d-%m-%Y %I:%M:%S %p"),
+                        "Generated By": session.get("admin_email", "Super Admin"),
+                        "Database Tables": len(table_names),
+                        "Status": "Completed",
                     }
                 ]
             )
 
+            backup_info.to_excel(writer, index=False, sheet_name="Backup Info")
 
-            backup_info.to_excel(
-                writer,
-                index=False,
-                sheet_name="Backup Info"
-            )
-
-            used_sheet_names.add(
-                "backup info"
-            )
-
+            used_sheet_names.add("backup info")
 
             # =================================================
             # EXPORT EVERY TABLE
             # =================================================
 
             for table_name in table_names:
-
                 try:
-
                     # -----------------------------------------
                     # SAFE TABLE NAME
                     # -----------------------------------------
 
-                    safe_table_name = (
-                        table_name.replace("`", "")
-                    )
-
+                    safe_table_name = table_name.replace("`", "")
 
                     # -----------------------------------------
                     # READ COMPLETE TABLE
@@ -8978,7 +13766,6 @@ def superadmin_excel_backup():
 
                     rows = cursor.fetchall()
 
-
                     # -----------------------------------------
                     # GET COLUMN NAMES
                     # -----------------------------------------
@@ -8986,128 +13773,72 @@ def superadmin_excel_backup():
                     column_names = []
 
                     if cursor.description:
-
-                        column_names = [
-                            column[0]
-                            for column in cursor.description
-                        ]
-
+                        column_names = [column[0] for column in cursor.description]
 
                     # -----------------------------------------
                     # CREATE DATAFRAME
                     # -----------------------------------------
 
                     if rows:
-
                         df = pd.DataFrame(rows)
 
                     else:
-
-                        df = pd.DataFrame(
-                            columns=column_names
-                        )
-
+                        df = pd.DataFrame(columns=column_names)
 
                     # -----------------------------------------
                     # SHEET NAME
                     # -----------------------------------------
 
-                    sheet_name = create_safe_sheet_name(
-                        table_name
-                    )
-
+                    sheet_name = create_safe_sheet_name(table_name)
 
                     # -----------------------------------------
                     # EXPORT
                     # -----------------------------------------
 
-                    df.to_excel(
-                        writer,
-                        index=False,
-                        sheet_name=sheet_name
-                    )
-
+                    df.to_excel(writer, index=False, sheet_name=sheet_name)
 
                     successful_tables += 1
 
                     total_rows_exported += len(df)
 
-
                 except Exception as table_error:
-
-                    print(
-                        f"⚠️ BACKUP TABLE ERROR "
-                        f"[{table_name}]:",
-                        table_error
-                    )
-
+                    print(f"⚠️ BACKUP TABLE ERROR [{table_name}]:", table_error)
 
                     backup_errors.append(
                         {
-                            "Table":
-                                table_name,
-
-                            "Error":
-                                str(table_error),
+                            "Table": table_name,
+                            "Error": str(table_error),
                         }
                     )
-
 
             # =================================================
             # ERROR SHEET
             # =================================================
 
             if backup_errors:
+                error_df = pd.DataFrame(backup_errors)
 
-                error_df = pd.DataFrame(
-                    backup_errors
-                )
+                error_sheet_name = create_safe_sheet_name("Export Errors")
 
-                error_sheet_name = (
-                    create_safe_sheet_name(
-                        "Export Errors"
-                    )
-                )
-
-                error_df.to_excel(
-                    writer,
-                    index=False,
-                    sheet_name=error_sheet_name
-                )
-
+                error_df.to_excel(writer, index=False, sheet_name=error_sheet_name)
 
             # =================================================
             # UPDATE BACKUP INFO
             # =================================================
 
-            info_sheet = writer.book[
-                "Backup Info"
-            ]
+            info_sheet = writer.book["Backup Info"]
 
-            info_sheet["A4"] = (
-                "Successful Tables"
-            )
+            info_sheet["A4"] = "Successful Tables"
 
-            info_sheet["B4"] = (
-                successful_tables
-            )
+            info_sheet["B4"] = successful_tables
 
-            info_sheet["A5"] = (
-                "Failed Tables"
-            )
+            info_sheet["A5"] = "Failed Tables"
 
-            info_sheet["B5"] = (
-                len(backup_errors)
-            )
+            info_sheet["B5"] = len(backup_errors)
 
-            info_sheet["A6"] = (
-                "Total Rows Exported"
-            )
+            info_sheet["A6"] = "Total Rows Exported"
 
-            info_sheet["B6"] = (
-                total_rows_exported
-            )
-
+            info_sheet["B6"] = total_rows_exported
 
             # =================================================
             # WORKBOOK STYLING
@@ -9115,113 +13846,66 @@ def superadmin_excel_backup():
 
             workbook = writer.book
 
+            header_fill = PatternFill("solid", fgColor="0EA5A4")
 
-            header_fill = PatternFill(
-                "solid",
-                fgColor="0EA5A4"
-            )
+            header_font = Font(bold=True, color="FFFFFF")
 
-            header_font = Font(
-                bold=True,
-                color="FFFFFF"
-            )
-
-            thin_side = Side(
-                style="thin",
-                color="E2E8F0"
-            )
+            thin_side = Side(style="thin", color="E2E8F0")
 
             thin_border = Border(
-                left=thin_side,
-                right=thin_side,
-                top=thin_side,
-                bottom=thin_side
+                left=thin_side, right=thin_side, top=thin_side, bottom=thin_side
             )
-
 
             # =================================================
             # STYLE EVERY SHEET
             # =================================================
 
             for sheet in workbook.worksheets:
-
-
                 # -----------------------------------------
                 # HEADER
                 # -----------------------------------------
 
                 for cell in sheet[1]:
-
                     cell.font = header_font
 
                     cell.fill = header_fill
 
-                    cell.alignment = Alignment(
-                        horizontal="center",
-                        vertical="center"
-                    )
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
 
                     cell.border = thin_border
-
 
                 # -----------------------------------------
                 # DATA
                 # -----------------------------------------
 
                 if sheet.max_row >= 2:
-
-                    for row in sheet.iter_rows(
-                        min_row=2
-                    ):
-
+                    for row in sheet.iter_rows(min_row=2):
                         for cell in row:
-
                             cell.border = thin_border
 
-                            cell.alignment = Alignment(
-                                vertical="top"
-                            )
-
+                            cell.alignment = Alignment(vertical="top")
 
                 # -----------------------------------------
                 # COLUMN WIDTH
                 # -----------------------------------------
 
                 for column_cells in sheet.columns:
-
                     if not column_cells:
                         continue
 
                     max_length = 0
 
-                    column_letter = (
-                        get_column_letter(
-                            column_cells[0].column
-                        )
-                    )
-
+                    column_letter = get_column_letter(column_cells[0].column)
 
                     for cell in column_cells:
-
                         if cell.value is not None:
+                            value_length = len(str(cell.value))
 
-                            value_length = len(
-                                str(cell.value)
-                            )
+                            max_length = max(max_length, value_length)
 
-                            max_length = max(
-                                max_length,
-                                value_length
-                            )
-
-
-                    sheet.column_dimensions[
-                        column_letter
-                    ].width = min(
-                        max(max_length + 3, 12),
-                        40
+                    sheet.column_dimensions[column_letter].width = min(
+                        max(max_length + 3, 12), 40
                     )
-
 
                 # -----------------------------------------
                 # FREEZE HEADER
@@ -9229,34 +13913,21 @@ def superadmin_excel_backup():
 
                 sheet.freeze_panes = "A2"
 
-
                 # -----------------------------------------
                 # AUTO FILTER
                 # -----------------------------------------
 
                 if sheet.max_row >= 2:
-
-                    sheet.auto_filter.ref = (
-                        sheet.dimensions
-                    )
-
+                    sheet.auto_filter.ref = sheet.dimensions
 
         # =====================================================
         # FINAL VALIDATION
         # =====================================================
 
         if successful_tables == 0:
+            flash("Backup failed. No database tables could be exported.", "danger")
 
-            flash(
-                "Backup failed. No database tables could be exported.",
-                "danger"
-            )
-
-            return redirect(
-                request.referrer
-                or url_for("superadmin_reports")
-            )
-
+            return redirect(request.referrer or url_for("superadmin_reports"))
 
         # =====================================================
         # PREPARE DOWNLOAD
@@ -9264,85 +13935,61 @@ def superadmin_excel_backup():
 
         output.seek(0)
 
-
         filename = (
             "SchoolSphere_Full_Database_Backup_"
             f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
             ".xlsx"
         )
 
-
         # =====================================================
         # DOWNLOAD
         # =====================================================
 
         return send_file(
-
             output,
-
             as_attachment=True,
-
             download_name=filename,
-
             mimetype=(
-                "application/vnd.openxmlformats-"
-                "officedocument.spreadsheetml.sheet"
-            )
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ),
         )
-
 
     # =========================================================
     # ERROR HANDLING
     # =========================================================
 
     except Exception as e:
-
         if conn:
             try:
                 conn.rollback()
             except Exception:
                 pass
 
+        logger.exception("SUPER ADMIN EXCEL BACKUP ERROR")
 
-        logger.exception(
-            "SUPER ADMIN EXCEL BACKUP ERROR"
-        )
+        flash("Unable to create database backup. Please try again.", "danger")
 
-
-        flash(
-            "Unable to create database backup. Please try again.",
-            "danger"
-        )
-
-
-        return redirect(
-            request.referrer
-            or url_for("superadmin_reports")
-        )
-
+        return redirect(request.referrer or url_for("superadmin_reports"))
 
     # =========================================================
     # CLEANUP
     # =========================================================
 
     finally:
-
         if cursor:
-
             try:
                 cursor.close()
 
             except Exception:
                 pass
 
-
         if conn:
-
             try:
                 conn.close()
 
             except Exception:
                 pass
+
 
 # =========================================================
 # 📊 SUPER ADMIN - REPORTS & ANALYTICS
@@ -9813,8 +14460,10 @@ def superadmin_reports():
 
 
 # =========================================================
-# 📊 SUPER ADMIN - REPORTS EXCEL EXPORT
+# 📊 SUPER ADMIN - FILTERED REPORT EXCEL EXPORT
 # =========================================================
+
+
 @app.route("/superadmin/reports/export/excel")
 @admin_required
 def export_admin_reports_excel():
@@ -9823,105 +14472,497 @@ def export_admin_reports_excel():
     cursor = None
 
     try:
+        # =====================================================
+        # READ FILTERS
+        # =====================================================
+
+        from_date = (request.args.get("from_date") or "").strip()
+        to_date = (request.args.get("to_date") or "").strip()
+        report_type = (request.args.get("report_type") or "").strip()
+
+        valid_report_types = ["", "revenue", "subscriptions", "leads", "certificates"]
+
+        if report_type not in valid_report_types:
+            report_type = ""
+
+        # =====================================================
+        # VALIDATE DATES
+        # =====================================================
+
+        def valid_date(value):
+
+            if not value:
+                return True
+
+            try:
+                datetime.strptime(value, "%Y-%m-%d")
+                return True
+
+            except ValueError:
+                return False
+
+        if not valid_date(from_date):
+            return "Invalid from date ❌", 400
+
+        if not valid_date(to_date):
+            return "Invalid to date ❌", 400
+
+        if from_date and to_date and from_date > to_date:
+            return "From date cannot be greater than To date ❌", 400
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("""
-            SELECT COALESCE(SUM(amount), 0) AS total_revenue
+        # =====================================================
+        # DATE FILTERS
+        # =====================================================
+
+        payment_filter = ""
+        payment_params = []
+
+        sub_filter = ""
+        sub_params = []
+
+        lead_filter = ""
+        lead_params = []
+
+        tc_filter = ""
+        tc_params = []
+
+        bonafide_filter = ""
+        bonafide_params = []
+
+        school_filter = ""
+        school_params = []
+
+        if from_date:
+            payment_filter += """
+                AND DATE(created_at) >= %s
+            """
+
+            payment_params.append(from_date)
+
+            sub_filter += """
+                AND DATE(created_at) >= %s
+            """
+
+            sub_params.append(from_date)
+
+            lead_filter += """
+                AND DATE(created_at) >= %s
+            """
+
+            lead_params.append(from_date)
+
+            tc_filter += """
+                AND DATE(tc_date) >= %s
+            """
+
+            tc_params.append(from_date)
+
+            bonafide_filter += """
+                AND DATE(date) >= %s
+            """
+
+            bonafide_params.append(from_date)
+
+            school_filter += """
+                AND DATE(created_at) >= %s
+            """
+
+            school_params.append(from_date)
+
+        if to_date:
+            payment_filter += """
+                AND DATE(created_at) <= %s
+            """
+
+            payment_params.append(to_date)
+
+            sub_filter += """
+                AND DATE(created_at) <= %s
+            """
+
+            sub_params.append(to_date)
+
+            lead_filter += """
+                AND DATE(created_at) <= %s
+            """
+
+            lead_params.append(to_date)
+
+            tc_filter += """
+                AND DATE(tc_date) <= %s
+            """
+
+            tc_params.append(to_date)
+
+            bonafide_filter += """
+                AND DATE(date) <= %s
+            """
+
+            bonafide_params.append(to_date)
+
+            school_filter += """
+                AND DATE(created_at) <= %s
+            """
+
+            school_params.append(to_date)
+
+        # =====================================================
+        # KPI DATA
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT COALESCE(SUM(amount), 0) AS total
             FROM payment_logs
             WHERE LOWER(payment_status) = 'success'
-        """)
-        total_revenue = cursor.fetchone()["total_revenue"] or 0
+            {payment_filter}
+            """,
+            payment_params,
+        )
 
-        cursor.execute("SELECT COUNT(*) AS total FROM schools")
+        total_revenue = cursor.fetchone()["total"] or 0
+
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS total
+            FROM schools
+            WHERE 1=1
+            {school_filter}
+            """,
+            school_params,
+        )
+
         total_schools = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM subscriptions
             WHERE LOWER(status) = 'active'
-        """)
+            {sub_filter}
+            """,
+            sub_params,
+        )
+
         active_subscriptions = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM lead_requests
             WHERE status = 'Converted'
-        """)
+            {lead_filter}
+            """,
+            lead_params,
+        )
+
         converted_leads = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            f"""
             SELECT
-                (SELECT COUNT(*) FROM tc)
+                (
+                    SELECT COUNT(*)
+                    FROM tc
+                    WHERE 1=1
+                    {tc_filter}
+                )
                 +
-                (SELECT COUNT(*) FROM bonafide) AS total
-        """)
+                (
+                    SELECT COUNT(*)
+                    FROM bonafide
+                    WHERE 1=1
+                    {bonafide_filter}
+                ) AS total
+            """,
+            tc_params + bonafide_params,
+        )
+
         total_certificates = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        # =====================================================
+        # REVENUE TREND
+        # =====================================================
+
+        cursor.execute(
+            f"""
             SELECT
+                DATE_FORMAT(MIN(created_at), '%b %Y') AS month,
+                SUM(amount) AS revenue,
+                YEAR(created_at) AS report_year,
+                MONTH(created_at) AS report_month
+            FROM payment_logs
+            WHERE LOWER(payment_status) = 'success'
+            {payment_filter}
+            GROUP BY
+                YEAR(created_at),
+                MONTH(created_at)
+            ORDER BY
+                report_year,
+                report_month
+            LIMIT 12
+            """,
+            payment_params,
+        )
+
+        revenue_rows = cursor.fetchall()
+
+        # =====================================================
+        # PLAN DISTRIBUTION
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+                COALESCE(plan_name, 'Unknown') AS plan_name,
+                COUNT(*) AS total
+            FROM subscriptions
+            WHERE 1=1
+            {sub_filter}
+            GROUP BY plan_name
+            ORDER BY total DESC
+            """,
+            sub_params,
+        )
+
+        plan_rows = cursor.fetchall()
+
+        # =====================================================
+        # LEAD FUNNEL
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+                COALESCE(status, 'Unknown') AS status,
+                COUNT(*) AS total
+            FROM lead_requests
+            WHERE 1=1
+            {lead_filter}
+            GROUP BY status
+            ORDER BY total DESC
+            """,
+            lead_params,
+        )
+
+        lead_rows = cursor.fetchall()
+
+        # =====================================================
+        # CERTIFICATES
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS total
+            FROM tc
+            WHERE 1=1
+            {tc_filter}
+            """,
+            tc_params,
+        )
+
+        tc_count = cursor.fetchone()["total"] or 0
+
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS total
+            FROM bonafide
+            WHERE 1=1
+            {bonafide_filter}
+            """,
+            bonafide_params,
+        )
+
+        bonafide_count = cursor.fetchone()["total"] or 0
+
+        # =====================================================
+        # TOP SCHOOLS
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+
                 s.name AS school_name,
+
                 s.email,
-                COALESCE(st_count.total_students, 0) AS students,
-                COALESCE(sub_latest.plan_name, '-') AS plan_name,
-                COALESCE(rev.total_revenue, 0) AS revenue,
+
+                COALESCE(
+                    st_count.total_students,
+                    0
+                ) AS students,
+
+                COALESCE(
+                    sub_latest.plan_name,
+                    '-'
+                ) AS plan_name,
+
+                COALESCE(
+                    sub_latest.status,
+                    '-'
+                ) AS status,
+
+                COALESCE(
+                    rev.total_revenue,
+                    0
+                ) AS revenue,
+
                 (
-                    COALESCE(tc_count.total_tc, 0)
+                    COALESCE(
+                        tc_count.total_tc,
+                        0
+                    )
                     +
-                    COALESCE(bon_count.total_bonafide, 0)
-                ) AS certificates,
-                COALESCE(sub_latest.status, '-') AS status
+                    COALESCE(
+                        bon_count.total_bonafide,
+                        0
+                    )
+                ) AS certificates
+
             FROM schools s
 
-            LEFT JOIN (
-                SELECT school_id, COUNT(*) AS total_students
-                FROM students
-                GROUP BY school_id
-            ) st_count ON s.school_id = st_count.school_id
 
             LEFT JOIN (
-                SELECT school_id, MAX(id) AS latest_id
-                FROM subscriptions
+
+                SELECT
+                    school_id,
+                    COUNT(*) AS total_students
+
+                FROM students
+
                 GROUP BY school_id
-            ) latest_sub ON s.school_id = latest_sub.school_id
+
+            ) st_count
+
+                ON s.school_id =
+                   st_count.school_id
+
+
+            LEFT JOIN (
+
+                SELECT
+                    school_id,
+                    MAX(id) AS latest_id
+
+                FROM subscriptions
+
+                GROUP BY school_id
+
+            ) latest_sub
+
+                ON s.school_id =
+                   latest_sub.school_id
+
 
             LEFT JOIN subscriptions sub_latest
-                ON latest_sub.latest_id = sub_latest.id
+
+                ON latest_sub.latest_id =
+                   sub_latest.id
+
 
             LEFT JOIN (
-                SELECT school_id, SUM(amount) AS total_revenue
+
+                SELECT
+                    school_id,
+                    SUM(amount) AS total_revenue
+
                 FROM payment_logs
+
                 WHERE LOWER(payment_status) = 'success'
+
+                {payment_filter}
+
                 GROUP BY school_id
-            ) rev ON s.school_id = rev.school_id
+
+            ) rev
+
+                ON s.school_id =
+                   rev.school_id
+
 
             LEFT JOIN (
-                SELECT school_id, COUNT(*) AS total_tc
+
+                SELECT
+                    school_id,
+                    COUNT(*) AS total_tc
+
                 FROM tc
+
+                WHERE 1=1
+
+                {tc_filter}
+
                 GROUP BY school_id
-            ) tc_count ON s.school_id = tc_count.school_id
+
+            ) tc_count
+
+                ON s.school_id =
+                   tc_count.school_id
+
 
             LEFT JOIN (
-                SELECT school_id, COUNT(*) AS total_bonafide
-                FROM bonafide
-                GROUP BY school_id
-            ) bon_count ON s.school_id = bon_count.school_id
 
-            ORDER BY revenue DESC, certificates DESC
-        """)
-        schools = cursor.fetchall()
+                SELECT
+                    school_id,
+                    COUNT(*) AS total_bonafide
+
+                FROM bonafide
+
+                WHERE 1=1
+
+                {bonafide_filter}
+
+                GROUP BY school_id
+
+            ) bon_count
+
+                ON s.school_id =
+                   bon_count.school_id
+
+
+            ORDER BY
+                revenue DESC,
+                certificates DESC,
+                students DESC
+
+            LIMIT 10
+            """,
+            payment_params + tc_params + bonafide_params,
+        )
+
+        top_schools = cursor.fetchall()
+
+        # =====================================================
+        # CREATE EXCEL
+        # =====================================================
 
         output = io.BytesIO()
 
         wb = Workbook()
-        ws = wb.active
-        ws.title = "Reports"
 
-        # styles
+        # =====================================================
+        # COLORS / STYLES
+        # =====================================================
+
         title_font = Font(bold=True, size=18, color="0F172A")
+
         subtitle_font = Font(size=11, color="64748B")
+
         header_fill = PatternFill("solid", fgColor="0EA5A4")
+
         header_font = Font(bold=True, color="FFFFFF")
+
+        section_fill = PatternFill("solid", fgColor="E6FFFB")
+
+        section_font = Font(bold=True, color="0F766E")
+
         border = Border(
             left=Side(style="thin", color="E2E8F0"),
             right=Side(style="thin", color="E2E8F0"),
@@ -9929,104 +14970,282 @@ def export_admin_reports_excel():
             bottom=Side(style="thin", color="E2E8F0"),
         )
 
+        # =====================================================
+        # SUMMARY SHEET
+        # =====================================================
+
+        ws = wb.active
+
+        ws.title = "Report Summary"
+
         ws.merge_cells("A1:G1")
+
         ws["A1"] = "SchoolSphere ERP - Reports & Analytics"
+
         ws["A1"].font = title_font
 
         ws.merge_cells("A2:G2")
-        ws["A2"] = f"Generated On: {datetime.now().strftime('%d-%m-%Y %I:%M %p')}"
+
+        scope_text = "All Reports"
+
+        if report_type:
+            scope_text = report_type.title()
+
+        date_text = "All Dates"
+
+        if from_date and to_date:
+            date_text = f"{from_date} to {to_date}"
+
+        elif from_date:
+            date_text = f"From {from_date}"
+
+        elif to_date:
+            date_text = f"Until {to_date}"
+
+        ws["A2"] = (
+            f"Report Type: {scope_text} | "
+            f"Period: {date_text} | "
+            f"Generated: "
+            f"{datetime.now().strftime('%d-%m-%Y %I:%M %p')}"
+        )
+
         ws["A2"].font = subtitle_font
+
+        # =====================================================
+        # KPI SUMMARY
+        # =====================================================
 
         kpis = [
             ["Total Revenue", total_revenue],
-            ["Total Schools", total_schools],
+            ["New Schools", total_schools],
             ["Active Subscriptions", active_subscriptions],
             ["Converted Leads", converted_leads],
             ["Certificates", total_certificates],
         ]
 
         row = 4
+
         for label, value in kpis:
             ws[f"A{row}"] = label
+
             ws[f"B{row}"] = value
-            ws[f"A{row}"].font = Font(bold=True)
+
+            ws[f"A{row}"].font = Font(bold=True, color="334155")
+
+            ws[f"A{row}"].border = border
+            ws[f"B{row}"].border = border
+
+            if label == "Total Revenue":
+                ws[f"B{row}"].number_format = "₹#,##0.00"
+
             row += 1
 
-        table_start = 11
+        # =====================================================
+        # REVENUE SHEET
+        # =====================================================
 
-        headers = [
-            "School Name",
-            "Email",
-            "Students",
-            "Plan",
-            "Revenue",
-            "Certificates",
-            "Status",
-        ]
+        if report_type in ("", "revenue"):
+            revenue_ws = wb.create_sheet("Revenue")
 
-        for col, header in enumerate(headers, 1):
-            cell = ws.cell(row=table_start, column=col)
-            cell.value = header
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.border = border
-            cell.alignment = Alignment(horizontal="center")
+            revenue_ws.append(["Month", "Revenue"])
 
-        for r, school in enumerate(schools, table_start + 1):
-            values = [
-                school["school_name"],
-                school["email"],
-                school["students"],
-                school["plan_name"],
-                school["revenue"],
-                school["certificates"],
-                school["status"],
+            for cell in revenue_ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.border = border
+
+            for item in revenue_rows:
+                revenue_ws.append([item["month"], item["revenue"] or 0])
+
+            for row_cells in revenue_ws.iter_rows(min_row=2):
+                for cell in row_cells:
+                    cell.border = border
+
+                row_cells[1].number_format = "₹#,##0.00"
+
+            revenue_ws.column_dimensions["A"].width = 20
+            revenue_ws.column_dimensions["B"].width = 18
+
+        # =====================================================
+        # SUBSCRIPTIONS SHEET
+        # =====================================================
+
+        if report_type in ("", "subscriptions"):
+            sub_ws = wb.create_sheet("Subscriptions")
+
+            sub_ws.append(["Plan", "Subscriptions"])
+
+            for cell in sub_ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.border = border
+
+            for item in plan_rows:
+                sub_ws.append([item["plan_name"], item["total"] or 0])
+
+            for row_cells in sub_ws.iter_rows(min_row=2):
+                for cell in row_cells:
+                    cell.border = border
+
+            sub_ws.column_dimensions["A"].width = 28
+            sub_ws.column_dimensions["B"].width = 18
+
+        # =====================================================
+        # LEADS SHEET
+        # =====================================================
+
+        if report_type in ("", "leads"):
+            lead_ws = wb.create_sheet("Leads")
+
+            lead_ws.append(["Lead Status", "Count"])
+
+            for cell in lead_ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.border = border
+
+            for item in lead_rows:
+                lead_ws.append([item["status"], item["total"] or 0])
+
+            for row_cells in lead_ws.iter_rows(min_row=2):
+                for cell in row_cells:
+                    cell.border = border
+
+            lead_ws.column_dimensions["A"].width = 25
+            lead_ws.column_dimensions["B"].width = 15
+
+        # =====================================================
+        # CERTIFICATES SHEET
+        # =====================================================
+
+        if report_type in ("", "certificates"):
+            cert_ws = wb.create_sheet("Certificates")
+
+            cert_ws.append(["Certificate Type", "Count"])
+
+            for cell in cert_ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.border = border
+
+            cert_ws.append(["TC", tc_count])
+
+            cert_ws.append(["Bonafide", bonafide_count])
+
+            for row_cells in cert_ws.iter_rows(min_row=2):
+                for cell in row_cells:
+                    cell.border = border
+
+            cert_ws.column_dimensions["A"].width = 25
+            cert_ws.column_dimensions["B"].width = 15
+
+        # =====================================================
+        # TOP SCHOOLS
+        # =====================================================
+
+        if report_type in ("", "revenue", "subscriptions", "certificates"):
+            school_ws = wb.create_sheet("Top Schools")
+
+            headers = [
+                "School",
+                "Email",
+                "Students",
+                "Plan",
+                "Revenue",
+                "Certificates",
+                "Status",
             ]
 
-            for c, value in enumerate(values, 1):
-                cell = ws.cell(row=r, column=c)
-                cell.value = value
+            school_ws.append(headers)
+
+            for cell in school_ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
                 cell.border = border
-                cell.alignment = Alignment(vertical="center")
 
-        last_row = table_start + len(schools)
+                cell.alignment = Alignment(horizontal="center")
 
-        ws.freeze_panes = "A12"
-        ws.auto_filter.ref = f"A{table_start}:G{last_row}"
+            for school in top_schools:
+                school_ws.append(
+                    [
+                        school["school_name"],
+                        school["email"] or "-",
+                        school["students"] or 0,
+                        school["plan_name"] or "-",
+                        school["revenue"] or 0,
+                        school["certificates"] or 0,
+                        school["status"] or "-",
+                    ]
+                )
 
-        widths = {"A": 35, "B": 35, "C": 12, "D": 16, "E": 14, "F": 14, "G": 14}
+            for row_cells in school_ws.iter_rows(min_row=2):
+                for cell in row_cells:
+                    cell.border = border
 
-        for col, width in widths.items():
-            ws.column_dimensions[col].width = width
+                row_cells[4].number_format = "₹#,##0.00"
 
-            for cell in ws["E"]:
-                if cell.row > table_start:
-                    cell.number_format = "₹#,##0.00"
+            widths = {"A": 32, "B": 32, "C": 14, "D": 18, "E": 18, "F": 16, "G": 16}
+
+            for column, width in widths.items():
+                school_ws.column_dimensions[column].width = width
+
+            school_ws.freeze_panes = "A2"
+
+            school_ws.auto_filter.ref = school_ws.dimensions
+
+        # =====================================================
+        # SUMMARY WIDTHS
+        # =====================================================
+
+        ws.column_dimensions["A"].width = 28
+        ws.column_dimensions["B"].width = 22
+
+        # =====================================================
+        # SAVE
+        # =====================================================
 
         wb.save(output)
+
         output.seek(0)
+
+        # =====================================================
+        # FILE NAME
+        # =====================================================
+
+        type_name = report_type if report_type else "all"
+
+        filename = (
+            f"school_sphere_{type_name}_"
+            f"report_"
+            f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        )
 
         return send_file(
             output,
             as_attachment=True,
-            download_name="admin_reports_analytics.xlsx",
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            download_name=filename,
+            mimetype=(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ),
         )
 
     except Exception as e:
         print("❌ REPORT EXCEL EXPORT ERROR:", e)
-        return f"Excel export failed ❌ {str(e)}"
+
+        return (f"Excel export failed ❌ {str(e)}", 500)
 
     finally:
         if cursor:
             cursor.close()
+
         if conn:
             conn.close()
 
 
 # =========================================================
-# 📄 SUPER ADMIN - EXPORT REPORT PDF USING PDFKIT
+# 📄 SUPER ADMIN - FILTERED REPORT PDF EXPORT
 # =========================================================
+
 
 @app.route("/superadmin/reports/export/pdf")
 @admin_required
@@ -10036,298 +15255,1265 @@ def export_admin_reports_pdf():
     cursor = None
 
     try:
+        # =====================================================
+        # FILTERS
+        # =====================================================
+
+        from_date = (request.args.get("from_date") or "").strip()
+
+        to_date = (request.args.get("to_date") or "").strip()
+
+        report_type = (request.args.get("report_type") or "").strip()
+
+        valid_report_types = ["", "revenue", "subscriptions", "leads", "certificates"]
+
+        if report_type not in valid_report_types:
+            report_type = ""
+
+        # =====================================================
+        # DATE VALIDATION
+        # =====================================================
+
+        def valid_date(value):
+
+            if not value:
+                return True
+
+            try:
+                datetime.strptime(value, "%Y-%m-%d")
+
+                return True
+
+            except ValueError:
+                return False
+
+        if not valid_date(from_date):
+            return "Invalid from date ❌", 400
+
+        if not valid_date(to_date):
+            return "Invalid to date ❌", 400
+
+        if from_date and to_date and from_date > to_date:
+            return ("From date cannot be greater than To date ❌", 400)
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
         conn = get_connection()
+
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("""
+        # =====================================================
+        # DATE FILTERS
+        # =====================================================
+
+        payment_filter = ""
+        payment_params = []
+
+        sub_filter = ""
+        sub_params = []
+
+        lead_filter = ""
+        lead_params = []
+
+        tc_filter = ""
+        tc_params = []
+
+        bonafide_filter = ""
+        bonafide_params = []
+
+        school_filter = ""
+        school_params = []
+
+        if from_date:
+            payment_filter += """
+                AND DATE(created_at) >= %s
+            """
+
+            payment_params.append(from_date)
+
+            sub_filter += """
+                AND DATE(created_at) >= %s
+            """
+
+            sub_params.append(from_date)
+
+            lead_filter += """
+                AND DATE(created_at) >= %s
+            """
+
+            lead_params.append(from_date)
+
+            tc_filter += """
+                AND DATE(tc_date) >= %s
+            """
+
+            tc_params.append(from_date)
+
+            bonafide_filter += """
+                AND DATE(date) >= %s
+            """
+
+            bonafide_params.append(from_date)
+
+            school_filter += """
+                AND DATE(created_at) >= %s
+            """
+
+            school_params.append(from_date)
+
+        if to_date:
+            payment_filter += """
+                AND DATE(created_at) <= %s
+            """
+
+            payment_params.append(to_date)
+
+            sub_filter += """
+                AND DATE(created_at) <= %s
+            """
+
+            sub_params.append(to_date)
+
+            lead_filter += """
+                AND DATE(created_at) <= %s
+            """
+
+            lead_params.append(to_date)
+
+            tc_filter += """
+                AND DATE(tc_date) <= %s
+            """
+
+            tc_params.append(to_date)
+
+            bonafide_filter += """
+                AND DATE(date) <= %s
+            """
+
+            bonafide_params.append(to_date)
+
+            school_filter += """
+                AND DATE(created_at) <= %s
+            """
+
+            school_params.append(to_date)
+
+        # =====================================================
+        # KPI
+        # =====================================================
+
+        cursor.execute(
+            f"""
             SELECT
-                COALESCE(SUM(amount), 0) AS total_revenue
+                COALESCE(SUM(amount), 0) AS total
             FROM payment_logs
             WHERE LOWER(payment_status) = 'success'
-        """)
-        total_revenue = cursor.fetchone()["total_revenue"] or 0
+            {payment_filter}
+            """,
+            payment_params,
+        )
 
-        cursor.execute("""
+        total_revenue = cursor.fetchone()["total"] or 0
+
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM schools
-        """)
+            WHERE 1=1
+            {school_filter}
+            """,
+            school_params,
+        )
+
         total_schools = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM subscriptions
             WHERE LOWER(status) = 'active'
-        """)
+            {sub_filter}
+            """,
+            sub_params,
+        )
+
         active_subscriptions = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            f"""
             SELECT COUNT(*) AS total
             FROM lead_requests
             WHERE status = 'Converted'
-        """)
+            {lead_filter}
+            """,
+            lead_params,
+        )
+
         converted_leads = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        cursor.execute(
+            f"""
             SELECT
+
                 (
-                    SELECT COUNT(*) FROM tc
+                    SELECT COUNT(*)
+                    FROM tc
+                    WHERE 1=1
+                    {tc_filter}
                 )
+
                 +
+
                 (
-                    SELECT COUNT(*) FROM bonafide
-                ) AS total
-        """)
+                    SELECT COUNT(*)
+                    FROM bonafide
+                    WHERE 1=1
+                    {bonafide_filter}
+                )
+
+                AS total
+            """,
+            tc_params + bonafide_params,
+        )
+
         total_certificates = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
+        # =====================================================
+        # REVENUE TREND
+        # =====================================================
+
+        cursor.execute(
+            f"""
             SELECT
+
+                DATE_FORMAT(
+                    MIN(created_at),
+                    '%b %Y'
+                ) AS month,
+
+                SUM(amount) AS revenue,
+
+                YEAR(created_at)
+                    AS report_year,
+
+                MONTH(created_at)
+                    AS report_month
+
+            FROM payment_logs
+
+            WHERE LOWER(payment_status)
+                = 'success'
+
+            {payment_filter}
+
+            GROUP BY
+                YEAR(created_at),
+                MONTH(created_at)
+
+            ORDER BY
+                report_year,
+                report_month
+
+            LIMIT 12
+            """,
+            payment_params,
+        )
+
+        revenue_rows = cursor.fetchall()
+
+        # =====================================================
+        # PLAN DISTRIBUTION
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+
+                COALESCE(
+                    plan_name,
+                    'Unknown'
+                ) AS plan_name,
+
+                COUNT(*) AS total
+
+            FROM subscriptions
+
+            WHERE 1=1
+
+            {sub_filter}
+
+            GROUP BY plan_name
+
+            ORDER BY total DESC
+            """,
+            sub_params,
+        )
+
+        plan_rows = cursor.fetchall()
+
+        # =====================================================
+        # LEADS
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+
+                COALESCE(
+                    status,
+                    'Unknown'
+                ) AS status,
+
+                COUNT(*) AS total
+
+            FROM lead_requests
+
+            WHERE 1=1
+
+            {lead_filter}
+
+            GROUP BY status
+
+            ORDER BY total DESC
+            """,
+            lead_params,
+        )
+
+        lead_rows = cursor.fetchall()
+
+        # =====================================================
+        # CERTIFICATES
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS total
+
+            FROM tc
+
+            WHERE 1=1
+
+            {tc_filter}
+            """,
+            tc_params,
+        )
+
+        tc_count = cursor.fetchone()["total"] or 0
+
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS total
+
+            FROM bonafide
+
+            WHERE 1=1
+
+            {bonafide_filter}
+            """,
+            bonafide_params,
+        )
+
+        bonafide_count = cursor.fetchone()["total"] or 0
+
+        # =====================================================
+        # TOP SCHOOLS
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+
                 s.name AS school_name,
+
                 s.email,
-                COALESCE(st_count.total_students, 0) AS students,
-                COALESCE(sub_latest.plan_name, '-') AS plan_name,
-                COALESCE(rev.total_revenue, 0) AS revenue,
+
+                COALESCE(
+                    st_count.total_students,
+                    0
+                ) AS students,
+
+                COALESCE(
+                    sub_latest.plan_name,
+                    '-'
+                ) AS plan_name,
+
+                COALESCE(
+                    sub_latest.status,
+                    '-'
+                ) AS status,
+
+                COALESCE(
+                    rev.total_revenue,
+                    0
+                ) AS revenue,
+
                 (
-                    COALESCE(tc_count.total_tc, 0)
+                    COALESCE(
+                        tc_count.total_tc,
+                        0
+                    )
+
                     +
-                    COALESCE(bon_count.total_bonafide, 0)
-                ) AS certificates,
-                COALESCE(sub_latest.status, '-') AS status
+
+                    COALESCE(
+                        bon_count.total_bonafide,
+                        0
+                    )
+
+                ) AS certificates
+
+
             FROM schools s
 
-            LEFT JOIN (
-                SELECT school_id, COUNT(*) AS total_students
-                FROM students
-                GROUP BY school_id
-            ) st_count
-                ON s.school_id = st_count.school_id
 
             LEFT JOIN (
-                SELECT school_id, MAX(id) AS latest_id
-                FROM subscriptions
+
+                SELECT
+                    school_id,
+                    COUNT(*) AS total_students
+
+                FROM students
+
                 GROUP BY school_id
+
+            ) st_count
+
+                ON s.school_id =
+                   st_count.school_id
+
+
+            LEFT JOIN (
+
+                SELECT
+                    school_id,
+                    MAX(id) AS latest_id
+
+                FROM subscriptions
+
+                GROUP BY school_id
+
             ) latest_sub
-                ON s.school_id = latest_sub.school_id
+
+                ON s.school_id =
+                   latest_sub.school_id
+
 
             LEFT JOIN subscriptions sub_latest
-                ON latest_sub.latest_id = sub_latest.id
+
+                ON latest_sub.latest_id =
+                   sub_latest.id
+
 
             LEFT JOIN (
-                SELECT school_id, SUM(amount) AS total_revenue
+
+                SELECT
+
+                    school_id,
+
+                    SUM(amount)
+                        AS total_revenue
+
                 FROM payment_logs
-                WHERE LOWER(payment_status) = 'success'
+
+                WHERE LOWER(payment_status)
+                    = 'success'
+
+                {payment_filter}
+
                 GROUP BY school_id
+
             ) rev
-                ON s.school_id = rev.school_id
+
+                ON s.school_id =
+                   rev.school_id
+
 
             LEFT JOIN (
-                SELECT school_id, COUNT(*) AS total_tc
+
+                SELECT
+
+                    school_id,
+
+                    COUNT(*) AS total_tc
+
                 FROM tc
+
+                WHERE 1=1
+
+                {tc_filter}
+
                 GROUP BY school_id
+
             ) tc_count
-                ON s.school_id = tc_count.school_id
+
+                ON s.school_id =
+                   tc_count.school_id
+
 
             LEFT JOIN (
-                SELECT school_id, COUNT(*) AS total_bonafide
+
+                SELECT
+
+                    school_id,
+
+                    COUNT(*) AS total_bonafide
+
                 FROM bonafide
+
+                WHERE 1=1
+
+                {bonafide_filter}
+
                 GROUP BY school_id
+
             ) bon_count
-                ON s.school_id = bon_count.school_id
 
-            ORDER BY revenue DESC, certificates DESC
-        """)
+                ON s.school_id =
+                   bon_count.school_id
 
-        schools = cursor.fetchall()
+
+            ORDER BY
+
+                revenue DESC,
+
+                certificates DESC,
+
+                students DESC
+
+            LIMIT 10
+
+            """,
+            payment_params + tc_params + bonafide_params,
+        )
+
+        top_schools = cursor.fetchall()
+
+        # =====================================================
+        # REPORT SCOPE
+        # =====================================================
+
+        scope_name = report_type.title() if report_type else "All Reports"
+
+        if from_date and to_date:
+            period = f"{from_date} to {to_date}"
+
+        elif from_date:
+            period = f"From {from_date}"
+
+        elif to_date:
+            period = f"Until {to_date}"
+
+        else:
+            period = "All Dates"
+
+        # =====================================================
+        # HTML FOR PDF
+        # =====================================================
 
         html = render_template_string(
             """
+<!DOCTYPE html>
 
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
+<html>
 
-            <style>
-                body{
-                    font-family: Arial, sans-serif;
-                    color:#0f172a;
-                    padding:25px;
-                }
+<head>
 
-                h1{
-                    color:#0ea5a4;
-                    margin-bottom:5px;
-                }
+<meta charset="UTF-8">
 
-                .subtitle{
-                    color:#64748b;
-                    margin-bottom:25px;
-                }
+<style>
 
-                .kpi-table{
-                    width:100%;
-                    border-collapse:separate;
-                    border-spacing:8px;
-                    margin-bottom:25px;
-                }
-                                      
-                .kpi{
-                    border:1px solid #dce3ec;
-                    border-radius:8px;
-                    padding:12px;
-                    background:#f8fafc;
-                }
+@page {
+    size: A4;
+    margin: 12mm;
+}
 
-                .kpi label{
-                    display:block;
-                    font-size:11px;
-                    color:#64748b;
-                    margin-bottom:6px;
-                }
+body {
 
-                .kpi strong{
-                    font-size:18px;
-                }
+    font-family: Arial, sans-serif;
 
-                table{
-                    width:100%;
-                    border-collapse:collapse;
-                    margin-top:15px;
-                    font-size:11px;
-                }
+    color: #0f172a;
 
-                th{
-                    background:#0ea5a4;
-                    color:#fff;
-                    padding:8px;
-                    text-align:left;
-                }
+    font-size: 11px;
 
-                td{
-                    padding:8px;
-                    border:1px solid #e2e8f0;
-                }
+    margin: 0;
 
-                tr:nth-child(even){
-                    background:#f8fafc;
-                }
+}
 
-                .footer{
-                    margin-top:30px;
-                    font-size:11px;
-                    color:#64748b;
-                }
-            </style>
-        </head>
+h1 {
 
-        <body>
+    color: #0f172a;
 
-            <h1>SchoolSphere ERP - Reports & Analytics</h1>
+    font-size: 22px;
 
-            <div class="subtitle">
-                Generated report summary
-            </div>
+    margin: 0 0 5px;
 
-           <table class="kpi-table">
-            <tr>
+}
 
-                <td class="kpi">
-                    <label>Total Revenue</label>
-                    <strong>Rs. {{ total_revenue }}</strong>
-                </td>
+.subtitle {
 
-                <td class="kpi">
-                    <label>Total Schools</label>
-                    <strong>{{ total_schools }}</strong>
-                </td>
+    color: #64748b;
 
-                <td class="kpi">
-                    <label>Active Subscriptions</label>
-                    <strong>{{ active_subscriptions }}</strong>
-                </td>
+    font-size: 11px;
 
-                <td class="kpi">
-                    <label>Converted Leads</label>
-                    <strong>{{ converted_leads }}</strong>
-                </td>
+    margin-bottom: 18px;
 
-                <td class="kpi">
-                    <label>Certificates</label>
-                    <strong>{{ total_certificates }}</strong>
-                </td>
+}
 
-            </tr>
-            </table>
+.scope {
 
-            <h3>Top Schools Report</h3>
+    background: #ecfeff;
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>School</th>
-                        <th>Email</th>
-                        <th>Students</th>
-                        <th>Plan</th>
-                        <th>Revenue</th>
-                        <th>Certificates</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
+    color: #0f766e;
 
-                <tbody>
-                    {% for s in schools %}
-                    <tr>
-                        <td>{{ s.school_name }}</td>
-                        <td>{{ s.email or '-' }}</td>
-                        <td>{{ s.students }}</td>
-                        <td>{{ s.plan_name }}</td>
-                        <td>Rs. {{ s.revenue }}</td>
-                        <td>{{ s.certificates }}</td>
-                        <td>{{ s.status }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    padding: 7px 10px;
 
-            <div class="footer">
-                Generated by SchoolSphere ERP Admin Panel
-            </div>
+    border-radius: 5px;
 
-        </body>
-        </html>
+    margin-bottom: 18px;
 
-        """,
+    font-weight: bold;
+
+}
+
+.kpi-table {
+
+    width: 100%;
+
+    border-collapse: separate;
+
+    border-spacing: 6px;
+
+    margin: 0 -6px 20px;
+
+}
+
+.kpi {
+
+    border: 1px solid #e2e8f0;
+
+    background: #f8fafc;
+
+    padding: 10px;
+
+}
+
+.kpi label {
+
+    display: block;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    margin-bottom: 5px;
+
+}
+
+.kpi strong {
+
+    font-size: 15px;
+
+    color: #0f172a;
+
+}
+
+.section-title {
+
+    color: #0f172a;
+
+    font-size: 15px;
+
+    margin: 18px 0 7px;
+
+    page-break-after: avoid;
+
+}
+
+table.data-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin-bottom: 15px;
+
+    page-break-inside: auto;
+
+}
+
+.data-table thead {
+
+    display: table-header-group;
+
+}
+
+.data-table tr {
+
+    page-break-inside: avoid;
+
+    page-break-after: auto;
+
+}
+
+.data-table th {
+
+    background: #0ea5a4;
+
+    color: #ffffff;
+
+    padding: 7px;
+
+    font-size: 9px;
+
+    text-align: left;
+
+}
+
+.data-table td {
+
+    padding: 7px;
+
+    border: 1px solid #e2e8f0;
+
+    font-size: 9px;
+
+}
+
+.data-table tr:nth-child(even) {
+
+    background: #f8fafc;
+
+}
+
+.footer {
+
+    margin-top: 20px;
+
+    padding-top: 8px;
+
+    border-top: 1px solid #e2e8f0;
+
+    color: #64748b;
+
+    font-size: 8px;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<h1>
+    SchoolSphere ERP - Reports & Analytics
+</h1>
+
+<div class="subtitle">
+
+    Generated on:
+    {{ generated_on }}
+
+</div>
+
+<div class="scope">
+
+    Report:
+    {{ scope_name }}
+
+    &nbsp; | &nbsp;
+
+    Period:
+    {{ period }}
+
+</div>
+
+
+<!-- =====================================================
+     KPI
+===================================================== -->
+
+<table class="kpi-table">
+
+<tr>
+
+    <td class="kpi">
+
+        <label>
+            Total Revenue
+        </label>
+
+        <strong>
+            ₹{{ "{:,.2f}".format(total_revenue or 0) }}
+        </strong>
+
+    </td>
+
+
+    <td class="kpi">
+
+        <label>
+            New Schools
+        </label>
+
+        <strong>
+            {{ total_schools or 0 }}
+        </strong>
+
+    </td>
+
+
+    <td class="kpi">
+
+        <label>
+            Active Subscriptions
+        </label>
+
+        <strong>
+            {{ active_subscriptions or 0 }}
+        </strong>
+
+    </td>
+
+
+    <td class="kpi">
+
+        <label>
+            Converted Leads
+        </label>
+
+        <strong>
+            {{ converted_leads or 0 }}
+        </strong>
+
+    </td>
+
+
+    <td class="kpi">
+
+        <label>
+            Certificates
+        </label>
+
+        <strong>
+            {{ total_certificates or 0 }}
+        </strong>
+
+    </td>
+
+</tr>
+
+</table>
+
+
+{% if report_type in ("", "revenue") %}
+
+<h2 class="section-title">
+    Revenue Trend
+</h2>
+
+<table class="data-table">
+
+<thead>
+
+<tr>
+
+    <th>
+        Month
+    </th>
+
+    <th>
+        Revenue
+    </th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for row in revenue_rows %}
+
+<tr>
+
+    <td>
+        {{ row.month }}
+    </td>
+
+    <td>
+        ₹{{ "{:,.2f}".format(row.revenue or 0) }}
+    </td>
+
+</tr>
+
+{% endfor %}
+
+{% if not revenue_rows %}
+
+<tr>
+
+    <td colspan="2">
+        No revenue data available.
+    </td>
+
+</tr>
+
+{% endif %}
+
+</tbody>
+
+</table>
+
+{% endif %}
+
+
+{% if report_type in ("", "subscriptions") %}
+
+<h2 class="section-title">
+    Plan Distribution
+</h2>
+
+<table class="data-table">
+
+<thead>
+
+<tr>
+
+    <th>
+        Plan
+    </th>
+
+    <th>
+        Subscriptions
+    </th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for row in plan_rows %}
+
+<tr>
+
+    <td>
+        {{ row.plan_name }}
+    </td>
+
+    <td>
+        {{ row.total }}
+    </td>
+
+</tr>
+
+{% endfor %}
+
+{% if not plan_rows %}
+
+<tr>
+
+    <td colspan="2">
+        No subscription data available.
+    </td>
+
+</tr>
+
+{% endif %}
+
+</tbody>
+
+</table>
+
+{% endif %}
+
+
+{% if report_type in ("", "leads") %}
+
+<h2 class="section-title">
+    Lead Funnel
+</h2>
+
+<table class="data-table">
+
+<thead>
+
+<tr>
+
+    <th>
+        Status
+    </th>
+
+    <th>
+        Leads
+    </th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for row in lead_rows %}
+
+<tr>
+
+    <td>
+        {{ row.status }}
+    </td>
+
+    <td>
+        {{ row.total }}
+    </td>
+
+</tr>
+
+{% endfor %}
+
+{% if not lead_rows %}
+
+<tr>
+
+    <td colspan="2">
+        No lead data available.
+    </td>
+
+</tr>
+
+{% endif %}
+
+</tbody>
+
+</table>
+
+{% endif %}
+
+
+{% if report_type in ("", "certificates") %}
+
+<h2 class="section-title">
+    Certificate Usage
+</h2>
+
+<table class="data-table">
+
+<thead>
+
+<tr>
+
+    <th>
+        Certificate Type
+    </th>
+
+    <th>
+        Count
+    </th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+    <td>
+        TC
+    </td>
+
+    <td>
+        {{ tc_count }}
+    </td>
+
+</tr>
+
+<tr>
+
+    <td>
+        Bonafide
+    </td>
+
+    <td>
+        {{ bonafide_count }}
+    </td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+{% endif %}
+
+
+{% if report_type in ("", "revenue", "subscriptions", "certificates") %}
+
+<h2 class="section-title">
+    Top Schools
+</h2>
+
+<table class="data-table">
+
+<thead>
+
+<tr>
+
+    <th>
+        #
+    </th>
+
+    <th>
+        School
+    </th>
+
+    <th>
+        Students
+    </th>
+
+    <th>
+        Plan
+    </th>
+
+    <th>
+        Revenue
+    </th>
+
+    <th>
+        Certificates
+    </th>
+
+    <th>
+        Status
+    </th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for school in top_schools %}
+
+<tr>
+
+    <td>
+        {{ loop.index }}
+    </td>
+
+    <td>
+        {{ school.school_name or '-' }}
+    </td>
+
+    <td>
+        {{ school.students or 0 }}
+    </td>
+
+    <td>
+        {{ school.plan_name or '-' }}
+    </td>
+
+    <td>
+        ₹{{ "{:,.2f}".format(school.revenue or 0) }}
+    </td>
+
+    <td>
+        {{ school.certificates or 0 }}
+    </td>
+
+    <td>
+        {{ school.status or '-' }}
+    </td>
+
+</tr>
+
+{% endfor %}
+
+{% if not top_schools %}
+
+<tr>
+
+    <td colspan="7">
+        No school data available.
+    </td>
+
+</tr>
+
+{% endif %}
+
+</tbody>
+
+</table>
+
+{% endif %}
+
+
+<div class="footer">
+
+    Generated by SHALASARTHI ERP Admin Panel
+
+</div>
+
+
+</body>
+
+</html>
+            """,
             total_revenue=total_revenue,
             total_schools=total_schools,
             active_subscriptions=active_subscriptions,
             converted_leads=converted_leads,
             total_certificates=total_certificates,
-            schools=schools,
+            revenue_rows=revenue_rows,
+            plan_rows=plan_rows,
+            lead_rows=lead_rows,
+            tc_count=tc_count,
+            bonafide_count=bonafide_count,
+            top_schools=top_schools,
+            scope_name=scope_name,
+            period=period,
+            generated_on=datetime.now().strftime("%d-%m-%Y %I:%M %p"),
         )
+
+        # =====================================================
+        # GENERATE PDF
+        # =====================================================
 
         options = {
             "page-size": "A4",
             "encoding": "UTF-8",
-            "margin-top": "10mm",
-            "margin-right": "10mm",
-            "margin-bottom": "10mm",
-            "margin-left": "10mm",
+            "margin-top": "12mm",
+            "margin-right": "12mm",
+            "margin-bottom": "12mm",
+            "margin-left": "12mm",
             "enable-local-file-access": None,
+            "print-media-type": None,
         }
 
         pdf = pdfkit.from_string(html, False, configuration=pdf_config, options=options)
 
+        # =====================================================
+        # RESPONSE
+        # =====================================================
+
         response = make_response(pdf)
 
         response.headers["Content-Type"] = "application/pdf"
+
+        type_name = report_type if report_type else "all"
+
         response.headers["Content-Disposition"] = (
-            "attachment; filename=admin_reports.pdf"
+            f"attachment; filename=school_sphere_{type_name}_report.pdf"
         )
 
         return response
 
     except Exception as e:
         print("❌ ADMIN REPORT PDF ERROR:", e)
-        return f"PDF export failed ❌ {str(e)}"
+
+        return (f"PDF export failed ❌ {str(e)}", 500)
 
     finally:
         if cursor:
@@ -10892,7 +17078,6 @@ def renew_subscription():
     cursor = None
 
     try:
-
         # =================================================
         # DATABASE
         # =================================================
@@ -10900,10 +17085,7 @@ def renew_subscription():
         conn = get_connection()
 
         if not conn:
-            flash(
-                "Unable to connect to the database. Please try again.",
-                "danger"
-            )
+            flash("Unable to connect to the database. Please try again.", "danger")
 
             return redirect(url_for("clerk_dashboard"))
 
@@ -10916,11 +17098,7 @@ def renew_subscription():
         subscription = get_latest_subscription(school_id)
 
         if not subscription:
-
-            flash(
-                "No subscription record found for this school.",
-                "warning"
-            )
+            flash("No subscription record found for this school.", "warning")
 
             return redirect(url_for("clerk_dashboard"))
 
@@ -11003,13 +17181,10 @@ def renew_subscription():
         end_date = subscription.get("end_date")
 
         if end_date:
-
             if hasattr(end_date, "date"):
                 end_date = end_date.date()
 
-            days_left = (
-                end_date - date.today()
-            ).days
+            days_left = (end_date - date.today()).days
 
             if days_left < 0:
                 days_left = 0
@@ -11020,40 +17195,25 @@ def renew_subscription():
 
         return render_template(
             "subscription/renew.html",
-
             subscription=subscription,
-
             plans=plans,
-
             current_feature_count=current_feature_count,
-
             days_left=days_left,
-
             role="clerk",
-
             active_page="subscription",
         )
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        logger.exception(
-            "RENEW SUBSCRIPTION PAGE ERROR"
-        )
+        logger.exception("RENEW SUBSCRIPTION PAGE ERROR")
 
-        flash(
-            "Unable to load subscription page. Please try again.",
-            "danger"
-        )
+        flash("Unable to load subscription page. Please try again.", "danger")
 
-        return redirect(
-            url_for("clerk_dashboard")
-        )
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -15743,11 +21903,7 @@ def add_student():
 
             # ================= CHECK STUDENT LIMIT =================
 
-            limit_check = check_subscription_limit(
-                cursor,
-                school_id,
-                "students"
-            )
+            limit_check = check_subscription_limit(cursor, school_id, "students")
 
             if not limit_check["allowed"]:
                 return limit_check["message"] + " Please upgrade your plan ❌"
@@ -15757,7 +21913,7 @@ def add_student():
             admission_no = generate_admission_no(school_id)
 
             # ================= INSERT STUDENT =================
-            
+
             cursor.execute(
                 """
                 INSERT INTO students (
@@ -16621,6 +22777,7 @@ def clerk_students():
 # Prevents duplicate TC numbers during multiple users
 # =========================================================
 
+
 def generate_tc_number(cursor, school_id):
 
     # =====================================
@@ -16709,6 +22866,7 @@ def generate_tc_number(cursor, school_id):
 # Clerk can generate TC only for own school student
 # TC number + TC insert happen in one transaction
 # =========================================================
+
 
 @app.route("/clerk/tc-form/<int:id>", methods=["GET", "POST"])
 @login_required
@@ -16856,17 +23014,10 @@ def tc_form(id):
             # CHECK TC SUBSCRIPTION LIMIT
             # =========================================
 
-            limit_check = check_subscription_limit(
-                cursor,
-                school_id,
-                "tc"
-            )
+            limit_check = check_subscription_limit(cursor, school_id, "tc")
 
             if not limit_check["allowed"]:
-                return (
-                    limit_check["message"]
-                    + " Please upgrade your plan ❌"
-                )
+                return limit_check["message"] + " Please upgrade your plan ❌"
 
             # =========================================
             # GENERATE TC NUMBER
@@ -18946,17 +25097,10 @@ def save_bonafide():
         # CHECK BONAFIDE SUBSCRIPTION LIMIT
         # =========================================
 
-        limit_check = check_subscription_limit(
-            cursor,
-            school_id,
-            "bonafide"
-        )
+        limit_check = check_subscription_limit(cursor, school_id, "bonafide")
 
         if not limit_check["allowed"]:
-            return (
-                limit_check["message"]
-                + " Please upgrade your plan ❌"
-            )
+            return limit_check["message"] + " Please upgrade your plan ❌"
 
         # =========================================
         # GENERATE BONAFIDE NUMBER
@@ -19678,7 +25822,6 @@ def import_students():
     cursor = None
 
     try:
-
         print("🔥 IMPORT STARTED")
 
         # =================================================
@@ -19688,10 +25831,7 @@ def import_students():
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            flash(
-                "School session expired. Please login again.",
-                "danger"
-            )
+            flash("School session expired. Please login again.", "danger")
 
             return redirect(url_for("login"))
 
@@ -19702,11 +25842,7 @@ def import_students():
         file = request.files.get("file")
 
         if not file or not file.filename:
-
-            flash(
-                "Please select an Excel file before importing.",
-                "warning"
-            )
+            flash("Please select an Excel file before importing.", "warning")
 
             return redirect(url_for("import_export_page"))
 
@@ -19717,11 +25853,7 @@ def import_students():
         filename = secure_filename(file.filename)
 
         if not filename:
-
-            flash(
-                "Invalid file name.",
-                "danger"
-            )
+            flash("Invalid file name.", "danger")
 
             return redirect(url_for("import_export_page"))
 
@@ -19730,11 +25862,7 @@ def import_students():
         # =================================================
 
         if not filename.lower().endswith(".xlsx"):
-
-            flash(
-                "Only .xlsx Excel files are allowed.",
-                "danger"
-            )
+            flash("Only .xlsx Excel files are allowed.", "danger")
 
             return redirect(url_for("import_export_page"))
 
@@ -19751,11 +25879,7 @@ def import_students():
         max_file_size = 5 * 1024 * 1024
 
         if file_size > max_file_size:
-
-            flash(
-                "Excel file size must not exceed 5 MB.",
-                "danger"
-            )
+            flash("Excel file size must not exceed 5 MB.", "danger")
 
             return redirect(url_for("import_export_page"))
 
@@ -19764,20 +25888,14 @@ def import_students():
         # =================================================
 
         try:
-
-            df = pd.read_excel(
-                file,
-                dtype=str,
-                engine="openpyxl"
-            )
+            df = pd.read_excel(file, dtype=str, engine="openpyxl")
 
         except Exception:
-
             logger.exception("EXCEL READ ERROR")
 
             flash(
                 "Unable to read the Excel file. Please use the official template.",
-                "danger"
+                "danger",
             )
 
             return redirect(url_for("import_export_page"))
@@ -19787,11 +25905,7 @@ def import_students():
         # =================================================
 
         if df.empty:
-
-            flash(
-                "The Excel file is empty.",
-                "warning"
-            )
+            flash("The Excel file is empty.", "warning")
 
             return redirect(url_for("import_export_page"))
 
@@ -19800,11 +25914,7 @@ def import_students():
         # =================================================
 
         if len(df) > 5000:
-
-            flash(
-                "Maximum 5000 student rows can be imported at once.",
-                "danger"
-            )
+            flash("Maximum 5000 student rows can be imported at once.", "danger")
 
             return redirect(url_for("import_export_page"))
 
@@ -19812,12 +25922,7 @@ def import_students():
         # NORMALIZE COLUMN NAMES
         # =================================================
 
-        df.columns = (
-            df.columns
-            .astype(str)
-            .str.strip()
-            .str.lower()
-        )
+        df.columns = df.columns.astype(str).str.strip().str.lower()
 
         print("📊 Excel Columns:", list(df.columns))
 
@@ -19825,23 +25930,16 @@ def import_students():
         # REQUIRED COLUMNS
         # =================================================
 
-        required_columns = [
-            "name",
-            "class"
-        ]
+        required_columns = ["name", "class"]
 
         missing_columns = [
-            column
-            for column in required_columns
-            if column not in df.columns
+            column for column in required_columns if column not in df.columns
         ]
 
         if missing_columns:
-
             flash(
-                "Missing required Excel column(s): "
-                + ", ".join(missing_columns),
-                "danger"
+                "Missing required Excel column(s): " + ", ".join(missing_columns),
+                "danger",
             )
 
             return redirect(url_for("import_export_page"))
@@ -19853,11 +25951,7 @@ def import_students():
         conn = get_connection()
 
         if not conn:
-
-            flash(
-                "Database connection failed. Please try again.",
-                "danger"
-            )
+            flash("Database connection failed. Please try again.", "danger")
 
             return redirect(url_for("import_export_page"))
 
@@ -19883,21 +25977,13 @@ def import_students():
         # PROCESS EXCEL ROWS
         # =================================================
 
-        for row_number, (_, row) in enumerate(
-            df.iterrows(),
-            start=2
-        ):
-
+        for row_number, (_, row) in enumerate(df.iterrows(), start=2):
             try:
-
                 # =========================================
                 # CLEAN NULLS
                 # =========================================
 
-                row = row.where(
-                    pd.notnull(row),
-                    None
-                )
+                row = row.where(pd.notnull(row), None)
 
                 # =========================================
                 # BASIC REQUIRED FIELDS
@@ -19907,24 +25993,12 @@ def import_students():
 
                 raw_class = row.get("class")
 
-                name = (
-                    str(raw_name).strip()
-                    if raw_name is not None
-                    else ""
-                )
+                name = str(raw_name).strip() if raw_name is not None else ""
 
-                class_name = (
-                    str(raw_class).strip()
-                    if raw_class is not None
-                    else ""
-                )
+                class_name = str(raw_class).strip() if raw_class is not None else ""
 
                 if not name or not class_name:
-
-                    print(
-                        f"⚠️ Row {row_number} skipped: "
-                        "missing name/class"
-                    )
+                    print(f"⚠️ Row {row_number} skipped: missing name/class")
 
                     skipped_rows += 1
                     invalid_rows += 1
@@ -19935,14 +26009,10 @@ def import_students():
                 # NEW FIELDS
                 # =========================================
 
-                school_register_no = row.get(
-                    "school_register_no"
-                )
+                school_register_no = row.get("school_register_no")
 
                 if school_register_no is not None:
-                    school_register_no = str(
-                        school_register_no
-                    ).strip()
+                    school_register_no = str(school_register_no).strip()
 
                 # =========================================
                 # STUDENT UID
@@ -19951,15 +26021,9 @@ def import_students():
                 student_uid = row.get("student_uid")
 
                 if student_uid:
-
-                    student_uid = (
-                        str(student_uid)
-                        .split(".")[0]
-                        .strip()
-                    )
+                    student_uid = str(student_uid).split(".")[0].strip()
 
                 else:
-
                     student_uid = None
 
                 # =========================================
@@ -19969,15 +26033,9 @@ def import_students():
                 apaar_id = row.get("apaar_id")
 
                 if apaar_id:
-
-                    apaar_id = (
-                        str(apaar_id)
-                        .split(".")[0]
-                        .strip()
-                    )
+                    apaar_id = str(apaar_id).split(".")[0].strip()
 
                 else:
-
                     apaar_id = None
 
                 # =========================================
@@ -19987,64 +26045,35 @@ def import_students():
                 dob = row.get("dob")
 
                 if dob:
-
                     try:
-
                         if hasattr(dob, "strftime"):
-
-                            dob = dob.strftime(
-                                "%Y-%m-%d"
-                            )
+                            dob = dob.strftime("%Y-%m-%d")
 
                         else:
-
-                            dob = pd.to_datetime(
-                                str(dob),
-                                dayfirst=True
-                            ).strftime(
+                            dob = pd.to_datetime(str(dob), dayfirst=True).strftime(
                                 "%Y-%m-%d"
                             )
 
                     except Exception:
-
                         dob = None
 
                 # =========================================
                 # ADMISSION DATE
                 # =========================================
 
-                admission_date = row.get(
-                    "admission_date"
-                )
+                admission_date = row.get("admission_date")
 
                 if admission_date:
-
                     try:
-
-                        if hasattr(
-                            admission_date,
-                            "strftime"
-                        ):
-
-                            admission_date = (
-                                admission_date.strftime(
-                                    "%Y-%m-%d"
-                                )
-                            )
+                        if hasattr(admission_date, "strftime"):
+                            admission_date = admission_date.strftime("%Y-%m-%d")
 
                         else:
-
-                            admission_date = (
-                                pd.to_datetime(
-                                    str(admission_date),
-                                    dayfirst=True
-                                ).strftime(
-                                    "%Y-%m-%d"
-                                )
-                            )
+                            admission_date = pd.to_datetime(
+                                str(admission_date), dayfirst=True
+                            ).strftime("%Y-%m-%d")
 
                     except Exception:
-
                         admission_date = None
 
                 # =========================================
@@ -20053,43 +26082,25 @@ def import_students():
 
                 caste = row.get("caste")
 
-                father_name = row.get(
-                    "father_name"
-                )
+                father_name = row.get("father_name")
 
-                mother_name = row.get(
-                    "mother_name"
-                )
+                mother_name = row.get("mother_name")
 
                 aadhaar = row.get("aadhaar")
 
                 if aadhaar:
-
-                    aadhaar = (
-                        str(aadhaar)
-                        .split(".")[0]
-                        .strip()
-                    )
+                    aadhaar = str(aadhaar).split(".")[0].strip()
 
                 else:
-
                     aadhaar = None
 
-                birth_place = row.get(
-                    "birth_place"
-                )
+                birth_place = row.get("birth_place")
 
-                nationality = row.get(
-                    "nationality"
-                )
+                nationality = row.get("nationality")
 
-                mother_tongue = row.get(
-                    "mother_tongue"
-                )
+                mother_tongue = row.get("mother_tongue")
 
-                religion = row.get(
-                    "religion"
-                )
+                religion = row.get("religion")
 
                 city = row.get("city")
 
@@ -20101,33 +26112,19 @@ def import_students():
 
                 section = row.get("section")
 
-                previous_school = row.get(
-                    "previous_school"
-                )
+                previous_school = row.get("previous_school")
 
-                last_exam = row.get(
-                    "last_exam"
-                )
+                last_exam = row.get("last_exam")
 
-                result_status = row.get(
-                    "result_status"
-                )
+                result_status = row.get("result_status")
 
-                progress = row.get(
-                    "progress"
-                )
+                progress = row.get("progress")
 
-                conduct = row.get(
-                    "conduct"
-                )
+                conduct = row.get("conduct")
 
-                primary_mobile = row.get(
-                    "primary_mobile"
-                )
+                primary_mobile = row.get("primary_mobile")
 
-                alternate_mobile = row.get(
-                    "alternate_mobile"
-                )
+                alternate_mobile = row.get("alternate_mobile")
 
                 email = row.get("email")
 
@@ -20136,19 +26133,10 @@ def import_students():
                 # =========================================
 
                 if email:
-
-                    email = (
-                        str(email)
-                        .strip()
-                        .lower()
-                    )
+                    email = str(email).strip().lower()
 
                     if not is_valid_email(email):
-
-                        print(
-                            f"⚠️ Row {row_number}: "
-                            "invalid email skipped"
-                        )
+                        print(f"⚠️ Row {row_number}: invalid email skipped")
 
                         skipped_rows += 1
                         invalid_rows += 1
@@ -20156,7 +26144,6 @@ def import_students():
                         continue
 
                 else:
-
                     email = None
 
                 # =========================================
@@ -20166,54 +26153,32 @@ def import_students():
                 income = row.get("income")
 
                 if income:
-
-                    income = (
-                        str(income)
-                        .replace(",", "")
-                        .strip()
-                    )
+                    income = str(income).replace(",", "").strip()
 
                     try:
-
-                        income = int(
-                            float(income)
-                        )
+                        income = int(float(income))
 
                     except (TypeError, ValueError):
-
                         income = None
 
                 else:
-
                     income = None
 
                 # =========================================
                 # GUARDIAN
                 # =========================================
 
-                guardian_name = row.get(
-                    "guardian_name"
-                )
+                guardian_name = row.get("guardian_name")
 
-                guardian_mobile = row.get(
-                    "guardian_mobile"
-                )
+                guardian_mobile = row.get("guardian_mobile")
 
                 # =========================================
                 # AADHAAR VALIDATION
                 # =========================================
 
                 if aadhaar:
-
-                    if (
-                        not aadhaar.isdigit()
-                        or len(aadhaar) != 12
-                    ):
-
-                        print(
-                            f"⚠️ Row {row_number}: "
-                            "invalid Aadhaar skipped"
-                        )
+                    if not aadhaar.isdigit() or len(aadhaar) != 12:
+                        print(f"⚠️ Row {row_number}: invalid Aadhaar skipped")
 
                         skipped_rows += 1
                         invalid_rows += 1
@@ -20225,28 +26190,13 @@ def import_students():
                 # =========================================
 
                 if primary_mobile:
-
-                    primary_mobile = (
-                        str(primary_mobile)
-                        .split(".")[0]
-                        .strip()
-                    )
+                    primary_mobile = str(primary_mobile).split(".")[0].strip()
 
                 if alternate_mobile:
-
-                    alternate_mobile = (
-                        str(alternate_mobile)
-                        .split(".")[0]
-                        .strip()
-                    )
+                    alternate_mobile = str(alternate_mobile).split(".")[0].strip()
 
                 if guardian_mobile:
-
-                    guardian_mobile = (
-                        str(guardian_mobile)
-                        .split(".")[0]
-                        .strip()
-                    )
+                    guardian_mobile = str(guardian_mobile).split(".")[0].strip()
 
                 # =========================================
                 # DUPLICATE CHECK - AADHAAR
@@ -20255,7 +26205,6 @@ def import_students():
                 existing_student = None
 
                 if aadhaar:
-
                     cursor.execute(
                         """
                         SELECT id
@@ -20271,25 +26220,16 @@ def import_students():
                         ),
                     )
 
-                    existing_student = (
-                        cursor.fetchone()
-                    )
+                    existing_student = cursor.fetchone()
 
-                    if (
-                        aadhaar in seen_aadhaar
-                    ):
-
+                    if aadhaar in seen_aadhaar:
                         existing_student = True
 
                 # =========================================
                 # DUPLICATE CHECK - STUDENT UID
                 # =========================================
 
-                if (
-                    not existing_student
-                    and student_uid
-                ):
-
+                if not existing_student and student_uid:
                     cursor.execute(
                         """
                         SELECT id
@@ -20305,15 +26245,9 @@ def import_students():
                         ),
                     )
 
-                    existing_student = (
-                        cursor.fetchone()
-                    )
+                    existing_student = cursor.fetchone()
 
-                    if (
-                        student_uid
-                        in seen_student_uid
-                    ):
-
+                    if student_uid in seen_student_uid:
                         existing_student = True
 
                 # =========================================
@@ -20321,11 +26255,7 @@ def import_students():
                 # =========================================
 
                 if existing_student:
-
-                    print(
-                        f"⚠️ Row {row_number}: "
-                        f"duplicate student skipped - {name}"
-                    )
+                    print(f"⚠️ Row {row_number}: duplicate student skipped - {name}")
 
                     duplicate_rows += 1
                     skipped_rows += 1
@@ -20348,110 +26278,43 @@ def import_students():
 
                 prepared_students.append(
                     {
-                        "school_register_no":
-                            school_register_no,
-
-                        "name":
-                            name,
-
-                        "father_name":
-                            father_name,
-
-                        "mother_name":
-                            mother_name,
-
-                        "student_uid":
-                            student_uid,
-
-                        "aadhaar":
-                            aadhaar,
-
-                        "apaar_id":
-                            apaar_id,
-
-                        "dob":
-                            dob,
-
-                        "birth_place":
-                            birth_place,
-
-                        "nationality":
-                            nationality,
-
-                        "mother_tongue":
-                            mother_tongue,
-
-                        "religion":
-                            religion,
-
-                        "caste":
-                            caste,
-
-                        "city":
-                            city,
-
-                        "taluka":
-                            taluka,
-
-                        "district":
-                            district,
-
-                        "state":
-                            state,
-
-                        "admission_date":
-                            admission_date,
-
-                        "class":
-                            class_name,
-
-                        "section":
-                            section,
-
-                        "previous_school":
-                            previous_school,
-
-                        "last_exam":
-                            last_exam,
-
-                        "result_status":
-                            result_status,
-
-                        "progress":
-                            progress,
-
-                        "conduct":
-                            conduct,
-
-                        "primary_mobile":
-                            primary_mobile,
-
-                        "alternate_mobile":
-                            alternate_mobile,
-
-                        "occupation":
-                            row.get("occupation"),
-
-                        "income":
-                            income,
-
-                        "guardian_name":
-                            guardian_name,
-
-                        "guardian_mobile":
-                            guardian_mobile,
-
-                        "email":
-                            email,
+                        "school_register_no": school_register_no,
+                        "name": name,
+                        "father_name": father_name,
+                        "mother_name": mother_name,
+                        "student_uid": student_uid,
+                        "aadhaar": aadhaar,
+                        "apaar_id": apaar_id,
+                        "dob": dob,
+                        "birth_place": birth_place,
+                        "nationality": nationality,
+                        "mother_tongue": mother_tongue,
+                        "religion": religion,
+                        "caste": caste,
+                        "city": city,
+                        "taluka": taluka,
+                        "district": district,
+                        "state": state,
+                        "admission_date": admission_date,
+                        "class": class_name,
+                        "section": section,
+                        "previous_school": previous_school,
+                        "last_exam": last_exam,
+                        "result_status": result_status,
+                        "progress": progress,
+                        "conduct": conduct,
+                        "primary_mobile": primary_mobile,
+                        "alternate_mobile": alternate_mobile,
+                        "occupation": row.get("occupation"),
+                        "income": income,
+                        "guardian_name": guardian_name,
+                        "guardian_mobile": guardian_mobile,
+                        "email": email,
                     }
                 )
 
             except Exception:
-
-                logger.exception(
-                    "EXCEL ROW PROCESSING ERROR | Row=%s",
-                    row_number
-                )
+                logger.exception("EXCEL ROW PROCESSING ERROR | Row=%s", row_number)
 
                 skipped_rows += 1
                 invalid_rows += 1
@@ -20462,22 +26325,16 @@ def import_students():
         # NOTHING TO IMPORT
         # =================================================
 
-        incoming_students = len(
-            prepared_students
-        )
+        incoming_students = len(prepared_students)
 
         if incoming_students == 0:
-
             conn.rollback()
 
             flash(
-                "No valid new student records were found in the Excel file.",
-                "warning"
+                "No valid new student records were found in the Excel file.", "warning"
             )
 
-            return redirect(
-                url_for("import_export_page")
-            )
+            return redirect(url_for("import_export_page"))
 
         # =================================================
         # SUBSCRIPTION STUDENT LIMIT
@@ -20485,29 +26342,16 @@ def import_students():
         # CHECK ONLY ACTUAL NEW STUDENTS
         # =================================================
 
-        limit_check = check_subscription_limit(
-            cursor,
-            school_id,
-            "students"
-        )
+        limit_check = check_subscription_limit(cursor, school_id, "students")
 
         if not limit_check["allowed"]:
-
             conn.rollback()
 
-            flash(
-                limit_check["message"]
-                + " Please upgrade your plan.",
-                "warning"
-            )
+            flash(limit_check["message"] + " Please upgrade your plan.", "warning")
 
-            return redirect(
-                url_for("import_export_page")
-            )
+            return redirect(url_for("import_export_page"))
 
-        current_students = int(
-            limit_check["current"] or 0
-        )
+        current_students = int(limit_check["current"] or 0)
 
         student_limit = limit_check["limit"]
 
@@ -20515,17 +26359,10 @@ def import_students():
         # PLAN LIMIT
         # =================================================
 
-        if (
-            student_limit is not None
-            and current_students + incoming_students
-            > int(student_limit)
+        if student_limit is not None and current_students + incoming_students > int(
+            student_limit
         ):
-
-            available_slots = max(
-                0,
-                int(student_limit)
-                - current_students
-            )
+            available_slots = max(0, int(student_limit) - current_students)
 
             conn.rollback()
 
@@ -20535,12 +26372,10 @@ def import_students():
                 f"Current students: {current_students}. "
                 f"Available slots: {available_slots}. "
                 f"New students: {incoming_students}.",
-                "warning"
+                "warning",
             )
 
-            return redirect(
-                url_for("import_export_page")
-            )
+            return redirect(url_for("import_export_page"))
 
         # =================================================
         # INSERT STUDENTS
@@ -20549,14 +26384,11 @@ def import_students():
         inserted_count = 0
 
         for student in prepared_students:
-
             # =============================================
             # SAFE ATOMIC ADMISSION NUMBER
             # =============================================
 
-            admission_no = generate_admission_no(
-                school_id
-            )
+            admission_no = generate_admission_no(school_id)
 
             # =============================================
             # INSERT
@@ -20656,81 +26488,53 @@ def import_students():
 
         conn.commit()
 
-        print(
-            "✅ IMPORT SUCCESS:",
-            inserted_count
-        )
+        print("✅ IMPORT SUCCESS:", inserted_count)
 
         # =================================================
         # SUCCESS MESSAGE
         # =================================================
 
-        message = (
-            f"{inserted_count} student(s) imported successfully."
-        )
+        message = f"{inserted_count} student(s) imported successfully."
 
         if skipped_rows:
+            message += f" {skipped_rows} row(s) skipped."
 
-            message += (
-                f" {skipped_rows} row(s) skipped."
-            )
-
-        flash(
-            message,
-            "success"
-        )
+        flash(message, "success")
 
         # Keep existing success query
-        return redirect(
-            url_for(
-                "import_export_page",
-                success=inserted_count
-            )
-        )
+        return redirect(url_for("import_export_page", success=inserted_count))
 
     # =====================================================
     # EXPECTED EXCEL ERRORS
     # =====================================================
 
     except pd.errors.EmptyDataError:
-
         if conn:
             conn.rollback()
 
-        flash(
-            "The uploaded Excel file contains no readable data.",
-            "danger"
-        )
+        flash("The uploaded Excel file contains no readable data.", "danger")
 
-        return redirect(
-            url_for("import_export_page")
-        )
+        return redirect(url_for("import_export_page"))
 
     # =====================================================
     # DATABASE / GENERAL ERROR
     # =====================================================
 
     except Exception as e:
-
         if conn:
             conn.rollback()
 
-        logger.exception(
-            "IMPORT STUDENTS ERROR"
-        )
+        logger.exception("IMPORT STUDENTS ERROR")
 
         flash(
             "Student import failed. No student records were added. "
             "Please check the Excel file and try again.",
-            "danger"
+            "danger",
         )
 
-        return redirect(
-            url_for("import_export_page")
-        )
+        return redirect(url_for("import_export_page"))
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -20751,7 +26555,6 @@ def export_students():
     cursor = None
 
     try:
-
         import io
         import pandas as pd
         from datetime import datetime
@@ -20760,90 +26563,50 @@ def export_students():
         # SCHOOL SESSION
         # =================================================
 
-        school_id = session.get(
-            "clerk_school_id"
-        )
+        school_id = session.get("clerk_school_id")
 
         if not school_id:
+            flash("School session expired. Please login again.", "danger")
 
-            flash(
-                "School session expired. Please login again.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("login")
-            )
+            return redirect(url_for("login"))
 
         # =================================================
         # FILTERS
         # =================================================
 
-        cls = (
-            request.args.get("class")
-            or ""
-        ).strip()
+        cls = (request.args.get("class") or "").strip()
 
-        month = (
-            request.args.get("month")
-            or ""
-        ).strip()
+        month = (request.args.get("month") or "").strip()
 
-        year = (
-            request.args.get("year")
-            or ""
-        ).strip()
+        year = (request.args.get("year") or "").strip()
 
         # =================================================
         # CLASS VALIDATION
         # =================================================
 
         if cls and not cls.isdigit():
+            flash("Invalid class filter.", "warning")
 
-            flash(
-                "Invalid class filter.",
-                "warning"
-            )
-
-            return redirect(
-                url_for("import_export_page")
-            )
+            return redirect(url_for("import_export_page"))
 
         # =================================================
         # MONTH VALIDATION
         # =================================================
 
         if month:
+            if not month.isdigit() or int(month) < 1 or int(month) > 12:
+                flash("Invalid month filter.", "warning")
 
-            if (
-                not month.isdigit()
-                or int(month) < 1
-                or int(month) > 12
-            ):
-
-                flash(
-                    "Invalid month filter.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("import_export_page")
-                )
+                return redirect(url_for("import_export_page"))
 
         # =================================================
         # YEAR VALIDATION
         # =================================================
 
         if year and not year.isdigit():
+            flash("Invalid year filter.", "warning")
 
-            flash(
-                "Invalid year filter.",
-                "warning"
-            )
-
-            return redirect(
-                url_for("import_export_page")
-            )
+            return redirect(url_for("import_export_page"))
 
         # =================================================
         # DATABASE
@@ -20852,19 +26615,11 @@ def export_students():
         conn = get_connection()
 
         if not conn:
+            flash("Database connection failed. Please try again.", "danger")
 
-            flash(
-                "Database connection failed. Please try again.",
-                "danger"
-            )
+            return redirect(url_for("import_export_page"))
 
-            return redirect(
-                url_for("import_export_page")
-            )
-
-        cursor = conn.cursor(
-            dictionary=True
-        )
+        cursor = conn.cursor(dictionary=True)
 
         # =================================================
         # BASE QUERY
@@ -20913,16 +26668,13 @@ def export_students():
             AND is_deleted = 0
         """
 
-        params = [
-            school_id
-        ]
+        params = [school_id]
 
         # =================================================
         # CLASS FILTER
         # =================================================
 
         if cls:
-
             query += """
                 AND `class` = %s
             """
@@ -20934,28 +26686,22 @@ def export_students():
         # =================================================
 
         if month:
-
             query += """
                 AND MONTH(admission_date) = %s
             """
 
-            params.append(
-                int(month)
-            )
+            params.append(int(month))
 
         # =================================================
         # YEAR FILTER
         # =================================================
 
         if year:
-
             query += """
                 AND YEAR(admission_date) = %s
             """
 
-            params.append(
-                int(year)
-            )
+            params.append(int(year))
 
         # =================================================
         # ORDER
@@ -20969,10 +26715,7 @@ def export_students():
         # EXECUTE
         # =================================================
 
-        cursor.execute(
-            query,
-            tuple(params)
-        )
+        cursor.execute(query, tuple(params))
 
         students = cursor.fetchall()
 
@@ -20981,15 +26724,9 @@ def export_students():
         # =================================================
 
         if not students:
+            flash("No student records found for the selected filters.", "warning")
 
-            flash(
-                "No student records found for the selected filters.",
-                "warning"
-            )
-
-            return redirect(
-                url_for("import_export_page")
-            )
+            return redirect(url_for("import_export_page"))
 
         # =================================================
         # SAFE DATE FORMAT
@@ -21001,13 +26738,9 @@ def export_students():
                 return ""
 
             try:
-
-                return value.strftime(
-                    "%d-%m-%Y"
-                )
+                return value.strftime("%d-%m-%Y")
 
             except Exception:
-
                 return str(value)
 
         # =================================================
@@ -21020,13 +26753,9 @@ def export_students():
                 return ""
 
             if isinstance(value, str):
-
                 value = value.strip()
 
-                if value.startswith(
-                    ("=", "+", "-", "@")
-                ):
-
+                if value.startswith(("=", "+", "-", "@")):
                     return "'" + value
 
             return value
@@ -21036,28 +26765,18 @@ def export_students():
         # =================================================
 
         for student in students:
+            student["dob"] = safe_date(student.get("dob"))
 
-            student["dob"] = safe_date(
-                student.get("dob")
-            )
-
-            student["admission_date"] = safe_date(
-                student.get("admission_date")
-            )
+            student["admission_date"] = safe_date(student.get("admission_date"))
 
             for key in student:
-
-                student[key] = sanitize_excel(
-                    student[key]
-                )
+                student[key] = sanitize_excel(student[key])
 
         # =================================================
         # DATAFRAME
         # =================================================
 
-        df = pd.DataFrame(
-            students
-        )
+        df = pd.DataFrame(students)
 
         # =================================================
         # CREATE EXCEL FILE
@@ -21065,16 +26784,8 @@ def export_students():
 
         output = io.BytesIO()
 
-        with pd.ExcelWriter(
-            output,
-            engine="openpyxl"
-        ) as writer:
-
-            df.to_excel(
-                writer,
-                index=False,
-                sheet_name="Students"
-            )
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Students")
 
         output.seek(0)
 
@@ -21094,8 +26805,7 @@ def export_students():
             as_attachment=True,
             download_name=filename,
             mimetype=(
-                "application/vnd.openxmlformats-"
-                "officedocument.spreadsheetml.sheet"
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             ),
         )
 
@@ -21104,22 +26814,13 @@ def export_students():
     # =====================================================
 
     except Exception as e:
+        logger.exception("EXPORT STUDENTS ERROR")
 
-        logger.exception(
-            "EXPORT STUDENTS ERROR"
-        )
+        flash("Unable to export student records. Please try again.", "danger")
 
-        flash(
-            "Unable to export student records. Please try again.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("import_export_page")
-        )
+        return redirect(url_for("import_export_page"))
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -21127,9 +26828,9 @@ def export_students():
             conn.close()
 
 
- # =====================================================
-# COMING SOON ROUTE 
- # =====================================================
+# =====================================================
+# COMING SOON ROUTE
+# =====================================================
 @app.route("/coming-soon/<feature>")
 @login_required
 @subscription_required

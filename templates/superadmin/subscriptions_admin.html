@@ -2,416 +2,5412 @@
 
 {% block content %}
 
-<link rel="stylesheet"
-href="{{ url_for('static',
-filename='css/superadmin/subscriptions_admin.css') }}">
+<!-- =========================================================
+     FONT AWESOME
+========================================================= -->
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+
+{% block extra_css %}
+
+<link rel="stylesheet" href="{{ url_for(
+        'static',
+        filename='css/superadmin/subscriptions_admin.css'
+    ) }}">
+
+{% endblock %}
+
+<!-- =====================================================
+     SUBSCRIPTION PAGE WRAPPER
+====================================================== -->
 
 <div class="sub-admin-wrapper">
 
 
-<!-- HEADER -->
+    <!-- =================================================
+         PAGE HEADER
+    ================================================== -->
 
-<div class="sub-admin-header">
+    <header class="sub-admin-header">
 
-    <div>
+        <!-- LEFT : PAGE IDENTITY -->
 
-        <h1>💳 Subscription Management</h1>
+        <div class="sub-admin-header-main">
 
-        <p>
-            Manage school subscriptions, renewals,
-            payments and plan activity
-        </p>
+            <!-- ICON -->
 
-    </div>
+            <div class="sub-admin-header-icon" aria-hidden="true">
+                <i class="fa-solid fa-credit-card"></i>
+            </div>
 
-    <a href="/superadmin/export/excel/subscriptions?search={{ search }}&status={{ status_filter }}&plan={{ plan_filter }}"
-       class="sub-admin-export-btn">
 
-        Export Report
+            <!-- TEXT -->
 
-    </a>
+            <div class="sub-admin-header-content">
 
-</div>
+                <div class="sub-admin-header-eyebrow">
+                    <span class="sub-admin-header-dot"></span>
+                    Super Admin
+                </div>
 
-<!-- KPI CARDS -->
 
-<div class="sub-admin-stats">
+                <h1>
+                    Subscription Management
+                </h1>
 
-    <div class="sub-admin-stat-card total">
 
-        <div>
+                <p>
+                    Manage school subscriptions, renewals,
+                    payments and plan activity
+                </p>
 
-            <h4>Total Subscriptions</h4>
-
-            <h2>{{ total_subscriptions }}</h2>
-
-        </div>
-
-        <span>🏫</span>
-
-    </div>
-
-    <div class="sub-admin-stat-card active">
-
-        <div>
-
-            <h4>Active</h4>
-
-            <h2>{{ active_subscriptions }}</h2>
+            </div>
 
         </div>
 
-        <span>✅</span>
 
-    </div>
+        <!-- =================================================
+             RIGHT : EXPORT
+        ================================================== -->
 
-    <div class="sub-admin-stat-card expired">
+        <div class="sub-admin-header-actions">
 
-        <div>
+            <a href="/superadmin/export/excel/subscriptions?search={{ search }}&status={{ status_filter }}&plan={{ plan_filter }}"
+                class="sub-admin-export-btn" title="Export subscription report">
 
-            <h4>Expired</h4>
+                <i class="fa-solid fa-file-export"></i>
 
-            <h2>{{ expired_subscriptions }}</h2>
+                <span>
+                    Export Report
+                </span>
 
-        </div>
-
-        <span>⚠️</span>
-
-    </div>
-
-    <div class="sub-admin-stat-card renewal">
-
-        <div>
-
-            <h4>Renewals Due</h4>
-
-            <h2>{{ renewal_due }}</h2>
+            </a>
 
         </div>
 
-        <span>🔔</span>
+    </header>
 
-    </div>
 
-    <div class="sub-admin-stat-card revenue">
 
-        <div>
+    <!-- =====================================================
+     SUBSCRIPTION KPI CARDS
+====================================================== -->
 
-            <h4>Total Revenue</h4>
+    <section class="sub-admin-stats" aria-label="Subscription overview">
 
-            <h2>₹{{ "{:,.0f}".format(total_revenue) }}</h2>
 
-        </div>
+        <!-- TOTAL SUBSCRIPTIONS -->
 
-        <span>💰</span>
+        <article class="sub-admin-stat-card total">
 
-    </div>
+            <div class="sub-admin-stat-content">
 
-</div>
+                <div class="sub-admin-stat-label">
+                    <span class="sub-admin-stat-dot"></span>
+                    Total Subscriptions
+                </div>
 
-<!-- FILTERS -->
+                <h2>
+                    {{ total_subscriptions }}
+                </h2>
 
-<form method="GET"
-      class="sub-admin-filter-box">
+                <p>
+                    All registered plans
+                </p>
 
-    <input
-        type="text"
-        name="search"
-        placeholder="Search school name..."
-        value="{{ search }}">
+            </div>
 
-    <select name="status">
 
-        <option value="">All Status</option>
+            <div class="sub-admin-stat-icon">
+                <i class="fa-solid fa-school"></i>
+            </div>
 
-       <option value="Active"
-        {% if status_filter == 'Active' %}selected{% endif %}>
-            Active
-        </option>
+        </article>
 
-        <option value="Expired"
-        {% if status_filter == 'Expired' %}selected{% endif %}>
-            Expired
-        </option>
 
-    </select>
+        <!-- ACTIVE -->
 
-    <select name="plan">
+        <article class="sub-admin-stat-card active">
 
-        <option value="">
-            All Plans
-        </option>
+            <div class="sub-admin-stat-content">
 
-        {% for plan in plans %}
+                <div class="sub-admin-stat-label">
+                    <span class="sub-admin-stat-dot"></span>
+                    Active
+                </div>
 
-        <option value="{{ plan.plan_name }}"
-        {% if plan_filter == plan.plan_name %}
-        selected
-        {% endif %}>
+                <h2>
+                    {{ active_subscriptions }}
+                </h2>
 
-            {{ plan.plan_name }}
+                <p>
+                    Currently active
+                </p>
 
-        </option>
+            </div>
 
-        {% endfor %}
 
-    </select>
+            <div class="sub-admin-stat-icon">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
 
-    <select name="expiry">
+        </article>
 
-        <option value="">
-            All Expiry
-        </option>
 
-        <option value="expiring_soon"
-            {% if expiry_filter == "expiring_soon" %}selected{% endif %}>
-            Expiring Soon
-        </option>
+        <!-- EXPIRED -->
 
-        <option value="expired"
-            {% if expiry_filter == "expired" %}selected{% endif %}>
-            Expired by Date
-        </option>
+        <article class="sub-admin-stat-card expired">
 
-    </select>
+            <div class="sub-admin-stat-content">
 
-    <button type="submit">
+                <div class="sub-admin-stat-label">
+                    <span class="sub-admin-stat-dot"></span>
+                    Expired
+                </div>
 
-        Search
+                <h2>
+                    {{ expired_subscriptions }}
+                </h2>
 
-    </button>
+                <p>
+                    Require attention
+                </p>
 
-    <a href="/superadmin/subscriptions"
-       class="sub-admin-clear-btn">
+            </div>
 
-        Clear
 
-    </a>
+            <div class="sub-admin-stat-icon">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
 
-</form>
+        </article>
 
-<!-- TABLE -->
 
-<div class="sub-admin-table-box">
+        <!-- RENEWALS DUE -->
 
-    <table class="sub-admin-table">
+        <article class="sub-admin-stat-card renewal">
 
-        <thead>
+            <div class="sub-admin-stat-content">
 
-            <tr>
+                <div class="sub-admin-stat-label">
+                    <span class="sub-admin-stat-dot"></span>
+                    Renewals Due
+                </div>
 
-                <th>School</th>
-                <th>Plan</th>
-                <th>Start Date</th>
-                <th>Expiry Date</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <h2>
+                    {{ renewal_due }}
+                </h2>
 
-            </tr>
+                <p>
+                    Upcoming renewals
+                </p>
 
-        </thead>
+            </div>
 
-        <tbody>
 
-            {% for sub in subscriptions %}
+            <div class="sub-admin-stat-icon">
+                <i class="fa-solid fa-bell"></i>
+            </div>
 
-            <tr>
+        </article>
 
-                <td>{{ sub.school_name }}</td>
 
-                <td>
+        <!-- TOTAL REVENUE -->
 
-                    <span class="plan-pill">
+        <article class="sub-admin-stat-card revenue">
 
-                        {{ sub.plan_name }}
+            <div class="sub-admin-stat-content">
 
-                    </span>
+                <div class="sub-admin-stat-label">
+                    <span class="sub-admin-stat-dot"></span>
+                    Total Revenue
+                </div>
 
-                </td>
+                <h2>
+                    ₹{{ "{:,.0f}".format(total_revenue) }}
+                </h2>
 
-                <td>{{ sub.start_date }}</td>
+                <p>
+                    Subscription revenue
+                </p>
 
-                <td>{{ sub.end_date }}</td>
+            </div>
 
-                <td>₹{{ sub.amount }}</td>
 
-                <td>
+            <div class="sub-admin-stat-icon">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+            </div>
 
-                    <span class="status-pill
-                    {{ sub.status|lower }}">
+        </article>
 
-                        {{ sub.status }}
 
-                    </span>
+    </section>
 
-                </td>
 
-                <td>
+    <!-- =====================================================
+     SUBSCRIPTION SEARCH & FILTERS
+====================================================== -->
 
-                    <button
-                    class="sub-view-btn"
-                    data-sub='{{ sub|tojson|safe }}'
-                    onclick="openSubscriptionModal(this)">
+    <section class="sub-admin-filter-section">
 
-                        View
+        <form method="GET" action="{{ url_for('superadmin_subscriptions') }}" class="sub-admin-filter-box"
+            id="subscriptionFilterForm">
 
+            <!-- ================= SEARCH ================= -->
+
+            <div class="sub-filter-field sub-filter-search">
+
+                <label for="subscriptionSearch">
+                    Search
+                </label>
+
+                <div class="sub-filter-input-wrap">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input type="search" id="subscriptionSearch" name="search" value="{{ search or '' }}"
+                        placeholder="Search school or plan..." autocomplete="off" spellcheck="false">
+
+                    {% if search %}
+                    <button type="button" class="sub-filter-clear-search" id="clearSubscriptionSearch"
+                        aria-label="Clear search" title="Clear search">
+                        <i class="fa-solid fa-xmark"></i>
                     </button>
+                    {% endif %}
 
-                </td>
+                </div>
 
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-</div>
+            </div>
 
 
-</div>
+            <!-- ================= STATUS ================= -->
 
-<!-- PAGINATION -->
+            <div class="sub-filter-field">
 
-{% if total_pages > 1 %}
+                <label for="subscriptionStatus">
+                    Status
+                </label>
 
-<div class="sub-admin-pagination">
+                <div class="sub-filter-select-wrap">
 
-    {% if page > 1 %}
-    <a href="?page={{ page-1 }}&search={{ search }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if expiry_filter %}&expiry={{ expiry_filter }}{% endif %}">
-        ← Prev
-    </a>
-    {% endif %}
+                    <i class="fa-solid fa-circle-half-stroke"></i>
 
-    <span>
-        Page {{ page }} of {{ total_pages }}
-    </span>
+                    <select id="subscriptionStatus" name="status">
 
-    {% if page < total_pages %}
-    <a href="?page={{ page+1 }}&search={{ search }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if expiry_filter %}&expiry={{ expiry_filter }}{% endif %}">
-        Next →
-    </a>
-    {% endif %}
+                        <option value="">
+                            All Status
+                        </option>
 
-</div>
+                        <option value="Active" {% if status_filter=='active' %} selected {% endif %}>
+                            Active
+                        </option>
 
-{% endif %}
+                        <option value="Expired" {% if status_filter=='expired' %} selected {% endif %}>
+                            Expired
+                        </option>
 
-<!-- MODAL -->
+                    </select>
 
-<div id="subscriptionModal"
-class="sub-modal">
+                </div>
 
-    <div class="sub-modal-box">
+            </div>
 
-        <span
-        class="sub-close"
-        onclick="closeSubscriptionModal()">
 
-            ×
+            <!-- ================= PLAN ================= -->
 
-        </span>
+            <div class="sub-filter-field">
 
-        <h2>Subscription Details</h2>
+                <label for="subscriptionPlan">
+                    Plan
+                </label>
 
-        <div id="subModalContent"></div>
+                <div class="sub-filter-select-wrap">
+
+                    <i class="fa-solid fa-layer-group"></i>
+
+                    <select id="subscriptionPlan" name="plan">
+
+                        <option value="">
+                            All Plans
+                        </option>
+
+                        {% for plan in plans %}
+
+                        <option value="{{ plan.plan_name }}" {% if plan_filter==plan.plan_name %} selected {% endif %}>
+                            {{ plan.plan_name }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================= EXPIRY ================= -->
+
+            <div class="sub-filter-field">
+
+                <label for="subscriptionExpiry">
+                    Expiry
+                </label>
+
+                <div class="sub-filter-select-wrap">
+
+                    <i class="fa-regular fa-calendar-days"></i>
+
+                    <select id="subscriptionExpiry" name="expiry">
+
+                        <option value="">
+                            All Expiry
+                        </option>
+
+                        <option value="expiring_soon" {% if expiry_filter=='expiring_soon' %} selected {% endif %}>
+                            Expiring Soon
+                        </option>
+
+                        <option value="expired" {% if expiry_filter=='expired' %} selected {% endif %}>
+                            Expired by Date
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================= ACTIONS ================= -->
+
+            <div class="sub-filter-actions">
+
+                <button type="submit" class="sub-filter-search-btn" id="subscriptionFilterSubmit">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <span>Search</span>
+
+                </button>
+
+
+                <a href="{{ url_for('superadmin_subscriptions') }}" class="sub-filter-clear-btn">
+
+                    <i class="fa-solid fa-rotate-left"></i>
+
+                    <span>Clear</span>
+
+                </a>
+
+            </div>
+
+        </form>
+
+
+        <!-- ================= ACTIVE FILTER SUMMARY ================= -->
+
+        {% set active_filter_count = 0 %}
+
+        {% if search %}
+        {% set active_filter_count = active_filter_count + 1 %}
+        {% endif %}
+
+        {% if status_filter %}
+        {% set active_filter_count = active_filter_count + 1 %}
+        {% endif %}
+
+        {% if plan_filter %}
+        {% set active_filter_count = active_filter_count + 1 %}
+        {% endif %}
+
+        {% if expiry_filter %}
+        {% set active_filter_count = active_filter_count + 1 %}
+        {% endif %}
+
+
+        {% if active_filter_count > 0 %}
+
+        <div class="sub-active-filter-bar">
+
+            <div class="sub-active-filter-info">
+
+                <span class="sub-active-filter-icon">
+                    <i class="fa-solid fa-filter"></i>
+                </span>
+
+                <div>
+
+                    <strong>
+                        Filters applied
+                    </strong>
+
+                    <span>
+                        {{ active_filter_count }}
+                        {% if active_filter_count == 1 %}
+                        filter
+                        {% else %}
+                        filters
+                        {% endif %}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <a href="{{ url_for('superadmin_subscriptions') }}" class="sub-reset-filter-link">
+                Reset filters
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- =========================================================
+     SUBSCRIPTION TABLE
+========================================================= -->
+
+    <section class="sub-admin-table-section">
+
+        <!-- TABLE HEADER -->
+
+        <div class="sub-table-heading">
+
+            <div class="sub-table-heading-left">
+
+                <div class="sub-table-heading-icon">
+                    <i class="fa-solid fa-credit-card"></i>
+                </div>
+
+                <div>
+
+                    <h3>Subscription Records</h3>
+
+                    <p>
+                        {% if total_records %}
+                        Showing
+                        {{ subscriptions|length }}
+                        of
+                        {{ total_records }}
+                        subscriptions
+                        {% else %}
+                        No subscription records found
+                        {% endif %}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            {% if total_records %}
+
+            <div class="sub-record-count">
+
+                <i class="fa-solid fa-database"></i>
+
+                {{ total_records }} Records
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- =====================================================
+         TABLE
+    ====================================================== -->
+
+        <div class="sub-admin-table-box">
+
+            <div class="sub-table-scroll">
+
+                <table class="sub-admin-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="school-column">
+                                School
+                            </th>
+
+                            <th class="plan-column">
+                                Plan
+                            </th>
+
+                            <th>
+                                Start Date
+                            </th>
+
+                            <th>
+                                Expiry Date
+                            </th>
+
+                            <th>
+                                Amount
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th class="actions-column">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for sub in subscriptions %}
+
+                        <tr>
+
+                            <!-- ================= SCHOOL ================= -->
+
+                            <td class="school-cell" data-label="School">
+
+                                <div class="subscription-school">
+
+                                    <div class="subscription-school-icon">
+
+                                        <i class="fa-solid fa-building-columns"></i>
+
+                                    </div>
+
+                                    <div class="subscription-school-info">
+
+                                        <strong>
+                                            {{ sub.school_name }}
+                                        </strong>
+
+                                        <span>
+                                            School ID #{{ sub.school_id }}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ================= PLAN ================= -->
+
+                            <td data-label="Plan" class="plan-cell">
+
+                                <span class="plan-pill">
+
+                                    <i class="fa-solid fa-layer-group"></i>
+
+                                    {{ sub.plan_name }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- ================= START DATE ================= -->
+
+                            <td data-label="Start Date" class="date-cell">
+
+                                <div class="subscription-date">
+
+                                    <i class="fa-regular fa-calendar"></i>
+
+                                    <span>
+                                        {{ sub.start_date or '—' }}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ================= EXPIRY ================= -->
+
+                            <td data-label="Expiry Date" class="date-cell">
+
+                                <div class="subscription-date">
+
+                                    <i class="fa-regular fa-calendar-xmark"></i>
+
+                                    <div>
+
+                                        <span>
+                                            {{ sub.end_date or '—' }}
+                                        </span>
+
+                                        {% if sub.days_remaining is not none %}
+
+                                        {% if sub.days_remaining < 0 %} <small class="expiry-note expired">
+                                            {{ sub.days_remaining|abs }}
+                                            {% if sub.days_remaining|abs == 1 %}
+                                            day
+                                            {% else %}
+                                            days
+                                            {% endif %}
+                                            overdue
+                                            </small>
+
+                                            {% elif sub.days_remaining == 0 %}
+
+                                            <small class="expiry-note today">
+                                                Expires today
+                                            </small>
+
+                                            {% elif sub.days_remaining <= 30 %} <small class="expiry-note warning">
+                                                {{ sub.days_remaining }}
+                                                {% if sub.days_remaining == 1 %}
+                                                day
+                                                {% else %}
+                                                days
+                                                {% endif %}
+                                                remaining
+                                                </small>
+
+                                                {% else %}
+
+                                                <small class="expiry-note">
+                                                    {{ sub.days_remaining }}
+                                                    days remaining
+                                                </small>
+
+                                                {% endif %}
+
+                                                {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ================= AMOUNT ================= -->
+
+                            <td data-label="Amount" class="amount-cell">
+
+                                <strong class="subscription-amount">
+
+                                    ₹{{ "{:,.2f}".format(sub.amount|float) }}
+
+                                </strong>
+
+                            </td>
+
+
+                            <!-- ================= STATUS ================= -->
+
+                            <td data-label="Status" class="status-cell">
+
+                                <span class="status-pill {{ sub.status|lower }}">
+
+                                    {% if sub.status|lower == 'active' %}
+
+                                    <i class="fa-solid fa-circle-check"></i>
+
+                                    {% else %}
+
+                                    <i class="fa-solid fa-circle-xmark"></i>
+
+                                    {% endif %}
+
+                                    {{ sub.status }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- ================= ACTIONS ================= -->
+
+                            <td data-label="Actions" class="sub-actions">
+
+                                <div class="subscription-action-group">
+
+                                    <!-- VIEW -->
+
+                                    <button type="button" class="sub-view-btn" data-sub='{{ sub|tojson|forceescape }}'
+                                        title="View subscription">
+                                        <i class="fa-regular fa-eye"></i>
+                                        <span>View</span>
+                                    </button>
+
+
+                                    <!-- EDIT -->
+
+                                    <button type="button" class="sub-edit-btn" data-sub='{{ sub|tojson|forceescape }}'
+                                        onclick="openEditSubscriptionModal(this)" title="Edit subscription">
+
+                                        <i class="fa-regular fa-pen-to-square"></i>
+
+                                        <span>Edit</span>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+
+                        {% else %}
+
+                        <!-- =================================================
+                         EMPTY STATE
+                    ================================================== -->
+
+                        <tr>
+
+                            <td colspan="7" class="subscription-empty-cell">
+
+                                <div class="subscription-empty-state">
+
+                                    <div class="subscription-empty-icon">
+
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                                    </div>
+
+                                    <h4>
+                                        No subscriptions found
+                                    </h4>
+
+                                    <p>
+                                        Try changing your search or filter
+                                        criteria.
+                                    </p>
+
+                                    <a href="{{ url_for('superadmin_subscriptions') }}">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                        Clear Filters
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+         PAGINATION
+    ====================================================== -->
+
+        {% if total_pages > 1 %}
+
+        <nav class="sub-admin-pagination" aria-label="Subscription pagination">
+
+            <!-- PREVIOUS -->
+
+            {% if page > 1 %}
+
+            <a class="pagination-nav" href="{{ url_for(
+                    'superadmin_subscriptions',
+                    page=page - 1,
+                    search=search,
+                    status=status_filter,
+                    plan=plan_filter,
+                    expiry=expiry_filter
+                ) }}" aria-label="Previous page">
+
+                <i class="fa-solid fa-chevron-left"></i>
+
+                <span>Previous</span>
+
+            </a>
+
+            {% else %}
+
+            <span class="pagination-nav disabled" aria-disabled="true">
+
+                <i class="fa-solid fa-chevron-left"></i>
+
+                <span>Previous</span>
+
+            </span>
+
+            {% endif %}
+
+
+            <!-- PAGE NUMBERS -->
+
+            <div class="pagination-pages">
+
+                {% set start_page = [1, page - 2]|max %}
+                {% set end_page = [total_pages, page + 2]|min %}
+
+
+                {% if start_page > 1 %}
+
+                <a href="{{ url_for(
+                        'superadmin_subscriptions',
+                        page=1,
+                        search=search,
+                        status=status_filter,
+                        plan=plan_filter,
+                        expiry=expiry_filter
+                    ) }}">
+                    1
+                </a>
+
+                {% if start_page > 2 %}
+
+                <span class="pagination-dots">
+                    ...
+                </span>
+
+                {% endif %}
+
+                {% endif %}
+
+
+                {% for page_number in range(start_page, end_page + 1) %}
+
+                {% if page_number == page %}
+
+                <span class="pagination-page active" aria-current="page">
+                    {{ page_number }}
+                </span>
+
+                {% else %}
+
+                <a class="pagination-page" href="{{ url_for(
+                            'superadmin_subscriptions',
+                            page=page_number,
+                            search=search,
+                            status=status_filter,
+                            plan=plan_filter,
+                            expiry=expiry_filter
+                        ) }}">
+                    {{ page_number }}
+                </a>
+
+                {% endif %}
+
+                {% endfor %}
+
+
+                {% if end_page < total_pages %} {% if end_page < total_pages - 1 %} <span class="pagination-dots">
+                    ...
+                    </span>
+
+                    {% endif %}
+
+
+                    <a class="pagination-page" href="{{ url_for(
+                        'superadmin_subscriptions',
+                        page=total_pages,
+                        search=search,
+                        status=status_filter,
+                        plan=plan_filter,
+                        expiry=expiry_filter
+                    ) }}">
+                        {{ total_pages }}
+                    </a>
+
+                    {% endif %}
+
+            </div>
+
+
+            <!-- NEXT -->
+
+            {% if page < total_pages %} <a class="pagination-nav" href="{{ url_for(
+                    'superadmin_subscriptions',
+                    page=page + 1,
+                    search=search,
+                    status=status_filter,
+                    plan=plan_filter,
+                    expiry=expiry_filter
+                ) }}" aria-label="Next page">
+
+                <span>Next</span>
+
+                <i class="fa-solid fa-chevron-right"></i>
+
+                </a>
+
+                {% else %}
+
+                <span class="pagination-nav disabled" aria-disabled="true">
+
+                    <span>Next</span>
+
+                    <i class="fa-solid fa-chevron-right"></i>
+
+                </span>
+
+                {% endif %}
+
+        </nav>
+
+
+        <!-- PAGINATION INFO -->
+
+        <div class="sub-pagination-info">
+
+            Showing
+
+            <strong>
+                {{ ((page - 1) * 5) + 1 }}
+            </strong>
+
+            –
+
+            <strong>
+                {{ ((page - 1) * 5) + (subscriptions|length) }}
+            </strong>
+
+            of
+
+            <strong>
+                {{ total_records }}
+            </strong>
+
+            subscriptions
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- =========================================================
+     VIEW SUBSCRIPTION MODAL
+========================================================= -->
+
+    <div id="subscriptionModal" class="sub-modal" aria-hidden="true">
+
+        <div class="sub-view-modal-box" role="dialog" aria-modal="true" aria-labelledby="subscriptionModalTitle">
+
+            <!-- =================================================
+             MODAL HEADER
+        ================================================== -->
+
+            <div class="sub-view-modal-header">
+
+                <div class="sub-view-modal-heading">
+
+                    <div class="sub-view-icon">
+
+                        <i class="fa-solid fa-building-columns"></i>
+
+                    </div>
+
+                    <div class="sub-view-title-content">
+
+                        <span class="sub-view-eyebrow">
+                            SUBSCRIPTION OVERVIEW
+                        </span>
+
+                        <h2 id="subscriptionModalTitle">
+                            Subscription Details
+                        </h2>
+
+                        <p id="view_modal_school">
+                            Loading school...
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="sub-view-close" id="subscriptionModalClose"
+                    aria-label="Close subscription details">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+             MODAL BODY
+        ================================================== -->
+
+            <div class="sub-view-modal-body">
+
+
+                <!-- =============================================
+                 SUBSCRIPTION HERO
+            ============================================== -->
+
+                <div class="sub-overview-hero">
+
+                    <div class="sub-overview-school">
+
+                        <div class="sub-overview-avatar" id="view_school_initial">
+                            -
+                        </div>
+
+                        <div class="sub-overview-school-info">
+
+                            <span>
+                                SCHOOL SUBSCRIPTION
+                            </span>
+
+                            <h3 id="view_school_name">
+                                -
+                            </h3>
+
+                            <p>
+                                Subscription ID:
+                                <strong id="view_sub_id">
+                                    -
+                                </strong>
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sub-overview-status">
+
+                        <span class="sub-status-label">
+                            CURRENT STATUS
+                        </span>
+
+                        <strong id="view_sub_status" class="sub-view-status-pill">
+                            -
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                 QUICK SUMMARY
+            ============================================== -->
+
+                <div class="sub-summary-grid">
+
+
+                    <!-- PLAN -->
+
+                    <div class="sub-summary-card plan-card">
+
+                        <div class="sub-summary-icon">
+
+                            <i class="fa-solid fa-layer-group"></i>
+
+                        </div>
+
+                        <div>
+
+                            <span>
+                                PLAN
+                            </span>
+
+                            <strong id="view_plan_name">
+                                -
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- AMOUNT -->
+
+                    <div class="sub-summary-card amount-card">
+
+                        <div class="sub-summary-icon">
+
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+
+                        </div>
+
+                        <div>
+
+                            <span>
+                                SUBSCRIPTION AMOUNT
+                            </span>
+
+                            <strong id="view_amount">
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DAYS -->
+
+                    <div class="sub-summary-card expiry-card">
+
+                        <div class="sub-summary-icon">
+
+                            <i class="fa-regular fa-calendar-check"></i>
+
+                        </div>
+
+                        <div>
+
+                            <span>
+                                DAYS REMAINING
+                            </span>
+
+                            <strong id="view_days_remaining">
+                                -
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                 EXPIRY HEALTH
+            ============================================== -->
+
+                <div class="sub-expiry-banner" id="subExpiryBanner">
+
+                    <div class="sub-expiry-icon">
+
+                        <i id="subExpiryIcon" class="fa-regular fa-clock"></i>
+
+                    </div>
+
+
+                    <div class="sub-expiry-content">
+
+                        <strong id="subExpiryTitle">
+                            Subscription period
+                        </strong>
+
+                        <span id="subExpiryMessage">
+                            Checking subscription expiry...
+                        </span>
+
+                    </div>
+
+
+                    <div class="sub-expiry-date">
+
+                        <span>
+                            EXPIRES
+                        </span>
+
+                        <strong id="view_end_date">
+                            -
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                 SUBSCRIPTION TIMELINE
+            ============================================== -->
+
+                <section class="sub-view-section">
+
+                    <div class="sub-view-section-title">
+
+                        <div class="sub-view-section-icon">
+
+                            <i class="fa-regular fa-calendar-days"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Subscription Timeline
+                            </h3>
+
+                            <p>
+                                Important subscription dates
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sub-timeline">
+
+
+                        <!-- START -->
+
+                        <div class="sub-timeline-item">
+
+                            <div class="sub-timeline-marker start">
+
+                                <i class="fa-solid fa-play"></i>
+
+                            </div>
+
+                            <div class="sub-timeline-content">
+
+                                <span>
+                                    START DATE
+                                </span>
+
+                                <strong id="view_start_date">
+                                    -
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sub-timeline-line"></div>
+
+
+                        <!-- EXPIRY -->
+
+                        <div class="sub-timeline-item">
+
+                            <div class="sub-timeline-marker expiry">
+
+                                <i class="fa-solid fa-flag-checkered"></i>
+
+                            </div>
+
+                            <div class="sub-timeline-content">
+
+                                <span>
+                                    EXPIRY DATE
+                                </span>
+
+                                <strong id="view_timeline_end_date">
+                                    -
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sub-timeline-line"></div>
+
+
+                        <!-- CREATED -->
+
+                        <div class="sub-timeline-item">
+
+                            <div class="sub-timeline-marker created">
+
+                                <i class="fa-solid fa-plus"></i>
+
+                            </div>
+
+                            <div class="sub-timeline-content">
+
+                                <span>
+                                    CREATED
+                                </span>
+
+                                <strong id="view_created_at">
+                                    -
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =============================================
+                 CURRENT USAGE
+            ============================================== -->
+
+                <section class="sub-view-section">
+
+                    <div class="sub-view-section-title">
+
+                        <div class="sub-view-section-icon usage">
+
+                            <i class="fa-solid fa-chart-simple"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Current Usage
+                            </h3>
+
+                            <p>
+                                Current activity for this school
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sub-usage-grid">
+
+
+                        <!-- STUDENTS -->
+
+                        <div class="sub-usage-card students">
+
+                            <div class="sub-usage-icon">
+
+                                <i class="fa-solid fa-user-graduate"></i>
+
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Students
+                                </span>
+
+                                <strong id="view_student_count" data-count="0">
+                                    0
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- STAFF -->
+
+                        <div class="sub-usage-card staff">
+
+                            <div class="sub-usage-icon">
+
+                                <i class="fa-solid fa-users"></i>
+
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Staff
+                                </span>
+
+                                <strong id="view_staff_count" data-count="0">
+                                    0
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- TC -->
+
+                        <div class="sub-usage-card tc">
+
+                            <div class="sub-usage-icon">
+
+                                <i class="fa-solid fa-file-lines"></i>
+
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    TC Issued
+                                </span>
+
+                                <strong id="view_tc_count" data-count="0">
+                                    0
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BONAFIDE -->
+
+                        <div class="sub-usage-card bonafide">
+
+                            <div class="sub-usage-icon">
+
+                                <i class="fa-solid fa-certificate"></i>
+
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Bonafide
+                                </span>
+
+                                <strong id="view_bonafide_count" data-count="0">
+                                    0
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+            <div class="sub-view-modal-footer">
+
+                <div class="sub-modal-secure">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    <span>
+                        Admin subscription view
+                    </span>
+
+                </div>
+
+
+                <button type="button" class="sub-view-footer-close" id="subscriptionModalFooterClose">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+     EDIT SUBSCRIPTION MODAL
+     PREMIUM ADMIN EDITOR
+========================================================= -->
+
+    <div id="editSubscriptionModal" class="sub-modal" aria-hidden="true">
+
+        <div class="sub-edit-modal-box" role="dialog" aria-modal="true" aria-labelledby="editSubscriptionTitle">
+
+            <!-- =================================================
+             HEADER
+        ================================================== -->
+
+            <header class="sub-edit-header">
+
+                <div class="sub-edit-heading">
+
+                    <div class="sub-edit-icon">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+
+                    <div class="sub-edit-title">
+
+                        <span>
+                            SUBSCRIPTION MANAGEMENT
+                        </span>
+
+                        <h2 id="editSubscriptionTitle">
+                            Edit Subscription
+                        </h2>
+
+                        <p>
+                            Update plan, limits and subscription validity.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="sub-edit-close" id="editSubscriptionClose" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </header>
+
+
+            <!-- =================================================
+             FORM
+        ================================================== -->
+
+            <form method="POST" action="{{ url_for('superadmin_edit_subscription') }}" id="editSubscriptionForm"
+                novalidate>
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <input type="hidden" name="subscription_id" id="edit_subscription_id">
+
+
+                <!-- =================================================
+                 SCHOOL SUMMARY
+            ================================================== -->
+
+                <section class="sub-edit-school">
+
+                    <div class="sub-edit-school-avatar">
+                        <i class="fa-solid fa-school"></i>
+                    </div>
+
+                    <div class="sub-edit-school-info">
+
+                        <span>
+                            SCHOOL
+                        </span>
+
+                        <h3 id="edit_school_name">
+                            —
+                        </h3>
+
+                        <p id="edit_school_id_display">
+                            School ID —
+                        </p>
+
+                    </div>
+
+                    <div class="sub-edit-current-plan">
+
+                        <span>
+                            CURRENT PLAN
+                        </span>
+
+                        <strong id="edit_current_plan">
+                            —
+                        </strong>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                 PLAN CONFIGURATION
+            ================================================== -->
+
+                <section class="sub-edit-section">
+
+                    <div class="sub-edit-section-head">
+
+                        <div>
+
+                            <span class="sub-edit-kicker">
+                                PLAN CONFIGURATION
+                            </span>
+
+                            <h3>
+                                Choose Subscription Plan
+                            </h3>
+
+                        </div>
+
+                        <span id="planChangeIndicator" class="sub-plan-change">
+                            <i class="fa-solid fa-minus"></i>
+                            No change
+                        </span>
+
+                    </div>
+
+
+                    <!-- PLAN SELECT -->
+
+                    <label for="edit_plan_id" class="sub-edit-label">
+                        New Plan
+                    </label>
+
+
+                    <div class="sub-edit-select">
+
+                        <i class="fa-solid fa-layer-group"></i>
+
+                        <select name="plan_id" id="edit_plan_id" required>
+
+                            {% for plan in plans %}
+
+                            <option value="{{ plan.id }}" data-plan-name="{{ plan.plan_name | e }}"
+                                data-monthly-price="{{ plan.monthly_price or 0 }}"
+                                data-yearly-price="{{ plan.yearly_price or 0 }}"
+                                data-student-limit="{{ plan.student_limit if plan.student_limit is not none else '' }}"
+                                data-staff-limit="{{ plan.staff_limit if plan.staff_limit is not none else '' }}"
+                                data-tc-limit="{{ plan.tc_limit if plan.tc_limit is not none else '' }}"
+                                data-bonafide-limit="{{ plan.bonafide_limit if plan.bonafide_limit is not none else '' }}"
+                                data-storage-limit="{{ plan.storage_limit if plan.storage_limit is not none else '' }}"
+                                data-support-type="{{ plan.support_type | e }}"
+                                data-duration-months="{{ plan.duration_months if plan.duration_months is not none else '' }}"
+                                data-tc="{{ plan.enable_tc_management | e }}"
+                                data-bonafide="{{ plan.enable_bonafide_management | e }}"
+                                data-import-export="{{ plan.enable_import_export | e }}"
+                                data-attendance="{{ plan.enable_attendance | e }}"
+                                data-fee="{{ plan.enable_fee_management | e }}"
+                                data-teacher="{{ plan.enable_teacher_management | e }}"
+                                data-results="{{ plan.enable_results | e }}"
+                                data-timetable="{{ plan.enable_timetable | e }}"
+                                data-notice="{{ plan.enable_notice_board | e }}">
+                                {{ plan.plan_name }}
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                        <i class="fa-solid fa-chevron-down"></i>
+
+                    </div>
+
+
+                    <!-- PLAN PREVIEW -->
+
+                    <div class="sub-edit-plan-preview">
+
+                        <div class="sub-plan-main">
+
+                            <div>
+
+                                <span>
+                                    SELECTED PLAN
+                                </span>
+
+                                <h3 id="preview_plan_name">
+                                    —
+                                </h3>
+
+                            </div>
+
+                            <div class="sub-plan-price">
+
+                                <strong id="preview_monthly_price">
+                                    ₹0
+                                </strong>
+
+                                <span>
+                                    / month
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sub-plan-meta">
+
+                            <span>
+                                <i class="fa-regular fa-calendar"></i>
+                                <b id="preview_duration">
+                                    —
+                                </b>
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-headset"></i>
+                                <b id="preview_support">
+                                    —
+                                </b>
+                            </span>
+
+                        </div>
+
+
+                        <!-- LIMITS -->
+
+                        <div class="sub-limit-grid">
+
+                            <div class="sub-limit">
+                                <i class="fa-solid fa-user-graduate"></i>
+                                <span>Students</span>
+                                <strong id="preview_student_limit">—</strong>
+                            </div>
+
+                            <div class="sub-limit">
+                                <i class="fa-solid fa-users"></i>
+                                <span>Staff</span>
+                                <strong id="preview_staff_limit">—</strong>
+                            </div>
+
+                            <div class="sub-limit">
+                                <i class="fa-solid fa-file-lines"></i>
+                                <span>TC</span>
+                                <strong id="preview_tc_limit">—</strong>
+                            </div>
+
+                            <div class="sub-limit">
+                                <i class="fa-solid fa-certificate"></i>
+                                <span>Bonafide</span>
+                                <strong id="preview_bonafide_limit">—</strong>
+                            </div>
+
+                            <div class="sub-limit">
+                                <i class="fa-solid fa-database"></i>
+                                <span>Storage</span>
+                                <strong id="preview_storage_limit">—</strong>
+                            </div>
+
+                        </div>
+
+
+                        <!-- FEATURES -->
+
+                        <div class="sub-feature-area">
+
+                            <div class="sub-feature-head">
+
+                                <span>
+                                    INCLUDED FEATURES
+                                </span>
+
+                                <strong id="preview_feature_count">
+                                    0 features
+                                </strong>
+
+                            </div>
+
+
+                            <div class="sub-feature-grid">
+
+                                <div class="sub-feature" data-feature="tc">
+                                    <span>
+                                        <i class="fa-solid fa-file-lines"></i>
+                                        TC Management
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+
+                                <div class="sub-feature" data-feature="bonafide">
+                                    <span>
+                                        <i class="fa-solid fa-certificate"></i>
+                                        Bonafide
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+
+                                <div class="sub-feature" data-feature="import-export">
+                                    <span>
+                                        <i class="fa-solid fa-file-import"></i>
+                                        Import / Export
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+
+                                <div class="sub-feature" data-feature="attendance">
+                                    <span>
+                                        <i class="fa-solid fa-calendar-check"></i>
+                                        Attendance
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+
+                                <div class="sub-feature" data-feature="fee">
+                                    <span>
+                                        <i class="fa-solid fa-money-check-dollar"></i>
+                                        Fee Management
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+
+                                <div class="sub-feature" data-feature="teacher">
+                                    <span>
+                                        <i class="fa-solid fa-chalkboard-user"></i>
+                                        Teacher Management
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+
+                                <div class="sub-feature" data-feature="results">
+                                    <span>
+                                        <i class="fa-solid fa-chart-column"></i>
+                                        Results
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+
+                                <div class="sub-feature" data-feature="timetable">
+                                    <span>
+                                        <i class="fa-solid fa-calendar-days"></i>
+                                        Timetable
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+
+                                <div class="sub-feature" data-feature="notice">
+                                    <span>
+                                        <i class="fa-solid fa-bullhorn"></i>
+                                        Notice Board
+                                    </span>
+                                    <i class="feature-state-icon"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                 USAGE SAFETY
+            ================================================== -->
+
+                <section class="sub-edit-section">
+
+                    <div class="sub-edit-section-head">
+
+                        <div>
+
+                            <span class="sub-edit-kicker">
+                                RESOURCE SAFETY
+                            </span>
+
+                            <h3>
+                                Current Usage vs New Limits
+                            </h3>
+
+                        </div>
+
+                        <span id="limitSafetyBadge" class="sub-safety-badge">
+                            <i class="fa-solid fa-circle-check"></i>
+                            Checking
+                        </span>
+
+                    </div>
+
+
+                    <div class="sub-usage-grid">
+
+                        <div class="sub-usage-card" data-resource="students">
+
+                            <div class="sub-usage-head">
+
+                                <div class="sub-usage-label">
+
+                                    <i class="fa-solid fa-user-graduate"></i>
+
+                                    <div>
+                                        <span>Students</span>
+
+                                        <strong>
+                                            <b id="usage_students">0</b>
+                                            /
+                                            <b id="limit_students">—</b>
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                                <span id="state_students" class="sub-usage-state">
+                                    —
+                                </span>
+
+                            </div>
+
+                            <div class="sub-progress">
+                                <span id="bar_students"></span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="sub-usage-card" data-resource="staff">
+
+                            <div class="sub-usage-head">
+
+                                <div class="sub-usage-label">
+
+                                    <i class="fa-solid fa-users"></i>
+
+                                    <div>
+                                        <span>Staff</span>
+
+                                        <strong>
+                                            <b id="usage_staff">0</b>
+                                            /
+                                            <b id="limit_staff">—</b>
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                                <span id="state_staff" class="sub-usage-state">
+                                    —
+                                </span>
+
+                            </div>
+
+                            <div class="sub-progress">
+                                <span id="bar_staff"></span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="sub-usage-card" data-resource="tc">
+
+                            <div class="sub-usage-head">
+
+                                <div class="sub-usage-label">
+
+                                    <i class="fa-solid fa-file-lines"></i>
+
+                                    <div>
+                                        <span>TC Records</span>
+
+                                        <strong>
+                                            <b id="usage_tc">0</b>
+                                            /
+                                            <b id="limit_tc">—</b>
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                                <span id="state_tc" class="sub-usage-state">
+                                    —
+                                </span>
+
+                            </div>
+
+                            <div class="sub-progress">
+                                <span id="bar_tc"></span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="sub-usage-card" data-resource="bonafide">
+
+                            <div class="sub-usage-head">
+
+                                <div class="sub-usage-label">
+
+                                    <i class="fa-solid fa-certificate"></i>
+
+                                    <div>
+                                        <span>Bonafide</span>
+
+                                        <strong>
+                                            <b id="usage_bonafide">0</b>
+                                            /
+                                            <b id="limit_bonafide">—</b>
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                                <span id="state_bonafide" class="sub-usage-state">
+                                    —
+                                </span>
+
+                            </div>
+
+                            <div class="sub-progress">
+                                <span id="bar_bonafide"></span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div id="downgradeWarning" class="sub-downgrade-warning" hidden>
+
+                        <div class="sub-warning-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Plan change cannot be applied
+                            </strong>
+
+                            <p id="downgradeWarningText">
+                                The selected plan does not support the school's current usage.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                 VALIDITY
+            ================================================== -->
+
+                <section class="sub-edit-section">
+
+                    <div class="sub-edit-section-head">
+
+                        <div>
+
+                            <span class="sub-edit-kicker">
+                                VALIDITY
+                            </span>
+
+                            <h3>
+                                Subscription Period
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sub-date-grid">
+
+                        <div>
+
+                            <label for="edit_start_date" class="sub-edit-label">
+                                Start Date
+                            </label>
+
+                            <div class="sub-date-input">
+
+                                <i class="fa-regular fa-calendar"></i>
+
+                                <input type="date" name="start_date" id="edit_start_date" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <label for="edit_end_date" class="sub-edit-label">
+                                Expiry Date
+                            </label>
+
+                            <div class="sub-date-input">
+
+                                <i class="fa-regular fa-calendar-xmark"></i>
+
+                                <input type="date" name="end_date" id="edit_end_date" required>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sub-live-status">
+
+                        <div class="sub-live-status-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+
+                        <div>
+
+                            <span>
+                                EFFECTIVE STATUS
+                            </span>
+
+                            <strong id="preview_effective_status">
+                                Active
+                            </strong>
+
+                        </div>
+
+                        <span id="preview_days_remaining" class="sub-days-pill">
+                            —
+                        </span>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                 CHANGE REASON
+            ================================================== -->
+
+                <section class="sub-edit-section">
+
+                    <div class="sub-edit-section-head">
+
+                        <div>
+
+                            <span class="sub-edit-kicker">
+                                ADMINISTRATION
+                            </span>
+
+                            <h3>
+                                Change Reason
+                            </h3>
+
+                        </div>
+
+                        <span class="sub-optional">
+                            Optional
+                        </span>
+
+                    </div>
+
+
+                    <div class="sub-reason-box">
+
+                        <i class="fa-regular fa-message"></i>
+
+                        <textarea name="change_reason" id="edit_change_reason" rows="3" maxlength="500"
+                            placeholder="e.g. School requested upgrade to Essential plan."></textarea>
+
+                    </div>
+
+
+                    <div class="sub-reason-count">
+                        <span id="changeReasonCount">0</span>
+                        / 500
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                 CONFIRMATION
+            ================================================== -->
+
+                <div class="sub-edit-confirmation">
+
+                    <div>
+                        <i class="fa-solid fa-circle-info"></i>
+                    </div>
+
+                    <section>
+
+                        <strong>
+                            Before you save
+                        </strong>
+
+                        <p>
+                            The selected plan, limits and enabled ERP
+                            features will be applied to this school's
+                            subscription.
+                        </p>
+
+                    </section>
+
+                </div>
+
+
+                <!-- =================================================
+                 FOOTER ACTIONS
+            ================================================== -->
+
+                <footer class="sub-edit-footer">
+
+                    <div class="sub-edit-footer-info">
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                        <span>
+                            Changes are validated securely on the server.
+                        </span>
+
+                    </div>
+
+
+                    <div class="sub-edit-actions">
+
+                        <button type="button" class="sub-cancel-btn" id="editSubscriptionCancel">
+                            <i class="fa-solid fa-xmark"></i>
+                            Cancel
+                        </button>
+
+
+                        <button type="submit" class="sub-save-btn" id="editSubscriptionSaveBtn">
+
+                            <span class="save-btn-content">
+
+                                <i class="fa-solid fa-check"></i>
+
+                                Save Changes
+
+                            </span>
+
+                            <span class="save-btn-loading">
+
+                                <i class="fa-solid fa-circle-notch fa-spin"></i>
+
+                                Updating...
+
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </footer>
+
+            </form>
+
+        </div>
 
     </div>
 
 </div>
+
+<!-- SEARCH AND FILTER JS  -->
 
 <script>
+    /* =========================================================
+       SUBSCRIPTION FILTERS
+       Lightweight / Server-Side Filtering
+    ========================================================= */
 
-function openSubscriptionModal(btn){
+    (function () {
 
-    const sub =
-    JSON.parse(btn.dataset.sub);
+        "use strict";
 
-    document.getElementById("subModalContent").innerHTML = `
 
-        <div class="sub-detail-grid">
+        const form =
+            document.getElementById(
+                "subscriptionFilterForm"
+            );
 
-            <div>
-                <label>Subscription ID</label>
-                <strong>#${sub.id}</strong>
-            </div>
 
-            <div>
-                <label>School</label>
-                <strong>${sub.school_name || '-'}</strong>
-            </div>
+        if (!form) {
+            return;
+        }
 
-            <div>
-                <label>Plan</label>
-                <strong>${sub.plan_name || '-'}</strong>
-            </div>
 
-            <div>
-                <label>Start Date</label>
-                <strong>${sub.start_date || '-'}</strong>
-            </div>
+        const searchInput =
+            document.getElementById(
+                "subscriptionSearch"
+            );
 
-            <div>
-                <label>Expiry Date</label>
-                <strong>${sub.end_date || '-'}</strong>
-            </div>
 
-            <div>
-                <label>Days Remaining</label>
-                <strong>
-                    ${sub.days_remaining !== null ? sub.days_remaining : '-'}
-                </strong>
-            </div>
+        const clearSearchButton =
+            document.getElementById(
+                "clearSubscriptionSearch"
+            );
 
-            <div>
-                <label>Amount</label>
-                <strong>₹${sub.amount || 0}</strong>
-            </div>
 
-            <div>
-                <label>Status</label>
-                <strong>${sub.status || '-'}</strong>
-            </div>
+        const submitButton =
+            document.getElementById(
+                "subscriptionFilterSubmit"
+            );
 
-            <div>
-                <label>Created At</label>
-                <strong>${sub.created_at || '-'}</strong>
-            </div>
 
-        </div>
+        /* =====================================================
+           CLEAR SEARCH
+        ===================================================== */
 
-    `;
+        if (clearSearchButton && searchInput) {
 
-    document.getElementById(
-        "subscriptionModal"
-    ).style.display = "flex";
-}
+            clearSearchButton.addEventListener(
+                "click",
+                function () {
 
-function closeSubscriptionModal(){
+                    searchInput.value = "";
 
-    document.getElementById(
-        "subscriptionModal"
-    ).style.display = "none";
-}
+                    searchInput.focus();
 
-window.onclick = function(e){
+                }
+            );
 
-    const modal =
-    document.getElementById(
-        "subscriptionModal"
-    );
+        }
 
-    if(e.target === modal){
 
-        modal.style.display = "none";
+        /* =====================================================
+           SUBMIT PROTECTION
+        ===================================================== */
 
-    }
+        let isSubmitting = false;
 
-}
 
+        form.addEventListener(
+            "submit",
+            function (event) {
+
+                /*
+                 * Prevent accidental double submission.
+                 */
+
+                if (isSubmitting) {
+
+                    event.preventDefault();
+
+                    return;
+
+                }
+
+
+                isSubmitting = true;
+
+
+                /*
+                 * Remove page parameter if it somehow
+                 * exists inside the form.
+                 *
+                 * New filters must always start
+                 * from page 1.
+                 */
+
+                const pageInput =
+                    form.querySelector(
+                        'input[name="page"]'
+                    );
+
+
+                if (pageInput) {
+
+                    pageInput.remove();
+
+                }
+
+
+                /*
+                 * Small loading state.
+                 */
+
+                if (submitButton) {
+
+                    submitButton.disabled = true;
+
+                    submitButton.innerHTML = `
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <span>Searching...</span>
+                `;
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           ENTER KEY
+           Native form submission already handles this,
+           but keep keyboard behavior explicit.
+        ===================================================== */
+
+        if (searchInput) {
+
+            searchInput.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (event.key !== "Enter") {
+                        return;
+                    }
+
+
+                    event.preventDefault();
+
+
+                    if (
+                        typeof form.requestSubmit ===
+                        "function"
+                    ) {
+
+                        form.requestSubmit();
+
+                    } else {
+
+                        form.submit();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+    })();
+</script>
+
+
+<script>
+    /* =========================================================
+       SUBSCRIPTION VIEW MODAL
+       PREMIUM / DYNAMIC / RESPONSIVE
+    ========================================================= */
+
+    (function () {
+
+        "use strict";
+
+
+        /* =====================================================
+           ELEMENTS
+        ===================================================== */
+
+        const modal =
+            document.getElementById("subscriptionModal");
+
+        const modalCard =
+            modal
+                ? modal.querySelector(".sub-view-modal-box")
+                : null;
+
+        const closeButton =
+            document.getElementById(
+                "subscriptionModalClose"
+            );
+
+        const footerCloseButton =
+            document.getElementById(
+                "subscriptionModalFooterClose"
+            );
+
+
+        /* =====================================================
+           SAFETY CHECK
+        ===================================================== */
+
+        if (!modal) {
+
+            console.warn(
+                "Subscription view modal not found."
+            );
+
+            return;
+
+        }
+
+
+        /* =====================================================
+           VIEW BUTTON EVENT DELEGATION
+        ===================================================== */
+
+        document.addEventListener(
+            "click",
+            function (event) {
+
+                const button =
+                    event.target.closest(
+                        ".sub-view-btn"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+
+                openSubscriptionModal(button);
+
+            }
+        );
+
+
+        /* =====================================================
+           OPEN MODAL
+        ===================================================== */
+
+        window.openSubscriptionModal =
+            function (button) {
+
+                try {
+
+                    if (!button) {
+
+                        console.error(
+                            "Subscription view button not found."
+                        );
+
+                        return;
+
+                    }
+
+
+                    /* =========================================
+                       GET DATA
+                    ========================================== */
+
+                    const rawData =
+                        button.getAttribute(
+                            "data-sub"
+                        );
+
+
+                    if (!rawData) {
+
+                        console.error(
+                            "Subscription data is missing."
+                        );
+
+                        return;
+
+                    }
+
+
+                    let sub;
+
+
+                    try {
+
+                        sub =
+                            JSON.parse(rawData);
+
+                    } catch (error) {
+
+                        console.error(
+                            "Unable to parse subscription data:",
+                            error
+                        );
+
+                        return;
+
+                    }
+
+
+                    console.log(
+                        "Subscription:",
+                        sub
+                    );
+
+
+                    /* =========================================
+                       BASIC DATA
+                    ========================================== */
+
+                    const schoolName =
+                        sub.school_name ||
+                        "Unknown School";
+
+
+                    const planName =
+                        sub.plan_name ||
+                        "Unknown Plan";
+
+
+                    const status =
+                        String(
+                            sub.status ||
+                            "Unknown"
+                        );
+
+
+                    const daysRemaining =
+                        normalizeDays(
+                            sub.days_remaining
+                        );
+
+
+                    /* =========================================
+                       SCHOOL
+                    ========================================== */
+
+                    setText(
+                        "view_school_name",
+                        schoolName
+                    );
+
+
+                    setText(
+                        "view_modal_school",
+                        schoolName
+                    );
+
+
+                    setText(
+                        "view_sub_id",
+                        sub.id
+                            ? "#" + sub.id
+                            : "-"
+                    );
+
+
+                    setText(
+                        "view_school_initial",
+                        getInitials(
+                            schoolName
+                        )
+                    );
+
+
+                    /* =========================================
+                       PLAN
+                    ========================================== */
+
+                    setText(
+                        "view_plan_name",
+                        planName
+                    );
+
+
+                    /* =========================================
+                       AMOUNT
+                    ========================================== */
+
+                    setText(
+                        "view_amount",
+                        formatCurrency(
+                            sub.amount
+                        )
+                    );
+
+
+                    /* =========================================
+                       DATES
+                    ========================================== */
+
+                    const startDate =
+                        formatDate(
+                            sub.start_date
+                        );
+
+
+                    const endDate =
+                        formatDate(
+                            sub.end_date
+                        );
+
+
+                    setText(
+                        "view_start_date",
+                        startDate
+                    );
+
+
+                    setText(
+                        "view_end_date",
+                        endDate
+                    );
+
+
+                    setText(
+                        "view_timeline_end_date",
+                        endDate
+                    );
+
+
+                    setText(
+                        "view_created_at",
+                        formatDateTime(
+                            sub.created_at
+                        )
+                    );
+
+
+                    /* =========================================
+                       STATUS
+                    ========================================== */
+
+                    updateStatus(
+                        status
+                    );
+
+
+                    /* =========================================
+                       DAYS REMAINING
+                    ========================================== */
+
+                    updateDaysRemaining(
+                        daysRemaining
+                    );
+
+
+                    /* =========================================
+                       EXPIRY BANNER
+                    ========================================== */
+
+                    updateExpiryBanner(
+                        status,
+                        daysRemaining,
+                        endDate
+                    );
+
+
+                    /* =========================================
+                       USAGE
+                    ========================================== */
+
+                    animateNumber(
+                        "view_student_count",
+                        sub.student_count
+                    );
+
+
+                    animateNumber(
+                        "view_staff_count",
+                        sub.staff_count
+                    );
+
+
+                    animateNumber(
+                        "view_tc_count",
+                        sub.tc_count
+                    );
+
+
+                    animateNumber(
+                        "view_bonafide_count",
+                        sub.bonafide_count
+                    );
+
+
+                    /* =========================================
+                       SHOW MODAL
+                    ========================================== */
+
+                    modal.style.display =
+                        "flex";
+
+
+                    modal.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+
+                    document.body.classList.add(
+                        "sub-modal-open"
+                    );
+
+
+                    requestAnimationFrame(
+                        function () {
+
+                            modal.classList.add(
+                                "is-open"
+                            );
+
+                        }
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Subscription modal error:",
+                        error
+                    );
+
+                }
+
+            };
+
+
+        /* =====================================================
+           CLOSE MODAL
+        ===================================================== */
+
+        window.closeSubscriptionModal =
+            function () {
+
+                if (!modal) {
+                    return;
+                }
+
+
+                modal.classList.remove(
+                    "is-open"
+                );
+
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+
+                document.body.classList.remove(
+                    "sub-modal-open"
+                );
+
+
+                setTimeout(
+                    function () {
+
+                        if (
+                            !modal.classList.contains(
+                                "is-open"
+                            )
+                        ) {
+
+                            modal.style.display =
+                                "none";
+
+                        }
+
+                    },
+                    240
+                );
+
+            };
+
+
+        /* =====================================================
+           CLOSE BUTTONS
+        ===================================================== */
+
+        if (closeButton) {
+
+            closeButton.addEventListener(
+                "click",
+                function () {
+
+                    closeSubscriptionModal();
+
+                }
+            );
+
+        }
+
+
+        if (footerCloseButton) {
+
+            footerCloseButton.addEventListener(
+                "click",
+                function () {
+
+                    closeSubscriptionModal();
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           OUTSIDE CLICK
+        ===================================================== */
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === modal
+                ) {
+
+                    closeSubscriptionModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           ESCAPE
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeSubscriptionModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           UPDATE STATUS
+        ===================================================== */
+
+        function updateStatus(status) {
+
+            const element =
+                document.getElementById(
+                    "view_sub_status"
+                );
+
+
+            if (!element) {
+                return;
+            }
+
+
+            element.textContent =
+                status;
+
+
+            element.classList.remove(
+                "expired"
+            );
+
+
+            if (
+                status.toLowerCase() ===
+                "expired"
+            ) {
+
+                element.classList.add(
+                    "expired"
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           UPDATE DAYS
+        ===================================================== */
+
+        function updateDaysRemaining(
+            days
+        ) {
+
+            const element =
+                document.getElementById(
+                    "view_days_remaining"
+                );
+
+
+            if (!element) {
+                return;
+            }
+
+
+            if (days === null) {
+
+                element.textContent =
+                    "-";
+
+                return;
+
+            }
+
+
+            if (days < 0) {
+
+                const overdue =
+                    Math.abs(days);
+
+
+                element.textContent =
+                    overdue +
+                    (
+                        overdue === 1
+                            ? " day overdue"
+                            : " days overdue"
+                    );
+
+
+                return;
+
+            }
+
+
+            if (days === 0) {
+
+                element.textContent =
+                    "Today";
+
+                return;
+
+            }
+
+
+            element.textContent =
+                days +
+                (
+                    days === 1
+                        ? " day"
+                        : " days"
+                );
+
+        }
+
+
+        /* =====================================================
+           EXPIRY BANNER
+        ===================================================== */
+
+        function updateExpiryBanner(
+            status,
+            days,
+            endDate
+        ) {
+
+            const banner =
+                document.getElementById(
+                    "subExpiryBanner"
+                );
+
+            const icon =
+                document.getElementById(
+                    "subExpiryIcon"
+                );
+
+            const title =
+                document.getElementById(
+                    "subExpiryTitle"
+                );
+
+            const message =
+                document.getElementById(
+                    "subExpiryMessage"
+                );
+
+
+            if (!banner) {
+                return;
+            }
+
+
+            banner.classList.remove(
+                "expired",
+                "warning"
+            );
+
+
+            icon.className =
+                "fa-regular fa-clock";
+
+
+            /* =========================================
+               EXPIRED
+            ========================================== */
+
+            if (
+                status.toLowerCase() ===
+                "expired" ||
+                (
+                    days !== null &&
+                    days < 0
+                )
+            ) {
+
+                banner.classList.add(
+                    "expired"
+                );
+
+
+                icon.className =
+                    "fa-solid fa-circle-exclamation";
+
+
+                title.textContent =
+                    "Subscription expired";
+
+
+                const overdue =
+                    days !== null
+                        ? Math.abs(days)
+                        : "";
+
+
+                message.textContent =
+                    overdue
+                        ? (
+                            overdue +
+                            (
+                                overdue === 1
+                                    ? " day"
+                                    : " days"
+                            ) +
+                            " overdue. Renewal is required."
+                        )
+                        : "This subscription is no longer active.";
+
+
+                return;
+
+            }
+
+
+            /* =========================================
+               EXPIRES TODAY
+            ========================================== */
+
+            if (days === 0) {
+
+                banner.classList.add(
+                    "warning"
+                );
+
+
+                icon.className =
+                    "fa-solid fa-triangle-exclamation";
+
+
+                title.textContent =
+                    "Subscription expires today";
+
+
+                message.textContent =
+                    "Renew the subscription to avoid service interruption.";
+
+
+                return;
+
+            }
+
+
+            /* =========================================
+               EXPIRING SOON
+            ========================================== */
+
+            if (
+                days !== null &&
+                days <= 30
+            ) {
+
+                banner.classList.add(
+                    "warning"
+                );
+
+
+                icon.className =
+                    "fa-solid fa-clock";
+
+
+                title.textContent =
+                    "Subscription expiring soon";
+
+
+                message.textContent =
+                    days +
+                    (
+                        days === 1
+                            ? " day remains."
+                            : " days remain."
+                    ) +
+                    " Consider renewing it soon.";
+
+
+                return;
+
+            }
+
+
+            /* =========================================
+               ACTIVE
+            ========================================== */
+
+            icon.className =
+                "fa-solid fa-circle-check";
+
+
+            title.textContent =
+                "Subscription is active";
+
+
+            message.textContent =
+                days !== null
+                    ? (
+                        days +
+                        (
+                            days === 1
+                                ? " day"
+                                : " days"
+                        ) +
+                        " remaining in the current subscription."
+                    )
+                    : "Subscription is currently active.";
+
+        }
+
+
+        /* =====================================================
+           ANIMATE NUMBER
+        ===================================================== */
+
+        function animateNumber(
+            elementId,
+            value
+        ) {
+
+            const element =
+                document.getElementById(
+                    elementId
+                );
+
+
+            if (!element) {
+                return;
+            }
+
+
+            let target =
+                Number(value);
+
+
+            if (
+                !Number.isFinite(target) ||
+                target < 0
+            ) {
+
+                target = 0;
+
+            }
+
+
+            target =
+                Math.floor(target);
+
+
+            element.textContent =
+                "0";
+
+
+            const duration =
+                450;
+
+
+            const startTime =
+                performance.now();
+
+
+            function update(
+                currentTime
+            ) {
+
+                const progress =
+                    Math.min(
+                        (
+                            currentTime -
+                            startTime
+                        ) /
+                        duration,
+                        1
+                    );
+
+
+                const eased =
+                    1 -
+                    Math.pow(
+                        1 - progress,
+                        3
+                    );
+
+
+                const current =
+                    Math.floor(
+                        target * eased
+                    );
+
+
+                element.textContent =
+                    current.toLocaleString(
+                        "en-IN"
+                    );
+
+
+                if (
+                    progress < 1
+                ) {
+
+                    requestAnimationFrame(
+                        update
+                    );
+
+                } else {
+
+                    element.textContent =
+                        target.toLocaleString(
+                            "en-IN"
+                        );
+
+                }
+
+            }
+
+
+            requestAnimationFrame(
+                update
+            );
+
+        }
+
+
+        /* =====================================================
+           NORMALIZE DAYS
+        ===================================================== */
+
+        function normalizeDays(
+            value
+        ) {
+
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+
+                return null;
+
+            }
+
+
+            const number =
+                Number(value);
+
+
+            if (
+                !Number.isFinite(number)
+            ) {
+
+                return null;
+
+            }
+
+
+            return Math.trunc(
+                number
+            );
+
+        }
+
+
+        /* =====================================================
+           INITIALS
+        ===================================================== */
+
+        function getInitials(
+            name
+        ) {
+
+            if (!name) {
+                return "?";
+            }
+
+
+            const words =
+                String(name)
+                    .trim()
+                    .split(/\s+/)
+                    .filter(Boolean);
+
+
+            if (!words.length) {
+                return "?";
+            }
+
+
+            if (
+                words.length === 1
+            ) {
+
+                return words[0]
+                    .substring(0, 2)
+                    .toUpperCase();
+
+            }
+
+
+            return (
+                words[0][0] +
+                words[1][0]
+            ).toUpperCase();
+
+        }
+
+
+        /* =====================================================
+           SET TEXT
+        ===================================================== */
+
+        function setText(
+            id,
+            value
+        ) {
+
+            const element =
+                document.getElementById(
+                    id
+                );
+
+
+            if (!element) {
+                return;
+            }
+
+
+            element.textContent =
+                (
+                    value === null ||
+                    value === undefined ||
+                    value === ""
+                )
+                    ? "-"
+                    : value;
+
+        }
+
+
+        /* =====================================================
+           CURRENCY
+        ===================================================== */
+
+        function formatCurrency(
+            value
+        ) {
+
+            const number =
+                Number(value);
+
+
+            if (
+                !Number.isFinite(number)
+            ) {
+
+                return "₹0.00";
+
+            }
+
+
+            return (
+                "₹" +
+                number.toLocaleString(
+                    "en-IN",
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                )
+            );
+
+        }
+
+
+        /* =====================================================
+           DATE
+        ===================================================== */
+
+        function formatDate(
+            value
+        ) {
+
+            if (!value) {
+                return "-";
+            }
+
+
+            const stringValue =
+                String(value);
+
+
+            /* YYYY-MM-DD */
+
+            if (
+                /^\d{4}-\d{2}-\d{2}$/
+                    .test(stringValue)
+            ) {
+
+                const parts =
+                    stringValue.split("-");
+
+
+                return (
+                    parts[2] +
+                    "/" +
+                    parts[1] +
+                    "/" +
+                    parts[0]
+                );
+
+            }
+
+
+            /* YYYY-MM-DD HH:MM:SS */
+
+            if (
+                /^\d{4}-\d{2}-\d{2}/
+                    .test(stringValue)
+            ) {
+
+                const datePart =
+                    stringValue.substring(
+                        0,
+                        10
+                    );
+
+
+                const parts =
+                    datePart.split("-");
+
+
+                return (
+                    parts[2] +
+                    "/" +
+                    parts[1] +
+                    "/" +
+                    parts[0]
+                );
+
+            }
+
+
+            return stringValue;
+
+        }
+
+
+        /* =====================================================
+           DATE + TIME
+        ===================================================== */
+
+        function formatDateTime(
+            value
+        ) {
+
+            if (!value) {
+                return "-";
+            }
+
+
+            const stringValue =
+                String(value);
+
+
+            if (
+                /^\d{4}-\d{2}-\d{2}/
+                    .test(stringValue)
+            ) {
+
+                const datePart =
+                    stringValue.substring(
+                        0,
+                        10
+                    );
+
+
+                const timePart =
+                    stringValue.length >= 19
+                        ? stringValue.substring(
+                            11,
+                            16
+                        )
+                        : "";
+
+
+                const parts =
+                    datePart.split("-");
+
+
+                return (
+                    parts[2] +
+                    "/" +
+                    parts[1] +
+                    "/" +
+                    parts[0] +
+                    (
+                        timePart
+                            ? " • " + timePart
+                            : ""
+                    )
+                );
+
+            }
+
+
+            return stringValue;
+
+        }
+
+
+    })();
+</script>
+
+
+
+
+
+
+<!-- EDIT SUBSCRIPTION
+           PREMIUM SAAS ADMIN JAVASCRIPT -->
+
+<script>
+    /* =========================================================
+       EDIT SUBSCRIPTION
+       PREMIUM ADMIN JAVASCRIPT
+    ========================================================= */
+
+    (function () {
+
+        "use strict";
+
+
+        /* =====================================================
+           DOM
+        ===================================================== */
+
+        const $ = (id) =>
+            document.getElementById(id);
+
+
+        const modal =
+            $("editSubscriptionModal");
+
+        const form =
+            $("editSubscriptionForm");
+
+        const planSelect =
+            $("edit_plan_id");
+
+        const saveButton =
+            $("editSubscriptionSaveBtn");
+
+        const startDateInput =
+            $("edit_start_date");
+
+        const endDateInput =
+            $("edit_end_date");
+
+        const reasonInput =
+            $("edit_change_reason");
+
+
+        if (!modal || !form) {
+            return;
+        }
+
+
+        /* =====================================================
+           STATE
+        ===================================================== */
+
+        let currentSubscription = null;
+
+        let currentPlanId = null;
+
+
+        /* =====================================================
+           FEATURE MAP
+        ===================================================== */
+
+        const FEATURE_FIELDS = {
+
+            tc: "tc",
+
+            bonafide: "bonafide",
+
+            "import-export": "import-export",
+
+            attendance: "attendance",
+
+            fee: "fee",
+
+            teacher: "teacher",
+
+            results: "results",
+
+            timetable: "timetable",
+
+            notice: "notice"
+
+        };
+
+
+        /* =====================================================
+           OPEN
+        ===================================================== */
+
+        window.openEditSubscriptionModal =
+            function (button) {
+
+                try {
+
+                    if (!button) {
+                        return;
+                    }
+
+
+                    const rawData =
+                        button.dataset.sub;
+
+
+                    if (!rawData) {
+                        throw new Error(
+                            "Subscription data missing."
+                        );
+                    }
+
+
+                    currentSubscription =
+                        JSON.parse(rawData);
+
+
+                    currentPlanId =
+                        String(
+                            currentSubscription.plan_id || ""
+                        );
+
+
+                    /* =========================================
+                       BASIC
+                    ========================================== */
+
+                    setValue(
+                        "edit_subscription_id",
+                        currentSubscription.id
+                    );
+
+
+                    setText(
+                        "edit_school_name",
+                        currentSubscription.school_name ||
+                        "Unknown School"
+                    );
+
+
+                    setText(
+                        "edit_school_id_display",
+                        "School ID " +
+                        (
+                            currentSubscription.school_id ||
+                            "—"
+                        )
+                    );
+
+
+                    setText(
+                        "edit_current_plan",
+                        currentSubscription.plan_name ||
+                        "Unknown Plan"
+                    );
+
+
+                    /* =========================================
+                       USAGE
+                    ========================================== */
+
+                    setNumber(
+                        "usage_students",
+                        currentSubscription.student_count
+                    );
+
+
+                    setNumber(
+                        "usage_staff",
+                        currentSubscription.staff_count
+                    );
+
+
+                    setNumber(
+                        "usage_tc",
+                        currentSubscription.tc_count
+                    );
+
+
+                    setNumber(
+                        "usage_bonafide",
+                        currentSubscription.bonafide_count
+                    );
+
+
+                    /* =========================================
+                       DATES
+                    ========================================== */
+
+                    startDateInput.value =
+                        normalizeDate(
+                            currentSubscription.start_date
+                        );
+
+
+                    endDateInput.value =
+                        normalizeDate(
+                            currentSubscription.end_date
+                        );
+
+
+                    /* =========================================
+                       REASON
+                    ========================================== */
+
+                    reasonInput.value = "";
+
+                    updateReasonCount();
+
+
+                    /* =========================================
+                       PLAN
+                    ========================================== */
+
+                    planSelect.value =
+                        currentPlanId;
+
+
+                    updatePlanPreview();
+
+                    updateUsageComparison();
+
+                    updateEffectiveStatus();
+
+
+                    /* =========================================
+                       OPEN
+                    ========================================== */
+
+                    modal.style.display =
+                        "flex";
+
+
+                    document.body.classList.add(
+                        "sub-modal-open"
+                    );
+
+
+                    requestAnimationFrame(
+                        function () {
+
+                            modal.classList.add(
+                                "is-open"
+                            );
+
+                            modal.setAttribute(
+                                "aria-hidden",
+                                "false"
+                            );
+
+                        }
+                    );
+
+
+                    /* =========================================
+                       RESET SCROLL
+                    ========================================== */
+
+                    form.scrollTop = 0;
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Edit subscription error:",
+                        error
+                    );
+
+                    alert(
+                        "Unable to open subscription editor."
+                    );
+
+                }
+
+            };
+
+
+        /* =====================================================
+           CLOSE
+        ===================================================== */
+
+        window.closeEditSubscriptionModal =
+            function () {
+
+                modal.classList.remove(
+                    "is-open"
+                );
+
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+
+                document.body.classList.remove(
+                    "sub-modal-open"
+                );
+
+
+                setTimeout(
+                    function () {
+
+                        if (
+                            !modal.classList.contains(
+                                "is-open"
+                            )
+                        ) {
+
+                            modal.style.display =
+                                "none";
+
+                        }
+
+                    },
+                    240
+                );
+
+
+                currentSubscription = null;
+
+            };
+
+
+        /* =====================================================
+           CLOSE BUTTONS
+        ===================================================== */
+
+        const closeButton =
+            $("editSubscriptionClose");
+
+
+        const cancelButton =
+            $("editSubscriptionCancel");
+
+
+        if (closeButton) {
+
+            closeButton.addEventListener(
+                "click",
+                closeEditSubscriptionModal
+            );
+
+        }
+
+
+        if (cancelButton) {
+
+            cancelButton.addEventListener(
+                "click",
+                closeEditSubscriptionModal
+            );
+
+        }
+
+
+        /* =====================================================
+           BACKDROP
+        ===================================================== */
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === modal
+                ) {
+
+                    closeEditSubscriptionModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           ESC
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeEditSubscriptionModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           PLAN CHANGE
+        ===================================================== */
+
+        if (planSelect) {
+
+            planSelect.addEventListener(
+                "change",
+                function () {
+
+                    updatePlanPreview();
+
+                    updateUsageComparison();
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           DATE CHANGE
+        ===================================================== */
+
+        if (startDateInput) {
+
+            startDateInput.addEventListener(
+                "change",
+                updateEffectiveStatus
+            );
+
+        }
+
+
+        if (endDateInput) {
+
+            endDateInput.addEventListener(
+                "change",
+                updateEffectiveStatus
+            );
+
+        }
+
+
+        /* =====================================================
+           PREVENT MANUAL DATE KEYBOARD ENTRY
+        ===================================================== */
+
+        [
+            startDateInput,
+            endDateInput
+        ].forEach(
+            function (input) {
+
+                if (!input) {
+                    return;
+                }
+
+
+                input.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                        event.preventDefault();
+
+                    }
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           REASON COUNTER
+        ===================================================== */
+
+        if (reasonInput) {
+
+            reasonInput.addEventListener(
+                "input",
+                updateReasonCount
+            );
+
+        }
+
+
+        function updateReasonCount() {
+
+            const counter =
+                $("changeReasonCount");
+
+
+            if (!counter || !reasonInput) {
+                return;
+            }
+
+
+            counter.textContent =
+                reasonInput.value.length;
+
+        }
+
+
+        /* =====================================================
+           GET SELECTED PLAN
+        ===================================================== */
+
+        function getSelectedPlan() {
+
+            if (!planSelect) {
+                return null;
+            }
+
+
+            return (
+                planSelect.options[
+                planSelect.selectedIndex
+                ] || null
+            );
+
+        }
+
+
+        /* =====================================================
+           FIND PLAN
+        ===================================================== */
+
+        function findPlanById(
+            planId
+        ) {
+
+            if (!planSelect) {
+                return null;
+            }
+
+
+            return Array
+                .from(planSelect.options)
+                .find(
+                    function (option) {
+
+                        return String(
+                            option.value
+                        ) === String(
+                            planId
+                        );
+
+                    }
+                ) || null;
+
+        }
+
+
+        /* =====================================================
+           PLAN PREVIEW
+        ===================================================== */
+
+        function updatePlanPreview() {
+
+            const plan =
+                getSelectedPlan();
+
+
+            if (!plan) {
+                return;
+            }
+
+
+            const name =
+                plan.dataset.planName ||
+                plan.textContent.trim() ||
+                "—";
+
+
+            const monthlyPrice =
+                number(
+                    plan.dataset.monthlyPrice
+                ) || 0;
+
+
+            const duration =
+                plan.dataset.durationMonths;
+
+
+            const support =
+                plan.dataset.supportType ||
+                "Standard support";
+
+
+            setText(
+                "preview_plan_name",
+                name
+            );
+
+
+            setText(
+                "preview_monthly_price",
+                formatCurrency(
+                    monthlyPrice
+                )
+            );
+
+
+            setText(
+                "preview_support",
+                support
+            );
+
+
+            setText(
+                "preview_duration",
+                duration
+                    ? duration +
+                    (
+                        Number(duration) === 1
+                            ? " month"
+                            : " months"
+                    )
+                    : "Flexible duration"
+            );
+
+
+            setText(
+                "preview_student_limit",
+                formatLimit(
+                    plan.dataset.studentLimit
+                )
+            );
+
+
+            setText(
+                "preview_staff_limit",
+                formatLimit(
+                    plan.dataset.staffLimit
+                )
+            );
+
+
+            setText(
+                "preview_tc_limit",
+                formatLimit(
+                    plan.dataset.tcLimit
+                )
+            );
+
+
+            setText(
+                "preview_bonafide_limit",
+                formatLimit(
+                    plan.dataset.bonafideLimit
+                )
+            );
+
+
+            setText(
+                "preview_storage_limit",
+                plan.dataset.storageLimit ||
+                "—"
+            );
+
+
+            updateFeatures();
+
+            updatePlanChangeIndicator();
+
+        }
+
+
+        /* =====================================================
+           FEATURES
+        ===================================================== */
+
+        function updateFeatures() {
+
+            const plan =
+                getSelectedPlan();
+
+
+            if (!plan) {
+                return;
+            }
+
+
+            let enabledCount = 0;
+
+
+            document
+                .querySelectorAll(
+                    "#editSubscriptionModal .sub-feature"
+                )
+                .forEach(
+                    function (item) {
+
+                        const feature =
+                            item.dataset.feature;
+
+
+                        const field =
+                            FEATURE_FIELDS[
+                            feature
+                            ];
+
+
+                        if (!field) {
+                            return;
+                        }
+
+
+                        const enabled =
+                            isEnabled(
+                                plan.dataset[
+                                field
+                                ]
+                            );
+
+
+                        item.classList.toggle(
+                            "is-enabled",
+                            enabled
+                        );
+
+
+                        item.classList.toggle(
+                            "is-disabled",
+                            !enabled
+                        );
+
+
+                        if (enabled) {
+                            enabledCount++;
+                        }
+
+                    }
+                );
+
+
+            setText(
+                "preview_feature_count",
+                enabledCount +
+                (
+                    enabledCount === 1
+                        ? " feature"
+                        : " features"
+                )
+            );
+
+        }
+
+
+        /* =====================================================
+           PLAN CHANGE INDICATOR
+        ===================================================== */
+
+        function updatePlanChangeIndicator() {
+
+            const indicator =
+                $("planChangeIndicator");
+
+
+            if (!indicator) {
+                return;
+            }
+
+
+            const selected =
+                getSelectedPlan();
+
+
+            if (!selected) {
+                return;
+            }
+
+
+            const selectedId =
+                String(
+                    selected.value
+                );
+
+
+            const currentId =
+                String(
+                    currentPlanId || ""
+                );
+
+
+            indicator.classList.remove(
+                "is-upgrade",
+                "is-downgrade"
+            );
+
+
+            if (
+                !currentId ||
+                selectedId === currentId
+            ) {
+
+                indicator.innerHTML =
+                    `
+                <i class="fa-solid fa-minus"></i>
+                No change
+                `;
+
+                return;
+
+            }
+
+
+            const currentPlan =
+                findPlanById(
+                    currentId
+                );
+
+
+            const currentPrice =
+                currentPlan
+                    ? number(
+                        currentPlan.dataset.monthlyPrice
+                    ) || 0
+                    : 0;
+
+
+            const selectedPrice =
+                number(
+                    selected.dataset.monthlyPrice
+                ) || 0;
+
+
+            if (
+                selectedPrice >
+                currentPrice
+            ) {
+
+                indicator.innerHTML =
+                    `
+                <i class="fa-solid fa-arrow-up"></i>
+                Plan Upgrade
+                `;
+
+                indicator.classList.add(
+                    "is-upgrade"
+                );
+
+            } else if (
+                selectedPrice <
+                currentPrice
+            ) {
+
+                indicator.innerHTML =
+                    `
+                <i class="fa-solid fa-arrow-down"></i>
+                Plan Downgrade
+                `;
+
+                indicator.classList.add(
+                    "is-downgrade"
+                );
+
+            } else {
+
+                indicator.innerHTML =
+                    `
+                <i class="fa-solid fa-arrows-left-right"></i>
+                Plan Change
+                `;
+
+            }
+
+        }
+
+
+        /* =====================================================
+           USAGE COMPARISON
+        ===================================================== */
+
+        function updateUsageComparison() {
+
+            const plan =
+                getSelectedPlan();
+
+
+            if (!plan) {
+                return;
+            }
+
+
+            const resources = [
+
+                {
+                    key: "students",
+                    usage: "usage_students",
+                    limit: "limit_students",
+                    state: "state_students",
+                    bar: "bar_students",
+                    value: plan.dataset.studentLimit
+                },
+
+                {
+                    key: "staff",
+                    usage: "usage_staff",
+                    limit: "limit_staff",
+                    state: "state_staff",
+                    bar: "bar_staff",
+                    value: plan.dataset.staffLimit
+                },
+
+                {
+                    key: "tc",
+                    usage: "usage_tc",
+                    limit: "limit_tc",
+                    state: "state_tc",
+                    bar: "bar_tc",
+                    value: plan.dataset.tcLimit
+                },
+
+                {
+                    key: "bonafide",
+                    usage: "usage_bonafide",
+                    limit: "limit_bonafide",
+                    state: "state_bonafide",
+                    bar: "bar_bonafide",
+                    value: plan.dataset.bonafideLimit
+                }
+
+            ];
+
+
+            let violation = false;
+
+
+            resources.forEach(
+                function (resource) {
+
+                    const usage =
+                        getUsage(
+                            resource.key
+                        );
+
+
+                    const limit =
+                        number(
+                            resource.value
+                        );
+
+
+                    setText(
+                        resource.limit,
+                        formatLimit(
+                            resource.value
+                        )
+                    );
+
+
+                    const state =
+                        $(resource.state);
+
+
+                    const bar =
+                        $(resource.bar);
+
+
+                    if (!state || !bar) {
+                        return;
+                    }
+
+
+                    state.classList.remove(
+                        "safe",
+                        "warning",
+                        "danger"
+                    );
+
+
+                    /* UNLIMITED */
+
+                    if (
+                        limit === null
+                    ) {
+
+                        state.textContent =
+                            "Unlimited";
+
+                        state.classList.add(
+                            "safe"
+                        );
+
+                        bar.style.width =
+                            "18%";
+
+                        return;
+
+                    }
+
+
+                    /* OVER */
+
+                    if (
+                        usage > limit
+                    ) {
+
+                        violation = true;
+
+                        state.textContent =
+                            "Over limit";
+
+                        state.classList.add(
+                            "danger"
+                        );
+
+                        bar.style.width =
+                            "100%";
+
+                        return;
+
+                    }
+
+
+                    const percentage =
+                        limit > 0
+                            ? Math.min(
+                                100,
+                                Math.round(
+                                    (
+                                        usage /
+                                        limit
+                                    ) * 100
+                                )
+                            )
+                            : 0;
+
+
+                    bar.style.width =
+                        percentage + "%";
+
+
+                    if (
+                        percentage >= 90
+                    ) {
+
+                        state.textContent =
+                            "Near limit";
+
+                        state.classList.add(
+                            "warning"
+                        );
+
+                    } else {
+
+                        state.textContent =
+                            "Available";
+
+                        state.classList.add(
+                            "safe"
+                        );
+
+                    }
+
+                }
+            );
+
+
+            updateSafety(
+                violation
+            );
+
+        }
+
+
+        /* =====================================================
+           SAFETY
+        ===================================================== */
+
+        function updateSafety(
+            violation
+        ) {
+
+            const badge =
+                $("limitSafetyBadge");
+
+
+            const warning =
+                $("downgradeWarning");
+
+
+            const warningText =
+                $("downgradeWarningText");
+
+
+            if (!badge) {
+                return;
+            }
+
+
+            badge.classList.remove(
+                "safe",
+                "danger"
+            );
+
+
+            if (violation) {
+
+                badge.classList.add(
+                    "danger"
+                );
+
+
+                badge.innerHTML =
+                    `
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Limit conflict
+                `;
+
+
+                if (warning) {
+                    warning.hidden = false;
+                }
+
+
+                if (warningText) {
+
+                    warningText.textContent =
+                        "The selected plan has limits below the school's current usage. The change cannot be safely applied.";
+
+                }
+
+
+                if (saveButton) {
+                    saveButton.disabled = true;
+                }
+
+
+            } else {
+
+                badge.classList.add(
+                    "safe"
+                );
+
+
+                badge.innerHTML =
+                    `
+                <i class="fa-solid fa-circle-check"></i>
+                Plan is compatible
+                `;
+
+
+                if (warning) {
+                    warning.hidden = true;
+                }
+
+
+                if (saveButton) {
+                    saveButton.disabled = false;
+                }
+
+            }
+
+        }
+
+
+        /* =====================================================
+           EFFECTIVE STATUS
+        ===================================================== */
+
+        function updateEffectiveStatus() {
+
+            const status =
+                $("preview_effective_status");
+
+
+            const days =
+                $("preview_days_remaining");
+
+
+            const end =
+                normalizeDate(
+                    endDateInput.value
+                );
+
+
+            if (!end) {
+
+                setText(
+                    "preview_effective_status",
+                    "Not set"
+                );
+
+
+                setText(
+                    "preview_days_remaining",
+                    "Select expiry"
+                );
+
+
+                return;
+
+            }
+
+
+            const expiry =
+                parseLocalDate(
+                    end
+                );
+
+
+            const today =
+                startOfDay(
+                    new Date()
+                );
+
+
+            const difference =
+                Math.round(
+                    (
+                        expiry.getTime() -
+                        today.getTime()
+                    ) /
+                    86400000
+                );
+
+
+            status.style.color =
+                "";
+
+
+            if (
+                difference < 0
+            ) {
+
+                status.textContent =
+                    "Expired";
+
+                status.style.color =
+                    "#b91c1c";
+
+
+                days.textContent =
+                    Math.abs(
+                        difference
+                    ) +
+                    (
+                        Math.abs(
+                            difference
+                        ) === 1
+                            ? " day overdue"
+                            : " days overdue"
+                    );
+
+
+            } else if (
+                difference === 0
+            ) {
+
+                status.textContent =
+                    "Expires today";
+
+                status.style.color =
+                    "#b45309";
+
+
+                days.textContent =
+                    "Expires today";
+
+
+            } else {
+
+                status.textContent =
+                    "Active";
+
+                status.style.color =
+                    "#15803d";
+
+
+                days.textContent =
+                    difference +
+                    (
+                        difference === 1
+                            ? " day left"
+                            : " days left"
+                    );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           VALIDATION
+        ===================================================== */
+
+        function validateForm() {
+
+            const plan =
+                getSelectedPlan();
+
+
+            if (!plan) {
+
+                showValidation(
+                    "Please select a subscription plan."
+                );
+
+                return false;
+
+            }
+
+
+            const start =
+                normalizeDate(
+                    startDateInput.value
+                );
+
+
+            const end =
+                normalizeDate(
+                    endDateInput.value
+                );
+
+
+            if (!start || !end) {
+
+                showValidation(
+                    "Start date and expiry date are required."
+                );
+
+                return false;
+
+            }
+
+
+            if (
+                end < start
+            ) {
+
+                showValidation(
+                    "Expiry date cannot be before the start date."
+                );
+
+
+                endDateInput.focus();
+
+
+                return false;
+
+            }
+
+
+            const resources = [
+
+                {
+                    label: "Students",
+                    usage: getUsage("students"),
+                    limit: number(
+                        plan.dataset.studentLimit
+                    )
+                },
+
+                {
+                    label: "Staff",
+                    usage: getUsage("staff"),
+                    limit: number(
+                        plan.dataset.staffLimit
+                    )
+                },
+
+                {
+                    label: "TC records",
+                    usage: getUsage("tc"),
+                    limit: number(
+                        plan.dataset.tcLimit
+                    )
+                },
+
+                {
+                    label: "Bonafide records",
+                    usage: getUsage("bonafide"),
+                    limit: number(
+                        plan.dataset.bonafideLimit
+                    )
+                }
+
+            ];
+
+
+            const violations =
+                resources.filter(
+                    function (item) {
+
+                        return (
+                            item.limit !== null &&
+                            item.usage >
+                            item.limit
+                        );
+
+                    }
+                );
+
+
+            if (
+                violations.length
+            ) {
+
+                showValidation(
+                    "The selected plan cannot be applied because its limits are below the school's current usage."
+                );
+
+
+                return false;
+
+            }
+
+
+            return true;
+
+        }
+
+
+        /* =====================================================
+           SUBMIT
+        ===================================================== */
+
+        form.addEventListener(
+            "submit",
+            function (event) {
+
+                if (
+                    !validateForm()
+                ) {
+
+                    event.preventDefault();
+
+                    return;
+
+                }
+
+
+                if (saveButton) {
+
+                    saveButton.classList.add(
+                        "is-loading"
+                    );
+
+
+                    saveButton.disabled =
+                        true;
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           USAGE
+        ===================================================== */
+
+        function getUsage(
+            resource
+        ) {
+
+            if (!currentSubscription) {
+                return 0;
+            }
+
+
+            const map = {
+
+                students:
+                    "student_count",
+
+                staff:
+                    "staff_count",
+
+                tc:
+                    "tc_count",
+
+                bonafide:
+                    "bonafide_count"
+
+            };
+
+
+            return Number(
+                currentSubscription[
+                map[resource]
+                ] || 0
+            );
+
+        }
+
+
+        /* =====================================================
+           HELPERS
+        ===================================================== */
+
+        function setText(
+            id,
+            value
+        ) {
+
+            const element =
+                $(id);
+
+
+            if (!element) {
+                return;
+            }
+
+
+            element.textContent =
+                value === null ||
+                    value === undefined ||
+                    value === ""
+                    ? "—"
+                    : value;
+
+        }
+
+
+        function setValue(
+            id,
+            value
+        ) {
+
+            const element =
+                $(id);
+
+
+            if (element) {
+                element.value =
+                    value ?? "";
+            }
+
+        }
+
+
+        function setNumber(
+            id,
+            value
+        ) {
+
+            const parsed =
+                Number(value);
+
+
+            setText(
+                id,
+                Number.isFinite(parsed)
+                    ? parsed.toLocaleString(
+                        "en-IN"
+                    )
+                    : "0"
+            );
+
+        }
+
+
+        function number(
+            value
+        ) {
+
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+
+                return null;
+
+            }
+
+
+            const parsed =
+                Number(value);
+
+
+            return Number.isFinite(
+                parsed
+            )
+                ? parsed
+                : null;
+
+        }
+
+
+        function formatLimit(
+            value
+        ) {
+
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+
+                return "Unlimited";
+
+            }
+
+
+            const parsed =
+                number(value);
+
+
+            return parsed === null
+                ? "—"
+                : parsed.toLocaleString(
+                    "en-IN"
+                );
+
+        }
+
+
+        function formatCurrency(
+            value
+        ) {
+
+            const parsed =
+                Number(value);
+
+
+            if (
+                !Number.isFinite(parsed)
+            ) {
+
+                return "₹0.00";
+
+            }
+
+
+            return (
+                "₹" +
+                parsed.toLocaleString(
+                    "en-IN",
+                    {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2
+                    }
+                )
+            );
+
+        }
+
+
+        function isEnabled(
+            value
+        ) {
+
+            return [
+                true,
+                1,
+                "1",
+                "true",
+                "yes",
+                "enabled",
+                "enable",
+                "active",
+                "on"
+            ].includes(
+                typeof value === "string"
+                    ? value.trim().toLowerCase()
+                    : value
+            );
+
+        }
+
+
+        function normalizeDate(
+            value
+        ) {
+
+            if (!value) {
+                return "";
+            }
+
+
+            const stringValue =
+                String(value).trim();
+
+
+            if (
+                /^\d{4}-\d{2}-\d{2}$/
+                    .test(stringValue)
+            ) {
+
+                return stringValue;
+
+            }
+
+
+            const firstTen =
+                stringValue.substring(
+                    0,
+                    10
+                );
+
+
+            if (
+                /^\d{4}-\d{2}-\d{2}$/
+                    .test(firstTen)
+            ) {
+
+                return firstTen;
+
+            }
+
+
+            return "";
+
+        }
+
+
+        function parseLocalDate(
+            value
+        ) {
+
+            const parts =
+                value
+                    .split("-")
+                    .map(Number);
+
+
+            return new Date(
+                parts[0],
+                parts[1] - 1,
+                parts[2]
+            );
+
+        }
+
+
+        function startOfDay(
+            date
+        ) {
+
+            return new Date(
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate()
+            );
+
+        }
+
+
+        function showValidation(
+            message
+        ) {
+
+            alert(message);
+
+        }
+
+
+    })();
 </script>
 
 {% endblock %}

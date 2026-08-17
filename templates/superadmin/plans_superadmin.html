@@ -1,0 +1,5221 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<!-- =========================================================
+     FONT AWESOME
+========================================================= -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+
+<!-- =========================================================
+     GLOBAL CSS
+========================================================= -->
+
+<link rel="stylesheet" href="{{ url_for(
+          'static',
+          filename='css/superadmin/plans_superadmin.css'
+      ) }}">
+
+<!-- =====================================================
+         PAGE WRAPPER
+    ====================================================== -->
+    
+<div class="plans-admin-wrapper">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <section class="plans-page-header">
+
+        <div class="plans-header-content">
+
+            <div class="plans-header-icon">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+
+            <div class="plans-header-text">
+
+                <h1>Plans & Pricing</h1>
+
+                <p>
+                    Manage subscription plans, pricing,
+                    limits and enabled modules.
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- =====================================================
+     PLAN HEADER ACTIONS
+====================================================== -->
+
+        <div class="plans-header-actions">
+
+            <!-- CREATE PLAN -->
+            <button type="button" class="plans-primary-btn" id="createPlanBtn">
+
+                <i class="fa-solid fa-plus"></i>
+                <span>Create Plan</span>
+
+            </button>
+
+
+            <!-- PLAN HISTORY -->
+            <button type="button" class="plans-secondary-btn" id="planHistoryBtn">
+
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Plan History</span>
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+     SUMMARY
+====================================================== -->
+
+    <section class="plans-summary-grid">
+
+        <!-- TOTAL PLANS -->
+        <div class="plans-summary-card summary-total">
+
+            <div class="summary-icon">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+
+            <div class="summary-content">
+
+                <span>Total Plans</span>
+
+                <strong>
+                    {{ plans|length if plans is defined else 0 }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- ACTIVE PLANS -->
+        <div class="plans-summary-card summary-active">
+
+            <div class="summary-icon active">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div class="summary-content">
+
+                <span>Active Plans</span>
+
+                <strong>
+                    {{ active_plans|default(0) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- ACTIVE SUBSCRIBERS -->
+        <div class="plans-summary-card summary-subscribers">
+
+            <div class="summary-icon subscribers">
+                <i class="fa-solid fa-school"></i>
+            </div>
+
+            <div class="summary-content">
+
+                <span>Active Subscribers</span>
+
+                <strong>
+                    {{ active_subscribers|default(0) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- POPULAR PLAN -->
+        <div class="plans-summary-card summary-popular">
+
+            <div class="summary-icon premium">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+
+            <div class="summary-content">
+
+                <span>Popular Plan</span>
+
+                <strong>
+                    {{ popular_plan|default('—') }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- =====================================================
+     PLAN MANAGEMENT TOOLBAR
+====================================================== -->
+
+    <section class="plans-toolbar">
+
+        <!-- SEARCH -->
+        <div class="plans-search">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input type="text" id="planSearch" placeholder="Search plans..." autocomplete="off">
+
+        </div>
+
+
+        <!-- STATUS -->
+        <div class="plans-filter">
+
+            <select id="planStatusFilter" aria-label="Filter by status">
+
+                <option value="">
+                    All Plans
+                </option>
+
+                <option value="active">
+                    Active
+                </option>
+
+                <option value="inactive">
+                    Inactive
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- DURATION -->
+        <div class="plans-filter">
+
+            <select id="planDurationFilter" aria-label="Filter by duration">
+
+                <option value="">
+                    All Durations
+                </option>
+
+                <option value="1">
+                    Monthly
+                </option>
+
+                <option value="12">
+                    Yearly
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- SORT -->
+        <div class="plans-filter">
+
+            <select id="planSortFilter" aria-label="Sort plans">
+
+                <option value="">
+                    Sort By
+                </option>
+
+                <option value="price-low">
+                    Price: Low to High
+                </option>
+
+                <option value="price-high">
+                    Price: High to Low
+                </option>
+
+                <option value="name">
+                    Plan Name
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- CLEAR -->
+        <button type="button" class="plans-clear-filter" id="clearPlanFilters">
+
+            <i class="fa-solid fa-rotate-left"></i>
+
+            <span>Clear</span>
+
+        </button>
+
+    </section>
+
+
+    <!-- =====================================================
+     PLANS GRID
+====================================================== -->
+
+    <section class="plans-grid-section">
+
+        <div class="plans-grid" id="plansGrid">
+
+            {% if plans %}
+
+            {% for plan in plans %}
+
+            <article class="plan-card {% if plan.is_active %}plan-active{% else %}plan-inactive{% endif %}"
+                data-plan-id="{{ plan.id }}" data-plan-name="{{ plan.plan_name|lower }}"
+                data-status="{% if plan.is_active %}active{% else %}inactive{% endif %}"
+                data-duration="{{ plan.duration_months or 0 }}" data-price="{{ plan.monthly_price or 0 }}">
+
+                <!-- =================================================
+                 CARD TOP
+            ================================================== -->
+
+                <div class="plan-card-header">
+
+                    <div class="plan-heading">
+
+                        <div class="plan-status">
+
+                            {% if plan.is_active %}
+
+                            <span class="status-dot active"></span>
+                            <span>Active</span>
+
+                            {% else %}
+
+                            <span class="status-dot inactive"></span>
+                            <span>Inactive</span>
+
+                            {% endif %}
+
+                        </div>
+
+                        <h2>{{ plan.plan_name }}</h2>
+
+                    </div>
+
+
+                    <button type="button" class="plan-more-btn" data-plan-id="{{ plan.id }}" aria-label="Plan actions">
+
+                        <i class="fa-solid fa-ellipsis"></i>
+
+                    </button>
+
+                </div>
+
+
+                <!-- =================================================
+                 PRICING
+            ================================================== -->
+
+                <div class="plan-price-section">
+
+                    <div class="plan-price-main">
+
+                        <span class="currency">₹</span>
+
+                        <strong>
+                            {{ "{:,.0f}".format(plan.monthly_price or 0) }}
+                        </strong>
+
+                        <span class="price-period">
+                            / month
+                        </span>
+
+                    </div>
+
+
+                    <div class="plan-yearly-price">
+
+                        <span>
+                            ₹{{ "{:,.0f}".format(plan.yearly_price or 0) }}
+                            / year
+                        </span>
+
+                        {% if plan.duration_months == 12 %}
+
+                        <span class="duration-badge">
+                            12 months
+                        </span>
+
+                        {% else %}
+
+                        <span class="duration-badge">
+                            Monthly
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 LIMITS
+            ================================================== -->
+
+                <div class="plan-limits">
+
+                    <div class="plan-limit">
+
+                        <div class="limit-icon students">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+
+                        <div class="limit-content">
+                            <span>Students</span>
+
+                            <strong>
+                                {{ "{:,}".format(plan.student_limit or 0) }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="plan-limit">
+
+                        <div class="limit-icon staff">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+
+                        <div class="limit-content">
+                            <span>Staff</span>
+
+                            <strong>
+                                {{ "{:,}".format(plan.staff_limit or 0) }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="plan-limit">
+
+                        <div class="limit-icon tc">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </div>
+
+                        <div class="limit-content">
+                            <span>TC</span>
+
+                            <strong>
+                                {{ "{:,}".format(plan.tc_limit or 0) }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="plan-limit">
+
+                        <div class="limit-icon bonafide">
+                            <i class="fa-solid fa-certificate"></i>
+                        </div>
+
+                        <div class="limit-content">
+                            <span>Bonafide</span>
+
+                            <strong>
+                                {{ "{:,}".format(plan.bonafide_limit or 0) }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 STORAGE + SUPPORT
+            ================================================== -->
+
+                <div class="plan-meta">
+
+                    <div class="plan-meta-item">
+
+                        <div class="meta-icon">
+                            <i class="fa-solid fa-hard-drive"></i>
+                        </div>
+
+                        <div>
+                            <span>Storage</span>
+
+                            <strong>
+                                {{ plan.storage_limit or '—' }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="plan-meta-item">
+
+                        <div class="meta-icon support">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+
+                        <div>
+                            <span>Support</span>
+
+                            <strong>
+                                {{ plan.support_type or '—' }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 INCLUDED MODULES
+            ================================================== -->
+
+                <div class="plan-modules">
+
+                    <div class="plan-modules-header">
+
+                        <span>Included Modules</span>
+
+                        <span class="module-count">
+
+                            {% set module_count = 0 %}
+
+                            {% if plan.enable_tc_management == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {% if plan.enable_bonafide_management == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {% if plan.enable_import_export == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {% if plan.enable_attendance == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {% if plan.enable_fee_management == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {% if plan.enable_teacher_management == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {% if plan.enable_results == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {% if plan.enable_timetable == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {% if plan.enable_notice_board == 'Enabled' %}
+                            {% set module_count = module_count + 1 %}
+                            {% endif %}
+
+                            {{ module_count }} enabled
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="module-list">
+
+                        {% if plan.enable_tc_management == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-check"></i>
+                            TC Management
+                        </span>
+                        {% endif %}
+
+
+                        {% if plan.enable_bonafide_management == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-check"></i>
+                            Bonafide
+                        </span>
+                        {% endif %}
+
+
+                        {% if plan.enable_import_export == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-check"></i>
+                            Import / Export
+                        </span>
+                        {% endif %}
+
+
+                        {% if plan.enable_attendance == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-check"></i>
+                            Attendance
+                        </span>
+                        {% endif %}
+
+
+                        {% if plan.enable_fee_management == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-check"></i>
+                            Fee Management
+                        </span>
+                        {% endif %}
+
+
+                        {% if plan.enable_teacher_management == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-check"></i>
+                            Teachers
+                        </span>
+                        {% endif %}
+
+
+                        {% if plan.enable_results == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-check"></i>
+                            Results
+                        </span>
+                        {% endif %}
+
+
+                        {% if plan.enable_timetable == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            Timetable
+                        </span>
+                        {% endif %}
+
+
+                        {% if plan.enable_notice_board == 'Enabled' %}
+                        <span class="module-tag enabled">
+                            <i class="fa-solid fa-bullhorn"></i>
+                            Notice Board
+                        </span>
+                        {% endif %}
+
+
+                        {% if module_count == 0 %}
+
+                        <span class="module-tag empty">
+                            No modules enabled
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+                <div class="plan-card-actions">
+
+                    <button type="button" class="plan-view-btn" data-plan='{{ plan|tojson|safe }}'>
+
+                        <i class="fa-regular fa-eye"></i>
+
+                        View
+
+                    </button>
+
+
+                    <button type="button" class="plan-edit-btn" data-plan='{{ plan|tojson|safe }}'>
+
+                        <i class="fa-solid fa-pen"></i>
+
+                        Edit Plan
+
+                    </button>
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+
+            {% else %}
+
+            <!-- =================================================
+             EMPTY STATE
+        ================================================== -->
+
+            <div class="plans-empty-state">
+
+                <div class="empty-icon">
+
+                    <i class="fa-solid fa-layer-group"></i>
+
+                </div>
+
+                <h3>
+                    No subscription plans found
+                </h3>
+
+                <p>
+                    Create your first subscription plan
+                    to get started.
+                </p>
+
+                <button type="button" class="plans-primary-btn" id="emptyCreatePlanBtn">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    Create Plan
+
+                </button>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+     INFORMATION NOTE
+====================================================== -->
+
+    <section class="plans-info-card">
+
+        <div class="plans-info-icon">
+            <i class="fa-solid fa-circle-info"></i>
+        </div>
+
+        <div class="plans-info-content">
+
+            <div class="plans-info-title">
+                <strong>Plan changes</strong>
+
+                <span class="plans-info-badge">
+                    Admin Notice
+                </span>
+            </div>
+
+            <p>
+                Changes to pricing, limits or modules can affect
+                new subscriptions and, when explicitly applied,
+                existing active subscriptions.
+            </p>
+
+        </div>
+
+    </section>
+
+
+</div>
+
+
+<!-- =========================================================
+     CREATE PLAN MODAL
+========================================================= -->
+
+<div class="plans-modal create-plan-modal" id="createPlanModal" aria-hidden="true">
+
+    <div class="plans-modal-overlay" data-close-create-plan></div>
+
+
+    <div class="create-plan-dialog" role="dialog" aria-modal="true" aria-labelledby="createPlanTitle">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="create-plan-header">
+
+            <div class="create-plan-heading">
+
+                <div class="create-plan-icon">
+
+                    <i class="fa-solid fa-layer-group"></i>
+
+                </div>
+
+
+                <div>
+
+                    <span class="create-plan-eyebrow">
+                        Subscription Management
+                    </span>
+
+                    <h2 id="createPlanTitle">
+                        Create New Plan
+                    </h2>
+
+                    <p>
+                        Configure pricing, limits and included modules.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button type="button" class="create-plan-close" id="closeCreatePlan" aria-label="Close create plan">
+
+                <i class="fa-solid fa-xmark"></i>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             FORM
+        ================================================== -->
+
+        <form id="createPlanForm" method="POST" action="{{ url_for('superadmin_create_plan') }}" autocomplete="off">
+
+
+            <!-- =================================================
+                 BASIC INFORMATION
+            ================================================== -->
+
+            <div class="create-plan-body">
+
+
+                <section class="create-plan-section">
+
+                    <div class="create-section-heading">
+
+                        <div class="create-section-icon">
+                            <i class="fa-solid fa-circle-info"></i>
+                        </div>
+
+                        <div>
+                            <h3>Basic Information</h3>
+
+                            <p>
+                                Define the identity and billing structure
+                                of this subscription plan.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="create-plan-grid create-plan-grid-3">
+
+
+                        <!-- PLAN NAME -->
+
+                        <div class="create-field create-field-wide">
+
+                            <label for="create_plan_name">
+
+                                Plan Name
+
+                                <span>*</span>
+
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <i class="fa-solid fa-tag"></i>
+
+                                <input type="text" id="create_plan_name" name="plan_name"
+                                    placeholder="e.g. Professional" maxlength="100" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- MONTHLY PRICE -->
+
+                        <div class="create-field">
+
+                            <label for="create_monthly_price">
+
+                                Monthly Price
+                                <span>*</span>
+
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <span class="currency-symbol">
+                                    ₹
+                                </span>
+
+                                <input type="number" id="create_monthly_price" name="monthly_price" min="0" step="0.01"
+                                    placeholder="0" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- YEARLY PRICE -->
+
+                        <div class="create-field">
+
+                            <label for="create_yearly_price">
+
+                                Yearly Price
+                                <span>*</span>
+
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <span class="currency-symbol">
+                                    ₹
+                                </span>
+
+                                <input type="number" id="create_yearly_price" name="yearly_price" min="0" step="0.01"
+                                    placeholder="0" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DURATION -->
+
+                        <div class="create-field">
+
+                            <label for="create_duration_months">
+
+                                Duration
+
+                                <span>*</span>
+
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <i class="fa-regular fa-calendar"></i>
+
+                                <select id="create_duration_months" name="duration_months" required>
+
+                                    <option value="">
+                                        Select duration
+                                    </option>
+
+                                    <option value="1">
+                                        Monthly — 1 Month
+                                    </option>
+
+                                    <option value="3">
+                                        Quarterly — 3 Months
+                                    </option>
+
+                                    <option value="6">
+                                        Half-Yearly — 6 Months
+                                    </option>
+
+                                    <option value="12">
+                                        Yearly — 12 Months
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SUPPORT -->
+
+                        <div class="create-field">
+
+                            <label for="create_support_type">
+
+                                Support
+
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <i class="fa-solid fa-headset"></i>
+
+                                <select id="create_support_type" name="support_type">
+
+                                    <option value="">
+                                        Select support
+                                    </option>
+
+                                    <option value="Email Support">
+                                        Email Support
+                                    </option>
+
+                                    <option value="Priority Support">
+                                        Priority Support
+                                    </option>
+
+                                    <option value="Dedicated Support">
+                                        Dedicated Support
+                                    </option>
+
+                                    <option value="24/7 Support">
+                                        24/7 Support
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- STORAGE -->
+
+                        <div class="create-field">
+
+                            <label for="create_storage_limit">
+
+                                Storage Limit
+
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <i class="fa-solid fa-database"></i>
+
+                                <input type="text" id="create_storage_limit" name="storage_limit"
+                                    placeholder="e.g. 10 GB">
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     LIMITS
+                ================================================== -->
+
+                <section class="create-plan-section">
+
+                    <div class="create-section-heading">
+
+                        <div class="create-section-icon">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+
+                        <div>
+                            <h3>Usage Limits</h3>
+
+                            <p>
+                                Set the maximum resources available
+                                under this plan.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="create-plan-grid create-plan-grid-4">
+
+
+                        <!-- STUDENTS -->
+
+                        <div class="create-field">
+
+                            <label for="create_student_limit">
+                                Students
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <i class="fa-solid fa-user-graduate"></i>
+
+                                <input type="number" id="create_student_limit" name="student_limit" min="0" value="0">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- STAFF -->
+
+                        <div class="create-field">
+
+                            <label for="create_staff_limit">
+                                Staff
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <i class="fa-solid fa-users"></i>
+
+                                <input type="number" id="create_staff_limit" name="staff_limit" min="0" value="0">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- TC -->
+
+                        <div class="create-field">
+
+                            <label for="create_tc_limit">
+                                TC Limit
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <i class="fa-solid fa-file-circle-check"></i>
+
+                                <input type="number" id="create_tc_limit" name="tc_limit" min="0" value="0">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BONAFIDE -->
+
+                        <div class="create-field">
+
+                            <label for="create_bonafide_limit">
+                                Bonafide Limit
+                            </label>
+
+                            <div class="create-input-wrap">
+
+                                <i class="fa-solid fa-file-lines"></i>
+
+                                <input type="number" id="create_bonafide_limit" name="bonafide_limit" min="0" value="0">
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     MODULE ACCESS
+                ================================================== -->
+
+                <section class="create-plan-section">
+
+                    <div class="create-section-heading">
+
+                        <div class="create-section-icon">
+                            <i class="fa-solid fa-puzzle-piece"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>Module Access</h3>
+
+                            <p>
+                                Choose the modules included with this plan.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="create-module-grid">
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_tc_management" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    TC Management
+                                </strong>
+
+                                <small>
+                                    Transfer certificate management
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_bonafide_management" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    Bonafide
+                                </strong>
+
+                                <small>
+                                    Bonafide certificate management
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_import_export" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    Import / Export
+                                </strong>
+
+                                <small>
+                                    Bulk data import and export
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_attendance" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    Attendance
+                                </strong>
+
+                                <small>
+                                    Student attendance management
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_fee_management" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    Fee Management
+                                </strong>
+
+                                <small>
+                                    Fees and payment management
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_teacher_management" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    Teacher Management
+                                </strong>
+
+                                <small>
+                                    Staff and teacher management
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_results" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    Results
+                                </strong>
+
+                                <small>
+                                    Academic result management
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_timetable" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    Timetable
+                                </strong>
+
+                                <small>
+                                    Timetable management
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+
+                        <label class="create-module-card">
+
+                            <input type="checkbox" name="enable_notice_board" value="Enabled">
+
+                            <span class="module-check">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+
+                            <span class="module-content">
+
+                                <strong>
+                                    Notice Board
+                                </strong>
+
+                                <small>
+                                    School announcements
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     STATUS
+                ================================================== -->
+
+                <section class="create-plan-section create-status-section">
+
+                    <div class="create-status-content">
+
+                        <div class="create-status-icon">
+
+                            <i class="fa-solid fa-toggle-on"></i>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Make this plan active
+                            </strong>
+
+                            <span>
+                                Active plans can be displayed and assigned
+                                to schools.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <label class="premium-switch">
+
+                        <input type="checkbox" id="create_is_active" name="is_active" value="1" checked>
+
+                        <span class="premium-switch-slider"></span>
+
+                    </label>
+
+                </section>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <div class="create-plan-footer">
+
+                <button type="button" class="create-plan-cancel" id="cancelCreatePlan">
+
+                    Cancel
+
+                </button>
+
+
+                <button type="submit" class="create-plan-submit" id="createPlanSubmit">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    <span>Create Plan</span>
+
+                </button>
+
+            </div>
+
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     VIEW PLAN MODAL
+========================================================= -->
+
+<div id="viewPlanModal" class="plans-modal" aria-hidden="true" role="dialog" aria-modal="true"
+    aria-labelledby="viewPlanName">
+
+    <!-- OVERLAY -->
+    <div class="plans-modal-overlay" data-close-modal>
+    </div>
+
+
+    <!-- MODAL -->
+    <div class="plans-modal-box">
+
+
+        <!-- =================================================
+             CLOSE
+        ================================================== -->
+
+        <button type="button" class="plans-modal-close" data-close-modal aria-label="Close plan details">
+
+            <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="plans-modal-header">
+
+            <div class="plans-modal-icon">
+
+                <i class="fa-solid fa-layer-group"></i>
+
+            </div>
+
+
+            <div class="plans-modal-heading">
+
+                <span class="plans-modal-eyebrow">
+                    Subscription Plan
+                </span>
+
+                <h2 id="viewPlanName">
+                    —
+                </h2>
+
+                <p>
+                    Complete pricing, limits and module overview
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             DYNAMIC CONTENT
+        ================================================== -->
+
+        <div id="viewPlanContent">
+
+            <!-- JS will populate this -->
+
+        </div>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <div class="plans-modal-footer">
+
+            <div class="modal-footer-note">
+
+                <i class="fa-solid fa-shield-halved"></i>
+
+                <span>
+                    Plan configuration is managed by Super Admin.
+                </span>
+
+            </div>
+
+
+            <button type="button" class="modal-footer-close" data-close-modal>
+
+                Close
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     EDIT PLAN MODAL
+========================================================= -->
+
+<div id="editPlanModal" class="plans-modal" aria-hidden="true" role="dialog" aria-modal="true"
+    aria-labelledby="editPlanTitle">
+
+    <!-- OVERLAY -->
+    <div class="plans-modal-overlay" data-close-edit>
+    </div>
+
+
+    <!-- MODAL -->
+    <div class="plans-modal-box plans-edit-modal-box">
+
+
+        <!-- CLOSE -->
+        <button type="button" class="plans-modal-close" data-close-edit aria-label="Close edit plan">
+
+            <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="plans-modal-header">
+
+            <div class="plans-modal-icon edit">
+
+                <i class="fa-solid fa-sliders"></i>
+
+            </div>
+
+
+            <div class="plans-modal-heading">
+
+                <span class="plans-modal-eyebrow">
+                    Plan Configuration
+                </span>
+
+                <h2 id="editPlanTitle">
+                    Edit Plan
+                </h2>
+
+                <p>
+                    Update pricing, limits and available modules.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FORM
+        ================================================== -->
+
+        <form method="POST" action="{{ url_for('superadmin_edit_plan') }}" id="editPlanForm" class="plans-edit-form">
+
+            <!-- IMPORTANT:
+                 Keep this if Flask-WTF / CSRFProtect is enabled.
+            -->
+
+            {% if csrf_token is defined %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+
+
+            <input type="hidden" name="plan_id" id="edit_plan_id">
+
+
+            <!-- =================================================
+                 01 BASIC INFORMATION
+            ================================================== -->
+
+            <section class="plan-form-section">
+
+                <div class="plan-form-section-header">
+
+                    <div class="form-section-number">
+                        01
+                    </div>
+
+                    <div>
+                        <h3>
+                            Basic Information
+                        </h3>
+
+                        <p>
+                            Pricing and commercial settings
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="plan-form-grid">
+
+
+                    <!-- PLAN NAME -->
+
+                    <div class="plan-form-field field-full">
+
+                        <label for="edit_plan_name">
+                            Plan Name
+                            <span>*</span>
+                        </label>
+
+                        <div class="form-input-wrap">
+
+                            <i class="fa-solid fa-layer-group"></i>
+
+                            <input type="text" name="plan_name" id="edit_plan_name" placeholder="e.g. Professional"
+                                autocomplete="off" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MONTHLY -->
+
+                    <div class="plan-form-field">
+
+                        <label for="edit_monthly_price">
+                            Monthly Price
+                            <span>*</span>
+                        </label>
+
+                        <div class="form-input-wrap price-field">
+
+                            <span class="currency-symbol">
+                                ₹
+                            </span>
+
+                            <input type="number" name="monthly_price" id="edit_monthly_price" min="0" step="0.01"
+                                placeholder="0.00" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- YEARLY -->
+
+                    <div class="plan-form-field">
+
+                        <label for="edit_yearly_price">
+                            Yearly Price
+                            <span>*</span>
+                        </label>
+
+                        <div class="form-input-wrap price-field">
+
+                            <span class="currency-symbol">
+                                ₹
+                            </span>
+
+                            <input type="number" name="yearly_price" id="edit_yearly_price" min="0" step="0.01"
+                                placeholder="0.00" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DURATION -->
+
+                    <div class="plan-form-field">
+
+                        <label for="edit_duration_months">
+                            Duration
+                            <span>*</span>
+                        </label>
+
+                        <div class="form-input-wrap">
+
+                            <i class="fa-regular fa-calendar"></i>
+
+                            <input type="number" name="duration_months" id="edit_duration_months" min="1"
+                                placeholder="1" required>
+
+                            <span class="input-suffix">
+                                months
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STORAGE -->
+
+                    <div class="plan-form-field">
+
+                        <label for="edit_storage_limit">
+                            Storage Limit
+                            <span>*</span>
+                        </label>
+
+                        <div class="form-input-wrap">
+
+                            <i class="fa-solid fa-hard-drive"></i>
+
+                            <input type="text" name="storage_limit" id="edit_storage_limit" placeholder="e.g. 20GB"
+                                required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SUPPORT -->
+
+                    <div class="plan-form-field">
+
+                        <label for="edit_support_type">
+                            Support Type
+                        </label>
+
+                        <div class="form-input-wrap">
+
+                            <i class="fa-solid fa-headset"></i>
+
+                            <input type="text" name="support_type" id="edit_support_type"
+                                placeholder="e.g. Priority Support">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="plan-form-field">
+
+                        <label for="edit_is_active">
+                            Plan Status
+                        </label>
+
+                        <div class="form-input-wrap select-wrap">
+
+                            <i class="fa-solid fa-circle-check"></i>
+
+                            <select name="is_active" id="edit_is_active">
+
+                                <option value="1">
+                                    Active
+                                </option>
+
+                                <option value="0">
+                                    Inactive
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 02 USAGE LIMITS
+            ================================================== -->
+
+            <section class="plan-form-section">
+
+                <div class="plan-form-section-header">
+
+                    <div class="form-section-number">
+                        02
+                    </div>
+
+                    <div>
+                        <h3>
+                            Usage Limits
+                        </h3>
+
+                        <p>
+                            Resources available to each school
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="plan-limit-form-grid">
+
+
+                    <!-- STUDENTS -->
+
+                    <div class="limit-form-card">
+
+                        <div class="limit-form-icon students">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+
+                        <div class="limit-form-content">
+
+                            <label for="edit_student_limit">
+                                Students
+                            </label>
+
+                            <input type="number" name="student_limit" id="edit_student_limit" min="0" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STAFF -->
+
+                    <div class="limit-form-card">
+
+                        <div class="limit-form-icon staff">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+
+                        <div class="limit-form-content">
+
+                            <label for="edit_staff_limit">
+                                Staff
+                            </label>
+
+                            <input type="number" name="staff_limit" id="edit_staff_limit" min="0" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TC -->
+
+                    <div class="limit-form-card">
+
+                        <div class="limit-form-icon tc">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </div>
+
+                        <div class="limit-form-content">
+
+                            <label for="edit_tc_limit">
+                                TC Records
+                            </label>
+
+                            <input type="number" name="tc_limit" id="edit_tc_limit" min="0" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BONAFIDE -->
+
+                    <div class="limit-form-card">
+
+                        <div class="limit-form-icon bonafide">
+                            <i class="fa-solid fa-certificate"></i>
+                        </div>
+
+                        <div class="limit-form-content">
+
+                            <label for="edit_bonafide_limit">
+                                Bonafide Records
+                            </label>
+
+                            <input type="number" name="bonafide_limit" id="edit_bonafide_limit" min="0" required>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 03 MODULES
+            ================================================== -->
+
+            <section class="plan-form-section">
+
+                <div class="plan-form-section-header">
+
+                    <div class="form-section-number">
+                        03
+                    </div>
+
+                    <div>
+                        <h3>
+                            Included Modules
+                        </h3>
+
+                        <p>
+                            Choose features available in this plan
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="module-toggle-grid">
+
+                    {% set module_fields = [
+
+                    (
+                    'enable_tc_management',
+                    'TC Management',
+                    'fa-file-lines'
+                    ),
+
+                    (
+                    'enable_bonafide_management',
+                    'Bonafide Management',
+                    'fa-certificate'
+                    ),
+
+                    (
+                    'enable_import_export',
+                    'Import / Export',
+                    'fa-file-import'
+                    ),
+
+                    (
+                    'enable_attendance',
+                    'Attendance',
+                    'fa-calendar-check'
+                    ),
+
+                    (
+                    'enable_fee_management',
+                    'Fee Management',
+                    'fa-wallet'
+                    ),
+
+                    (
+                    'enable_teacher_management',
+                    'Teacher Management',
+                    'fa-chalkboard-user'
+                    ),
+
+                    (
+                    'enable_results',
+                    'Results',
+                    'fa-square-poll-vertical'
+                    ),
+
+                    (
+                    'enable_timetable',
+                    'Timetable',
+                    'fa-calendar-days'
+                    ),
+
+                    (
+                    'enable_notice_board',
+                    'Notice Board',
+                    'fa-bullhorn'
+                    )
+
+                    ] %}
+
+
+                    {% for field, label, icon in module_fields %}
+
+                    <label class="module-toggle">
+
+                        <input type="checkbox" name="{{ field }}" id="edit_{{ field }}" value="Enabled">
+
+                        <span class="toggle-ui"></span>
+
+                        <span class="module-toggle-text">
+
+                            <span class="module-toggle-icon">
+
+                                <i class="fa-solid {{ icon }}"></i>
+
+                            </span>
+
+                            <span>
+                                {{ label }}
+                            </span>
+
+                        </span>
+
+                    </label>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 04 EXISTING SUBSCRIBERS
+            ================================================== -->
+
+            <section class="plan-apply-section">
+
+                <div class="plan-apply-icon">
+
+                    <i class="fa-solid fa-users"></i>
+
+                </div>
+
+
+                <div class="plan-apply-content">
+
+                    <div class="apply-heading">
+
+                        <div>
+
+                            <strong>
+                                Existing Subscribers
+                            </strong>
+
+                            <span>
+                                Optional
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <p>
+                        Decide whether these changes should also
+                        update schools currently subscribed to
+                        this plan.
+                    </p>
+
+
+                    <label class="apply-checkbox">
+
+                        <input type="checkbox" name="apply_to_existing" value="1">
+
+                        <span class="custom-checkbox"></span>
+
+                        <span>
+                            Apply changes to existing active subscriptions
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+            <div class="plans-modal-actions">
+
+                <button type="button" class="plans-cancel-btn" data-close-edit>
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                    Cancel
+
+                </button>
+
+
+                <button type="submit" class="plans-save-btn" id="savePlanBtn">
+
+                    <span class="save-plan-normal">
+
+                        <i class="fa-solid fa-check"></i>
+
+                        Save Changes
+
+                    </span>
+
+
+                    <span class="save-plan-loading">
+
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+
+                        Saving...
+
+                    </span>
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PLAN HISTORY MODAL
+========================================================= -->
+
+<div id="planHistoryModal" class="plans-modal plan-history-modal" aria-hidden="true">
+
+
+    <!-- OVERLAY -->
+
+    <div class="plans-modal-overlay" data-close-history>
+    </div>
+
+
+    <!-- DIALOG -->
+
+    <div class="plans-modal-box plan-history-box" role="dialog" aria-modal="true" aria-labelledby="planHistoryTitle">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="history-modal-header">
+
+
+            <div class="history-heading">
+
+
+                <div class="history-modal-icon">
+
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+
+                </div>
+
+
+                <div>
+
+                    <span class="history-eyebrow">
+                        Audit History
+                    </span>
+
+                    <h2 id="planHistoryTitle">
+                        Plan History
+                    </h2>
+
+                    <p id="planHistorySubtitle">
+                        Changes and configuration activity
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+            <button type="button" class="history-close-btn" data-close-history aria-label="Close history">
+
+                <i class="fa-solid fa-xmark"></i>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             SUMMARY
+        ================================================== -->
+
+        <div class="history-summary">
+
+            <div class="history-summary-item">
+
+                <span>
+                    <i class="fa-solid fa-list"></i>
+                    Total Changes
+                </span>
+
+                <strong id="historyTotalChanges">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="history-summary-item">
+
+                <span>
+                    <i class="fa-solid fa-user-pen"></i>
+                    Last Changed By
+                </span>
+
+                <strong id="historyLastChangedBy">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="history-summary-item">
+
+                <span>
+                    <i class="fa-regular fa-calendar"></i>
+                    Last Updated
+                </span>
+
+                <strong id="historyLastUpdated">
+                    —
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             BODY
+        ================================================== -->
+
+        <div class="history-modal-body">
+
+
+            <!-- LOADING -->
+
+            <div id="historyLoading" class="history-loading">
+
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+
+                <span>
+                    Loading plan history...
+                </span>
+
+            </div>
+
+
+            <!-- ERROR -->
+
+            <div id="historyError" class="history-state history-error" hidden>
+
+                <div class="history-state-icon">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                </div>
+
+                <strong>
+                    Unable to load history
+                </strong>
+
+                <p id="historyErrorText">
+                    Please try again.
+                </p>
+
+            </div>
+
+
+            <!-- EMPTY -->
+
+            <div id="historyEmpty" class="history-state" hidden>
+
+                <div class="history-state-icon">
+
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+
+                </div>
+
+                <strong>
+                    No history available
+                </strong>
+
+                <p>
+                    No configuration changes have been recorded
+                    for this plan yet.
+                </p>
+
+            </div>
+
+
+            <!-- TIMELINE -->
+
+            <div id="historyTimeline" class="history-timeline" hidden>
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <div class="history-modal-footer">
+
+            <button type="button" class="history-close-footer" data-close-history>
+
+                <i class="fa-solid fa-xmark"></i>
+
+                Close
+
+            </button>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- =========================================================
+     PLAN MANAGEMENT JS
+========================================================= -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        /* =========================================================
+           ELEMENTS
+        ========================================================= */
+
+        const searchInput =
+            document.getElementById("planSearch");
+
+        const statusFilter =
+            document.getElementById("planStatusFilter");
+
+        const durationFilter =
+            document.getElementById("planDurationFilter");
+
+        const sortFilter =
+            document.getElementById("planSortFilter");
+
+        const clearButton =
+            document.getElementById("clearPlanFilters");
+
+        const plansGrid =
+            document.getElementById("plansGrid");
+
+
+        if (!plansGrid) {
+            return;
+        }
+
+
+        /* =========================================================
+           PLAN CARDS
+        ========================================================= */
+
+        function getPlanCards() {
+
+            return Array.from(
+                plansGrid.querySelectorAll(
+                    ".plan-card"
+                )
+            );
+
+        }
+
+
+        /* =========================================================
+           EMPTY FILTER STATE
+        ========================================================= */
+
+        let filterEmptyState =
+            document.getElementById(
+                "planFilterEmptyState"
+            );
+
+
+        if (!filterEmptyState) {
+
+            filterEmptyState =
+                document.createElement("div");
+
+            filterEmptyState.id =
+                "planFilterEmptyState";
+
+            filterEmptyState.className =
+                "plans-filter-empty";
+
+            filterEmptyState.innerHTML = `
+
+            <div class="plans-filter-empty-icon">
+
+                <i class="fa-solid fa-filter-circle-xmark"></i>
+
+            </div>
+
+            <h3>
+                No matching plans
+            </h3>
+
+            <p>
+                Try changing your search or filters.
+            </p>
+
+            <button
+                type="button"
+                id="resetPlanFiltersInline">
+
+                <i class="fa-solid fa-rotate-left"></i>
+
+                Clear Filters
+
+            </button>
+
+        `;
+
+            plansGrid.appendChild(
+                filterEmptyState
+            );
+
+        }
+
+
+        /* =========================================================
+           HELPERS
+        ========================================================= */
+
+        function getSearchValue() {
+
+            return (
+                searchInput?.value || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        }
+
+
+        function getStatusValue() {
+
+            return (
+                statusFilter?.value || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        }
+
+
+        function getDurationValue() {
+
+            return (
+                durationFilter?.value || ""
+            )
+                .trim();
+
+        }
+
+
+        function getSortValue() {
+
+            return (
+                sortFilter?.value || ""
+            )
+                .trim();
+
+        }
+
+
+        /* =========================================================
+           SEARCH + FILTER + SORT
+        ========================================================= */
+
+        function applyPlanFilters() {
+
+            const search =
+                getSearchValue();
+
+            const status =
+                getStatusValue();
+
+            const duration =
+                getDurationValue();
+
+            const sort =
+                getSortValue();
+
+
+            let cards =
+                getPlanCards();
+
+
+            /* =====================================================
+               FILTER
+            ===================================================== */
+
+            let visibleCards =
+                cards.filter(function (card) {
+
+                    const planName =
+                        (
+                            card.dataset.planName ||
+                            ""
+                        ).toLowerCase();
+
+
+                    const statusValue =
+                        (
+                            card.dataset.status ||
+                            ""
+                        ).toLowerCase();
+
+
+                    const durationValue =
+                        String(
+                            card.dataset.duration || ""
+                        );
+
+
+                    /*
+                     * Search also checks visible card text.
+                     *
+                     * This means searching:
+                     * Premium
+                     * Attendance
+                     * Storage
+                     * Support
+                     * TC
+                     * etc.
+                     *
+                     * will also work.
+                     */
+
+                    const cardText =
+                        (
+                            card.textContent || ""
+                        ).toLowerCase();
+
+
+                    const matchesSearch =
+                        !search ||
+                        planName.includes(search) ||
+                        cardText.includes(search);
+
+
+                    const matchesStatus =
+                        !status ||
+                        statusValue === status;
+
+
+                    const matchesDuration =
+                        !duration ||
+                        durationValue === duration;
+
+
+                    return (
+                        matchesSearch &&
+                        matchesStatus &&
+                        matchesDuration
+                    );
+
+                });
+
+
+            /* =====================================================
+               SORT
+            ===================================================== */
+
+            if (sort) {
+
+                visibleCards.sort(
+                    function (a, b) {
+
+                        if (sort === "price-low") {
+
+                            const priceA =
+                                Number(
+                                    a.dataset.price || 0
+                                );
+
+                            const priceB =
+                                Number(
+                                    b.dataset.price || 0
+                                );
+
+                            return priceA - priceB;
+                        }
+
+
+                        if (sort === "price-high") {
+
+                            const priceA =
+                                Number(
+                                    a.dataset.price || 0
+                                );
+
+                            const priceB =
+                                Number(
+                                    b.dataset.price || 0
+                                );
+
+                            return priceB - priceA;
+                        }
+
+
+                        if (sort === "name") {
+
+                            const nameA =
+                                (
+                                    a.dataset.planName ||
+                                    ""
+                                ).toLowerCase();
+
+                            const nameB =
+                                (
+                                    b.dataset.planName ||
+                                    ""
+                                ).toLowerCase();
+
+                            return nameA.localeCompare(
+                                nameB,
+                                "en",
+                                {
+                                    sensitivity: "base"
+                                }
+                            );
+
+                        }
+
+
+                        return 0;
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               HIDE ALL FIRST
+            ===================================================== */
+
+            cards.forEach(function (card) {
+
+                card.style.display = "none";
+
+            });
+
+
+            /* =====================================================
+               RE-INSERT SORTED CARDS
+            ===================================================== */
+
+            visibleCards.forEach(function (card) {
+
+                card.style.display = "";
+
+                plansGrid.appendChild(card);
+
+            });
+
+
+            /* =====================================================
+               EMPTY STATE
+            ===================================================== */
+
+            const hasResults =
+                visibleCards.length > 0;
+
+
+            filterEmptyState.style.display =
+                hasResults
+                    ? "none"
+                    : "";
+
+
+            /*
+             * Keep empty state at the bottom.
+             */
+
+            if (!hasResults) {
+
+                plansGrid.appendChild(
+                    filterEmptyState
+                );
+
+            }
+
+        }
+
+
+        /* =========================================================
+           SEARCH
+        ========================================================= */
+
+        if (searchInput) {
+
+            searchInput.addEventListener(
+                "input",
+                applyPlanFilters
+            );
+
+        }
+
+
+        /* =========================================================
+           STATUS
+        ========================================================= */
+
+        if (statusFilter) {
+
+            statusFilter.addEventListener(
+                "change",
+                applyPlanFilters
+            );
+
+        }
+
+
+        /* =========================================================
+           DURATION
+        ========================================================= */
+
+        if (durationFilter) {
+
+            durationFilter.addEventListener(
+                "change",
+                applyPlanFilters
+            );
+
+        }
+
+
+        /* =========================================================
+           SORT
+        ========================================================= */
+
+        if (sortFilter) {
+
+            sortFilter.addEventListener(
+                "change",
+                applyPlanFilters
+            );
+
+        }
+
+
+        /* =========================================================
+           CLEAR FILTERS
+        ========================================================= */
+
+        function clearPlanFilters() {
+
+            if (searchInput) {
+
+                searchInput.value = "";
+
+            }
+
+
+            if (statusFilter) {
+
+                statusFilter.value = "";
+
+            }
+
+
+            if (durationFilter) {
+
+                durationFilter.value = "";
+
+            }
+
+
+            if (sortFilter) {
+
+                sortFilter.value = "";
+
+            }
+
+
+            applyPlanFilters();
+
+            /*
+             * Put cards back into their original order
+             * using plan ID.
+             */
+
+            const cards =
+                getPlanCards();
+
+
+            cards.sort(
+                function (a, b) {
+
+                    return (
+                        Number(
+                            a.dataset.planId || 0
+                        ) -
+                        Number(
+                            b.dataset.planId || 0
+                        )
+                    );
+
+                }
+            );
+
+
+            cards.forEach(function (card) {
+
+                plansGrid.appendChild(card);
+
+            });
+
+        }
+
+
+        if (clearButton) {
+
+            clearButton.addEventListener(
+                "click",
+                clearPlanFilters
+            );
+
+        }
+
+
+        /* =========================================================
+           INLINE EMPTY STATE CLEAR
+        ========================================================= */
+
+        const inlineClear =
+            document.getElementById(
+                "resetPlanFiltersInline"
+            );
+
+
+        if (inlineClear) {
+
+            inlineClear.addEventListener(
+                "click",
+                clearPlanFilters
+            );
+
+        }
+
+
+        /* =========================================================
+           INITIAL STATE
+        ========================================================= */
+
+        filterEmptyState.style.display =
+            "none";
+
+
+        /*
+         * Run once on page load.
+         */
+
+        applyPlanFilters();
+
+    });
+
+</script>
+
+<script>
+
+    /* =========================================================
+       CREATE PLAN MODAL
+    ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const createModal =
+            document.getElementById(
+                "createPlanModal"
+            );
+
+        const createButton =
+            document.getElementById(
+                "createPlanBtn"
+            );
+
+        const closeButton =
+            document.getElementById(
+                "closeCreatePlan"
+            );
+
+        const cancelButton =
+            document.getElementById(
+                "cancelCreatePlan"
+            );
+
+        const createForm =
+            document.getElementById(
+                "createPlanForm"
+            );
+
+        const submitButton =
+            document.getElementById(
+                "createPlanSubmit"
+            );
+
+
+        /* =====================================================
+           OPEN
+        ===================================================== */
+
+        function openCreatePlanModal() {
+
+            if (!createModal) return;
+
+            createModal.classList.add(
+                "is-open"
+            );
+
+            createModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.classList.add(
+                "modal-open"
+            );
+
+
+            setTimeout(function () {
+
+                const nameInput =
+                    document.getElementById(
+                        "create_plan_name"
+                    );
+
+                nameInput?.focus();
+
+            }, 150);
+
+        }
+
+
+        /* =====================================================
+           CLOSE
+        ===================================================== */
+
+        function closeCreatePlanModal() {
+
+            if (!createModal) return;
+
+            createModal.classList.remove(
+                "is-open"
+            );
+
+            createModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.classList.remove(
+                "modal-open"
+            );
+
+        }
+
+
+        /* =====================================================
+           BUTTON EVENTS
+        ===================================================== */
+
+        createButton?.addEventListener(
+            "click",
+            openCreatePlanModal
+        );
+
+
+        closeButton?.addEventListener(
+            "click",
+            closeCreatePlanModal
+        );
+
+
+        cancelButton?.addEventListener(
+            "click",
+            closeCreatePlanModal
+        );
+
+
+        /* =====================================================
+           OVERLAY
+        ===================================================== */
+
+        createModal
+            ?.querySelector(
+                "[data-close-create-plan]"
+            )
+            ?.addEventListener(
+                "click",
+                closeCreatePlanModal
+            );
+
+
+        /* =====================================================
+           ESCAPE
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    createModal?.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeCreatePlanModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           PRICE VALIDATION
+        ===================================================== */
+
+        const monthlyPrice =
+            document.getElementById(
+                "create_monthly_price"
+            );
+
+        const yearlyPrice =
+            document.getElementById(
+                "create_yearly_price"
+            );
+
+
+        function validatePrices() {
+
+            if (
+                !monthlyPrice ||
+                !yearlyPrice
+            ) {
+                return true;
+            }
+
+
+            const monthly =
+                Number(
+                    monthlyPrice.value || 0
+                );
+
+            const yearly =
+                Number(
+                    yearlyPrice.value || 0
+                );
+
+
+            monthlyPrice.setCustomValidity("");
+
+            yearlyPrice.setCustomValidity("");
+
+
+            if (monthly < 0) {
+
+                monthlyPrice.setCustomValidity(
+                    "Monthly price cannot be negative."
+                );
+
+                return false;
+
+            }
+
+
+            if (yearly < 0) {
+
+                yearlyPrice.setCustomValidity(
+                    "Yearly price cannot be negative."
+                );
+
+                return false;
+
+            }
+
+
+            return true;
+
+        }
+
+
+        monthlyPrice?.addEventListener(
+            "input",
+            validatePrices
+        );
+
+
+        yearlyPrice?.addEventListener(
+            "input",
+            validatePrices
+        );
+
+
+        /* =====================================================
+           FORM SUBMIT
+        ===================================================== */
+
+        createForm?.addEventListener(
+            "submit",
+            function (event) {
+
+                if (!validatePrices()) {
+
+                    event.preventDefault();
+
+                    createForm.reportValidity();
+
+                    return;
+
+                }
+
+
+                if (
+                    !createForm.checkValidity()
+                ) {
+
+                    return;
+
+                }
+
+
+                if (submitButton) {
+
+                    submitButton.disabled =
+                        true;
+
+                    submitButton.innerHTML = `
+
+                    <i class="
+                        fa-solid
+                        fa-circle-notch
+                        fa-spin
+                    "></i>
+
+                    <span>
+                        Creating...
+                    </span>
+
+                `;
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           RESET WHEN OPENED
+        ===================================================== */
+
+        createButton?.addEventListener(
+            "click",
+            function () {
+
+                /*
+                 * Do not reset every time automatically
+                 * if browser/server validation is being used.
+                 *
+                 * Reset only when form is clean.
+                 */
+
+            }
+        );
+
+    });
+
+</script>
+<!-- =========================================================
+     PLAN VIEW MODAL JS
+========================================================= -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const viewModal =
+            document.getElementById("viewPlanModal");
+
+        const viewContent =
+            document.getElementById("viewPlanContent");
+
+        const viewName =
+            document.getElementById("viewPlanName");
+
+
+        if (!viewModal || !viewContent) {
+            return;
+        }
+
+
+        /* =====================================================
+           HELPERS
+        ===================================================== */
+
+        function escapeHtml(value) {
+
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+
+        function formatNumber(value) {
+
+            const number = Number(value);
+
+            if (!Number.isFinite(number)) {
+                return "0";
+            }
+
+            return number.toLocaleString("en-IN");
+        }
+
+
+        function formatLimit(value) {
+
+            const number = Number(value);
+
+            if (number >= 999999) {
+                return "Unlimited";
+            }
+
+            if (!Number.isFinite(number)) {
+                return "—";
+            }
+
+            return number.toLocaleString("en-IN");
+        }
+
+
+        function isEnabled(value) {
+
+            return String(value || "")
+                .trim()
+                .toLowerCase() === "enabled";
+        }
+
+
+        function isActive(value) {
+
+            return (
+                value === 1 ||
+                value === true ||
+                String(value).toLowerCase() === "1" ||
+                String(value).toLowerCase() === "true"
+            );
+        }
+
+
+        function limitBox(icon, label, value) {
+
+            return `
+            <div class="view-plan-limit">
+
+                <div class="view-plan-limit-icon">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+
+                <span>
+                    ${label}
+                </span>
+
+                <strong>
+                    ${value}
+                </strong>
+
+            </div>
+        `;
+        }
+
+
+        function metaBox(label, value) {
+
+            return `
+            <div class="view-plan-meta">
+
+                <span>
+                    ${label}
+                </span>
+
+                <strong>
+                    ${escapeHtml(value)}
+                </strong>
+
+            </div>
+        `;
+        }
+
+
+        /* =====================================================
+           MODULES
+        ===================================================== */
+
+        const modules = [
+
+            [
+                "enable_tc_management",
+                "TC Management"
+            ],
+
+            [
+                "enable_bonafide_management",
+                "Bonafide Management"
+            ],
+
+            [
+                "enable_import_export",
+                "Import / Export"
+            ],
+
+            [
+                "enable_attendance",
+                "Attendance"
+            ],
+
+            [
+                "enable_fee_management",
+                "Fee Management"
+            ],
+
+            [
+                "enable_teacher_management",
+                "Teacher Management"
+            ],
+
+            [
+                "enable_results",
+                "Results"
+            ],
+
+            [
+                "enable_timetable",
+                "Timetable"
+            ],
+
+            [
+                "enable_notice_board",
+                "Notice Board"
+            ]
+
+        ];
+
+
+        /* =====================================================
+           RENDER VIEW
+        ===================================================== */
+
+        function renderPlan(plan) {
+
+            const active =
+                isActive(plan.is_active);
+
+
+            const enabledCount =
+                modules.filter(
+                    ([field]) =>
+                        isEnabled(plan[field])
+                ).length;
+
+
+            if (viewName) {
+
+                viewName.textContent =
+                    plan.plan_name ||
+                    "Plan Details";
+            }
+
+
+            let html = `
+
+            <!-- PLAN HERO -->
+
+            <section class="view-plan-hero">
+
+                <div class="view-plan-hero-left">
+
+                    <span class="view-plan-label">
+                        Current Plan
+                    </span>
+
+                    <h3>
+                        ${escapeHtml(
+                plan.plan_name || "—"
+            )}
+                    </h3>
+
+                    <span class="
+                        view-plan-status
+                        ${active ? "" : "inactive"}
+                    ">
+
+                        <span class="status-dot"></span>
+
+                        ${active
+                    ? "Active Plan"
+                    : "Inactive Plan"
+                }
+
+                    </span>
+
+                </div>
+
+
+                <div class="view-plan-hero-price">
+
+                    <span>
+                        Monthly Price
+                    </span>
+
+                    <strong>
+                        ₹${formatNumber(
+                    plan.monthly_price
+                )}
+                    </strong>
+
+                    <small>
+                        / month
+                    </small>
+
+                </div>
+
+            </section>
+
+
+            <!-- LIMITS -->
+
+            <section class="view-plan-section">
+
+                <div class="view-plan-section-header">
+
+                    <div class="view-plan-section-title">
+
+                        <div class="view-plan-section-title-icon">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Usage Limits
+                            </h3>
+
+                            <p>
+                                Resources included with this plan
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="view-plan-limits">
+
+                    ${limitBox(
+                    "fa-user-graduate",
+                    "Students",
+                    formatLimit(
+                        plan.student_limit
+                    )
+                )}
+
+                    ${limitBox(
+                    "fa-users",
+                    "Staff",
+                    formatLimit(
+                        plan.staff_limit
+                    )
+                )}
+
+                    ${limitBox(
+                    "fa-file-lines",
+                    "TC Records",
+                    formatLimit(
+                        plan.tc_limit
+                    )
+                )}
+
+                    ${limitBox(
+                    "fa-certificate",
+                    "Bonafide",
+                    formatLimit(
+                        plan.bonafide_limit
+                    )
+                )}
+
+                </div>
+
+            </section>
+
+
+            <!-- BILLING -->
+
+            <section class="view-plan-section">
+
+                <div class="view-plan-section-header">
+
+                    <div class="view-plan-section-title">
+
+                        <div class="view-plan-section-title-icon">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Billing & Support
+                            </h3>
+
+                            <p>
+                                Commercial configuration
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="view-plan-meta-grid">
+
+                    ${metaBox(
+                    "Monthly Price",
+                    "₹" +
+                    formatNumber(
+                        plan.monthly_price
+                    )
+                )}
+
+                    ${metaBox(
+                    "Yearly Price",
+                    "₹" +
+                    formatNumber(
+                        plan.yearly_price
+                    )
+                )}
+
+                    ${metaBox(
+                    "Duration",
+                    (plan.duration_months || "—") +
+                    " month(s)"
+                )}
+
+                    ${metaBox(
+                    "Storage",
+                    plan.storage_limit || "—"
+                )}
+
+                    ${metaBox(
+                    "Support",
+                    plan.support_type || "—"
+                )}
+
+                    ${metaBox(
+                    "Status",
+                    active
+                        ? "Active"
+                        : "Inactive"
+                )}
+
+                </div>
+
+            </section>
+
+
+            <!-- MODULES -->
+
+            <section class="view-plan-section">
+
+                <div class="view-plan-section-header">
+
+                    <div class="view-plan-section-title">
+
+                        <div class="view-plan-section-title-icon">
+                            <i class="fa-solid fa-puzzle-piece"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Included Modules
+                            </h3>
+
+                            <p>
+                                Features available in this plan
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <span class="view-plan-section-count">
+                        ${enabledCount} enabled
+                    </span>
+
+                </div>
+
+
+                <div class="view-feature-grid">
+        `;
+
+
+            modules.forEach(
+                ([field, label]) => {
+
+                    const enabled =
+                        isEnabled(plan[field]);
+
+
+                    html += `
+
+                    <div class="
+                        view-feature
+                        ${enabled
+                            ? "enabled"
+                            : "disabled"
+                        }
+                    ">
+
+                        <i class="
+                            fa-solid
+                            ${enabled
+                            ? "fa-check"
+                            : "fa-minus"
+                        }
+                        "></i>
+
+                        <span>
+                            ${label}
+                        </span>
+
+                    </div>
+
+                `;
+                }
+            );
+
+
+            html += `
+
+                </div>
+
+            </section>
+
+        `;
+
+
+            viewContent.innerHTML = html;
+        }
+
+
+        /* =====================================================
+           OPEN
+        ===================================================== */
+
+        function openViewModal(plan) {
+
+            renderPlan(plan);
+
+            viewModal.classList.add("is-open");
+
+            viewModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.classList.add(
+                "modal-open"
+            );
+        }
+
+
+        /* =====================================================
+           CLOSE
+        ===================================================== */
+
+        function closeViewModal() {
+
+            viewModal.classList.remove(
+                "is-open"
+            );
+
+            viewModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.classList.remove(
+                "modal-open"
+            );
+        }
+
+
+        /* =====================================================
+           VIEW BUTTONS
+        ===================================================== */
+
+        document
+            .querySelectorAll(".plan-view-btn")
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        try {
+
+                            const plan =
+                                JSON.parse(
+                                    this.dataset.plan
+                                );
+
+                            openViewModal(plan);
+
+                        } catch (error) {
+
+                            console.error(
+                                "View plan error:",
+                                error
+                            );
+
+                            alert(
+                                "Unable to load plan details."
+                            );
+                        }
+
+                    }
+                );
+
+            });
+
+
+        /* =====================================================
+           CLOSE BUTTONS
+        ===================================================== */
+
+        viewModal
+            .querySelectorAll("[data-close-modal]")
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    closeViewModal
+                );
+
+            });
+
+
+        /* =====================================================
+           ESCAPE
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    viewModal.classList.contains("is-open")
+                ) {
+
+                    closeViewModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           GLOBAL ACCESS
+           Optional - useful for debugging
+        ===================================================== */
+
+        window.openViewPlanModal =
+            openViewModal;
+
+        window.closeViewPlanModal =
+            closeViewModal;
+
+    });
+</script>
+
+<!-- =========================================================
+     PLAN EDIT MODAL JS
+========================================================= -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const editModal =
+            document.getElementById("editPlanModal");
+
+        const editForm =
+            document.getElementById("editPlanForm");
+
+
+        if (!editModal || !editForm) {
+            return;
+        }
+
+
+        /* =====================================================
+           HELPERS
+        ===================================================== */
+
+        function setValue(id, value) {
+
+            const element =
+                document.getElementById(id);
+
+            if (!element) {
+                return;
+            }
+
+            element.value =
+                value ?? "";
+        }
+
+
+        function setCheckbox(id, enabled) {
+
+            const checkbox =
+                document.getElementById(id);
+
+            if (!checkbox) {
+                return;
+            }
+
+            checkbox.checked =
+                String(enabled || "")
+                    .trim()
+                    .toLowerCase() === "enabled";
+        }
+
+
+        /* =====================================================
+           OPEN MODAL
+        ===================================================== */
+
+        function openEditModal(plan) {
+
+            if (!plan || !plan.id) {
+
+                console.error(
+                    "Invalid plan data:",
+                    plan
+                );
+
+                return;
+            }
+
+
+            /* BASIC */
+
+            setValue(
+                "edit_plan_id",
+                plan.id
+            );
+
+            setValue(
+                "edit_plan_name",
+                plan.plan_name
+            );
+
+            setValue(
+                "edit_monthly_price",
+                plan.monthly_price
+            );
+
+            setValue(
+                "edit_yearly_price",
+                plan.yearly_price
+            );
+
+            setValue(
+                "edit_duration_months",
+                plan.duration_months
+            );
+
+            setValue(
+                "edit_storage_limit",
+                plan.storage_limit
+            );
+
+            setValue(
+                "edit_support_type",
+                plan.support_type
+            );
+
+
+            const activeSelect =
+                document.getElementById(
+                    "edit_is_active"
+                );
+
+            if (activeSelect) {
+
+                activeSelect.value =
+                    (
+                        plan.is_active === 1 ||
+                        plan.is_active === true ||
+                        String(
+                            plan.is_active
+                        ) === "1"
+                    )
+                        ? "1"
+                        : "0";
+            }
+
+
+            /* LIMITS */
+
+            setValue(
+                "edit_student_limit",
+                plan.student_limit
+            );
+
+            setValue(
+                "edit_staff_limit",
+                plan.staff_limit
+            );
+
+            setValue(
+                "edit_tc_limit",
+                plan.tc_limit
+            );
+
+            setValue(
+                "edit_bonafide_limit",
+                plan.bonafide_limit
+            );
+
+
+            /* MODULES */
+
+            const modules = [
+
+                "enable_tc_management",
+
+                "enable_bonafide_management",
+
+                "enable_import_export",
+
+                "enable_attendance",
+
+                "enable_fee_management",
+
+                "enable_teacher_management",
+
+                "enable_results",
+
+                "enable_timetable",
+
+                "enable_notice_board"
+
+            ];
+
+
+            modules.forEach(function (field) {
+
+                setCheckbox(
+                    "edit_" + field,
+                    plan[field]
+                );
+
+            });
+
+
+            /* RESET EXISTING SUBSCRIBER OPTION */
+
+            const applyExisting =
+                editForm.querySelector(
+                    'input[name="apply_to_existing"]'
+                );
+
+            if (applyExisting) {
+
+                applyExisting.checked =
+                    false;
+
+            }
+
+
+            /* TITLE */
+
+            const title =
+                document.getElementById(
+                    "editPlanTitle"
+                );
+
+            if (title) {
+
+                title.textContent =
+                    plan.plan_name
+                        ? `Edit ${plan.plan_name}`
+                        : "Edit Plan";
+
+            }
+
+
+            /* OPEN */
+
+            editModal.classList.add(
+                "is-open"
+            );
+
+            editModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.classList.add(
+                "modal-open"
+            );
+
+
+            /* FOCUS */
+
+            setTimeout(function () {
+
+                const nameInput =
+                    document.getElementById(
+                        "edit_plan_name"
+                    );
+
+                if (nameInput) {
+
+                    nameInput.focus();
+
+                }
+
+            }, 200);
+
+        }
+
+
+        /* =====================================================
+           CLOSE MODAL
+        ===================================================== */
+
+        function closeEditModal() {
+
+            editModal.classList.remove(
+                "is-open"
+            );
+
+            editModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.classList.remove(
+                "modal-open"
+            );
+
+        }
+
+
+        /* =====================================================
+           EDIT BUTTONS
+        ===================================================== */
+
+        document
+            .querySelectorAll(".plan-edit-btn")
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        try {
+
+                            const plan =
+                                JSON.parse(
+                                    this.dataset.plan
+                                );
+
+                            openEditModal(plan);
+
+                        } catch (error) {
+
+                            console.error(
+                                "Edit plan data error:",
+                                error
+                            );
+
+                            alert(
+                                "Unable to open plan editor."
+                            );
+
+                        }
+
+                    }
+                );
+
+            });
+
+
+        /* =====================================================
+           CLOSE BUTTONS
+        ===================================================== */
+
+        editModal
+            .querySelectorAll("[data-close-edit]")
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    closeEditModal
+                );
+
+            });
+
+
+        /* =====================================================
+           ESCAPE
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    editModal.classList.contains("is-open")
+                ) {
+
+                    closeEditModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           FORM VALIDATION
+        ===================================================== */
+
+        editForm.addEventListener(
+            "submit",
+            function (event) {
+
+                const monthly =
+                    Number(
+                        document.getElementById(
+                            "edit_monthly_price"
+                        )?.value || 0
+                    );
+
+                const yearly =
+                    Number(
+                        document.getElementById(
+                            "edit_yearly_price"
+                        )?.value || 0
+                    );
+
+                const duration =
+                    Number(
+                        document.getElementById(
+                            "edit_duration_months"
+                        )?.value || 0
+                    );
+
+
+                if (
+                    monthly < 0 ||
+                    yearly < 0 ||
+                    duration < 1
+                ) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Please enter valid pricing and duration."
+                    );
+
+                    return;
+
+                }
+
+
+                const button =
+                    document.getElementById(
+                        "savePlanBtn"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                button.disabled = true;
+
+                button.classList.add(
+                    "is-loading"
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           PREVENT DOUBLE SUBMIT AFTER BACK
+        ===================================================== */
+
+        window.addEventListener(
+            "pageshow",
+            function () {
+
+                const button =
+                    document.getElementById(
+                        "savePlanBtn"
+                    );
+
+                if (!button) {
+                    return;
+                }
+
+                button.disabled = false;
+
+                button.classList.remove(
+                    "is-loading"
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           GLOBAL ACCESS
+           Optional
+        ===================================================== */
+
+        window.openEditPlanModal =
+            openEditModal;
+
+        window.closeEditPlanModal =
+            closeEditModal;
+
+    });
+</script>
+
+<!-- =========================================================
+   PLAN HISTORY MODAL
+=========================================================  -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const modal =
+            document.getElementById("planHistoryModal");
+
+        const historyButton =
+            document.getElementById("planHistoryBtn");
+
+        const timeline =
+            document.getElementById("historyTimeline");
+
+        const loading =
+            document.getElementById("historyLoading");
+
+        const empty =
+            document.getElementById("historyEmpty");
+
+        const error =
+            document.getElementById("historyError");
+
+        const errorText =
+            document.getElementById("historyErrorText");
+
+        const totalChanges =
+            document.getElementById("historyTotalChanges");
+
+        const lastChangedBy =
+            document.getElementById("historyLastChangedBy");
+
+        const lastUpdated =
+            document.getElementById("historyLastUpdated");
+
+        const title =
+            document.getElementById("planHistoryTitle");
+
+        const subtitle =
+            document.getElementById("planHistorySubtitle");
+
+
+        if (!modal || !historyButton) {
+            console.warn(
+                "Plan history elements not found."
+            );
+
+            return;
+        }
+
+
+        /* =====================================================
+           OPEN GLOBAL HISTORY
+        ===================================================== */
+
+        async function openPlanHistory() {
+
+            modal.classList.add("is-open");
+
+            modal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.classList.add(
+                "modal-open"
+            );
+
+
+            resetHistory();
+
+
+            try {
+
+                const response = await fetch(
+                    "/superadmin/plans/history",
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        },
+
+                        credentials:
+                            "same-origin"
+                    }
+                );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    throw new Error(
+                        data.message ||
+                        "Unable to load plan history."
+                    );
+
+                }
+
+
+                loading.hidden = true;
+
+
+                title.textContent =
+                    "Plan History";
+
+                subtitle.textContent =
+                    "Changes and configuration activity";
+
+
+                const history =
+                    Array.isArray(data.history)
+                        ? data.history
+                        : [];
+
+
+                totalChanges.textContent =
+                    data.total_changes ??
+                    history.length;
+
+
+                lastChangedBy.textContent =
+                    data.last_changed_by ||
+                    "—";
+
+
+                lastUpdated.textContent =
+                    formatHistoryDate(
+                        data.last_updated
+                    );
+
+
+                if (!history.length) {
+
+                    empty.hidden = false;
+
+                    return;
+                }
+
+
+                timeline.innerHTML = "";
+
+                timeline.hidden = false;
+
+
+                history.forEach(function (item) {
+
+                    timeline.appendChild(
+                        createHistoryItem(item)
+                    );
+
+                });
+
+
+            } catch (err) {
+
+                console.error(
+                    "Plan history error:",
+                    err
+                );
+
+
+                loading.hidden = true;
+
+                error.hidden = false;
+
+                errorText.textContent =
+                    err.message ||
+                    "Unable to load plan history.";
+
+            }
+
+        }
+
+
+        /* =====================================================
+           RESET
+        ===================================================== */
+
+        function resetHistory() {
+
+            loading.hidden = false;
+
+            empty.hidden = true;
+
+            error.hidden = true;
+
+            timeline.hidden = true;
+
+            timeline.innerHTML = "";
+
+            totalChanges.textContent = "0";
+
+            lastChangedBy.textContent = "—";
+
+            lastUpdated.textContent = "—";
+
+            title.textContent =
+                "Plan History";
+
+            subtitle.textContent =
+                "Loading configuration activity...";
+
+        }
+
+
+        /* =====================================================
+           CREATE HISTORY ITEM
+        ===================================================== */
+
+        function createHistoryItem(item) {
+
+            const article =
+                document.createElement("article");
+
+            article.className =
+                "history-item";
+
+
+            /* DOT */
+
+            const dot =
+                document.createElement("div");
+
+            dot.className =
+                "history-item-dot";
+
+            dot.innerHTML =
+                '<i class="fa-solid fa-check"></i>';
+
+
+            /* CARD */
+
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "history-item-card";
+
+
+            /* TOP */
+
+            const top =
+                document.createElement("div");
+
+            top.className =
+                "history-item-top";
+
+
+            /* PLAN */
+
+            const plan =
+                document.createElement("strong");
+
+            plan.className =
+                "history-plan-name";
+
+            plan.textContent =
+                item.plan_name ||
+                "Unknown Plan";
+
+
+            /* CHANGE TYPE */
+
+            const type =
+                document.createElement("span");
+
+            type.className =
+                "history-item-type";
+
+            type.innerHTML =
+                '<i class="fa-solid fa-pen"></i> ' +
+                escapeHtml(
+                    formatChangeType(
+                        item.change_type
+                    )
+                );
+
+
+            /* DATE */
+
+            const date =
+                document.createElement("span");
+
+            date.className =
+                "history-item-date";
+
+            date.textContent =
+                formatHistoryDate(
+                    item.created_at
+                );
+
+
+            top.appendChild(plan);
+
+            top.appendChild(type);
+
+            top.appendChild(date);
+
+
+            card.appendChild(top);
+
+
+            /* CHANGED BY */
+
+            const meta =
+                document.createElement("div");
+
+            meta.className =
+                "history-item-meta";
+
+            meta.innerHTML = `
+            <i class="fa-solid fa-user"></i>
+
+            <span>
+                Changed by
+                <strong>
+                    ${escapeHtml(
+                item.changed_by ||
+                "System"
+            )}
+                </strong>
+            </span>
+        `;
+
+
+            card.appendChild(meta);
+
+
+            /* REASON */
+
+            if (item.change_reason) {
+
+                const reason =
+                    document.createElement("div");
+
+                reason.className =
+                    "history-reason";
+
+                reason.innerHTML = `
+                <strong>Reason:</strong>
+                ${escapeHtml(
+                    item.change_reason
+                )}
+            `;
+
+                card.appendChild(reason);
+            }
+
+
+            /* CHANGES */
+
+            const changes =
+                buildChangeRows(item);
+
+
+            if (changes) {
+
+                card.appendChild(
+                    changes
+                );
+
+            }
+
+
+            article.appendChild(dot);
+
+            article.appendChild(card);
+
+
+            return article;
+
+        }
+
+
+        /* =====================================================
+           BUILD CHANGE ROWS
+        ===================================================== */
+
+        function buildChangeRows(item) {
+
+            const oldData =
+                parseHistoryJSON(
+                    item.old_data
+                );
+
+            const newData =
+                parseHistoryJSON(
+                    item.new_data
+                );
+
+
+            if (!oldData && !newData) {
+
+                return null;
+
+            }
+
+
+            const container =
+                document.createElement("div");
+
+            container.className =
+                "history-changes";
+
+
+            const fields = [
+
+                {
+                    key: "plan_name",
+                    label: "Plan Name"
+                },
+
+                {
+                    key: "monthly_price",
+                    label: "Monthly Price"
+                },
+
+                {
+                    key: "yearly_price",
+                    label: "Yearly Price"
+                },
+
+                {
+                    key: "duration_months",
+                    label: "Duration"
+                },
+
+                {
+                    key: "student_limit",
+                    label: "Student Limit"
+                },
+
+                {
+                    key: "staff_limit",
+                    label: "Staff Limit"
+                },
+
+                {
+                    key: "tc_limit",
+                    label: "TC Limit"
+                },
+
+                {
+                    key: "bonafide_limit",
+                    label: "Bonafide Limit"
+                },
+
+                {
+                    key: "storage_limit",
+                    label: "Storage"
+                },
+
+                {
+                    key: "support_type",
+                    label: "Support"
+                },
+
+                {
+                    key: "is_active",
+                    label: "Status"
+                },
+
+                {
+                    key: "enable_tc_management",
+                    label: "TC Management"
+                },
+
+                {
+                    key: "enable_bonafide_management",
+                    label: "Bonafide"
+                },
+
+                {
+                    key: "enable_import_export",
+                    label: "Import / Export"
+                },
+
+                {
+                    key: "enable_attendance",
+                    label: "Attendance"
+                },
+
+                {
+                    key: "enable_fee_management",
+                    label: "Fee Management"
+                },
+
+                {
+                    key: "enable_teacher_management",
+                    label: "Teacher Management"
+                },
+
+                {
+                    key: "enable_results",
+                    label: "Results"
+                },
+
+                {
+                    key: "enable_timetable",
+                    label: "Timetable"
+                },
+
+                {
+                    key: "enable_notice_board",
+                    label: "Notice Board"
+                }
+
+            ];
+
+
+            let changedCount = 0;
+
+
+            fields.forEach(function (field) {
+
+                const oldValue =
+                    oldData
+                        ? oldData[field.key]
+                        : undefined;
+
+
+                const newValue =
+                    newData
+                        ? newData[field.key]
+                        : undefined;
+
+
+                if (
+                    normalizeValue(oldValue) ===
+                    normalizeValue(newValue)
+                ) {
+
+                    return;
+
+                }
+
+
+                changedCount++;
+
+
+                const row =
+                    document.createElement("div");
+
+                row.className =
+                    "history-change-row";
+
+
+                const label =
+                    document.createElement("div");
+
+                label.className =
+                    "history-change-label";
+
+                label.textContent =
+                    field.label;
+
+
+                const oldElement =
+                    document.createElement("div");
+
+                oldElement.className =
+                    "history-old-value";
+
+                oldElement.textContent =
+                    formatHistoryValue(
+                        oldValue,
+                        field.key
+                    );
+
+
+                const arrow =
+                    document.createElement("div");
+
+                arrow.className =
+                    "history-arrow";
+
+                arrow.innerHTML =
+                    '<i class="fa-solid fa-arrow-right"></i>';
+
+
+                const newElement =
+                    document.createElement("div");
+
+                newElement.className =
+                    "history-new-value";
+
+                newElement.textContent =
+                    formatHistoryValue(
+                        newValue,
+                        field.key
+                    );
+
+
+                row.appendChild(label);
+
+                row.appendChild(oldElement);
+
+                row.appendChild(arrow);
+
+                row.appendChild(newElement);
+
+
+                container.appendChild(row);
+
+            });
+
+
+            return changedCount
+                ? container
+                : null;
+
+        }
+
+
+        /* =====================================================
+           CLOSE
+        ===================================================== */
+
+        function closePlanHistory() {
+
+            modal.classList.remove(
+                "is-open"
+            );
+
+            modal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.classList.remove(
+                "modal-open"
+            );
+
+        }
+
+
+        /* =====================================================
+           HEADER BUTTON
+        ===================================================== */
+
+        historyButton.addEventListener(
+            "click",
+            function () {
+
+                openPlanHistory();
+
+            }
+        );
+
+
+        /* =====================================================
+           CLOSE BUTTONS / OVERLAY
+        ===================================================== */
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target.closest(
+                        "[data-close-history]"
+                    )
+                ) {
+
+                    closePlanHistory();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           ESC
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closePlanHistory();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           HELPERS
+        ===================================================== */
+
+        function parseHistoryJSON(value) {
+
+            if (!value) return null;
+
+
+            if (
+                typeof value === "object"
+            ) {
+
+                return value;
+
+            }
+
+
+            try {
+
+                return JSON.parse(value);
+
+            } catch {
+
+                return null;
+
+            }
+
+        }
+
+
+        function normalizeValue(value) {
+
+            if (
+                value === null ||
+                value === undefined
+            ) {
+
+                return "";
+
+            }
+
+
+            return String(value)
+                .trim()
+                .toLowerCase();
+
+        }
+
+
+        function formatHistoryValue(
+            value,
+            key
+        ) {
+
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+
+                return "—";
+
+            }
+
+
+            if (
+                key === "monthly_price" ||
+                key === "yearly_price"
+            ) {
+
+                return "₹" +
+                    Number(value)
+                        .toLocaleString(
+                            "en-IN",
+                            {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }
+                        );
+
+            }
+
+
+            if (
+                key === "duration_months"
+            ) {
+
+                const months =
+                    Number(value);
+
+                return `${months} month${months === 1
+                    ? ""
+                    : "s"
+                    }`;
+
+            }
+
+
+            if (
+                key === "is_active"
+            ) {
+
+                return String(value) === "1"
+                    ? "Active"
+                    : "Inactive";
+
+            }
+
+
+            return String(value);
+
+        }
+
+
+        function formatChangeType(type) {
+
+            if (!type) {
+
+                return "Configuration Change";
+
+            }
+
+
+            return String(type)
+                .replace(/[_-]/g, " ")
+                .replace(
+                    /\b\w/g,
+                    function (char) {
+
+                        return char.toUpperCase();
+
+                    }
+                );
+
+        }
+
+
+        function formatHistoryDate(value) {
+
+            if (!value) return "—";
+
+
+            const date =
+                new Date(
+                    String(value)
+                        .replace(" ", "T")
+                );
+
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                return String(value);
+
+            }
+
+
+            return date.toLocaleString(
+                "en-IN",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+        }
+
+
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent =
+                value ?? "";
+
+            return div.innerHTML;
+
+        }
+
+    });
+
+</script>
+
+{% endblock %}

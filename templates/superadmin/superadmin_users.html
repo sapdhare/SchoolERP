@@ -2,532 +2,1147 @@
 
 {% block content %}
 
+<!-- =========================================================
+     FONT AWESOME
+========================================================= -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+
+<!-- =========================================================
+     GLOBAL CSS
+========================================================= -->
+
 <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/superadmin_users.css') }}">
+
+<!-- =====================================================
+         PAGE WRAPPER
+    ====================================================== -->
 
 <div class="su-wrapper">
 
-    <!-- HEADER -->
-    <div class="su-header">
+    <!-- =========================================================
+     USERS MANAGEMENT HEADER
+========================================================= -->
 
-        <div>
-            <h1>👥 Users Management</h1>
+    <section class="su-header">
 
-            <p>
-                Manage all ERP users, access control,
-                schools and permissions
-            </p>
+        <!-- HEADER CONTENT -->
+        <div class="su-header-content">
+
+            <!-- ICON -->
+            <div class="su-header-icon">
+                <i class="fa-solid fa-users"></i>
+            </div>
+
+            <!-- TITLE -->
+            <div class="su-header-text">
+
+                <div class="su-header-title-row">
+
+                    <h1>
+                        Users Management
+                    </h1>
+
+                    <span class="su-header-badge">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Access Control
+                    </span>
+
+                </div>
+
+                <p>
+                    Manage ERP users, access control, schools
+                    and permissions from one place.
+                </p>
+
+            </div>
+
         </div>
 
-        <button
-            class="su-add-user-btn"
-            onclick="openAddUserModal()">
 
-            + Add New User
+        <!-- HEADER ACTION -->
+        <div class="su-header-actions">
 
-        </button>
+            <button type="button" class="su-add-user-btn" onclick="openAddUserModal()">
 
-    </div>
+                <span class="su-add-user-icon">
+                    <i class="fa-solid fa-user-plus"></i>
+                </span>
 
-    <!-- STATS -->
-    <div class="su-stats-grid">
+                <span class="su-add-user-text">
+                    Add New User
+                </span>
 
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- =========================================================
+     USERS KPI CARDS
+========================================================= -->
+
+    <section class="su-stats-grid">
+
+        <!-- TOTAL USERS -->
         <div class="su-stat-card total-users">
-            <div>
-                <h4>Total Users</h4>
-                <h2>{{ total_users }}</h2>
+
+            <div class="su-stat-content">
+
+                <span class="su-stat-label">
+                    Total Users
+                </span>
+
+                <strong class="su-stat-value">
+                    {{ total_users or 0 }}
+                </strong>
+
             </div>
-            <span>👤</span>
+
+            <div class="su-stat-icon">
+                <i class="fa-solid fa-users"></i>
+            </div>
+
         </div>
 
+
+        <!-- ACTIVE USERS -->
         <div class="su-stat-card active-users">
-            <div>
-                <h4>Active Users</h4>
-                <h2>{{ active_users }}</h2>
+
+            <div class="su-stat-content">
+
+                <span class="su-stat-label">
+                    Active Users
+                </span>
+
+                <strong class="su-stat-value">
+                    {{ active_users or 0 }}
+                </strong>
+
             </div>
-            <span>🟢</span>
+
+            <div class="su-stat-icon">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
         </div>
 
+
+        <!-- CLERK USERS -->
         <div class="su-stat-card clerk-users">
-            <div>
-                <h4>Clerk Accounts</h4>
-                <h2>{{ clerk_users }}</h2>
+
+            <div class="su-stat-content">
+
+                <span class="su-stat-label">
+                    Clerk Accounts
+                </span>
+
+                <strong class="su-stat-value">
+                    {{ clerk_users or 0 }}
+                </strong>
+
             </div>
-            <span>🏫</span>
+
+            <div class="su-stat-icon">
+                <i class="fa-solid fa-school"></i>
+            </div>
+
         </div>
 
+
+        <!-- ADMIN USERS -->
         <div class="su-stat-card admin-users">
-            <div>
-                <h4>Admin Accounts</h4>
-                <h2>{{ admin_users }}</h2>
+
+            <div class="su-stat-content">
+
+                <span class="su-stat-label">
+                    Admin Accounts
+                </span>
+
+                <strong class="su-stat-value">
+                    {{ admin_users or 0 }}
+                </strong>
+
             </div>
-            <span>🛡️</span>
+
+            <div class="su-stat-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+
         </div>
 
-    </div>
+    </section>
 
-    <!-- FILTERS -->
-    <form method="GET" class="su-filter-box">
+    <!-- =========================================================
+     USERS FILTER TOOLBAR
+========================================================= -->
 
-        <input
-            type="text"
-            name="search"
-            placeholder="Search by email, name, phone..."
-            value="{{ search }}"
-        >
+    <section class="su-filter-box">
 
-       <select name="role">
-            <option value="">All Roles</option>
+        <!-- SEARCH -->
+        <div class="su-filter-search">
 
-            <option value="admin" {% if role_filter == "admin" %}selected{% endif %}>
-                Admin
-            </option>
+            <i class="fa-solid fa-magnifying-glass"></i>
 
-            <option value="clerk" {% if role_filter == "clerk" %}selected{% endif %}>
-                Clerk
-            </option>
-       </select>
+            <input type="text" id="userSearch" name="search" value="{{ search|default('') }}"
+                placeholder="Search name, email or phone..." autocomplete="off" aria-label="Search users">
 
-       <select name="status">
-            <option value="">All Status</option>
+        </div>
 
-            <option value="active" {% if status_filter == "active" %}selected{% endif %}>
-                Active
-            </option>
 
-            <option value="blocked" {% if status_filter == "blocked" %}selected{% endif %}>
-                Blocked
-            </option>
-        </select>
+        <!-- ROLE -->
+        <div class="su-filter-control">
 
-        <button type="submit">Search</button>
-        <a href="{{ url_for('superadmin_users') }}" class="su-clear-btn">Clear</a>
+            <i class="fa-solid fa-user-tag"></i>
 
-    </form>
+            <select id="userRole" name="role" aria-label="Filter by role">
 
-    <!-- USERS TABLE -->
-    <div class="su-table-box">
+                <option value="">
+                    All Roles
+                </option>
 
-        <table class="su-users-table">
+                <option value="admin" {% if role_filter=="admin" %}selected{% endif %}>
+                    Admin
+                </option>
 
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Role</th>
-                    <th>School</th>
-                    <th>Status</th>
-                    <th>Subscription</th>
-                    <th>Last Login</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+                <option value="clerk" {% if role_filter=="clerk" %}selected{% endif %}>
+                    Clerk
+                </option>
 
-            <tbody>
+            </select>
 
-                {% for user in users %}
-                <tr>
+        </div>
 
-                    <td>{{ user.name or '-' }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.phone or '-' }}</td>
 
-                    <td>
-                        <span class="role-badge {{ user.role }}">
-                            {{ user.role }}
-                        </span>
-                    </td>
+        <!-- STATUS -->
+        <div class="su-filter-control">
 
-                    <td>
-                        {{ user.school_name or 'System Admin' }}
-                    </td>
+            <i class="fa-solid fa-circle-half-stroke"></i>
 
-                    <td>
-                        <span class="status-badge {{ user.status }}">
-                            {{ user.status }}
-                        </span>
-                    </td>
+            <select id="userStatus" name="status" aria-label="Filter by status">
 
-                    <td>
-                        <span class="plan-badge">
-                            {{ user.subscription_plan }}
-                        </span>
-                    </td>
+                <option value="">
+                    All Status
+                </option>
 
-                    <td>
-                        {{ user.last_login or '-' }}
-                    </td>
+                <option value="active" {% if status_filter=="active" %}selected{% endif %}>
+                    Active
+                </option>
 
-                    <td>
-                        {{ user.created_at }}
-                    </td>
-                 
-                    <td class="su-actions">
+                <option value="blocked" {% if status_filter=="blocked" %}selected{% endif %}>
+                    Blocked
+                </option>
 
-                    <button
-                        class="view-btn"
-                        data-user='{{ user|tojson|safe }}'
-                        onclick="openViewModal(this)">
-                        View
-                    </button>
+            </select>
 
-                    <button
-                        class="edit-btn"
-                        data-user='{{ user|tojson|safe }}'
-                        onclick="openEditModal(this)">
-                        Edit
-                    </button>
+        </div>
 
-                    <button
-                        class="status-btn"
-                        onclick="openStatusModal('{{ user.id }}')">
-                        Status
-                    </button>
 
-                    <button
-                        class="delete-btn"
-                        onclick="openDeleteModal('{{ user.id }}')">
-                        Delete
-                    </button>
+        <!-- SCHOOL -->
+        <div class="su-filter-control">
 
-                </td>
+            <i class="fa-solid fa-school"></i>
 
-                </tr>
+            <select id="userSchool" name="school" aria-label="Filter by school">
+
+                <option value="">
+                    All Schools
+                </option>
+
+                {% for school in schools|default([]) %}
+
+                <option value="{{ school.school_id }}" {% if school_filter|default('')|string==school.school_id|string
+                    %} selected {% endif %}>
+                    {{ school.name }}
+                </option>
+
                 {% endfor %}
 
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-<!-- PAGINATION -->
-
-{% if total_pages > 1 %}
-
-<div class="su-pagination">
-
-    {% if page > 1 %}
-    <a href="?page={{ page-1 }}&search={{ search }}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-        ← Prev
-    </a>
-    {% endif %}
-
-    <span>
-        Page {{ page }} of {{ total_pages }}
-    </span>
-
-    {% if page < total_pages %}
-    <a href="?page={{ page+1 }}&search={{ search }}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-        Next →
-    </a>
-    {% endif %}
-
-</div>
-
-{% endif %}
-
-<!-- VIEW MODAL -->
-<div id="viewModal" class="su-modal">
-    <div class="su-modal-box su-view-box">
-        <button class="su-close-btn" onclick="closeModal('viewModal')">×</button>
-
-        <div class="su-modal-header">
-            <h2>User Details</h2>
-            <p>Read-only information</p>
-        </div>
-
-        <div id="viewContent"></div>
-    </div>
-</div>
-
-
-<!-- EDIT MODAL -->
-<div id="editModal" class="su-modal">
-    <div class="su-modal-box su-edit-box">
-        <button class="su-close-btn" onclick="closeModal('editModal')">×</button>
-
-        <div class="su-modal-header">
-            <h2>Edit User</h2>
-            <p>Update user information</p>
-        </div>
-
-        <form id="editForm" method="POST" class="su-edit-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <div class="su-input-group">
-                <label>Full Name</label>
-                <input type="text" name="name" id="edit_name" required>
-            </div>
-
-            <div class="su-input-group">
-                <label>Email</label>
-                <input type="email" name="email" id="edit_email" required>
-            </div>
-
-            <div class="su-input-group">
-                <label>Phone</label>
-                <input type="text" name="phone" id="edit_phone">
-            </div>
-
-            <div class="su-input-group">
-                <label>Role</label>
-
-                <select
-                    name="role"
-                    id="edit_role"
-                    onchange="toggleEditSchool()">
-
-                    <option value="admin">Admin</option>
-                    <option value="clerk">Clerk</option>
-
-                </select>
-            </div>
-
-
-            <div class="su-input-group">
-                <label>School</label>
-
-                <select name="school_id" id="edit_school">
-
-                    <option value="">
-                        Select School
-                    </option>
-
-                    {% for school in schools %}
-                    <option value="{{ school.school_id }}">
-                        {{ school.name }}
-                    </option>
-                    {% endfor %}
-
-                </select>
-            </div>
-
-            <button type="submit" class="su-save-btn">
-                Update User
-            </button>
-
-        </form>
-    </div>
-</div>
-
-
-<!-- STATUS MODAL -->
-<div id="statusModal" class="su-modal">
-    <div class="su-modal-box su-small-box">
-        <button class="su-close-btn" onclick="closeModal('statusModal')">×</button>
-
-        <h2>Change Status</h2>
-        <p>Do you want to update user status?</p>
-
-        <form method="POST" action="/superadmin/user/status">
-
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="user_id" id="statusUserId">
-
-            <button type="submit" class="su-confirm-btn">
-                Yes, Continue
-            </button>
-
-        </form>
-    </div>
-</div>
-
-
-<!-- DELETE MODAL -->
-<div id="deleteModal" class="su-modal">
-    <div class="su-modal-box su-small-box su-danger-box">
-        <button class="su-close-btn" onclick="closeModal('deleteModal')">×</button>
-
-        <h2>Delete User</h2>
-        <p>This action cannot be undone.</p>
-
-        <form method="POST" action="/superadmin/user/delete">
-
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="user_id" id="deleteUserId">
-
-            <button type="submit" class="su-delete-confirm-btn">
-                Yes, Delete
-            </button>
-
-        </form>
-    </div>
-</div>
-
-<!-- ADD USER MODAL -->
-<div id="addUserModal" class="su-modal">
-
-    <div class="su-modal-box su-add-user-box">
-
-        <button
-            class="su-close-btn"
-            onclick="closeModal('addUserModal')">
-
-            ×
-
-        </button>
-
-        <div class="su-modal-header">
-
-            <h2>Create New User</h2>
-
-            <p>
-                Add new ERP account with school access
-            </p>
+            </select>
 
         </div>
 
-        <form
-            method="POST"
-            action="/superadmin/add-user"
-            class="su-add-user-form">
 
-            <input
-                type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
-            >
+        <!-- SORT -->
+        <div class="su-filter-control">
 
-            <!-- ROW 1 -->
-            <div class="su-form-grid">
+            <i class="fa-solid fa-arrow-down-wide-short"></i>
 
-                <div class="su-input-group">
-                    <label>Full Name</label>
+            <select id="userSort" name="sort" aria-label="Sort users">
 
-                    <input
-                        type="text"
-                        name="name"
-                        required
-                    >
-                </div>
+                <option value="newest" {% if sort_filter|default('newest')=="newest" %} selected {% endif %}>
+                    Newest First
+                </option>
 
-                <div class="su-input-group">
-                    <label>Email Address</label>
+                <option value="oldest" {% if sort_filter=="oldest" %} selected {% endif %}>
+                    Oldest First
+                </option>
 
-                    <input
-                        type="email"
-                        name="email"
-                        required
-                    >
-                </div>
+                <option value="name-asc" {% if sort_filter=="name-asc" %} selected {% endif %}>
+                    Name A–Z
+                </option>
 
-            </div>
+                <option value="name-desc" {% if sort_filter=="name-desc" %} selected {% endif %}>
+                    Name Z–A
+                </option>
 
-            <!-- ROW 2 -->
-            <div class="su-form-grid">
+            </select>
 
-                <div class="su-input-group">
-                    <label>Phone Number</label>
+        </div>
 
-                    <input
-                        type="text"
-                        name="phone"
-                    >
-                </div>
 
-                <div class="su-input-group">
-                    <label>Password</label>
+        <!-- CLEAR -->
+        <a href="{{ url_for('superadmin_users') }}" class="su-clear-btn" id="userClearBtn">
 
-                    <input
-                        type="password"
-                        name="password"
-                        required
-                    >
-                </div>
+            <i class="fa-solid fa-rotate-left"></i>
 
-            </div>
+            <span>
+                Clear
+            </span>
 
-            <!-- ROW 3 -->
-            <div class="su-form-grid">
+        </a>
 
-                <div class="su-input-group">
-                    <label>Role</label>
+    </section>
 
-                    <select
-                        name="role"
-                        id="userRole"
-                        onchange="toggleSchoolField()"
-                        required>
 
-                        <option value="">
-                            Select Role
-                        </option>
+    <!-- =========================================================
+     RESULT COUNT
+========================================================= -->
 
-                        <option value="admin">
-                            Admin
-                        </option>
+    <div class="su-filter-result">
 
-                        <option value="clerk">
-                            Clerk
-                        </option>
+        <span>
+            Showing
+            <strong>{{ users|length }}</strong>
+            of
+            <strong>{{ total_records }}</strong>
+            matching users
+        </span>
 
-                    </select>
-                </div>
+    </div>
 
-                <div
-                    class="su-input-group"
-                    id="schoolField">
 
-                    <label>School</label>
 
-                    <select name="school_id">
+    <!-- =========================================================
+     USERS TABLE
+========================================================= -->
 
-                        <option value="">
-                            Select School
-                        </option>
+    <section class="su-table-section">
 
-                        {% for school in schools %}
+        <div class="su-table-box">
 
-                        <option
-                            value="{{ school.school_id }}">
+            <div class="su-table-scroll">
 
-                            {{ school.name }}
+                <table class="su-users-table">
 
-                        </option>
+                    <colgroup>
+                        <col class="col-name">
+                        <col class="col-email">
+                        <col class="col-phone">
+                        <col class="col-role">
+                        <col class="col-school">
+                        <col class="col-status">
+                        <col class="col-subscription">
+                        <col class="col-login">
+                        <col class="col-created">
+                        <col class="col-actions">
+                    </colgroup>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Name
+                            </th>
+
+                            <th>
+                                Email
+                            </th>
+
+                            <th>
+                                Phone
+                            </th>
+
+                            <th>
+                                Role
+                            </th>
+
+                            <th>
+                                School
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Subscription
+                            </th>
+
+                            <th>
+                                Last Login
+                            </th>
+
+                            <th>
+                                Created
+                            </th>
+
+                            <th class="actions-heading">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% if users %}
+
+                        {% for user in users %}
+
+                        <tr>
+
+                            <!-- NAME -->
+
+                            <td class="user-name-cell">
+
+                                <div class="user-primary-info">
+
+                                    <strong>
+                                        {{ user.name or 'Unnamed User' }}
+                                    </strong>
+
+                                    {% if user.role == 'admin' %}
+
+                                    <small>
+                                        System Administrator
+                                    </small>
+
+                                    {% elif user.role == 'clerk' %}
+
+                                    <small>
+                                        Clerk Account
+                                    </small>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- EMAIL -->
+
+                            <td class="user-email-cell">
+
+                                <span title="{{ user.email or '-' }}">
+                                    {{ user.email or '-' }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- PHONE -->
+
+                            <td class="user-phone-cell">
+
+                                {{ user.phone or '-' }}
+
+                            </td>
+
+
+                            <!-- ROLE -->
+
+                            <td>
+
+                                <span class="role-badge
+                                    {{ user.role|default('')|lower }}">
+
+                                    {% if user.role == 'admin' %}
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    {% else %}
+                                    <i class="fa-solid fa-user"></i>
+                                    {% endif %}
+
+                                    {{ user.role or '-' }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- SCHOOL -->
+
+                            <td class="user-school-cell">
+
+                                <span title="{{ user.school_name or 'System Admin' }}">
+                                    {{ user.school_name or 'System Admin' }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- STATUS -->
+
+                            <td>
+
+                                <span class="status-badge
+                                    {{ user.status|default('')|lower }}">
+
+                                    <span class="status-dot"></span>
+
+                                    {{ user.status or '-' }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- SUBSCRIPTION -->
+
+                            <td>
+
+                                <span class="plan-badge">
+
+                                    {{ user.subscription_plan or 'No Plan' }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- LAST LOGIN -->
+
+                            <td class="date-cell">
+
+                                {% if user.last_login %}
+
+                                <span>
+                                    {{ user.last_login }}
+                                </span>
+
+                                {% else %}
+
+                                <span class="muted-value">
+                                    Never
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- CREATED -->
+
+                            <td class="date-cell">
+
+                                {{ user.created_at or '-' }}
+
+                            </td>
+
+
+                            <!-- =========================================================
+                        ACTIONS
+                    ========================================================= -->
+
+
+
+                            <td class="su-actions-cell">
+
+                                <div class="su-actions">
+
+                                    <!-- VIEW -->
+
+                                    <button type="button" class="su-action-btn view-btn"
+                                        data-user='{{ user|tojson|safe }}' onclick="openViewModal(this)"
+                                        title="View user">
+                                        <i class="fa-regular fa-eye"></i>
+
+                                        <span>
+                                            View
+                                        </span>
+                                    </button>
+
+
+                                    <!-- EDIT -->
+
+                                    <button type="button" class="su-action-btn edit-btn"
+                                        data-user='{{ user|tojson|safe }}' onclick="openEditModal(this)"
+                                        title="Edit user">
+                                        <i class="fa-solid fa-pen"></i>
+
+                                        <span>
+                                            Edit
+                                        </span>
+                                    </button>
+
+
+                                    <!-- STATUS -->
+
+                                    <button type="button" class="su-action-btn status-btn"
+                                        data-user='{{ user|tojson|safe }}' onclick="openStatusModal(this)"
+                                        title="Change user status">
+                                        <i class="fa-solid fa-power-off"></i>
+
+                                        <span>
+                                            Status
+                                        </span>
+                                    </button>
+
+
+                                    <!-- DELETE -->
+
+                                    <button type="button" class="su-action-btn delete-btn"
+                                        data-user='{{ user|tojson|safe }}' onclick="openDeleteModal(this)"
+                                        title="Delete user">
+                                        <i class="fa-regular fa-trash-can"></i>
+
+                                        <span>
+                                            Delete
+                                        </span>
+                                    </button>
+
+                                </div>
+
+                            </td>
+                        </tr>
 
                         {% endfor %}
 
-                    </select>
+                        {% else %}
 
-                </div>
+                        <!-- EMPTY STATE -->
+
+                        <tr>
+
+                            <td colspan="10" class="su-empty-state">
+
+                                <div class="su-empty-icon">
+
+                                    <i class="fa-solid fa-users-slash"></i>
+
+                                </div>
+
+                                <h3>
+                                    No users found
+                                </h3>
+
+                                <p>
+                                    No users match your current search
+                                    or filter criteria.
+                                </p>
+
+                                <a href="{{ url_for('superadmin_users') }}" class="su-empty-clear">
+                                    Clear Filters
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
 
             </div>
 
-            <!-- ROW 4 -->
-            <div class="su-form-grid">
+        </div>
 
-                <div class="su-input-group">
-                    <label>Designation</label>
+    </section>
 
-                    <input
-                        type="text"
-                        name="designation"
-                    >
-                </div>
 
-                <div class="su-input-group">
-                    <label>Address</label>
+    <!-- =========================================================
+     PAGINATION
+========================================================= -->
 
-                    <input
-                        type="text"
-                        name="address"
-                    >
-                </div>
+    {% if total_records > 0 %}
+
+    <div class="su-pagination-section">
+
+        <div class="su-pagination">
+
+            <!-- PAGINATION INFO -->
+
+            <div class="su-pagination-info">
+
+                <span>
+                    Showing
+                </span>
+
+                <strong>
+                    {{ ((page - 1) * 5) + 1 }}
+                </strong>
+
+                <em>–</em>
+
+                <strong>
+                    {{ [page * 5, total_records] | min }}
+                </strong>
+
+                <span>
+                    of
+                </span>
+
+                <strong>
+                    {{ total_records }}
+                </strong>
+
+                <span>
+                    users
+                </span>
 
             </div>
 
-            <!-- SUBMIT -->
-            <button
-                type="submit"
-                class="su-create-user-btn">
 
-                Create User
+            <!-- PAGINATION CONTROLS -->
 
+            <div class="su-pagination-controls">
+
+                <!-- PREVIOUS -->
+
+                {% if page > 1 %}
+
+                <a href="?page={{ page - 1 }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if school_filter %}&school={{ school_filter }}{% endif %}{% if sort_filter %}&sort={{ sort_filter }}{% endif %}"
+                    class="su-page-btn" aria-label="Previous page">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </a>
+
+                {% else %}
+
+                <span class="su-page-btn disabled" aria-disabled="true">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </span>
+
+                {% endif %}
+
+
+                <!-- CURRENT PAGE -->
+
+                <span class="su-page-current">
+                    {{ page }}
+                </span>
+
+
+                <span class="su-page-total">
+                    of {{ total_pages }}
+                </span>
+
+
+                <!-- NEXT -->
+
+                {% if page < total_pages %} <a
+                    href="?page={{ page + 1 }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if school_filter %}&school={{ school_filter }}{% endif %}{% if sort_filter %}&sort={{ sort_filter }}{% endif %}"
+                    class="su-page-btn" aria-label="Next page">
+                    <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+
+                    {% else %}
+
+                    <span class="su-page-btn disabled" aria-disabled="true">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </span>
+
+                    {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    {% else %}
+
+    <div class="su-empty-state">
+
+        <div class="su-empty-icon">
+            <i class="fa-solid fa-users-slash"></i>
+        </div>
+
+        <h3>
+            No users found
+        </h3>
+
+        <p>
+            Try changing your search or filter criteria.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- =========================================================
+     VIEW USER MODAL
+========================================================= -->
+
+<div id="viewModal" class="su-modal" aria-hidden="true">
+
+    <div class="su-modal-box su-view-modal" role="dialog" aria-modal="true" aria-labelledby="viewModalTitle">
+
+        <!-- CLOSE -->
+
+        <button type="button" class="su-modal-close" onclick="closeModal('viewModal')" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+
+        <!-- HEADER -->
+
+        <div class="su-modal-header su-view-header">
+
+            <div class="su-modal-icon view-icon">
+
+                <i class="fa-solid fa-user"></i>
+
+            </div>
+
+            <div>
+
+                <span class="su-modal-eyebrow">
+                    USER PROFILE
+                </span>
+
+                <h2 id="viewModalTitle">
+                    User Details
+                </h2>
+
+                <p>
+                    View account information and access details.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- CONTENT -->
+
+        <div id="viewContent" class="su-view-content"></div>
+
+
+        <!-- FOOTER -->
+
+        <div class="su-modal-footer">
+
+            <button type="button" class="su-secondary-btn" onclick="closeModal('viewModal')">
+                Close
             </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     EDIT USER MODAL
+========================================================= -->
+
+<div id="editModal" class="su-modal" aria-hidden="true">
+
+    <div class="su-modal-box su-edit-modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+
+        <!-- CLOSE -->
+
+        <button type="button" class="su-modal-close" onclick="closeModal('editModal')" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+
+        <!-- HEADER -->
+
+        <div class="su-modal-header su-edit-header">
+
+            <div class="su-modal-icon edit-icon">
+                <i class="fa-solid fa-user-pen"></i>
+            </div>
+
+            <div>
+
+                <span class="su-modal-eyebrow">
+                    USER MANAGEMENT
+                </span>
+
+                <h2 id="editModalTitle">
+                    Edit User
+                </h2>
+
+                <p>
+                    Update account information and access settings.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- FORM -->
+
+        <form id="editForm" method="POST" class="su-user-form">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+            <!-- =================================================
+                 ACCOUNT INFORMATION
+            ================================================== -->
+
+            <div class="su-form-section">
+
+                <div class="su-form-section-title">
+
+                    <i class="fa-solid fa-user"></i>
+
+                    <div>
+
+                        <strong>
+                            Account Information
+                        </strong>
+
+                        <span>
+                            Basic user details
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="su-form-grid">
+
+
+                    <!-- NAME -->
+
+                    <div class="su-input-group">
+
+                        <label for="edit_name">
+                            Full Name
+                        </label>
+
+                        <div class="su-input-wrap">
+
+                            <i class="fa-regular fa-user"></i>
+
+                            <input type="text" name="name" id="edit_name" placeholder="Enter full name"
+                                autocomplete="name" maxlength="120" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="su-input-group">
+
+                        <label for="edit_email">
+                            Email Address
+                        </label>
+
+                        <div class="su-input-wrap">
+
+                            <i class="fa-regular fa-envelope"></i>
+
+                            <input type="email" name="email" id="edit_email" placeholder="Enter email address"
+                                autocomplete="email" maxlength="150" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="su-input-group">
+
+                        <label for="edit_phone">
+                            Phone Number
+                        </label>
+
+                        <div class="su-input-wrap">
+
+                            <i class="fa-solid fa-phone"></i>
+
+                            <input type="tel" name="phone" id="edit_phone" placeholder="Enter phone number"
+                                autocomplete="tel" maxlength="15" inputmode="numeric">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DESIGNATION -->
+
+                    <div class="su-input-group">
+
+                        <label for="edit_designation">
+                            Designation
+                        </label>
+
+                        <div class="su-input-wrap">
+
+                            <i class="fa-solid fa-briefcase"></i>
+
+                            <input type="text" name="designation" id="edit_designation"
+                                placeholder="e.g. Clerk, Accountant" maxlength="100">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ADDRESS -->
+
+                    <div class="su-input-group su-input-full">
+
+                        <label for="edit_address">
+                            Address
+                        </label>
+
+                        <div class="su-input-wrap">
+
+                            <i class="fa-solid fa-location-dot"></i>
+
+                            <input type="text" name="address" id="edit_address" placeholder="Enter address"
+                                autocomplete="street-address" maxlength="500">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ACCESS CONTROL
+            ================================================== -->
+
+            <div class="su-form-section">
+
+                <div class="su-form-section-title">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    <div>
+
+                        <strong>
+                            Access Control
+                        </strong>
+
+                        <span>
+                            Role and school assignment
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="su-form-grid">
+
+
+                    <!-- ROLE -->
+
+                    <div class="su-input-group">
+
+                        <label for="edit_role">
+                            User Role
+                        </label>
+
+                        <div class="su-input-wrap su-select-wrap">
+
+                            <i class="fa-solid fa-user-shield"></i>
+
+                            <select name="role" id="edit_role" onchange="toggleEditSchool()" required>
+
+                                <option value="admin">
+                                    Admin
+                                </option>
+
+                                <option value="clerk">
+                                    Clerk
+                                </option>
+
+                            </select>
+
+                            <i class="fa-solid fa-chevron-down select-arrow"></i>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SCHOOL -->
+
+                    <div class="su-input-group" id="editSchoolGroup">
+
+                        <label for="edit_school">
+                            Assigned School
+                        </label>
+
+                        <div class="su-input-wrap su-select-wrap">
+
+                            <i class="fa-solid fa-school"></i>
+
+                            <select name="school_id" id="edit_school">
+
+                                <option value="">
+                                    Select School
+                                </option>
+
+                                {% for school in schools %}
+
+                                <option value="{{ school.school_id }}">
+                                    {{ school.name }}
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <i class="fa-solid fa-chevron-down select-arrow"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+
+            <div class="su-modal-footer su-form-footer">
+
+                <button type="button" class="su-secondary-btn" onclick="closeModal('editModal')">
+                    Cancel
+                </button>
+
+
+                <button type="submit" class="su-primary-btn">
+
+                    <i class="fa-solid fa-check"></i>
+
+                    <span>
+                        Save Changes
+                    </span>
+
+                </button>
+
+            </div>
 
         </form>
 
@@ -535,101 +1150,1686 @@
 
 </div>
 
+<!-- =========================================================
+     STATUS MODAL
+========================================================= -->
+
+<div id="statusModal" class="su-modal" aria-hidden="true">
+
+    <div class="su-modal-box su-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle">
+
+        <button type="button" class="su-modal-close" onclick="closeModal('statusModal')" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+
+        <div class="su-confirm-content">
+
+            <div class="su-confirm-icon status-confirm-icon">
+
+                <i class="fa-solid fa-power-off"></i>
+
+            </div>
+
+            <span class="su-modal-eyebrow">
+                ACCOUNT STATUS
+            </span>
+
+            <h2 id="statusModalTitle">
+                Change User Status
+            </h2>
+
+            <p>
+
+                You are about to change the status of
+
+                <strong id="statusUserName">
+                    this user
+                </strong>.
+
+            </p>
+
+
+            <div class="su-current-status">
+
+                <span>
+                    Current Status
+                </span>
+
+                <strong id="statusCurrentValue">
+                    —
+                </strong>
+
+            </div>
+
+
+            <form method="POST" action="/superadmin/user/status" class="su-confirm-form">
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <input type="hidden" name="user_id" id="statusUserId">
+
+
+                <div class="su-confirm-actions">
+
+                    <button type="button" class="su-secondary-btn" onclick="closeModal('statusModal')">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="su-status-confirm-btn">
+
+                        <i class="fa-solid fa-power-off"></i>
+
+                        Continue
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     DELETE MODAL
+========================================================= -->
+
+<div id="deleteModal" class="su-modal" aria-hidden="true">
+
+    <div class="su-modal-box su-confirm-modal su-danger-modal" role="dialog" aria-modal="true"
+        aria-labelledby="deleteModalTitle">
+
+        <button type="button" class="su-modal-close" onclick="closeModal('deleteModal')" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+
+        <div class="su-confirm-content">
+
+            <div class="su-confirm-icon delete-confirm-icon">
+
+                <i class="fa-solid fa-trash-can"></i>
+
+            </div>
+
+            <span class="su-modal-eyebrow danger-eyebrow">
+                DANGEROUS ACTION
+            </span>
+
+            <h2 id="deleteModalTitle">
+                Delete User?
+            </h2>
+
+            <p>
+
+                You are about to permanently delete
+
+                <strong id="deleteUserName">
+                    this user
+                </strong>.
+
+            </p>
+
+
+            <div class="su-danger-notice">
+
+                <i class="fa-solid fa-triangle-exclamation"></i>
+
+                <span>
+                    This action cannot be undone. All account
+                    access associated with this user will be removed.
+                </span>
+
+            </div>
+
+
+            <form method="POST" action="/superadmin/user/delete" class="su-confirm-form">
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <input type="hidden" name="user_id" id="deleteUserId">
+
+
+                <div class="su-confirm-actions">
+
+                    <button type="button" class="su-secondary-btn" onclick="closeModal('deleteModal')">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="su-delete-confirm-btn">
+
+                        <i class="fa-regular fa-trash-can"></i>
+
+                        Delete User
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     ADD USER MODAL
+========================================================= -->
+
+<div id="addUserModal" class="su-modal" aria-hidden="true">
+
+    <div class="su-modal-box su-add-user-box" role="dialog" aria-modal="true" aria-labelledby="addUserModalTitle">
+
+        <!-- =================================================
+             CLOSE
+        ================================================== -->
+
+        <button type="button" class="su-modal-close" onclick="closeModal('addUserModal')" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="su-add-modal-header">
+
+            <div class="su-add-modal-icon">
+
+                <i class="fa-solid fa-user-plus"></i>
+
+            </div>
+
+            <div class="su-add-modal-heading">
+
+                <span class="su-add-modal-eyebrow">
+                    USER MANAGEMENT
+                </span>
+
+                <h2 id="addUserModalTitle">
+                    Create New User
+                </h2>
+
+                <p>
+                    Add a new ERP account and configure
+                    school access and permissions.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FORM
+        ================================================== -->
+
+        <form method="POST" action="/superadmin/add-user" class="su-add-user-form" id="addUserForm">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+            <!-- =================================================
+                 ACCOUNT INFORMATION
+            ================================================== -->
+
+            <div class="su-add-form-section">
+
+                <div class="su-add-section-heading">
+
+                    <div class="su-add-section-icon">
+
+                        <i class="fa-solid fa-user"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Account Information
+                        </strong>
+
+                        <span>
+                            Basic details for the new user
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="su-add-form-grid">
+
+
+                    <!-- FULL NAME -->
+
+                    <div class="su-add-input-group">
+
+                        <label for="userName">
+
+                            Full Name
+
+                            <span class="required-mark">
+                                *
+                            </span>
+
+                        </label>
+
+                        <div class="su-add-input-wrap">
+
+                            <i class="fa-regular fa-user"></i>
+
+                            <input type="text" id="userName" name="name" placeholder="Enter full name"
+                                autocomplete="name" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="su-add-input-group">
+
+                        <label for="userEmail">
+
+                            Email Address
+
+                            <span class="required-mark">
+                                *
+                            </span>
+
+                        </label>
+
+                        <div class="su-add-input-wrap">
+
+                            <i class="fa-regular fa-envelope"></i>
+
+                            <input type="email" id="userEmail" name="email" placeholder="Enter email address"
+                                autocomplete="email" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="su-add-input-group">
+
+                        <label for="userPhone">
+
+                            Phone Number
+
+                        </label>
+
+                        <div class="su-add-input-wrap">
+
+                            <i class="fa-solid fa-phone"></i>
+
+                            <input type="tel" id="userPhone" name="phone" placeholder="Enter phone number"
+                                autocomplete="tel">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="su-add-input-group">
+
+                        <label for="userPassword">
+
+                            Password
+
+                            <span class="required-mark">
+                                *
+                            </span>
+
+                        </label>
+
+                        <div class="su-add-input-wrap">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            <input type="password" id="userPassword" name="password"
+                                placeholder="Create secure password" autocomplete="new-password" required>
+
+                            <button type="button" class="su-password-toggle" onclick="toggleUserPassword()"
+                                aria-label="Show password">
+                                <i id="passwordToggleIcon" class="fa-regular fa-eye"></i>
+                            </button>
+
+                        </div>
+
+                        <small class="su-input-hint">
+                            Use a strong password for account security.
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ACCESS & SCHOOL
+            ================================================== -->
+
+            <div class="su-add-form-section">
+
+                <div class="su-add-section-heading">
+
+                    <div class="su-add-section-icon access">
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Access & School
+                        </strong>
+
+                        <span>
+                            Configure role and school assignment
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="su-add-form-grid">
+
+
+                    <!-- ROLE -->
+
+                    <div class="su-add-input-group">
+
+                        <label for="addUserRole">
+                            User Role
+
+                            <span class="required-mark">
+                                *
+                            </span>
+                        </label>
+
+                        <div class="su-add-input-wrap su-add-select-wrap">
+
+                            <i class="fa-solid fa-user-shield"></i>
+
+                            <select name="role" id="addUserRole" onchange="toggleSchoolField()" required>
+
+                                <option value="">
+                                    Select Role
+                                </option>
+
+                                <option value="admin">
+                                    Admin
+                                </option>
+
+                                <option value="clerk">
+                                    Clerk
+                                </option>
+
+                            </select>
+
+                            <i class="fa-solid fa-chevron-down su-add-select-arrow"></i>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SCHOOL -->
+
+                    <div class="su-add-input-group" id="schoolField">
+
+                        <label for="addUserSchool">
+                            School
+                        </label>
+
+                        <div class="su-add-input-wrap su-add-select-wrap">
+
+                            <i class="fa-solid fa-school"></i>
+
+                            <select name="school_id" id="addUserSchool">
+
+                                <option value="">
+                                    Select School
+                                </option>
+
+                                {% for school in schools %}
+
+                                <option value="{{ school.school_id }}">
+                                    {{ school.name }}
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <i class="fa-solid fa-chevron-down su-add-select-arrow"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACCESS INFO -->
+
+                <div class="su-access-info">
+
+                    <i class="fa-solid fa-circle-info"></i>
+
+                    <span>
+                        Admin accounts can manage the system.
+                        Clerk accounts should be assigned to a school.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ADDITIONAL INFORMATION
+            ================================================== -->
+
+            <div class="su-add-form-section">
+
+                <div class="su-add-section-heading">
+
+                    <div class="su-add-section-icon details">
+
+                        <i class="fa-solid fa-id-card"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Additional Information
+                        </strong>
+
+                        <span>
+                            Optional profile details
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="su-add-form-grid">
+
+
+                    <!-- DESIGNATION -->
+
+                    <div class="su-add-input-group">
+
+                        <label for="userDesignation">
+
+                            Designation
+
+                        </label>
+
+                        <div class="su-add-input-wrap">
+
+                            <i class="fa-solid fa-briefcase"></i>
+
+                            <input type="text" id="userDesignation" name="designation"
+                                placeholder="e.g. Clerk, Accountant">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ADDRESS -->
+
+                    <div class="su-add-input-group">
+
+                        <label for="userAddress">
+
+                            Address
+
+                        </label>
+
+                        <div class="su-add-input-wrap">
+
+                            <i class="fa-solid fa-location-dot"></i>
+
+                            <input type="text" id="userAddress" name="address" placeholder="Enter address"
+                                autocomplete="street-address">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <div class="su-add-modal-footer">
+
+                <button type="button" class="su-add-cancel-btn" onclick="closeModal('addUserModal')">
+                    Cancel
+                </button>
+
+
+                <button type="submit" class="su-create-user-btn">
+
+                    <i class="fa-solid fa-user-plus"></i>
+
+                    <span>
+                        Create User
+                    </span>
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- SEARCH AND FILTER JS  -->
+
 <script>
 
-function openViewModal(btn){
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
 
-    const user = JSON.parse(btn.dataset.user);
+            const search =
+                document.getElementById(
+                    "userSearch"
+                );
 
-    document.getElementById("viewContent").innerHTML = `
-        <div class="su-view-grid">
-            <div class="su-view-card"><span>Name</span><strong>${user.name || '-'}</strong></div>
-            <div class="su-view-card"><span>Email</span><strong>${user.email || '-'}</strong></div>
-            <div class="su-view-card"><span>Phone</span><strong>${user.phone || '-'}</strong></div>
-            <div class="su-view-card"><span>Role</span><strong>${user.role || '-'}</strong></div>
-            <div class="su-view-card"><span>Status</span><strong>${user.status || '-'}</strong></div>
-            <div class="su-view-card"><span>School</span><strong>${user.school_name || 'System Admin'}</strong></div>
-            <div class="su-view-card"><span>Last Login</span><strong>${user.last_login || '-'}</strong></div>
-            <div class="su-view-card"><span>Created</span><strong>${user.created_at || '-'}</strong></div>
-        </div>
-    `;
+            const role =
+                document.getElementById(
+                    "userRole"
+                );
 
-    document.getElementById("viewModal").style.display = "flex";
-}
+            const status =
+                document.getElementById(
+                    "userStatus"
+                );
 
-function openEditModal(btn){
+            const school =
+                document.getElementById(
+                    "userSchool"
+                );
 
-    const user = JSON.parse(btn.dataset.user);
+            const sort =
+                document.getElementById(
+                    "userSort"
+                );
 
-    document.getElementById("edit_name").value = user.name || "";
-    document.getElementById("edit_email").value = user.email || "";
-    document.getElementById("edit_phone").value = user.phone || "";
-    document.getElementById("edit_role").value = user.role || "";
-    document.getElementById("edit_school").value = user.school_id || "";
+            const clear =
+                document.getElementById(
+                    "userClearBtn"
+                );
 
-    document.getElementById("editForm").action =
-        "/superadmin/user/edit/" + user.id;
 
-    toggleEditSchool();
+            if (
+                !search ||
+                !role ||
+                !status ||
+                !school ||
+                !sort
+            ) {
 
-    document.getElementById("editModal").style.display = "flex";
-}
+                return;
 
-function toggleEditSchool(){
+            }
 
-    const role = document.getElementById("edit_role").value;
-    const school = document.getElementById("edit_school");
-    const schoolGroup = school.closest(".su-input-group");
 
-    if(role === "admin"){
-        schoolGroup.style.display = "none";
-        school.value = "";
-    }else{
-        schoolGroup.style.display = "block";
-    }
-}
+            function applyFilters() {
 
-function openStatusModal(id){
-    document.getElementById("statusUserId").value = id;
-    document.getElementById("statusModal").style.display = "flex";
-}
+                const params =
+                    new URLSearchParams();
 
-function openDeleteModal(id){
-    document.getElementById("deleteUserId").value = id;
-    document.getElementById("deleteModal").style.display = "flex";
-}
 
-function openAddUserModal(){
-    document.getElementById("addUserModal").style.display = "flex";
-    toggleSchoolField();
-}
+                const searchValue =
+                    search.value.trim();
 
-function toggleSchoolField(){
 
-    const role = document.getElementById("userRole").value;
-    const schoolField = document.getElementById("schoolField");
-    const schoolSelect = schoolField.querySelector("select");
+                if (searchValue) {
 
-    if(role === "admin"){
-        schoolField.style.display = "none";
-        schoolSelect.value = "";
-    }else{
-        schoolField.style.display = "block";
-    }
-}
+                    params.set(
+                        "search",
+                        searchValue
+                    );
 
-function closeModal(id){
-    document.getElementById(id).style.display = "none";
-}
+                }
 
-window.onclick = function(e){
-    document.querySelectorAll(".su-modal").forEach(modal => {
-        if(e.target === modal){
-            modal.style.display = "none";
+
+                if (role.value) {
+
+                    params.set(
+                        "role",
+                        role.value
+                    );
+
+                }
+
+
+                if (status.value) {
+
+                    params.set(
+                        "status",
+                        status.value
+                    );
+
+                }
+
+
+                if (school.value) {
+
+                    params.set(
+                        "school",
+                        school.value
+                    );
+
+                }
+
+
+                if (sort.value) {
+
+                    params.set(
+                        "sort",
+                        sort.value
+                    );
+
+                }
+
+
+                params.set(
+                    "page",
+                    "1"
+                );
+
+
+                window.location.href =
+                    window.location.pathname +
+                    "?" +
+                    params.toString();
+
+            }
+
+
+            let timer = null;
+
+
+            search.addEventListener(
+                "input",
+                function () {
+
+                    clearTimeout(timer);
+
+
+                    timer = setTimeout(
+                        function () {
+
+                            applyFilters();
+
+                        },
+                        500
+                    );
+
+                }
+            );
+
+
+            search.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (
+                        event.key ===
+                        "Enter"
+                    ) {
+
+                        event.preventDefault();
+
+                        clearTimeout(timer);
+
+                        applyFilters();
+
+                    }
+
+                }
+            );
+
+
+            role.addEventListener(
+                "change",
+                applyFilters
+            );
+
+            status.addEventListener(
+                "change",
+                applyFilters
+            );
+
+            school.addEventListener(
+                "change",
+                applyFilters
+            );
+
+            sort.addEventListener(
+                "change",
+                applyFilters
+            );
+
+
+            if (clear) {
+
+                clear.addEventListener(
+                    "click",
+                    function () {
+
+                        window.location.href =
+                            window.location.pathname;
+
+                    }
+                );
+
+            }
+
         }
-    });
-}
+    );
 
 </script>
+
+<!-- MODAL JS  -->
+<script>
+
+    (function () {
+
+        "use strict";
+
+
+        /* =========================================================
+           MODAL HELPERS
+        ========================================================= */
+
+        function getModal(id) {
+
+            return document.getElementById(id);
+
+        }
+
+
+        function openModal(id) {
+
+            const modal = getModal(id);
+
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.add("is-open");
+
+            modal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.classList.add(
+                "su-modal-open"
+            );
+
+        }
+
+
+        function closeModal(id) {
+
+            const modal = getModal(id);
+
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.remove(
+                "is-open"
+            );
+
+            modal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
+            if (
+                !document.querySelector(
+                    ".su-modal.is-open"
+                )
+            ) {
+
+                document.body.classList.remove(
+                    "su-modal-open"
+                );
+
+            }
+
+        }
+
+
+        window.openModal = openModal;
+
+        window.closeModal = closeModal;
+
+
+        /* =========================================================
+           SAFE HTML
+        ========================================================= */
+
+        function escapeHTML(value) {
+
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+
+                return "-";
+
+            }
+
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        /* =========================================================
+           READ USER DATA
+        ========================================================= */
+
+        function getUserFromButton(btn) {
+
+            if (!btn) {
+                return null;
+            }
+
+            try {
+
+                return JSON.parse(
+                    btn.dataset.user
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Invalid user data:",
+                    error
+                );
+
+                return null;
+
+            }
+
+        }
+
+
+        /* =========================================================
+           VIEW USER
+        ========================================================= */
+
+        window.openViewModal = function (btn) {
+
+            const user =
+                getUserFromButton(btn);
+
+            if (!user) {
+                return;
+            }
+
+
+            const content =
+                document.getElementById(
+                    "viewContent"
+                );
+
+            if (!content) {
+                return;
+            }
+
+
+            const role =
+                String(
+                    user.role || ""
+                ).toLowerCase();
+
+            const status =
+                String(
+                    user.status || ""
+                ).toLowerCase();
+
+
+            const roleClass =
+                role === "admin"
+                    ? "admin"
+                    : "clerk";
+
+
+            const statusClass =
+                status === "blocked"
+                    ? "blocked"
+                    : "active";
+
+
+            content.innerHTML = `
+
+            <div class="su-view-grid">
+
+                <div class="su-view-card">
+                    <span>Full Name</span>
+                    <strong>
+                        ${escapeHTML(user.name)}
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Email Address</span>
+                    <strong>
+                        ${escapeHTML(user.email)}
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Phone Number</span>
+                    <strong>
+                        ${escapeHTML(user.phone)}
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Role</span>
+                    <strong>
+                        <span class="role-badge ${roleClass}">
+                            ${escapeHTML(user.role)}
+                        </span>
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Status</span>
+                    <strong>
+                        <span class="status-badge ${statusClass}">
+                            <span class="status-dot"></span>
+                            ${escapeHTML(user.status)}
+                        </span>
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>School</span>
+                    <strong>
+                        ${escapeHTML(
+                user.school_name ||
+                "System Admin"
+            )}
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Subscription</span>
+                    <strong>
+                        ${escapeHTML(
+                user.subscription_plan ||
+                "No Plan"
+            )}
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Last Login</span>
+                    <strong>
+                        ${escapeHTML(
+                user.last_login ||
+                "Never"
+            )}
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Created At</span>
+                    <strong>
+                        ${escapeHTML(
+                user.created_at
+            )}
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Designation</span>
+                    <strong>
+                        ${escapeHTML(
+                user.designation
+            )}
+                    </strong>
+                </div>
+
+                <div class="su-view-card">
+                    <span>Address</span>
+                    <strong>
+                        ${escapeHTML(
+                user.address
+            )}
+                    </strong>
+                </div>
+
+            </div>
+
+        `;
+
+
+            openModal(
+                "viewModal"
+            );
+
+        };
+
+
+        /* =========================================================
+           EDIT USER
+        ========================================================= */
+
+        window.openEditModal = function (btn) {
+
+            const user =
+                getUserFromButton(btn);
+
+            if (!user) {
+                return;
+            }
+
+
+            const fields = {
+
+                name:
+                    document.getElementById(
+                        "edit_name"
+                    ),
+
+                email:
+                    document.getElementById(
+                        "edit_email"
+                    ),
+
+                phone:
+                    document.getElementById(
+                        "edit_phone"
+                    ),
+
+                designation:
+                    document.getElementById(
+                        "edit_designation"
+                    ),
+
+                address:
+                    document.getElementById(
+                        "edit_address"
+                    ),
+
+                role:
+                    document.getElementById(
+                        "edit_role"
+                    ),
+
+                school:
+                    document.getElementById(
+                        "edit_school"
+                    ),
+
+                form:
+                    document.getElementById(
+                        "editForm"
+                    )
+
+            };
+
+
+            if (
+                !fields.name ||
+                !fields.email ||
+                !fields.phone ||
+                !fields.designation ||
+                !fields.address ||
+                !fields.role ||
+                !fields.school ||
+                !fields.form
+            ) {
+
+                console.error(
+                    "Edit form fields are missing."
+                );
+
+                return;
+
+            }
+
+
+            fields.name.value =
+                user.name || "";
+
+            fields.email.value =
+                user.email || "";
+
+            fields.phone.value =
+                user.phone || "";
+
+            fields.designation.value =
+                user.designation || "";
+
+            fields.address.value =
+                user.address || "";
+
+            fields.role.value =
+                user.role || "clerk";
+
+            fields.school.value =
+                user.school_id || "";
+
+
+            fields.form.action =
+                "/superadmin/user/edit/" +
+                encodeURIComponent(
+                    user.id
+                );
+
+
+            toggleEditSchool();
+
+
+            openModal(
+                "editModal"
+            );
+
+        };
+
+
+        /* =========================================================
+           EDIT SCHOOL TOGGLE
+        ========================================================= */
+
+        window.toggleEditSchool = function () {
+
+            const role =
+                document.getElementById(
+                    "edit_role"
+                );
+
+            const school =
+                document.getElementById(
+                    "edit_school"
+                );
+
+            const group =
+                document.getElementById(
+                    "editSchoolGroup"
+                );
+
+
+            if (
+                !role ||
+                !school ||
+                !group
+            ) {
+
+                return;
+
+            }
+
+
+            const selectedRole =
+                role.value
+                    .trim()
+                    .toLowerCase();
+
+
+            if (
+                selectedRole === "admin"
+            ) {
+
+                group.style.display =
+                    "none";
+
+                school.value = "";
+
+                school.removeAttribute(
+                    "required"
+                );
+
+            }
+
+            else if (
+                selectedRole === "clerk"
+            ) {
+
+                group.style.display =
+                    "";
+
+                school.setAttribute(
+                    "required",
+                    "required"
+                );
+
+            }
+
+            else {
+
+                group.style.display =
+                    "";
+
+                school.removeAttribute(
+                    "required"
+                );
+
+            }
+
+        };
+
+
+        /* =========================================================
+           ADD USER
+        ========================================================= */
+
+        window.openAddUserModal = function () {
+
+            const form =
+                document.getElementById(
+                    "addUserForm"
+                );
+
+            if (form) {
+                form.reset();
+            }
+
+
+            const role =
+                document.getElementById(
+                    "addUserRole"
+                );
+
+            if (role) {
+                role.value = "";
+            }
+
+
+            toggleSchoolField();
+
+            openModal(
+                "addUserModal"
+            );
+
+        };
+
+
+        /* =========================================================
+           ADD USER SCHOOL
+        ========================================================= */
+
+        window.toggleSchoolField = function () {
+
+            const role =
+                document.getElementById(
+                    "addUserRole"
+                );
+
+            const field =
+                document.getElementById(
+                    "schoolField"
+                );
+
+            const school =
+                document.getElementById(
+                    "addUserSchool"
+                );
+
+
+            if (
+                !role ||
+                !field ||
+                !school
+            ) {
+
+                return;
+
+            }
+
+
+            const selectedRole =
+                role.value
+                    .trim()
+                    .toLowerCase();
+
+
+            if (
+                selectedRole === "admin"
+            ) {
+
+                field.style.display =
+                    "none";
+
+                school.value = "";
+
+                school.removeAttribute(
+                    "required"
+                );
+
+            }
+
+            else if (
+                selectedRole === "clerk"
+            ) {
+
+                field.style.display =
+                    "";
+
+                school.setAttribute(
+                    "required",
+                    "required"
+                );
+
+            }
+
+            else {
+
+                field.style.display =
+                    "";
+
+                school.removeAttribute(
+                    "required"
+                );
+
+            }
+
+        };
+
+
+        /* =========================================================
+           STATUS MODAL
+        ========================================================= */
+
+        window.openStatusModal = function (btn) {
+
+            const user =
+                getUserFromButton(btn);
+
+            if (!user) {
+                return;
+            }
+
+
+            const id =
+                document.getElementById(
+                    "statusUserId"
+                );
+
+            const name =
+                document.getElementById(
+                    "statusUserName"
+                );
+
+            const status =
+                document.getElementById(
+                    "statusCurrentValue"
+                );
+
+
+            if (id) {
+                id.value =
+                    user.id || "";
+            }
+
+            if (name) {
+                name.textContent =
+                    user.name ||
+                    "this user";
+            }
+
+            if (status) {
+
+                status.textContent =
+                    user.status ||
+                    "Unknown";
+
+                status.className =
+                    "status-value " +
+                    String(
+                        user.status || ""
+                    ).toLowerCase();
+
+            }
+
+
+            openModal(
+                "statusModal"
+            );
+
+        };
+
+
+        /* =========================================================
+           DELETE MODAL
+        ========================================================= */
+
+        window.openDeleteModal = function (btn) {
+
+            const user =
+                getUserFromButton(btn);
+
+            if (!user) {
+                return;
+            }
+
+
+            const id =
+                document.getElementById(
+                    "deleteUserId"
+                );
+
+            const name =
+                document.getElementById(
+                    "deleteUserName"
+                );
+
+
+            if (id) {
+
+                id.value =
+                    user.id || "";
+
+            }
+
+
+            if (name) {
+
+                name.textContent =
+                    user.name ||
+                    "this user";
+
+            }
+
+
+            openModal(
+                "deleteModal"
+            );
+
+        };
+
+
+        /* =========================================================
+           CLICK OUTSIDE MODAL
+        ========================================================= */
+
+        document.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target.classList.contains(
+                        "su-modal"
+                    )
+                ) {
+
+                    closeModal(
+                        event.target.id
+                    );
+
+                }
+
+            }
+        );
+
+
+        /* =========================================================
+           ESCAPE
+        ========================================================= */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key !== "Escape"
+                ) {
+                    return;
+                }
+
+
+                const modals =
+                    document.querySelectorAll(
+                        ".su-modal.is-open"
+                    );
+
+
+                if (!modals.length) {
+                    return;
+                }
+
+
+                closeModal(
+                    modals[
+                        modals.length - 1
+                    ].id
+                );
+
+            }
+        );
+
+
+        /* =========================================================
+           INITIAL STATE
+        ========================================================= */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                toggleSchoolField();
+
+                toggleEditSchool();
+
+            }
+        );
+
+    })();
+
+
+    /* =========================================================
+       PASSWORD TOGGLE
+    ========================================================= */
+
+    function toggleUserPassword() {
+
+        const password =
+            document.getElementById(
+                "userPassword"
+            );
+
+        const icon =
+            document.getElementById(
+                "passwordToggleIcon"
+            );
+
+
+        if (
+            !password ||
+            !icon
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            password.type ===
+            "password"
+        ) {
+
+            password.type =
+                "text";
+
+            icon.classList.remove(
+                "fa-eye"
+            );
+
+            icon.classList.add(
+                "fa-eye-slash"
+            );
+
+        }
+
+        else {
+
+            password.type =
+                "password";
+
+            icon.classList.remove(
+                "fa-eye-slash"
+            );
+
+            icon.classList.add(
+                "fa-eye"
+            );
+
+        }
+
+    }
+
+</script>
+
 
 {% endblock %}

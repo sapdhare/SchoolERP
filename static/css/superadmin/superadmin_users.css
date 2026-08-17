@@ -2,835 +2,5977 @@
    SUPER ADMIN USERS PAGE
 ============================== */
 
-/* .su-wrapper{
-    padding: 28px;
-} */
+.su-wrapper {
+    width: 100%;
 
-/* HEADER */
+    max-width: 1500px;
 
-.su-header{
+    margin: 0 auto;
 
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:20px;
+    padding: 28px 34px 50px;
+
+    box-sizing: border-box;
 }
 
-.su-header h1{
-    font-size: 34px;
-    font-weight: 800;
-    color: #0f172a;
-    margin-bottom: 8px;
-}
+.su-header {
 
-.su-header p{
-    color: #64748b;
-    font-size: 15px;
-}
+    width: 100%;
 
-/* STATS */
-
-.su-stats-grid{
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.su-stat-card{
-    position: relative;
-    overflow: hidden;
-    padding: 28px;
-    border-radius: 22px;
-    color: white;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    min-height: 130px;
-    transition: .35s ease;
-    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
-}
+    justify-content: space-between;
 
-.su-stat-card:hover{
-    transform: translateY(-6px);
-}
+    gap: 24px;
 
-.su-stat-card h4{
-    font-size: 16px;
-    font-weight: 500;
-    opacity: .95;
-    margin-bottom: 12px;
-}
+    padding: 22px 24px;
 
-.su-stat-card h2{
-    font-size: 38px;
-    font-weight: 800;
-}
+    margin-bottom: 24px;
 
-.su-stat-card span{
-    font-size: 34px;
-    background: rgba(255,255,255,0.18);
-    width: 65px;
-    height: 65px;
+    background: #ffffff;
+
+    border: 1px solid #e8edf3;
+
     border-radius: 18px;
+
+    box-shadow:
+        0 4px 18px rgba(15, 23, 42, 0.04);
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER CONTENT
+========================================================= */
+
+.su-header-content {
+
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    flex: 1;
+}
+
+
+/* =========================================================
+   HEADER ICON
+========================================================= */
+
+.su-header-icon {
+
+    width: 52px;
+    height: 52px;
+
+    flex: 0 0 52px;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
+
+    border-radius: 14px;
+
+    background: linear-gradient(135deg,
+            #eff6ff 0%,
+            #eef2ff 100%);
+
+    border: 1px solid #dbeafe;
+
+    color: #4f46e5;
+
+    font-size: 20px;
+
+    box-sizing: border-box;
 }
 
-/* Theme cards */
 
-.total-users{
-    background: linear-gradient(135deg,#0ea5a4,#22c55e);
+.su-header-icon i {
+
+    line-height: 1;
 }
 
-.active-users{
-    background: linear-gradient(135deg,#14b8a6,#10b981);
-}
 
-.clerk-users{
-    background: linear-gradient(135deg,#06b6d4,#0ea5e9);
-}
+/* =========================================================
+   HEADER TEXT
+========================================================= */
 
-.admin-users{
-    background: linear-gradient(135deg,#8b5cf6,#7c3aed);
-}
+.su-header-text {
 
-/* FILTER */
+    min-width: 0;
 
-.su-filter-box{
-    background: rgba(255,255,255,0.78);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 22px;
-    padding: 18px;
     display: flex;
-    gap: 15px;
-    margin-bottom: 28px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    flex-direction: column;
+
+    gap: 5px;
 }
 
-.su-filter-box input,
-.su-filter-box select{
-    flex: 1;
-    padding: 16px 18px;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    outline: none;
-    font-size: 14px;
-    background: #f8fafc;
-    transition: .25s;
+
+/* =========================================================
+   TITLE ROW
+========================================================= */
+
+.su-header-title-row {
+
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    min-width: 0;
 }
 
-.su-filter-box input:focus,
-.su-filter-box select:focus{
-    border-color: #0ea5a4;
-    background: white;
-}
 
-.su-filter-box button{
-    border: none;
-    padding: 15px 24px;
-    border-radius: 16px;
-    cursor: pointer;
-    font-weight: 600;
-    color: white;
-    background: linear-gradient(135deg,#0ea5a4,#22c55e);
-    transition: .25s;
-}
+/* =========================================================
+   TITLE
+========================================================= */
 
-.su-filter-box button:hover{
-    transform: translateY(-2px);
-}
+.su-header h1 {
 
-.su-clear-btn{
-    padding: 15px 24px;
-    border-radius: 16px;
-    text-decoration: none;
-    background: #64748b;
-    color: white;
-    font-weight: 600;
-}
+    margin: 0;
 
-/* TABLE */
-
-.su-table-box{
-    background: rgba(255,255,255,0.78);
-    backdrop-filter: blur(18px);
-    border-radius: 24px;
-    padding: 20px;
-    border: 1px solid rgba(255,255,255,0.4);
-    box-shadow: 0 15px 35px rgba(15,23,42,0.05);
-}
-
-.su-users-table{
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.su-users-table thead th{
-    background: #f8fafc;
-    padding: 18px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #334155;
-    text-align: left;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.su-users-table tbody td{
-    padding:20px 18px;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 14px;
     color: #0f172a;
+
+    font-size: 28px;
+
+    line-height: 1.2;
+
+    font-weight: 800;
+
+    letter-spacing: -0.55px;
 }
 
-.su-users-table tbody tr{
-    transition: .25s;
-}
 
-.su-users-table tbody tr:hover{
+/* =========================================================
+   HEADER BADGE
+========================================================= */
+
+.su-header-badge {
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
     background: #f8fafc;
-}
 
-/* BADGES */
+    border: 1px solid #e2e8f0;
 
-.role-badge,
-.status-badge,
-.plan-badge{
-    padding: 7px 14px;
-    border-radius: 50px;
-    font-size: 12px;
+    color: #64748b;
+
+    font-size: 11px;
+
+    line-height: 1;
+
     font-weight: 700;
-    display: inline-block;
-}
 
-.role-badge.admin{
-    background: rgba(139,92,246,.15);
-    color: #7c3aed;
-}
-
-.role-badge.clerk{
-    background: rgba(14,165,164,.15);
-    color: #0ea5a4;
-}
-
-.status-badge.active{
-    background: rgba(34,197,94,.15);
-    color: #16a34a;
-}
-
-.status-badge.blocked{
-    background: rgba(239,68,68,.15);
-    color: #dc2626;
-}
-
-.plan-badge{
-    background: rgba(59,130,246,.12);
-    color: #2563eb;
-}
-/* PAGINATION  */
-
-.su-pagination{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:14px;
-    margin:24px 0;
-}
-
-.su-pagination a{
-    padding:12px 18px;
-    border-radius:12px;
-    background:#0ea5a4;
-    color:#fff;
-    text-decoration:none;
-    font-weight:700;
-}
-
-.su-pagination span{
-    padding:12px 16px;
-    border-radius:12px;
-    background:#fff;
-    border:1px solid #e2e8f0;
-    color:#334155;
-    font-weight:700;
+    white-space: nowrap;
 }
 
 
-/* ACTIONS */
+.su-header-badge i {
 
-.su-actions{
+    color: #6366f1;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.su-header p {
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    font-weight: 500;
+
+    max-width: 620px;
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
+
+.su-header-actions {
+
+    flex: 0 0 auto;
+
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    align-items: center;
 }
 
-.su-actions button{
-    border: none;
-    padding: 9px 14px;
-    border-radius: 12px;
-    cursor: pointer;
-    color: white;
-    font-size: 12px;
-    font-weight: 700;
-    transition: .25s;
-}
 
-.su-actions button:hover{
-    transform: translateY(-2px);
-}
-
-.view-btn{
-    background: #3b82f6;
-}
-
-.edit-btn{
-    background: #f59e0b;
-}
-
-.status-btn{
-    background: #10b981;
-}
-
-.delete-btn{
-    background: #ef4444;
-}
-.su-modal{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.45);
-    backdrop-filter:blur(8px);
-    z-index:999;
-    justify-content:center;
-    align-items:center;
-}
-
-.su-modal-box{
-    width:700px;
-    background:white;
-    border-radius:22px;
-    padding:30px;
-    position:relative;
-}
-
-.su-close-btn{
-    position:absolute;
-    top:20px;
-    right:20px;
-    border:none;
-    background:none;
-    font-size:28px;
-    cursor:pointer;
-}
-
-.su-modal-header h2{
-    font-size:28px;
-    margin-bottom:8px;
-}
-
-.su-modal-header p{
-    color:#64748b;
-    margin-bottom:25px;
-}
-
-.su-view-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:20px;
-}
-
-.su-view-card{
-    background:#f8fafc;
-    padding:20px;
-    border-radius:14px;
-}
-
-.su-view-card span{
-    display:block;
-    color:#64748b;
-    font-size:14px;
-    margin-bottom:8px;
-}
-
-.su-view-card strong{
-    font-size:16px;
-}
-
-.su-edit-form{
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-}
-
-.su-input-group label{
-    display:block;
-    margin-bottom:8px;
-    font-weight:600;
-}
-
-.su-input-group input,
-.su-input-group select{
-    width:100%;
-    padding:14px;
-    border:1px solid #dbe2ea;
-    border-radius:12px;
-}
-
-.su-save-btn{
-    background:linear-gradient(135deg,#14b8a6,#22c55e);
-    color:white;
-    border:none;
-    padding:16px;
-    border-radius:12px;
-    font-weight:700;
-    cursor:pointer;
-}
-
-.su-confirm-btn,
-.su-delete-confirm-btn{
-    display:inline-block;
-    padding:14px 20px;
-    border-radius:12px;
-    text-decoration:none;
-    color:white;
-    margin-top:20px;
-    border:none;
-    cursor:pointer;
-    font-weight:700;
-}
-
-.su-confirm-btn{
-    background:#14b8a6;
-}
-
-.su-delete-confirm-btn{
-    background:#ef4444;
-}
- 
-
-
-/* ADD USER MODAL CSS */
- 
-/* =========================================
+/* =========================================================
    ADD USER BUTTON
-========================================= */
+========================================================= */
 
-.su-add-user-btn{
+.su-add-user-btn {
 
-    border:none;
+    height: 46px;
 
-    background:
-    linear-gradient(
-        135deg,
-        #0ea5a4,
-        #22c55e
-    );
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-    color:white;
+    gap: 9px;
 
-    padding:16px 24px;
+    padding: 0 16px 0 8px;
 
-    border-radius:16px;
+    border: 0;
 
-    font-size:14px;
-    font-weight:700;
+    border-radius: 12px;
 
-    cursor:pointer;
+    background: linear-gradient(135deg,
+            #4f46e5 0%,
+            #6366f1 100%);
 
-    transition:.3s ease;
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.1px;
+
+    cursor: pointer;
+
+    white-space: nowrap;
 
     box-shadow:
-    0 12px 25px
-    rgba(16,185,129,.25);
+        0 6px 16px rgba(79, 70, 229, 0.20);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
 }
 
-.su-add-user-btn:hover{
 
-    transform:
-    translateY(-3px);
+.su-add-user-btn:hover {
+
+    transform: translateY(-1px);
 
     box-shadow:
-    0 18px 35px
-    rgba(16,185,129,.35);
+        0 9px 22px rgba(79, 70, 229, 0.26);
+
+    filter: brightness(1.02);
 }
 
-/* =========================================
-   ADD USER MODAL
-========================================= */
 
-.su-add-user-box{
+.su-add-user-btn:active {
 
-    width:850px;
-    max-width:95%;
+    transform: translateY(0);
+
+    box-shadow:
+        0 4px 12px rgba(79, 70, 229, 0.18);
 }
 
-/* =========================================
-   FORM GRID
-========================================= */
 
-.su-form-grid{
+/* =========================================================
+   ADD USER ICON
+========================================================= */
 
-    display:grid;
+.su-add-user-icon {
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: rgba(255, 255, 255, 0.16);
+
+    border: 1px solid rgba(255,
+            255,
+            255,
+            0.18);
+
+    font-size: 12px;
+
+    flex: 0 0 30px;
+}
+
+
+.su-add-user-icon i {
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   BUTTON TEXT
+========================================================= */
+
+.su-add-user-text {
+
+    line-height: 1;
+}
+
+/* =========================================================
+   USERS HEADER
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .su-header {
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 16px;
+
+        padding: 17px;
+
+        margin-bottom: 18px;
+
+        border-radius: 16px;
+
+    }
+
+
+    /* =====================================================
+       HEADER CONTENT
+    ===================================================== */
+
+    .su-header-content {
+
+        width: 100%;
+
+        display: flex;
+
+        align-items: flex-start;
+
+        gap: 12px;
+
+    }
+
+
+    /* =====================================================
+       HEADER ICON
+    ===================================================== */
+
+    .su-header-icon {
+
+        width: 44px;
+        height: 44px;
+
+        flex: 0 0 44px;
+
+        border-radius: 12px;
+
+        font-size: 17px;
+
+    }
+
+
+    /* =====================================================
+       HEADER TEXT
+    ===================================================== */
+
+    .su-header-text {
+
+        flex: 1;
+
+        min-width: 0;
+
+        gap: 6px;
+
+    }
+
+
+    /* =====================================================
+       TITLE ROW
+    ===================================================== */
+
+    .su-header-title-row {
+
+        display: flex;
+
+        align-items: flex-start;
+
+        flex-wrap: wrap;
+
+        gap: 7px 8px;
+
+    }
+
+
+    /* =====================================================
+       TITLE
+    ===================================================== */
+
+    .su-header h1 {
+
+        font-size: 21px;
+
+        line-height: 1.25;
+
+        letter-spacing: -0.35px;
+
+    }
+
+
+    /* =====================================================
+       BADGE
+    ===================================================== */
+
+    .su-header-badge {
+
+        padding: 4px 7px;
+
+        font-size: 9px;
+
+        gap: 4px;
+
+    }
+
+
+    .su-header-badge i {
+
+        font-size: 8px;
+
+    }
+
+
+    /* =====================================================
+       DESCRIPTION
+    ===================================================== */
+
+    .su-header p {
+
+        font-size: 12px;
+
+        line-height: 1.5;
+
+        max-width: none;
+
+    }
+
+
+    /* =====================================================
+       ACTION AREA
+    ===================================================== */
+
+    .su-header-actions {
+
+        width: 100%;
+
+        display: block;
+
+    }
+
+
+    /* =====================================================
+       ADD USER BUTTON
+    ===================================================== */
+
+    .su-add-user-btn {
+
+        width: 100%;
+
+        height: 44px;
+
+        padding: 0 12px;
+
+        border-radius: 11px;
+
+        gap: 8px;
+
+        font-size: 12.5px;
+
+    }
+
+
+    /* =====================================================
+       BUTTON ICON
+    ===================================================== */
+
+    .su-add-user-icon {
+
+        width: 28px;
+        height: 28px;
+
+        flex: 0 0 28px;
+
+        border-radius: 8px;
+
+        font-size: 11px;
+
+    }
+
+}
+
+/* =========================================================
+   EXTRA SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .su-header {
+
+        padding: 15px;
+
+        border-radius: 15px;
+
+        gap: 14px;
+
+    }
+
+
+    .su-header-content {
+
+        gap: 10px;
+
+    }
+
+
+    .su-header-icon {
+
+        width: 40px;
+        height: 40px;
+
+        flex-basis: 40px;
+
+        border-radius: 11px;
+
+        font-size: 15px;
+
+    }
+
+
+    .su-header h1 {
+
+        font-size: 19px;
+
+        letter-spacing: -0.25px;
+
+    }
+
+
+    .su-header p {
+
+        font-size: 11.5px;
+
+        line-height: 1.45;
+
+    }
+
+
+    .su-header-badge {
+
+        font-size: 8.5px;
+
+        padding: 4px 6px;
+
+    }
+
+
+    .su-add-user-btn {
+
+        height: 42px;
+
+        font-size: 12px;
+
+    }
+
+}
+
+
+/* =========================================================
+   USERS KPI CARDS
+========================================================= */
+
+.su-stats-grid {
+
+    width: 100%;
+
+    display: grid;
 
     grid-template-columns:
-    repeat(2,1fr);
+        repeat(4, minmax(0, 1fr));
 
-    gap:18px;
+    gap: 18px;
 
-    margin-bottom:18px;
+    margin-bottom: 24px;
+
 }
 
-/* =========================================
-   INPUTS
-========================================= */
 
-.su-add-user-form input,
-.su-add-user-form select{
+/* =========================================================
+   BASE STAT CARD
+========================================================= */
 
-    width:100%;
+.su-stat-card {
 
-    padding:15px 16px;
+    position: relative;
 
-    border-radius:14px;
+    min-width: 0;
 
-    border:1px solid #dbe2ea;
+    min-height: 104px;
 
-    background:#f8fafc;
+    padding: 18px 19px;
 
-    transition:.3s;
-}
+    display: flex;
 
-.su-add-user-form input:focus,
-.su-add-user-form select:focus{
+    align-items: center;
 
-    border-color:#0ea5a4;
+    justify-content: space-between;
 
-    background:white;
+    gap: 14px;
 
-    outline:none;
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(255, 255, 255, 0.75);
 
     box-shadow:
-    0 0 0 4px
-    rgba(20,184,166,.08);
+        0 8px 24px rgba(15, 23, 42, 0.06);
+
+    transition:
+        transform .22s ease,
+        box-shadow .22s ease;
+
+    box-sizing: border-box;
 }
 
-/* =========================================
-   SUBMIT BUTTON
-========================================= */
 
-.su-create-user-btn{
+/* =========================================================
+   HOVER
+========================================================= */
 
-    width:100%;
+.su-stat-card:hover {
 
-    margin-top:10px;
+    transform: translateY(-3px);
 
-    border:none;
+    box-shadow:
+        0 12px 28px rgba(15, 23, 42, 0.09);
+
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.su-stat-content {
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 6px;
+
+}
+
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.su-stat-label {
+
+    display: block;
+
+    color: #475569;
+
+    font-size: 13px;
+
+    line-height: 1.2;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
+
+/* =========================================================
+   VALUE
+========================================================= */
+
+.su-stat-value {
+
+    display: block;
+
+    color: #0f172a;
+
+    font-size: 28px;
+
+    line-height: 1;
+
+    font-weight: 800;
+
+    letter-spacing: -0.5px;
+
+}
+
+
+/* =========================================================
+   ICON CONTAINER
+========================================================= */
+
+.su-stat-icon {
+
+    width: 46px;
+
+    height: 46px;
+
+    flex: 0 0 46px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 14px;
+
+    font-size: 17px;
+
+    background: rgba(255, 255, 255, 0.62);
+
+    border: 1px solid rgba(255, 255, 255, 0.72);
+
+    box-shadow:
+        0 5px 14px rgba(15, 23, 42, 0.05);
+
+}
+
+
+/* =========================================================
+   TOTAL USERS
+========================================================= */
+
+.su-stat-card.total-users {
 
     background:
-    linear-gradient(
-        135deg,
-        #14b8a6,
-        #22c55e
-    );
+        linear-gradient(135deg,
+            #ecfdf5 0%,
+            #d1fae5 55%,
+            #bbf7d0 100%);
 
-    color:white;
-
-    padding:18px;
-
-    border-radius:16px;
-
-    font-size:15px;
-    font-weight:700;
-
-    cursor:pointer;
-
-    transition:.3s ease;
 }
 
-.su-create-user-btn:hover{
 
-    transform:
-    translateY(-2px);
+.su-stat-card.total-users .su-stat-icon {
+
+    color: #059669;
+
 }
 
- /* =====================================================
-   SUPER ADMIN USERS - PREMIUM MOBILE RESPONSIVE
-===================================================== */
 
-@media(max-width:576px){
+/* =========================================================
+   ACTIVE USERS
+========================================================= */
 
-    html,
-    body{
-        width:100%;
-        overflow-x:hidden;
-        background:#f8fafc;
+.su-stat-card.active-users {
+
+    background:
+        linear-gradient(135deg,
+            #ecfdf5 0%,
+            #ccfbf1 55%,
+            #a7f3d0 100%);
+
+}
+
+
+.su-stat-card.active-users .su-stat-icon {
+
+    color: #0f766e;
+
+}
+
+
+/* =========================================================
+   CLERK USERS
+========================================================= */
+
+.su-stat-card.clerk-users {
+
+    background:
+        linear-gradient(135deg,
+            #ecfeff 0%,
+            #cffafe 55%,
+            #bae6fd 100%);
+
+}
+
+
+.su-stat-card.clerk-users .su-stat-icon {
+
+    color: #0284c7;
+
+}
+
+
+/* =========================================================
+   ADMIN USERS
+========================================================= */
+
+.su-stat-card.admin-users {
+
+    background:
+        linear-gradient(135deg,
+            #f5f3ff 0%,
+            #ede9fe 55%,
+            #ddd6fe 100%);
+
+}
+
+
+.su-stat-card.admin-users .su-stat-icon {
+
+    color: #7c3aed;
+
+}
+
+/* =========================================================
+   USERS KPI CARDS
+   TABLET / MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .su-stats-grid {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 12px;
+
+        margin-bottom: 18px;
+
     }
 
-    .su-header{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:16px;
-        margin-bottom:22px;
+
+    .su-stat-card {
+
+        min-height: 94px;
+
+        padding: 15px;
+
+        border-radius: 15px;
+
+        gap: 10px;
+
     }
 
-    .su-header h1{
-        font-size:25px;
-        line-height:1.3;
+
+    .su-stat-label {
+
+        font-size: 11.5px;
+
     }
 
-    .su-header p{
-        font-size:13px;
-        line-height:1.5;
+
+    .su-stat-value {
+
+        font-size: 24px;
+
     }
 
-    .su-add-user-btn{
-        width:100%;
-        padding:14px;
-        border-radius:14px;
-        font-size:13px;
+
+    .su-stat-icon {
+
+        width: 40px;
+
+        height: 40px;
+
+        flex-basis: 40px;
+
+        border-radius: 12px;
+
+        font-size: 15px;
+
     }
 
-    .su-stats-grid{
-        grid-template-columns:1fr;
-        gap:14px;
-        margin-bottom:22px;
+}
+
+/* =========================================================
+   USERS KPI CARDS
+   SMALL MOBILE — 480px
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .su-stats-grid {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 10px;
+
+        margin-bottom: 16px;
+
     }
 
-    .su-stat-card{
-        min-height:110px;
-        padding:20px;
-        border-radius:18px;
+
+    .su-stat-card {
+
+        min-height: 88px;
+
+        padding: 13px;
+
+        border-radius: 14px;
+
     }
 
-    .su-stat-card:hover{
-        transform:none;
+
+    .su-stat-content {
+
+        gap: 5px;
+
     }
 
-    .su-stat-card h4{
-        font-size:13px;
-        margin-bottom:8px;
+
+    .su-stat-label {
+
+        font-size: 10.5px;
+
     }
 
-    .su-stat-card h2{
-        font-size:30px;
+
+    .su-stat-value {
+
+        font-size: 22px;
+
+        letter-spacing: -0.3px;
+
     }
 
-    .su-stat-card span{
-        width:48px;
-        height:48px;
-        border-radius:14px;
-        font-size:24px;
+
+    .su-stat-icon {
+
+        width: 35px;
+
+        height: 35px;
+
+        flex-basis: 35px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+
     }
 
-    .su-filter-box{
-        flex-direction:column;
-        gap:10px;
-        padding:14px;
-        border-radius:18px;
-        margin-bottom:18px;
+}
+
+
+
+/* =========================================================
+   USERS FILTER TOOLBAR
+========================================================= */
+
+.su-filter-box {
+
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(260px, 1.6fr) minmax(145px, .85fr) minmax(145px, .85fr) minmax(175px, 1fr) auto;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 14px;
+
+    margin-bottom: 8px;
+
+    background: #ffffff;
+
+    border: 1px solid #e5eaf0;
+
+    border-radius: 17px;
+
+    box-shadow:
+        0 6px 22px rgba(15, 23, 42, .045);
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.su-filter-search {
+
+    height: 44px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 0;
+
+    padding: 0 13px;
+
+    background: #f8fafc;
+
+    border: 1px solid #dfe6ee;
+
+    border-radius: 11px;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+
+    box-sizing: border-box;
+}
+
+
+.su-filter-search i {
+
+    flex: 0 0 auto;
+
+    color: #94a3b8;
+
+    font-size: 13px;
+
+}
+
+
+.su-filter-search input {
+
+    width: 100%;
+
+    min-width: 0;
+
+    height: 100%;
+
+    padding: 0;
+
+    border: 0;
+
+    outline: 0;
+
+    background: transparent;
+
+    color: #0f172a;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+}
+
+
+.su-filter-search input::placeholder {
+
+    color: #94a3b8;
+
+}
+
+
+.su-filter-search:focus-within {
+
+    background: #ffffff;
+
+    border-color: #0ea5a4;
+
+    box-shadow:
+        0 0 0 3px rgba(14, 165, 164, .10);
+
+}
+
+
+/* =========================================================
+   FILTER CONTROL
+========================================================= */
+
+.su-filter-control {
+
+    height: 44px;
+
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 0 11px;
+
+    background: #f8fafc;
+
+    border: 1px solid #dfe6ee;
+
+    border-radius: 11px;
+
+    box-sizing: border-box;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+
+.su-filter-control i {
+
+    flex: 0 0 auto;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+}
+
+
+.su-filter-control select {
+
+    width: 100%;
+
+    min-width: 0;
+
+    height: 100%;
+
+    padding: 0;
+
+    border: 0;
+
+    outline: 0;
+
+    background: transparent;
+
+    color: #334155;
+
+    font-family: inherit;
+
+    font-size: 12.5px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+
+.su-filter-control:focus-within {
+
+    background: #ffffff;
+
+    border-color: #0ea5a4;
+
+    box-shadow:
+        0 0 0 3px rgba(14, 165, 164, .10);
+
+}
+
+
+/* =========================================================
+   CLEAR BUTTON
+========================================================= */
+
+.su-clear-btn {
+
+    height: 44px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 0 15px;
+
+    border-radius: 11px;
+
+    background: #f1f5f9;
+
+    border: 1px solid #e2e8f0;
+
+    color: #475569;
+
+    text-decoration: none;
+
+    font-size: 12.5px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+
+    box-sizing: border-box;
+}
+
+
+.su-clear-btn i {
+
+    font-size: 11px;
+
+}
+
+
+.su-clear-btn:hover {
+
+    background: #e2e8f0;
+
+    color: #0f172a;
+
+    border-color: #cbd5e1;
+
+    transform: translateY(-1px);
+
+}
+
+
+/* =========================================================
+   RESULT COUNT
+========================================================= */
+
+.su-filter-result {
+
+    display: flex;
+
+    align-items: center;
+
+    min-height: 34px;
+
+    margin-bottom: 15px;
+
+    padding: 0 4px;
+
+    color: #64748b;
+
+    font-size: 12.5px;
+
+    font-weight: 500;
+
+}
+
+
+.su-filter-result strong {
+
+    margin: 0 3px;
+
+    color: #0f172a;
+
+    font-weight: 800;
+
+}
+
+/* =========================================================
+   USERS FILTER TOOLBAR
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .su-filter-box {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 9px;
+
+        padding: 11px;
+
+        margin-bottom: 6px;
+
+        border-radius: 15px;
+
     }
 
-    .su-filter-box input,
-    .su-filter-box select{
-        width:100%;
-        flex:none;
-        padding:13px 14px;
-        border-radius:12px;
-        font-size:13px;
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    .su-filter-search {
+
+        grid-column: 1 / -1;
+
+        width: 100%;
+
+        height: 43px;
+
+        border-radius: 11px;
+
     }
 
-    .su-filter-box button,
-    .su-clear-btn{
-        width:100%;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        text-align:center;
-        padding:12px;
-        border-radius:12px;
-        font-size:13px;
-        font-weight:700;
+
+    .su-filter-search input {
+
+        font-size: 12.5px;
+
     }
 
-    .su-table-box{
-        padding:0;
-        border-radius:18px;
-        overflow-x:auto;
-        background:#ffffff;
-        border:1px solid #e2e8f0;
-        box-shadow:0 12px 30px rgba(15,23,42,.06);
+
+    /* =====================================================
+       CONTROLS
+    ===================================================== */
+
+    .su-filter-control {
+
+        width: 100%;
+
+        height: 42px;
+
+        border-radius: 10px;
+
+        padding: 0 10px;
+
     }
 
-    .su-users-table{
-        min-width:1150px;
-        width:1150px;
+
+    .su-filter-control i {
+
+        font-size: 11px;
+
     }
 
-    .su-users-table thead th{
-        padding:13px;
-        font-size:12px;
-        white-space:nowrap;
+
+    .su-filter-control select {
+
+        font-size: 11.5px;
+
     }
 
-    .su-users-table tbody td{
-        padding:13px;
-        font-size:13px;
-        white-space:nowrap;
+
+    /* =====================================================
+       CLEAR
+    ===================================================== */
+
+    .su-clear-btn {
+
+        grid-column: 1 / -1;
+
+        width: 100%;
+
+        height: 41px;
+
+        border-radius: 10px;
+
+        font-size: 12px;
+
     }
 
-    .su-users-table tbody tr:hover{
-        background:transparent;
+
+    /* =====================================================
+       RESULT COUNT
+    ===================================================== */
+
+    .su-filter-result {
+
+        min-height: 30px;
+
+        margin-bottom: 12px;
+
+        padding: 0 2px;
+
+        font-size: 11.5px;
+
     }
+
+}
+
+/* =========================================================
+   USERS FILTER TOOLBAR
+   SMALL MOBILE — 480px
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .su-filter-box {
+
+        gap: 8px;
+
+        padding: 9px;
+
+        border-radius: 14px;
+
+    }
+
+
+    .su-filter-search {
+
+        height: 41px;
+
+    }
+
+
+    .su-filter-search input {
+
+        font-size: 12px;
+
+    }
+
+
+    .su-filter-control {
+
+        height: 40px;
+
+        padding: 0 8px;
+
+        gap: 7px;
+
+    }
+
+
+    .su-filter-control i {
+
+        font-size: 10px;
+
+    }
+
+
+    .su-filter-control select {
+
+        font-size: 10.5px;
+
+    }
+
+
+    .su-clear-btn {
+
+        height: 40px;
+
+        font-size: 11.5px;
+
+    }
+
+
+    .su-filter-result {
+
+        font-size: 11px;
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   USERS TABLE SECTION
+========================================================= */
+
+.su-table-section {
+    width: 100%;
+    margin-top: 4px;
+}
+
+
+/* =========================================================
+   TABLE CARD
+========================================================= */
+
+.su-table-box {
+
+    width: 100%;
+
+    background: #ffffff;
+
+    border: 1px solid #e5eaf0;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 12px 35px rgba(15, 23, 42, .055);
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   TABLE SCROLL CONTAINER
+========================================================= */
+
+.su-table-scroll {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+    overflow-y: hidden;
+
+    scrollbar-width: thin;
+
+    scrollbar-color:
+        #cbd5e1 transparent;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+
+.su-table-scroll::-webkit-scrollbar {
+
+    height: 7px;
+
+}
+
+
+.su-table-scroll::-webkit-scrollbar-track {
+
+    background: #f8fafc;
+
+}
+
+
+.su-table-scroll::-webkit-scrollbar-thumb {
+
+    background: #cbd5e1;
+
+    border-radius: 20px;
+
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.su-users-table {
+
+    width: 100%;
+
+    min-width: 1320px;
+
+    border-collapse: separate;
+
+    border-spacing: 0;
+
+    table-layout: fixed;
+
+    font-size: 13px;
+
+}
+
+
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+.su-users-table .col-name {
+    width: 145px;
+}
+
+.su-users-table .col-email {
+    width: 210px;
+}
+
+.su-users-table .col-phone {
+    width: 120px;
+}
+
+.su-users-table .col-role {
+    width: 90px;
+}
+
+.su-users-table .col-school {
+    width: 175px;
+}
+
+.su-users-table .col-status {
+    width: 90px;
+}
+
+.su-users-table .col-subscription {
+    width: 110px;
+}
+
+.su-users-table .col-login {
+    width: 145px;
+}
+
+.su-users-table .col-created {
+    width: 135px;
+}
+
+.su-users-table .col-actions {
+    width: 175px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.su-users-table thead th {
+
+    height: 48px;
+
+    padding:
+        0 15px;
+
+    background: #f8fafc;
+
+    color: #475569;
+
+    border-bottom: 1px solid #e2e8f0;
+
+    text-align: left;
+
+    vertical-align: middle;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    letter-spacing: .01em;
+
+    white-space: nowrap;
+
+}
+
+
+.su-users-table thead th:first-child {
+
+    padding-left: 18px;
+
+}
+
+
+.su-users-table .actions-heading {
+
+    text-align: center;
+
+}
+
+
+/* =========================================================
+   BODY CELLS
+========================================================= */
+
+.su-users-table tbody td {
+
+    height: 76px;
+
+    padding:
+        12px 15px;
+
+    color: #334155;
+
+    border-bottom: 1px solid #eef2f6;
+
+    vertical-align: middle;
+
+    font-size: 13px;
+
+    line-height: 1.35;
+
+    box-sizing: border-box;
+
+}
+
+
+.su-users-table tbody tr {
+
+    background: #ffffff;
+
+    transition:
+        background .18s ease;
+
+}
+
+
+.su-users-table tbody tr:hover {
+
+    background: #f8fbfb;
+
+}
+
+
+.su-users-table tbody tr:last-child td {
+
+    border-bottom: none;
+
+}
+
+
+.su-users-table tbody td:first-child {
+
+    padding-left: 18px;
+
+}
+
+
+/* =========================================================
+   USER NAME
+========================================================= */
+
+.user-primary-info {
+
+    min-width: 0;
+
+}
+
+
+.user-primary-info strong {
+
+    display: block;
+
+    color: #0f172a;
+
+    font-size: 13.5px;
+
+    font-weight: 750;
+
+    line-height: 1.3;
+
+    white-space: normal;
+
+    overflow-wrap: anywhere;
+
+}
+
+
+.user-primary-info small {
+
+    display: block;
+
+    margin-top: 4px;
+
+    color: #94a3b8;
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+}
+
+
+/* =========================================================
+   EMAIL
+========================================================= */
+
+.user-email-cell {
+
+    color: #475569;
+
+}
+
+
+.user-email-cell span {
+
+    display: block;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+}
+
+
+/* =========================================================
+   PHONE
+========================================================= */
+
+.user-phone-cell {
+
+    color: #475569;
+
+    white-space: nowrap;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+
+/* =========================================================
+   SCHOOL
+========================================================= */
+
+.user-school-cell span {
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+
+    line-height: 1.3;
+
+}
+
+
+/* =========================================================
+   DATE CELLS
+========================================================= */
+
+.date-cell {
+
+    color: #475569;
+
+    font-size: 11.5px !important;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+
+.date-cell span {
+
+    display: block;
+
+    white-space: normal;
+
+    line-height: 1.35;
+
+}
+
+
+.muted-value {
+
+    color: #94a3b8;
+
+    font-style: italic;
+
+}
+
+
+/* =========================================================
+   ROLE BADGES
+========================================================= */
+
+.role-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    min-width: 58px;
+
+    padding:
+        6px 9px;
+
+    border-radius: 999px;
+
+    font-size: 10.5px;
+
+    font-weight: 800;
+
+    text-transform: capitalize;
+
+    white-space: nowrap;
+
+}
+
+
+.role-badge i {
+
+    font-size: 9px;
+
+}
+
+
+.role-badge.admin {
+
+    background: #f0eaff;
+
+    color: #7c3aed;
+
+}
+
+
+.role-badge.clerk {
+
+    background: #e0f7f6;
+
+    color: #0f8f8c;
+
+}
+
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
+.status-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding:
+        6px 9px;
+
+    border-radius: 999px;
+
+    font-size: 10.5px;
+
+    font-weight: 800;
+
+    text-transform: capitalize;
+
+    white-space: nowrap;
+
+}
+
+
+.status-dot {
+
+    width: 5px;
+
+    height: 5px;
+
+    border-radius: 50%;
+
+    background: currentColor;
+
+}
+
+
+.status-badge.active {
+
+    background: #dcfce9;
+
+    color: #15803d;
+
+}
+
+
+.status-badge.blocked {
+
+    background: #fee8e8;
+
+    color: #dc2626;
+
+}
+
+
+/* =========================================================
+   PLAN BADGE
+========================================================= */
+
+.plan-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    max-width: 95px;
+
+    padding:
+        6px 10px;
+
+    border-radius: 999px;
+
+    background: #edf4ff;
+
+    color: #2563eb;
+
+    font-size: 10.5px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
+
+/* =========================================================
+   ACTIONS CELL
+========================================================= */
+
+.su-actions-cell {
+
+    padding:
+        10px 12px !important;
+
+    text-align: center;
+
+}
+
+
+.su-actions {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 6px;
+
+    width: 100%;
+
+    max-width: 156px;
+
+    margin: 0 auto;
+
+}
+
+
+/* =========================================================
+   ACTION BUTTON
+========================================================= */
+
+.su-action-btn {
+
+    min-width: 0;
+
+    height: 30px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    padding:
+        0 7px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 10.5px;
+
+    font-weight: 750;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        filter .18s ease;
+
+}
+
+
+.su-action-btn i {
+
+    font-size: 9px;
+
+}
+
+
+.su-action-btn:hover {
+
+    transform: translateY(-1px);
+
+    filter: brightness(.97);
+
+}
+
+
+.su-action-btn:active {
+
+    transform: translateY(0);
+
+}
+
+
+/* VIEW */
+
+.view-btn {
+
+    background:
+        linear-gradient(135deg,
+            #3b82f6,
+            #2563eb);
+
+    box-shadow:
+        0 4px 10px rgba(37, 99, 235, .14);
+
+}
+
+
+/* EDIT */
+
+.edit-btn {
+
+    background:
+        linear-gradient(135deg,
+            #f59e0b,
+            #f97316);
+
+    box-shadow:
+        0 4px 10px rgba(245, 158, 11, .14);
+
+}
+
+
+/* STATUS */
+
+.status-btn {
+
+    background:
+        linear-gradient(135deg,
+            #10b981,
+            #0ea5a4);
+
+    box-shadow:
+        0 4px 10px rgba(14, 165, 164, .14);
+
+}
+
+
+/* DELETE */
+
+.delete-btn {
+
+    background:
+        linear-gradient(135deg,
+            #ef4444,
+            #dc2626);
+
+    box-shadow:
+        0 4px 10px rgba(239, 68, 68, .13);
+
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.su-empty-state {
+
+    padding:
+        65px 25px !important;
+
+    text-align: center;
+
+    color: #64748b;
+
+}
+
+
+.su-empty-icon {
+
+    width: 54px;
+
+    height: 54px;
+
+    margin: 0 auto 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 16px;
+
+    background: #f1f5f9;
+
+    color: #94a3b8;
+
+    font-size: 20px;
+
+}
+
+
+.su-empty-state h3 {
+
+    margin: 0 0 6px;
+
+    color: #0f172a;
+
+    font-size: 15px;
+
+    font-weight: 800;
+
+}
+
+
+.su-empty-state p {
+
+    margin: 0 0 18px;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+}
+
+
+.su-empty-clear {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding:
+        9px 14px;
+
+    border-radius: 9px;
+
+    background: #e6f7f6;
+
+    color: #0f8f8c;
+
+    text-decoration: none;
+
+    font-size: 11.5px;
+
+    font-weight: 750;
+
+}
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.su-pagination-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 18px;
+    margin-bottom: 10px;
+
+    padding: 0 10px;
+}
+
+
+/* =========================================================
+   PAGINATION WRAPPER
+========================================================= */
+
+.su-pagination {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    min-height: 42px;
+}
+
+
+/* =========================================================
+   PAGINATION INFO
+========================================================= */
+
+.su-pagination-info {
+
+    min-height: 38px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    padding: 0 14px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+    box-shadow:
+        0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+
+.su-pagination-info strong {
+
+    color: #0f172a;
+
+    font-size: 12px;
+    font-weight: 800;
+
+}
+
+
+.su-pagination-info span {
+
+    font-weight: 500;
+
+}
+
+
+.su-pagination-info em {
+
+    margin: 0 2px;
+
+    color: #cbd5e1;
+
+    font-style: normal;
+
+}
+
+
+/* =========================================================
+   PAGINATION CONTROLS
+========================================================= */
+
+.su-pagination-controls {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
+}
+
+
+/* =========================================================
+   PREVIOUS / NEXT BUTTON
+========================================================= */
+
+.su-page-btn {
+
+    width: 38px;
+    height: 38px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 38px;
+
+    padding: 0;
+
+    border: 1px solid #dce5ed;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #334155;
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+    box-shadow:
+        0 2px 7px rgba(15, 23, 42, 0.04);
+}
+
+
+.su-page-btn:hover {
+
+    background: #eaf8f7;
+
+    border-color: #9ddbd7;
+
+    color: #0f8f8c;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 5px 12px rgba(15, 143, 140, 0.10);
+
+}
+
+
+.su-page-btn:active {
+
+    transform: translateY(0);
+
+}
+
+
+.su-page-btn i {
+
+    font-size: 10px;
+
+}
+
+
+/* =========================================================
+   DISABLED BUTTON
+========================================================= */
+
+.su-page-btn.disabled {
+
+    opacity: 0.45;
+
+    background: #f8fafc;
+
+    color: #94a3b8;
+
+    border-color: #e2e8f0;
+
+    cursor: not-allowed;
+
+    pointer-events: none;
+
+    box-shadow: none;
+
+}
+
+
+/* =========================================================
+   CURRENT PAGE
+========================================================= */
+
+.su-page-current {
+
+    min-width: 38px;
+    height: 38px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 10px;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(135deg,
+            #0ea5a4,
+            #14b8a6);
+
+    border: 1px solid #0ea5a4;
+
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    box-shadow:
+        0 5px 14px rgba(14, 165, 164, 0.20);
+
+}
+
+
+/* =========================================================
+   TOTAL PAGE TEXT
+========================================================= */
+
+.su-page-total {
+
+    height: 38px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 3px;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+}
+
+
+/* PAGE INFO */
+
+.su-page-info {
+
+    height: 38px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 4px;
+
+    padding:
+        0 14px;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    font-size: 11.5px;
+
+    white-space: nowrap;
+
+}
+
+
+.su-page-info strong {
+
+    color: #0f172a;
+
+    font-weight: 800;
+
+}
+
+
+.su-page-info span {
+
+    font-weight: 600;
+
+}
+
+
+.su-page-info em {
+
+    margin:
+        0 2px;
+
+    color: #cbd5e1;
+
+    font-style: normal;
+
+}
+
+/* =========================================================
+   USERS TABLE
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .su-table-section {
+
+        margin-top: 2px;
+
+    }
+
+
+    .su-table-box {
+
+        border-radius: 16px;
+
+        box-shadow:
+            0 8px 24px rgba(15, 23, 42, .05);
+
+    }
+
+
+    .su-table-scroll {
+
+        overflow-x: auto;
+
+        overflow-y: hidden;
+
+    }
+
+
+    .su-users-table {
+
+        min-width: 1180px;
+
+        font-size: 12px;
+
+    }
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .su-users-table thead th {
+
+        height: 44px;
+
+        padding:
+            0 12px;
+
+        font-size: 11px;
+
+    }
+
+
+    /* =====================================================
+       BODY
+    ===================================================== */
+
+    .su-users-table tbody td {
+
+        height: 70px;
+
+        padding:
+            10px 12px;
+
+        font-size: 12px;
+
+    }
+
+
+    .user-primary-info strong {
+
+        font-size: 12.5px;
+
+    }
+
+
+    .user-primary-info small {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .date-cell {
+
+        font-size: 10.5px !important;
+
+    }
+
+
+    /* =====================================================
+       BADGES
+    ===================================================== */
 
     .role-badge,
     .status-badge,
-    .plan-badge{
-        padding:6px 10px;
-        font-size:11px;
+    .plan-badge {
+
+        font-size: 10px;
+
+        padding:
+            5px 8px;
+
     }
 
-    .su-actions{
-        flex-wrap:nowrap;
-        gap:6px;
+
+    /* =====================================================
+       ACTIONS
+    ===================================================== */
+
+    .su-actions-cell {
+
+        padding:
+            9px 10px !important;
+
     }
 
-    .su-actions button{
-        padding:8px 10px;
-        border-radius:9px;
-        font-size:11px;
+
+    .su-actions {
+
+        max-width: 145px;
+
+        gap: 5px;
+
     }
 
-    .su-pagination{
-        flex-direction:column;
-        gap:10px;
-        margin:22px 0;
+
+    .su-action-btn {
+
+        height: 29px;
+
+        font-size: 10px;
+
+        border-radius: 7px;
+
     }
 
-    .su-pagination a,
-    .su-pagination span{
-        width:100%;
-        text-align:center;
-        padding:12px;
-        border-radius:12px;
-        font-size:13px;
+
+    /* =====================================================
+       PAGINATION
+    ===================================================== */
+
+    .su-pagination-section {
+
+        margin-top: 15px;
+
     }
 
-    .su-modal{
-        align-items:flex-start;
-        padding:14px;
-        overflow-y:auto;
-        z-index:9999;
+
+    .su-pagination {
+
+        width: 100%;
+
+        gap: 6px;
+
     }
 
-    .su-modal-box{
-        width:100%;
-        max-width:100%;
-        margin-top:18px;
-        padding:20px;
-        border-radius:20px;
-        max-height:90vh;
-        overflow-y:auto;
+
+    .su-page-btn {
+
+        height: 36px;
+
+        padding:
+            0 10px;
+
+        font-size: 10.5px;
+
     }
 
-    .su-small-box{
-        margin-top:80px;
+
+    .su-page-info {
+
+        height: 36px;
+
+        padding:
+            0 10px;
+
+        font-size: 10.5px;
+
     }
 
-    .su-close-btn{
-        top:14px;
-        right:14px;
-        width:36px;
-        height:36px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        border-radius:10px;
-        background:#f1f5f9;
-        font-size:24px;
+}
+
+/* =========================================================
+   USERS TABLE
+   SMALL MOBILE — 480px
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .su-table-box {
+
+        border-radius: 14px;
+
     }
 
-    .su-modal-header h2{
-        font-size:22px;
-        padding-right:42px;
+
+    .su-users-table {
+
+        min-width: 1120px;
+
     }
 
-    .su-modal-header p{
-        font-size:13px;
-        line-height:1.5;
-        margin-bottom:18px;
+
+    .su-users-table thead th {
+
+        height: 42px;
+
+        padding:
+            0 10px;
+
+        font-size: 10.5px;
+
     }
 
-    .su-view-grid{
-        grid-template-columns:1fr;
-        gap:10px;
+
+    .su-users-table tbody td {
+
+        height: 66px;
+
+        padding:
+            9px 10px;
+
+        font-size: 11.5px;
+
     }
 
-    .su-view-card{
-        padding:14px;
-        border-radius:12px;
-        border:1px solid #e2e8f0;
+
+    .user-primary-info strong {
+
+        font-size: 12px;
+
     }
 
-    .su-view-card span{
-        font-size:11px;
+
+    .user-primary-info small {
+
+        font-size: 9px;
+
     }
 
-    .su-view-card strong{
-        font-size:13px;
-        word-break:break-word;
+
+    .role-badge,
+    .status-badge,
+    .plan-badge {
+
+        font-size: 9.5px;
+
+        padding:
+            5px 7px;
+
     }
 
-    .su-edit-form{
-        gap:14px;
+
+    .su-actions {
+
+        max-width: 135px;
+
+        gap: 4px;
+
     }
 
-    .su-input-group label{
-        font-size:13px;
+
+    .su-action-btn {
+
+        height: 27px;
+
+        padding:
+            0 5px;
+
+        gap: 4px;
+
+        font-size: 9.5px;
+
     }
 
-    .su-input-group input,
-    .su-input-group select{
-        padding:13px 14px;
-        border-radius:12px;
-        font-size:13px;
+
+    .su-action-btn i {
+
+        font-size: 8px;
+
     }
 
-    .su-save-btn,
-    .su-confirm-btn,
-    .su-delete-confirm-btn{
-        width:100%;
-        padding:13px;
-        border-radius:12px;
-        font-size:13px;
-        border:none;
-        cursor:pointer;
-        font-weight:700;
+
+    /* =====================================================
+       PAGINATION
+    ===================================================== */
+
+    .su-pagination {
+
+        flex-wrap: wrap;
+
+        max-width: 100%;
+
     }
 
-    .su-form-grid{
-        grid-template-columns:1fr;
-        gap:12px;
-        margin-bottom:12px;
+
+    .su-page-btn {
+
+        height: 34px;
+
+        padding:
+            0 9px;
+
+        font-size: 10px;
+
     }
 
-    .su-add-user-box{
-        width:100%;
-        max-width:100%;
+
+    .su-page-info {
+
+        height: 34px;
+
+        padding:
+            0 9px;
+
+        font-size: 10px;
+
+        order: -1;
+
+        width: 100%;
+
     }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   SUPER ADMIN USER MODALS
+========================================================= */
+
+
+/* =========================================================
+   OVERLAY
+========================================================= */
+
+.su-modal {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 24px;
+
+    background:
+        rgba(15, 23, 42, .48);
+
+    backdrop-filter:
+        blur(9px);
+
+    -webkit-backdrop-filter:
+        blur(9px);
+
+    overflow-y: auto;
+
+    box-sizing: border-box;
+}
+
+
+/* ACTIVE */
+
+.su-modal.is-open {
+
+    display: flex;
+
+}
+
+
+/* =========================================================
+   MAIN MODAL
+========================================================= */
+
+.su-modal-box {
+
+    position: relative;
+
+    width: min(720px, 100%);
+
+    max-height: calc(100vh - 48px);
+
+    display: flex;
+
+    flex-direction: column;
+
+    background: #ffffff;
+
+    border:
+        1px solid #e5eaf0;
+
+    border-radius: 24px;
+
+    box-shadow:
+        0 30px 80px rgba(15, 23, 42, .20),
+        0 10px 30px rgba(15, 23, 42, .08);
+
+    overflow: hidden;
+
+    animation:
+        suModalIn .22s ease both;
+
+}
+
+
+@keyframes suModalIn {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(12px) scale(.985);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0) scale(1);
+
+    }
+
+}
+
+
+/* =========================================================
+   VIEW / EDIT WIDTHS
+========================================================= */
+
+.su-view-modal {
+
+    width: min(760px, 100%);
+
+}
+
+
+.su-edit-modal {
+
+    width: min(700px, 100%);
+
+}
+
+
+/* =========================================================
+   CONFIRM MODALS
+========================================================= */
+
+.su-confirm-modal {
+
+    width: min(430px, 100%);
+
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
+.su-modal-close {
+
+    position: absolute;
+
+    top: 17px;
+
+    right: 17px;
+
+    z-index: 5;
+
+    width: 36px;
+
+    height: 36px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: 1px solid #e8edf2;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+
+    color: #64748b;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease;
+
+}
+
+
+.su-modal-close:hover {
+
+    background: #eef2f6;
+
+    color: #0f172a;
+
+    transform: rotate(3deg);
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.su-modal-header {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding:
+        27px 56px 22px 28px;
+
+    border-bottom:
+        1px solid #edf1f5;
+
+    background:
+        linear-gradient(180deg,
+            #ffffff 0%,
+            #fbfdfd 100%);
+
+}
+
+
+.su-modal-icon {
+
+    flex: 0 0 auto;
+
+    width: 48px;
+
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 14px;
+
+    font-size: 18px;
+
+}
+
+
+.view-icon {
+
+    background: #e8f7f7;
+
+    color: #0f9995;
+
+}
+
+
+.edit-icon {
+
+    background: #fff4df;
+
+    color: #d97706;
+
+}
+
+
+.add-icon {
+
+    background: #e9f8f3;
+
+    color: #059669;
+
+}
+
+
+.su-modal-eyebrow {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #0f9995;
+
+    font-size: 9.5px;
+
+    font-weight: 850;
+
+    letter-spacing: .12em;
+
+}
+
+
+.su-modal-header h2 {
+
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 22px;
+
+    line-height: 1.25;
+
+    font-weight: 800;
+
+}
+
+
+.su-modal-header p {
+
+    margin:
+        5px 0 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    line-height: 1.45;
+
+}
+
+
+/* =========================================================
+   VIEW CONTENT
+========================================================= */
+
+.su-view-content {
+
+    padding: 24px 28px;
+
+    overflow-y: auto;
+
+}
+
+
+.su-view-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 11px;
+
+}
+
+
+.su-view-card {
+
+    position: relative;
+
+    min-width: 0;
+
+    padding:
+        14px 15px;
+
+    border:
+        1px solid #e8edf2;
+
+    border-radius: 13px;
+
+    background:
+        #f8fafc;
+
+    transition:
+        border-color .18s ease,
+        background .18s ease;
+
+}
+
+
+.su-view-card:hover {
+
+    border-color: #cfe7e5;
+
+    background: #fbfefe;
+
+}
+
+
+.su-view-card span {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #94a3b8;
+
+    font-size: 10.5px;
+
+    font-weight: 650;
+
+}
+
+
+.su-view-card strong {
+
+    display: block;
+
+    color: #1e293b;
+
+    font-size: 13px;
+
+    line-height: 1.4;
+
+    font-weight: 750;
+
+    overflow-wrap: anywhere;
+
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.su-user-form {
+
+    display: flex;
+
+    flex-direction: column;
+
+    min-height: 0;
+
+}
+
+
+/* =========================================================
+   FORM SCROLL AREA
+========================================================= */
+
+.su-user-form {
+
+    overflow-y: auto;
+
+}
+
+
+/* =========================================================
+   FORM SECTION
+========================================================= */
+
+.su-form-section {
+
+    padding:
+        21px 28px 22px;
+
+    border-bottom:
+        1px solid #edf1f5;
+
+}
+
+
+.su-form-section-title {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 17px;
+
+}
+
+
+.su-form-section-title>i {
+
+    width: 32px;
+
+    height: 32px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #eef9f8;
+
+    color: #0f9995;
+
+    font-size: 12px;
+
+}
+
+
+.su-form-section-title strong {
+
+    display: block;
+
+    color: #1e293b;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+}
+
+
+.su-form-section-title span {
+
+    display: block;
+
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 10.5px;
+
+}
+
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.su-form-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        16px 14px;
+
+}
+
+
+/* =========================================================
+   INPUT GROUP
+========================================================= */
+
+.su-input-group {
+
+    min-width: 0;
+
+}
+
+
+.su-input-group label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #334155;
+
+    font-size: 11.5px;
+
+    font-weight: 750;
+
+}
+
+
+.su-input-wrap {
+
+    position: relative;
+
+}
+
+
+.su-input-wrap>i:first-child {
+
+    position: absolute;
+
+    left: 13px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    pointer-events: none;
+
+}
+
+
+.su-input-wrap input,
+.su-input-wrap select {
+
+    width: 100%;
+
+    height: 43px;
+
+    box-sizing: border-box;
+
+    padding:
+        0 38px 0 36px;
+
+    border:
+        1px solid #dce4eb;
+
+    border-radius: 11px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #1e293b;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background .18s ease;
+
+}
+
+
+.su-input-wrap input::placeholder {
+
+    color: #a8b2bf;
+
+}
+
+
+.su-input-wrap input:focus,
+.su-input-wrap select:focus {
+
+    border-color: #0ea5a4;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 3px rgba(14, 165, 164, .10);
+
+}
+
+
+/* SELECT */
+
+.su-input-wrap select {
+
+    appearance: none;
+
+    -webkit-appearance: none;
+
+    cursor: pointer;
+
+}
+
+
+.su-select-wrap .select-arrow {
+
+    position: absolute;
+
+    left: auto;
+
+    right: 13px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    pointer-events: none;
+
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.su-modal-footer {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 9px;
+
+    padding:
+        15px 28px;
+
+    background: #fbfcfd;
+
+    border-top:
+        1px solid #edf1f5;
+
+}
+
+
+.su-form-footer {
+
+    position: sticky;
+
+    bottom: 0;
+
+    z-index: 3;
+
+}
+
+
+/* =========================================================
+   SECONDARY BUTTON
+========================================================= */
+
+.su-secondary-btn {
+
+    height: 39px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding:
+        0 16px;
+
+    border:
+        1px solid #dce4eb;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease;
+
+}
+
+
+.su-secondary-btn:hover {
+
+    background: #f8fafc;
+
+    border-color: #cbd5e1;
+
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+========================================================= */
+
+.su-primary-btn {
+
+    height: 39px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding:
+        0 18px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(135deg,
+            #0ea5a4,
+            #14b8a6);
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 5px 13px rgba(14, 165, 164, .18);
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease;
+
+}
+
+
+.su-primary-btn:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 16px rgba(14, 165, 164, .22);
+
+}
+
+
+/* =========================================================
+   CONFIRM CONTENT
+========================================================= */
+
+.su-confirm-content {
+
+    padding:
+        30px 28px 26px;
+
+    text-align: center;
+
+}
+
+
+.su-confirm-icon {
+
+    width: 58px;
+
+    height: 58px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin:
+        0 auto 15px;
+
+    border-radius: 17px;
+
+    font-size: 20px;
+
+}
+
+
+.status-confirm-icon {
+
+    background: #e8f8f5;
+
+    color: #059669;
+
+}
+
+
+.delete-confirm-icon {
+
+    background: #fff0f0;
+
+    color: #dc2626;
+
+}
+
+
+.su-confirm-content .su-modal-eyebrow {
+
+    margin-bottom: 5px;
+
+}
+
+
+.su-confirm-content h2 {
+
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 20px;
+
+    font-weight: 800;
+
+}
+
+
+.su-confirm-content p {
+
+    max-width: 340px;
+
+    margin:
+        9px auto 17px;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    line-height: 1.55;
+
+}
+
+
+.su-confirm-content p strong {
+
+    color: #334155;
+
+    font-weight: 800;
+
+}
+
+
+/* =========================================================
+   CURRENT STATUS
+========================================================= */
+
+.su-current-status {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding:
+        11px 13px;
+
+    margin-bottom: 18px;
+
+    border:
+        1px solid #e8edf2;
+
+    border-radius: 11px;
+
+    background: #f8fafc;
+
+    text-align: left;
+
+}
+
+
+.su-current-status span {
+
+    color: #64748b;
+
+    font-size: 10.5px;
+
+    font-weight: 650;
+
+}
+
+
+.su-current-status strong {
+
+    padding:
+        5px 9px;
+
+    border-radius: 999px;
+
+    background: #dcfce9;
+
+    color: #15803d;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    text-transform: capitalize;
+
+}
+
+
+/* =========================================================
+   DANGER NOTICE
+========================================================= */
+
+.su-danger-notice {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 9px;
+
+    margin:
+        16px 0 19px;
+
+    padding:
+        11px 12px;
+
+    border:
+        1px solid #fecaca;
+
+    border-radius: 11px;
+
+    background: #fff7f7;
+
+    color: #991b1b;
+
+    text-align: left;
+
+}
+
+
+.su-danger-notice i {
+
+    flex: 0 0 auto;
+
+    margin-top: 2px;
+
+    font-size: 12px;
+
+}
+
+
+.su-danger-notice span {
+
+    font-size: 10.5px;
+
+    line-height: 1.5;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   DANGER EYEBROW
+========================================================= */
+
+.danger-eyebrow {
+
+    color: #dc2626;
+
+}
+
+
+/* =========================================================
+   CONFIRM ACTIONS
+========================================================= */
+
+.su-confirm-form {
+
+    margin: 0;
+
+}
+
+
+.su-confirm-actions {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 9px;
+
+}
+
+
+/* =========================================================
+   STATUS CONFIRM
+========================================================= */
+
+.su-status-confirm-btn {
+
+    height: 39px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding:
+        0 17px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(135deg,
+            #10b981,
+            #0ea5a4);
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+}
+
+
+/* =========================================================
+   DELETE CONFIRM
+========================================================= */
+
+.su-delete-confirm-btn {
+
+    height: 39px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding:
+        0 17px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(135deg,
+            #ef4444,
+            #dc2626);
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 5px 13px rgba(239, 68, 68, .16);
+
+}
+
+/* =========================================================
+   USERS MODALS
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .su-modal {
+
+        align-items: flex-end;
+
+        padding: 0;
+
+    }
+
+
+    .su-modal-box {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        max-height: 92vh;
+
+        border-radius:
+            22px 22px 0 0;
+
+        animation:
+            suMobileModalIn .22s ease both;
+
+    }
+
+
+    @keyframes suMobileModalIn {
+
+        from {
+
+            opacity: 0;
+
+            transform:
+                translateY(25px);
+
+        }
+
+        to {
+
+            opacity: 1;
+
+            transform:
+                translateY(0);
+
+        }
+
+    }
+
+
+    /* =====================================================
+       CLOSE
+    ===================================================== */
+
+    .su-modal-close {
+
+        top: 13px;
+
+        right: 13px;
+
+        width: 34px;
+
+        height: 34px;
+
+        border-radius: 9px;
+
+    }
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .su-modal-header {
+
+        padding:
+            22px 52px 18px 20px;
+
+        gap: 11px;
+
+    }
+
+
+    .su-modal-icon {
+
+        width: 42px;
+
+        height: 42px;
+
+        border-radius: 12px;
+
+        font-size: 16px;
+
+    }
+
+
+    .su-modal-eyebrow {
+
+        font-size: 8.5px;
+
+    }
+
+
+    .su-modal-header h2 {
+
+        font-size: 19px;
+
+    }
+
+
+    .su-modal-header p {
+
+        font-size: 11px;
+
+        margin-top: 4px;
+
+    }
+
+
+    /* =====================================================
+       VIEW
+    ===================================================== */
+
+    .su-view-content {
+
+        padding:
+            18px 20px;
+
+        overflow-y: auto;
+
+    }
+
+
+    .su-view-grid {
+
+        grid-template-columns:
+            1fr 1fr;
+
+        gap: 9px;
+
+    }
+
+
+    .su-view-card {
+
+        padding:
+            12px;
+
+        border-radius: 11px;
+
+    }
+
+
+    .su-view-card span {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .su-view-card strong {
+
+        font-size: 11.5px;
+
+    }
+
+
+    /* =====================================================
+       FORM
+    ===================================================== */
+
+    .su-form-section {
+
+        padding:
+            17px 20px 19px;
+
+    }
+
+
+    .su-form-section-title {
+
+        margin-bottom: 14px;
+
+    }
+
+
+    .su-form-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 13px;
+
+    }
+
+
+    .su-input-group label {
+
+        font-size: 11px;
+
+    }
+
+
+    .su-input-wrap input,
+    .su-input-wrap select {
+
+        height: 42px;
+
+        font-size: 11.5px;
+
+    }
+
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    .su-modal-footer {
+
+        padding:
+            13px 20px;
+
+    }
+
+
+    .su-secondary-btn,
+    .su-primary-btn,
+    .su-status-confirm-btn,
+    .su-delete-confirm-btn {
+
+        height: 38px;
+
+        font-size: 11px;
+
+    }
+
+
+    /* =====================================================
+       CONFIRM
+    ===================================================== */
+
+    .su-confirm-content {
+
+        padding:
+            27px 20px 22px;
+
+    }
+
+
+    .su-confirm-icon {
+
+        width: 53px;
+
+        height: 53px;
+
+        margin-bottom: 13px;
+
+        font-size: 18px;
+
+    }
+
+
+    .su-confirm-content h2 {
+
+        font-size: 18px;
+
+    }
+
+
+    .su-confirm-content p {
+
+        font-size: 11.5px;
+
+    }
+
+
+    .su-current-status {
+
+        margin-bottom: 16px;
+
+    }
+
+}
+
+/* =========================================================
+   USERS MODALS
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .su-modal {
+
+        align-items: flex-end;
+
+        padding: 0;
+
+    }
+
+
+    .su-modal-box {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        max-height: 92vh;
+
+        border-radius:
+            22px 22px 0 0;
+
+        animation:
+            suMobileModalIn .22s ease both;
+
+    }
+
+
+    @keyframes suMobileModalIn {
+
+        from {
+
+            opacity: 0;
+
+            transform:
+                translateY(25px);
+
+        }
+
+        to {
+
+            opacity: 1;
+
+            transform:
+                translateY(0);
+
+        }
+
+    }
+
+
+    /* =====================================================
+       CLOSE
+    ===================================================== */
+
+    .su-modal-close {
+
+        top: 13px;
+
+        right: 13px;
+
+        width: 34px;
+
+        height: 34px;
+
+        border-radius: 9px;
+
+    }
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .su-modal-header {
+
+        padding:
+            22px 52px 18px 20px;
+
+        gap: 11px;
+
+    }
+
+
+    .su-modal-icon {
+
+        width: 42px;
+
+        height: 42px;
+
+        border-radius: 12px;
+
+        font-size: 16px;
+
+    }
+
+
+    .su-modal-eyebrow {
+
+        font-size: 8.5px;
+
+    }
+
+
+    .su-modal-header h2 {
+
+        font-size: 19px;
+
+    }
+
+
+    .su-modal-header p {
+
+        font-size: 11px;
+
+        margin-top: 4px;
+
+    }
+
+
+    /* =====================================================
+       VIEW
+    ===================================================== */
+
+    .su-view-content {
+
+        padding:
+            18px 20px;
+
+        overflow-y: auto;
+
+    }
+
+
+    .su-view-grid {
+
+        grid-template-columns:
+            1fr 1fr;
+
+        gap: 9px;
+
+    }
+
+
+    .su-view-card {
+
+        padding:
+            12px;
+
+        border-radius: 11px;
+
+    }
+
+
+    .su-view-card span {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .su-view-card strong {
+
+        font-size: 11.5px;
+
+    }
+
+
+    /* =====================================================
+       FORM
+    ===================================================== */
+
+    .su-form-section {
+
+        padding:
+            17px 20px 19px;
+
+    }
+
+
+    .su-form-section-title {
+
+        margin-bottom: 14px;
+
+    }
+
+
+    .su-form-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 13px;
+
+    }
+
+
+    .su-input-group label {
+
+        font-size: 11px;
+
+    }
+
+
+    .su-input-wrap input,
+    .su-input-wrap select {
+
+        height: 42px;
+
+        font-size: 11.5px;
+
+    }
+
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    .su-modal-footer {
+
+        padding:
+            13px 20px;
+
+    }
+
+
+    .su-secondary-btn,
+    .su-primary-btn,
+    .su-status-confirm-btn,
+    .su-delete-confirm-btn {
+
+        height: 38px;
+
+        font-size: 11px;
+
+    }
+
+
+    /* =====================================================
+       CONFIRM
+    ===================================================== */
+
+    .su-confirm-content {
+
+        padding:
+            27px 20px 22px;
+
+    }
+
+
+    .su-confirm-icon {
+
+        width: 53px;
+
+        height: 53px;
+
+        margin-bottom: 13px;
+
+        font-size: 18px;
+
+    }
+
+
+    .su-confirm-content h2 {
+
+        font-size: 18px;
+
+    }
+
+
+    .su-confirm-content p {
+
+        font-size: 11.5px;
+
+    }
+
+
+    .su-current-status {
+
+        margin-bottom: 16px;
+
+    }
+
+}
+
+/* =========================================================
+   ADD USER MODAL
+========================================================= */
+
+
+/* =========================================================
+   MODAL BOX
+========================================================= */
+
+.su-add-user-box {
+
+    width: min(820px, 100%);
+
+    max-height: calc(100vh - 40px);
+
+    background: #ffffff;
+
+    border-radius: 24px;
+
+    overflow: hidden;
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.su-add-modal-header {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 25px 60px 22px 27px;
+
+    border-bottom: 1px solid #edf1f5;
+
+    background:
+        linear-gradient(135deg,
+            #ffffff 0%,
+            #f7fcfb 100%);
+
+}
+
+
+/* subtle top accent */
+
+.su-add-modal-header::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+
+    left: 0;
+
+    right: 0;
+
+    height: 3px;
+
+    background:
+        linear-gradient(90deg,
+            #0ea5a4,
+            #14b8a6,
+            #22c55e);
+
+}
+
+
+/* =========================================================
+   HEADER ICON
+========================================================= */
+
+.su-add-modal-icon {
+
+    width: 50px;
+
+    height: 50px;
+
+    flex: 0 0 50px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(135deg,
+            #e8faf7,
+            #dff7ef);
+
+    color: #079789;
+
+    font-size: 19px;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(14, 165, 164, .08);
+
+}
+
+
+/* =========================================================
+   HEADER TEXT
+========================================================= */
+
+.su-add-modal-heading {
+
+    min-width: 0;
+
+}
+
+
+.su-add-modal-eyebrow {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #0f9995;
+
+    font-size: 9px;
+
+    line-height: 1;
+
+    font-weight: 850;
+
+    letter-spacing: .13em;
+
+}
+
+
+.su-add-modal-heading h2 {
+
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 22px;
+
+    line-height: 1.25;
+
+    font-weight: 800;
+
+}
+
+
+.su-add-modal-heading p {
+
+    margin:
+        5px 0 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    line-height: 1.45;
+
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.su-add-user-form {
+
+    display: flex;
+
+    flex-direction: column;
+
+    min-height: 0;
+
+    max-height:
+        calc(100vh - 145px);
+
+    overflow-y: auto;
+
+}
+
+
+/* custom scrollbar */
+
+.su-add-user-form::-webkit-scrollbar {
+
+    width: 6px;
+
+}
+
+
+.su-add-user-form::-webkit-scrollbar-track {
+
+    background: #f8fafc;
+
+}
+
+
+.su-add-user-form::-webkit-scrollbar-thumb {
+
+    background: #cbd5e1;
+
+    border-radius: 999px;
+
+}
+
+
+.su-add-user-form::-webkit-scrollbar-thumb:hover {
+
+    background: #94a3b8;
+
+}
+
+
+/* =========================================================
+   FORM SECTION
+========================================================= */
+
+.su-add-form-section {
+
+    padding:
+        21px 27px 22px;
+
+    border-bottom:
+        1px solid #edf1f5;
+
+}
+
+
+/* =========================================================
+   SECTION HEADING
+========================================================= */
+
+.su-add-section-heading {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 17px;
+
+}
+
+
+.su-add-section-icon {
+
+    width: 32px;
+
+    height: 32px;
+
+    flex: 0 0 32px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #eef9f8;
+
+    color: #0f9995;
+
+    font-size: 12px;
+
+}
+
+
+.su-add-section-icon.access {
+
+    background: #eef4ff;
+
+    color: #2563eb;
+
+}
+
+
+.su-add-section-icon.details {
+
+    background: #f4efff;
+
+    color: #7c3aed;
+
+}
+
+
+.su-add-section-heading strong {
+
+    display: block;
+
+    color: #1e293b;
+
+    font-size: 13px;
+
+    line-height: 1.25;
+
+    font-weight: 800;
+
+}
+
+
+.su-add-section-heading span {
+
+    display: block;
+
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+    line-height: 1.3;
+
+}
+
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.su-add-form-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        15px 16px;
+
+}
+
+
+/* =========================================================
+   INPUT GROUP
+========================================================= */
+
+.su-add-input-group {
+
+    min-width: 0;
+
+}
+
+
+.su-add-input-group label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #334155;
+
+    font-size: 11px;
+
+    line-height: 1.2;
+
+    font-weight: 750;
+
+}
+
+
+.required-mark {
+
+    color: #ef4444;
+
+    margin-left: 2px;
+
+}
+
+
+/* =========================================================
+   INPUT WRAPPER
+========================================================= */
+
+.su-add-input-wrap {
+
+    position: relative;
+
+}
+
+
+.su-add-input-wrap>i:first-child {
+
+    position: absolute;
+
+    left: 13px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    pointer-events: none;
+
+    z-index: 2;
+
+}
+
+
+/* =========================================================
+   INPUTS / SELECTS
+========================================================= */
+
+.su-add-user-form input,
+.su-add-user-form select {
+
+    width: 100%;
+
+    height: 43px;
+
+    box-sizing: border-box;
+
+    padding:
+        0 13px 0 35px;
+
+    border:
+        1px solid #dce4eb;
+
+    border-radius: 11px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #1e293b;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background .18s ease;
+
+}
+
+
+.su-add-user-form input::placeholder {
+
+    color: #a8b2bf;
+
+}
+
+
+.su-add-user-form input:hover,
+.su-add-user-form select:hover {
+
+    border-color: #cbd5e1;
+
+}
+
+
+.su-add-user-form input:focus,
+.su-add-user-form select:focus {
+
+    border-color: #0ea5a4;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 3px rgba(14, 165, 164, .10);
+
+}
+
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+.su-add-select-wrap select {
+
+    appearance: none;
+
+    -webkit-appearance: none;
+
+    cursor: pointer;
+
+    padding-right: 35px;
+
+}
+
+
+.su-add-select-arrow {
+
+    position: absolute;
+
+    left: auto !important;
+
+    right: 13px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8 !important;
+
+    font-size: 9px !important;
+
+    pointer-events: none;
+
+}
+
+
+/* =========================================================
+   PASSWORD TOGGLE
+========================================================= */
+
+.su-password-toggle {
+
+    position: absolute;
+
+    top: 50%;
+
+    right: 10px;
+
+    transform: translateY(-50%);
+
+    width: 28px;
+
+    height: 28px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 7px;
+
+    background: transparent;
+
+    color: #94a3b8;
+
+    cursor: pointer;
+
+    transition:
+        background .18s ease,
+        color .18s ease;
+
+}
+
+
+.su-password-toggle:hover {
+
+    background: #f1f5f9;
+
+    color: #475569;
+
+}
+
+
+.su-password-toggle i {
+
+    position: static !important;
+
+    transform: none !important;
+
+    font-size: 11px;
+
+}
+
+
+/* password needs room for button */
+
+#userPassword {
+
+    padding-right: 43px;
+
+}
+
+
+/* =========================================================
+   INPUT HINT
+========================================================= */
+
+.su-input-hint {
+
+    display: block;
+
+    margin-top: 5px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    line-height: 1.35;
+
+}
+
+
+/* =========================================================
+   ACCESS INFORMATION
+========================================================= */
+
+.su-access-info {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 8px;
+
+    margin-top: 14px;
+
+    padding:
+        10px 12px;
+
+    border:
+        1px solid #dbeeed;
+
+    border-radius: 10px;
+
+    background:
+        #f4fbfa;
+
+    color: #47706d;
+
+}
+
+
+.su-access-info i {
+
+    flex: 0 0 auto;
+
+    margin-top: 1px;
+
+    color: #0f9995;
+
+    font-size: 11px;
+
+}
+
+
+.su-access-info span {
+
+    font-size: 9.5px;
+
+    line-height: 1.5;
+
+    font-weight: 550;
+
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.su-add-modal-footer {
+
+    position: sticky;
+
+    bottom: 0;
+
+    z-index: 5;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 9px;
+
+    padding:
+        14px 27px;
+
+    background:
+        rgba(251, 252, 253, .96);
+
+    border-top:
+        1px solid #e9eef2;
+
+    backdrop-filter:
+        blur(10px);
+
+}
+
+
+/* =========================================================
+   CANCEL
+========================================================= */
+
+.su-add-cancel-btn {
+
+    height: 40px;
+
+    padding:
+        0 17px;
+
+    border:
+        1px solid #dce4eb;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease;
+
+}
+
+
+.su-add-cancel-btn:hover {
+
+    background: #f8fafc;
+
+    border-color: #cbd5e1;
+
+}
+
+
+/* =========================================================
+   CREATE BUTTON
+========================================================= */
+
+.su-create-user-btn {
+
+    height: 40px;
+
+    min-width: 145px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding:
+        0 18px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(135deg,
+            #0ea5a4 0%,
+            #14b8a6 55%,
+            #22c55e 100%);
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 7px 17px rgba(16, 185, 129, .20);
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease;
+
+}
+
+
+.su-create-user-btn:hover {
+
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 10px 22px rgba(16, 185, 129, .27);
+
+}
+
+
+.su-create-user-btn:active {
+
+    transform:
+        translateY(0);
+
+}
+
+
+/* =========================================================
+   DISABLED
+========================================================= */
+
+.su-create-user-btn:disabled {
+
+    opacity: .65;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+
+}
+
+/* =========================================================
+   ADD USER MODAL
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .su-add-user-box {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        max-height: 92vh;
+
+        border-radius:
+            22px 22px 0 0;
+
+    }
+
+
+    .su-add-modal-header {
+
+        padding:
+            21px 52px 18px 20px;
+
+        gap: 11px;
+
+    }
+
+
+    .su-add-modal-icon {
+
+        width: 43px;
+
+        height: 43px;
+
+        flex-basis: 43px;
+
+        border-radius: 12px;
+
+        font-size: 16px;
+
+    }
+
+
+    .su-add-modal-eyebrow {
+
+        font-size: 8px;
+
+    }
+
+
+    .su-add-modal-heading h2 {
+
+        font-size: 19px;
+
+    }
+
+
+    .su-add-modal-heading p {
+
+        font-size: 10.5px;
+
+    }
+
+
+    /* =====================================================
+       FORM
+    ===================================================== */
+
+    .su-add-user-form {
+
+        max-height:
+            calc(92vh - 100px);
+
+    }
+
+
+    .su-add-form-section {
+
+        padding:
+            17px 20px 19px;
+
+    }
+
+
+    .su-add-section-heading {
+
+        margin-bottom: 14px;
+
+    }
+
+
+    .su-add-form-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 13px;
+
+    }
+
+
+    .su-add-section-icon {
+
+        width: 30px;
+
+        height: 30px;
+
+        flex-basis: 30px;
+
+        font-size: 11px;
+
+    }
+
+
+    .su-add-section-heading strong {
+
+        font-size: 12px;
+
+    }
+
+
+    .su-add-section-heading span {
+
+        font-size: 9px;
+
+    }
+
+
+    /* =====================================================
+       INPUTS
+    ===================================================== */
+
+    .su-add-input-group label {
+
+        font-size: 10.5px;
+
+    }
+
 
     .su-add-user-form input,
-    .su-add-user-form select{
-        padding:13px 14px;
-        border-radius:12px;
-        font-size:13px;
+    .su-add-user-form select {
+
+        height: 42px;
+
+        font-size: 11.5px;
+
+        border-radius: 10px;
+
     }
 
-    .su-create-user-btn{
-        padding:14px;
-        border-radius:13px;
-        font-size:13px;
+
+    .su-input-hint {
+
+        font-size: 8.5px;
+
     }
+
+
+    /* =====================================================
+       ACCESS NOTE
+    ===================================================== */
+
+    .su-access-info {
+
+        margin-top: 12px;
+
+        padding:
+            9px 10px;
+
+    }
+
+
+    .su-access-info span {
+
+        font-size: 9px;
+
+    }
+
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    .su-add-modal-footer {
+
+        padding:
+            12px 20px;
+
+    }
+
+
+    .su-add-cancel-btn,
+    .su-create-user-btn {
+
+        height: 39px;
+
+        font-size: 11px;
+
+    }
+
+
+    .su-create-user-btn {
+
+        min-width: 135px;
+
+    }
+
+}
+
+/* =========================================================
+   ADD USER MODAL
+   SMALL MOBILE — 480px
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .su-add-user-box {
+
+        max-height: 94vh;
+
+        border-radius:
+            18px 18px 0 0;
+
+    }
+
+
+    .su-add-modal-header {
+
+        padding:
+            18px 49px 16px 16px;
+
+    }
+
+
+    .su-add-modal-icon {
+
+        width: 38px;
+
+        height: 38px;
+
+        flex-basis: 38px;
+
+        border-radius: 10px;
+
+        font-size: 14px;
+
+    }
+
+
+    .su-add-modal-heading h2 {
+
+        font-size: 17px;
+
+    }
+
+
+    .su-add-modal-heading p {
+
+        font-size: 9.5px;
+
+        max-width: 230px;
+
+    }
+
+
+    .su-add-user-form {
+
+        max-height:
+            calc(94vh - 90px);
+
+    }
+
+
+    .su-add-form-section {
+
+        padding:
+            15px 16px 17px;
+
+    }
+
+
+    .su-add-section-heading {
+
+        gap: 8px;
+
+        margin-bottom: 12px;
+
+    }
+
+
+    .su-add-section-icon {
+
+        width: 28px;
+
+        height: 28px;
+
+        flex-basis: 28px;
+
+        border-radius: 8px;
+
+        font-size: 10px;
+
+    }
+
+
+    .su-add-section-heading strong {
+
+        font-size: 11px;
+
+    }
+
+
+    .su-add-section-heading span {
+
+        font-size: 8.5px;
+
+    }
+
+
+    /* =====================================================
+       INPUTS
+    ===================================================== */
+
+    .su-add-form-grid {
+
+        gap: 11px;
+
+    }
+
+
+    .su-add-input-group label {
+
+        font-size: 10px;
+
+        margin-bottom: 6px;
+
+    }
+
+
+    .su-add-user-form input,
+    .su-add-user-form select {
+
+        height: 40px;
+
+        padding-left: 33px;
+
+        padding-right: 33px;
+
+        font-size: 10.5px;
+
+        border-radius: 9px;
+
+    }
+
+
+    .su-add-input-wrap>i:first-child {
+
+        left: 12px;
+
+        font-size: 10px;
+
+    }
+
+
+    .su-add-select-arrow {
+
+        right: 11px;
+
+        font-size: 8px !important;
+
+    }
+
+
+    .su-password-toggle {
+
+        right: 7px;
+
+        width: 26px;
+
+        height: 26px;
+
+    }
+
+
+    #userPassword {
+
+        padding-right: 38px;
+
+    }
+
+
+    .su-input-hint {
+
+        font-size: 8px;
+
+    }
+
+
+    /* =====================================================
+       INFO
+    ===================================================== */
+
+    .su-access-info {
+
+        gap: 7px;
+
+        padding:
+            8px 9px;
+
+    }
+
+
+    .su-access-info i {
+
+        font-size: 10px;
+
+    }
+
+
+    .su-access-info span {
+
+        font-size: 8.5px;
+
+    }
+
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    .su-add-modal-footer {
+
+        gap: 7px;
+
+        padding:
+            10px 16px;
+
+    }
+
+
+    .su-add-cancel-btn,
+    .su-create-user-btn {
+
+        flex: 1;
+
+        min-width: 0;
+
+        height: 37px;
+
+        padding:
+            0 10px;
+
+        font-size: 10px;
+
+    }
+
+
+    .su-create-user-btn {
+
+        min-width: 0;
+
+    }
+
 }

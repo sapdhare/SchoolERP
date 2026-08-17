@@ -2,938 +2,4881 @@
 
 {% block content %}
 
+<!-- =========================================================
+     FONT AWESOME
+========================================================= -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+
+<!-- =========================================================
+     GLOBAL CSS
+========================================================= -->
+
 <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/schools.css') }}">
 
-<!-- ================= HERO HEADER ================= -->
-<div class="sa-hero">
-
-    <div class="hero-left">
-        <h1>🏫 School Management</h1>
-        <p>Manage all schools, track students and control system access</p>
-    </div>
 
 
-    <div class="hero-stats">
-        <div class="hero-stat-card">
-            <span>Total Schools</span>
-            <h3>{{ total_schools }}</h3>
-        </div>
 
-        <div class="hero-stat-card">
-            <span>Active Schools</span>
-            <h3>{{ active_schools }}</h3>
-        </div>
-    </div>
 
-</div>
+<!-- =====================================================
+         PAGE WRAPPER
+    ====================================================== -->
 
-<form method="GET" class="sa-search-box">
+<div class="sa-wrapper">
 
-    <div class="search-wrapper">
-        <input type="text" name="search" value="{{ search }}" placeholder="Search school name, code, email, phone...">
-    </div>
+    <!-- =========================================================
+     SCHOOL MANAGEMENT HEADER
+========================================================= -->
 
-    <button type="submit">Search</button>
+    <div class="sa-school-header">
 
-    <a href="/superadmin/schools" class="clear-btn">
-        Clear
-    </a>
+        <!-- LEFT -->
+        <div class="sa-school-header-content">
 
-</form>
+            <div class="sa-school-title-row">
 
-<!-- ================= SECTION TITLE ================= -->
-<div class="section-head">
+                <div class="sa-school-title-icon">
+                    <i class="fa-solid fa-school"></i>
+                </div>
 
-    <div class="section-head-left">
-        <h2>Registered Schools</h2>
-        <p>Click any school card to manage student records</p>
-    </div>
+                <div>
 
-    <button class="add-school-btn" onclick="openSchoolModal()">
-        + Add School
-    </button>
+                    <h1>
+                        School Management
+                    </h1>
 
-</div>
+                    <p>
+                        Manage schools, students, subscriptions and system access
+                    </p>
 
-<!-- ================= SCHOOL GRID ================= -->
-<div class="sa-grid" id="schoolGrid">
+                </div>
 
-    {% for school in schools %}
-    <div class="sa-card" data-name="{{ school.name | lower }}" onclick="goToSchool('{{ school.school_id }}')">
-
-        <div class="card-glow"></div>
-
-        <div class="sa-top">
-            <div>
-                <h2>{{ school.name }}</h2>
-                <p class="school-label">School Profile</p>
             </div>
 
-            <span class="badge">{{ school.school_code }}</span>
         </div>
 
-        <div class="sa-middle">
-            <div class="metric-box">
-                <span>Total Students</span>
-                <h3>{{ school.total_students }}</h3>
+
+        <!-- RIGHT STATS -->
+
+        <div class="sa-school-header-stats">
+
+            <!-- TOTAL -->
+
+            <div class="sa-header-stat">
+
+                <div class="sa-header-stat-icon total">
+                    <i class="fa-solid fa-school"></i>
+                </div>
+
+                <div class="sa-header-stat-content">
+
+                    <span>
+                        Total Schools
+                    </span>
+
+                    <strong>
+                        {{ total_schools or 0 }}
+                    </strong>
+
+                </div>
+
             </div>
+
+
+            <!-- ACTIVE -->
+
+            <div class="sa-header-stat">
+
+                <div class="sa-header-stat-icon active">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+
+                <div class="sa-header-stat-content">
+
+                    <span>
+                        Active Schools
+                    </span>
+
+                    <strong>
+                        {{ active_schools or 0 }}
+                    </strong>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <div class="sa-bottom">
-
-            <!-- VIEW -->
-            <button class="card-btn view-btn" onclick="event.stopPropagation(); goToSchool('{{ school.school_id }}')">
-                View
-            </button>
-
-            <!-- EDIT -->
-            <button class="card-btn edit-btn" onclick="event.stopPropagation(); openEditSchoolModal(
-        '{{ school.school_id }}',
-        '{{ school.name }}',
-        '{{ school.udise_no or '' }}',
-        '{{ school.address }}',
-        '{{ school.phone }}',
-        '{{ school.email }}',
-        '{{ school.school_code }}',
-        '{{ school.principal_name or '' }}'
-    )">
-                Edit
-            </button>
-            <!-- FEATURES -->
-            <button class="card-btn feature-btn" onclick="event.stopPropagation(); openFeatureModal(this)"
-                data-school-id="{{ school.school_id }}" data-tc="{{ school.enable_tc_management }}"
-                data-bonafide="{{ school.enable_bonafide_management }}"
-                data-import-export="{{ school.enable_import_export }}" data-attendance="{{ school.enable_attendance }}"
-                data-fee="{{ school.enable_fee_management }}" data-teacher="{{ school.enable_teacher_management }}"
-                data-results="{{ school.enable_results }}" data-timetable="{{ school.enable_timetable }}"
-                data-notice="{{ school.enable_notice_board }}">
-                Features
-            </button>
-
-            <!-- CERTIFICATES -->
-
-            <button class="card-btn certificate-btn" onclick="event.stopPropagation(); openCertificateModal(
-
-        '{{ school.school_id }}',
-
-        '{{ school.tc_prefix }}',
-        '{{ school.bonafide_prefix }}',
-
-        '{{ school.auto_numbering }}',
-        '{{ school.enable_certificate_labels }}',
-
-        '{{ school.show_tc_logo }}',
-        '{{ school.show_tc_watermark }}',
-
-        '{{ school.show_bonafide_logo }}',
-        '{{ school.show_bonafide_watermark }}'
-
-        )">
-
-                Certificates
+    </div>
 
 
-            </button>
+
+    <!-- =========================================================
+     SCHOOL SEARCH & FILTER SECTION
+========================================================= -->
+
+    <section class="sa-school-search-section">
+
+        <div class="sa-search-header">
+
+            <div class="sa-search-heading">
+
+                <div class="sa-search-heading-icon">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+
+                <div>
+                    <h2>Search & Filter</h2>
+
+                    <p>
+                        Find a school using its name, code, UDISE, email or phone number.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
 
 
-            <!-- STATUS -->
-            {% if school.is_active == 1 %}
-            <button type="button" class="card-btn deactivate-btn"
-                onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 1)">
-                Deactivate
-            </button>
-            {% else %}
-            <button type="button" class="card-btn activate-btn"
-                onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 0)">
-                Activate
-            </button>
+        <!-- =====================================================
+         SEARCH FORM
+    ====================================================== -->
+
+        <form method="GET" action="{{ url_for('superadmin_schools') }}" class="sa-school-search-form"
+            id="schoolSearchForm">
+
+            <!-- SEARCH FIELD -->
+
+            <div class="sa-school-search-field">
+
+                <div class="sa-search-icon">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+
+                <input type="text" name="search" id="schoolSearchInput" value="{{ search or '' }}"
+                    placeholder="Search school name, code, UDISE, email or phone..." autocomplete="off"
+                    aria-label="Search schools">
+
+                {% if search %}
+
+                <button type="button" class="sa-search-clear-input" id="clearSearchInput" aria-label="Clear search"
+                    title="Clear search">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="sa-search-actions">
+
+                <button type="submit" class="sa-search-submit-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Search</span>
+                </button>
+
+
+                <a href="{{ url_for('superadmin_schools') }}" class="sa-search-clear-btn">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Clear</span>
+                </a>
+
+            </div>
+
+        </form>
+
+
+        <!-- =====================================================
+         SEARCH RESULT INFORMATION
+    ====================================================== -->
+
+        <div class="sa-search-result-row">
+
+            <div class="sa-search-result-info">
+
+                <i class="fa-solid fa-circle-info"></i>
+
+                {% if search %}
+
+                Showing results for
+                <strong>"{{ search }}"</strong>
+
+                {% else %}
+
+                Showing all registered schools
+
+                {% endif %}
+
+            </div>
+
+
+            {% if total_filtered is defined %}
+
+            <div class="sa-search-result-count">
+
+                <strong>{{ total_filtered }}</strong>
+
+                <span>
+                    school{% if total_filtered != 1 %}s{% endif %}
+                    found
+                </span>
+
+            </div>
+
             {% endif %}
 
         </div>
 
-    </div>
-    {% endfor %}
+    </section>
 
-</div>
 
-{% if total_pages > 1 %}
 
-<div class="sa-pagination">
+    <!-- =========================================================
+     REGISTERED SCHOOLS SECTION
+========================================================= -->
 
-    {% if page > 1 %}
-    <a href="?page={{ page-1 }}&search={{ search }}">
-        ← Previous
-    </a>
-    {% endif %}
+    <section class="sa-schools-section">
 
-    <span>
-        Page {{ page }} of {{ total_pages }}
-    </span>
+        <!-- ================= SECTION HEADER ================= -->
 
-    {% if page < total_pages %} <a href="?page={{ page+1 }}&search={{ search }}">
-        Next →
-        </a>
+        <div class="sa-section-head">
+
+            <div class="sa-section-title">
+
+                <div class="sa-section-icon">
+                    <i class="fa-solid fa-school"></i>
+                </div>
+
+                <div>
+
+                    <h2>Registered Schools</h2>
+
+                    <p>
+                        Manage schools, students, features and certificate settings.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ADD SCHOOL -->
+
+            <button type="button" class="sa-add-school-btn" onclick="openSchoolModal()">
+
+                <i class="fa-solid fa-plus"></i>
+
+                <span>Add School</span>
+
+            </button>
+
+        </div>
+
+
+        <!-- =====================================================
+         SCHOOL GRID
+    ====================================================== -->
+
+        {% if schools %}
+
+        <div class="sa-school-grid" id="schoolGrid">
+
+            {% for school in schools %}
+
+            <article class="sa-school-card" data-school-id="{{ school.school_id }}">
+
+                <!-- CARD DECORATION -->
+
+                <div class="sa-card-decoration"></div>
+
+
+                <!-- =================================================
+                 SCHOOL HEADER
+            ================================================== -->
+
+                <div class="sa-school-card-header">
+
+                    <div class="sa-school-identity">
+
+                        <div class="sa-school-icon">
+                            <i class="fa-solid fa-school"></i>
+                        </div>
+
+
+                        <div class="sa-school-title">
+
+                            <h3 title="{{ school.name }}">
+                                {{ school.name }}
+                            </h3>
+
+                            <p>
+                                School Profile
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SCHOOL CODE -->
+
+                    <span class="sa-school-code">
+                        {{ school.school_code or 'N/A' }}
+                    </span>
+
+                </div>
+
+
+                <!-- =================================================
+                 STATUS
+            ================================================== -->
+
+                <div class="sa-school-status-row">
+
+                    {% if school.is_active == 1 %}
+
+                    <span class="sa-school-status active">
+                        <span class="status-dot"></span>
+                        Active
+                    </span>
+
+                    {% else %}
+
+                    <span class="sa-school-status inactive">
+                        <span class="status-dot"></span>
+                        Inactive
+                    </span>
+
+                    {% endif %}
+
+
+                    {% if school.udise_no %}
+
+                    <span class="sa-school-udise">
+                        UDISE: {{ school.udise_no }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                 STUDENT METRIC
+            ================================================== -->
+
+                <div class="sa-school-metric">
+
+                    <div class="sa-metric-icon">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+
+
+                    <div class="sa-metric-content">
+
+                        <span>Total Students</span>
+
+                        <strong>
+                            {{ school.total_students or 0 }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 SCHOOL INFORMATION
+            ================================================== -->
+
+                <div class="sa-school-info">
+
+                    {% if school.principal_name %}
+
+                    <div class="sa-info-item">
+
+                        <i class="fa-solid fa-user-tie"></i>
+
+                        <div>
+
+                            <span>Principal</span>
+
+                            <strong>
+                                {{ school.principal_name }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if school.phone %}
+
+                    <div class="sa-info-item">
+
+                        <i class="fa-solid fa-phone"></i>
+
+                        <div>
+
+                            <span>Contact</span>
+
+                            <strong>
+                                {{ school.phone }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+                <div class="sa-school-actions">
+
+                    <!-- VIEW -->
+
+                    <button type="button" class="sa-card-action primary-action"
+                        onclick="event.stopPropagation(); goToSchool('{{ school.school_id }}')" title="View school">
+
+                        <i class="fa-solid fa-eye"></i>
+
+                        <span>View</span>
+
+                    </button>
+
+
+                    <!-- EDIT -->
+
+                    <button type="button" class="sa-card-action edit-btn"
+                        onclick="event.stopPropagation(); openEditSchoolModal(this)"
+                        data-school-id="{{ school.school_id }}" data-name="{{ school.name | e }}"
+                        data-udise="{{ school.udise_no or '' | e }}" data-address="{{ school.address or '' | e }}"
+                        data-phone="{{ school.phone or '' | e }}" data-email="{{ school.email or '' | e }}"
+                        data-school-code="{{ school.school_code or '' | e }}"
+                        data-principal="{{ school.principal_name or '' | e }}"
+                        data-recognition="{{ school.recognition_no or '' | e }}"
+                        data-medium="{{ school.medium or '' | e }}" data-index="{{ school.school_index_no or '' | e }}"
+                        data-board="{{ school.board_name or '' | e }}">
+
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>Edit</span>
+
+                    </button>
+
+
+                    <!-- FEATURES -->
+
+                    <button type="button" class="sa-card-action feature-action" data-school-id="{{ school.school_id }}"
+                        data-tc="{{ school.enable_tc_management }}"
+                        data-bonafide="{{ school.enable_bonafide_management }}"
+                        data-import-export="{{ school.enable_import_export }}"
+                        data-attendance="{{ school.enable_attendance }}" data-fee="{{ school.enable_fee_management }}"
+                        data-teacher="{{ school.enable_teacher_management }}" data-results="{{ school.enable_results }}"
+                        data-timetable="{{ school.enable_timetable }}" data-notice="{{ school.enable_notice_board }}"
+                        onclick="event.stopPropagation(); openFeatureModal(this)" title="Manage features">
+
+                        <i class="fa-solid fa-sliders"></i>
+
+                        <span>Features</span>
+
+                    </button>
+
+
+                    <!-- CERTIFICATES -->
+
+                    <button type="button" class="sa-card-action certificate-btn"
+                        onclick="event.stopPropagation(); openCertificateModal(this);"
+                        data-school-id="{{ school.school_id }}" data-tc-prefix="{{ school.tc_prefix or 'TC' }}"
+                        data-bonafide-prefix="{{ school.bonafide_prefix or 'BON' }}"
+                        data-auto-numbering="{{ school.auto_numbering or 'Enabled' }}"
+                        data-certificate-labels="{{ school.enable_certificate_labels or 'Enabled' }}"
+                        data-tc-logo="{{ school.show_tc_logo or 'Enabled' }}"
+                        data-tc-watermark="{{ school.show_tc_watermark or 'Enabled' }}"
+                        data-bonafide-logo="{{ school.show_bonafide_logo or 'Enabled' }}"
+                        data-bonafide-watermark="{{ school.show_bonafide_watermark or 'Enabled' }}">
+
+                        <i class="fa-solid fa-certificate"></i>
+
+                        <span>
+                            Certificates
+                        </span>
+
+                    </button>
+
+
+                    <!-- STATUS -->
+
+                    {% if school.is_active == 1 %}
+
+                    <button type="button" class="sa-card-action status-action deactivate"
+                        onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 1)"
+                        title="Deactivate school">
+
+                        <i class="fa-solid fa-ban"></i>
+
+                        <span>Deactivate</span>
+
+                    </button>
+
+                    {% else %}
+
+                    <button type="button" class="sa-card-action status-action activate"
+                        onclick="event.stopPropagation(); toggleSchoolStatus('{{ school.school_id }}', 0)"
+                        title="Activate school">
+
+                        <i class="fa-solid fa-circle-check"></i>
+
+                        <span>Activate</span>
+
+                    </button>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- =====================================================
+         PAGINATION
+    ====================================================== -->
+
+        {% if total_filtered > 0 %}
+
+        <div class="sa-school-pagination">
+
+            <!-- RESULT INFO -->
+
+            <div class="sa-pagination-info">
+
+                {% set start_record = ((page - 1) * 8) + 1 %}
+                {% set end_record = [page * 8, total_filtered] | min %}
+
+                Showing
+
+                <strong>{{ start_record }}</strong>
+
+                –
+
+                <strong>{{ end_record }}</strong>
+
+                of
+
+                <strong>{{ total_filtered }}</strong>
+
+                schools
+
+            </div>
+
+
+            <!-- PAGINATION CONTROLS -->
+
+            <div class="sa-pagination-controls">
+
+                {% if page > 1 %}
+
+                <a href="?page={{ page - 1 }}{% if search %}&search={{ search|urlencode }}{% endif %}"
+                    class="sa-page-btn" aria-label="Previous page">
+
+                    <i class="fa-solid fa-chevron-left"></i>
+
+                    <span>Previous</span>
+
+                </a>
+
+                {% else %}
+
+                <span class="sa-page-btn disabled">
+
+                    <i class="fa-solid fa-chevron-left"></i>
+
+                    <span>Previous</span>
+
+                </span>
+
+                {% endif %}
+
+
+                <div class="sa-page-indicator">
+
+                    <strong>{{ page }}</strong>
+
+                    <span>of</span>
+
+                    <strong>{{ total_pages }}</strong>
+
+                </div>
+
+
+                {% if page < total_pages %} <a
+                    href="?page={{ page + 1 }}{% if search %}&search={{ search|urlencode }}{% endif %}"
+                    class="sa-page-btn" aria-label="Next page">
+
+                    <span>Next</span>
+
+                    <i class="fa-solid fa-chevron-right"></i>
+
+                    </a>
+
+                    {% else %}
+
+                    <span class="sa-page-btn disabled">
+
+                        <span>Next</span>
+
+                        <i class="fa-solid fa-chevron-right"></i>
+
+                    </span>
+
+                    {% endif %}
+
+            </div>
+
+        </div>
+
         {% endif %}
 
-</div>
 
-{% endif %}
+        {% else %}
 
+        <!-- =====================================================
+         EMPTY STATE
+    ====================================================== -->
 
-<!-- ================= ADD SCHOOL MODAL ================= -->
-<div class="school-modal" id="schoolModal">
+        <div class="sa-school-empty">
 
-    <div class="school-modal-box">
+            <div class="sa-empty-icon">
+                <i class="fa-solid fa-school-circle-xmark"></i>
+            </div>
 
-        <div class="modal-head">
-            <h2>Add New School</h2>
-            <span onclick="closeSchoolModal()">&times;</span>
+            <h3>No schools found</h3>
+
+            <p>
+                {% if search %}
+                No schools matched "{{ search }}".
+                Try a different search.
+                {% else %}
+                No schools have been registered yet.
+                {% endif %}
+            </p>
+
+            {% if search %}
+
+            <a href="{{ url_for('superadmin_schools') }}" class="sa-empty-clear-btn">
+                Clear Search
+            </a>
+
+            {% endif %}
+
         </div>
 
-        <form method="POST" action="{{ url_for('save_school') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% endif %}
 
-            <div class="school-form-grid">
+    </section>
 
-                <div class="school-form-group">
-                    <label>School Name</label>
-                    <input type="text" name="name" required>
+
+
+
+
+    <!-- =========================================================
+     ADD SCHOOL MODAL
+========================================================= -->
+
+    <div class="sa-school-modal" id="schoolModal" aria-hidden="true">
+
+        <div class="sa-school-modal-overlay" onclick="closeSchoolModal()"></div>
+
+
+        <div class="sa-school-modal-box" role="dialog" aria-modal="true" aria-labelledby="addSchoolTitle">
+
+            <!-- =================================================
+             MODAL HEADER
+        ================================================== -->
+
+            <div class="sa-school-modal-header">
+
+                <div class="sa-school-modal-title-wrap">
+
+                    <div class="sa-school-modal-icon">
+                        <i class="fa-solid fa-school"></i>
+                    </div>
+
+                    <div>
+
+                        <h2 id="addSchoolTitle">
+                            Add New School
+                        </h2>
+
+                        <p>
+                            Register a new school and initialize its ERP account.
+                        </p>
+
+                    </div>
+
                 </div>
 
-                <div class="school-form-group">
-                    <label>UDISE Number</label>
-                    <input type="text" name="udise_no" required>
-                </div>
 
-                <div class="school-form-group full">
-                    <label>Address</label>
-                    <input type="text" name="address" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>Phone</label>
-                    <input type="text" name="phone" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>School Code</label>
-                    <input type="text" name="school_code" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>Principal Name</label>
-                    <input type="text" name="principal_name">
-                </div>
-
-            </div>
-
-            <div class="school-modal-actions">
-                <button type="button" class="cancel-btn" onclick="closeSchoolModal()">Cancel</button>
-                <button type="submit" class="save-btn">Save School</button>
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-<!-- EDIT SCHOOL MODAL -->
-<div class="school-modal" id="editSchoolModal">
-
-    <div class="school-modal-box">
-
-        <div class="modal-head">
-            <h2>Edit School</h2>
-            <span onclick="closeEditSchoolModal()">&times;</span>
-        </div>
-
-        <form method="POST" action="{{ url_for('update_school') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <input type="hidden" name="school_id" id="editSchoolId">
-
-            <div class="school-form-grid">
-
-                <div class="school-form-group">
-                    <label>School Name</label>
-                    <input type="text" name="name" id="editName" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>UDISE Number</label>
-                    <input type="text" name="udise_no" id="editUdise" required>
-                </div>
-
-                <div class="school-form-group full">
-                    <label>Address</label>
-                    <input type="text" name="address" id="editAddress" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>Phone</label>
-                    <input type="text" name="phone" id="editPhone" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" id="editEmail" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>School Code</label>
-                    <input type="text" name="school_code" id="editCode" required>
-                </div>
-
-                <div class="school-form-group">
-                    <label>Principal Name</label>
-                    <input type="text" name="principal_name" id="editPrincipal">
-                </div>
-
-            </div>
-
-            <div class="school-modal-actions">
-                <button type="button" class="cancel-btn" onclick="closeEditSchoolModal()">Cancel</button>
-                <button type="submit" class="save-btn">Update School</button>
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-<!-- ================= FEATURE MODAL ================= -->
-
-<div class="school-modal" id="featureModal">
-
-    <div class="school-modal-box">
-
-        <div class="modal-head">
-            <h2>Manage School Features</h2>
-            <span onclick="closeFeatureModal()">&times;</span>
-        </div>
-
-        <form method="POST" action="{{ url_for('update_school_features') }}">
-
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <input type="hidden" name="school_id" id="featureSchoolId">
-
-            <div class="feature-grid">
-
-                <!-- TC -->
-                <div class="feature-item">
-                    <label>TC Management</label>
-
-                    <select name="enable_tc_management">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-                <!-- BONAFIDE -->
-                <div class="feature-item">
-                    <label>Bonafide Management</label>
-
-                    <select name="enable_bonafide_management">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-                <!-- IMPORT EXPORT -->
-                <div class="feature-item">
-                    <label>Import / Export</label>
-
-                    <select name="enable_import_export">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-                <!-- ATTENDANCE -->
-                <div class="feature-item">
-                    <label>Attendance</label>
-
-                    <select name="enable_attendance">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-                <!-- FEES -->
-                <div class="feature-item">
-                    <label>Fee Management</label>
-
-                    <select name="enable_fee_management">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-                <!-- TEACHERS -->
-                <div class="feature-item">
-                    <label>Teacher Management</label>
-
-                    <select name="enable_teacher_management">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-                <!-- RESULTS -->
-                <div class="feature-item">
-                    <label>Results Module</label>
-
-                    <select name="enable_results">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-                <!-- TIMETABLE -->
-                <div class="feature-item">
-                    <label>Timetable</label>
-
-                    <select name="enable_timetable">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-                <!-- NOTICE -->
-                <div class="feature-item">
-                    <label>Notice Board</label>
-
-                    <select name="enable_notice_board">
-                        <option value="Enabled">Enabled</option>
-                        <option value="Disabled">Disabled</option>
-                    </select>
-                </div>
-
-            </div>
-
-            <div class="school-modal-actions">
-
-                <button type="button" class="cancel-btn" onclick="closeFeatureModal()">
-
-                    Cancel
-                </button>
-
-                <button type="submit" class="save-btn">
-
-                    Save Features
+                <button type="button" class="sa-school-modal-close" onclick="closeSchoolModal()" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
 
             </div>
 
-        </form>
 
-    </div>
+            <!-- =================================================
+             FORM
+        ================================================== -->
 
-</div>
-<!-- ================= CERTIFICATE MODAL ================= -->
+            <form method="POST" action="{{ url_for('save_school') }}" id="addSchoolForm" class="sa-add-school-form"
+                novalidate>
 
-<div class="school-modal" id="certificateModal">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <div class="school-modal-box">
 
-        <div class="modal-head">
+                <!-- =================================================
+                 BASIC INFORMATION
+            ================================================== -->
 
-            <h2>
-                Certificate Settings
-            </h2>
+                <div class="sa-form-section">
 
-            <span onclick="closeCertificateModal()">
-                &times;
-            </span>
+                    <div class="sa-form-section-head">
+
+                        <div class="sa-form-section-icon">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>Basic Information</h3>
+
+                            <p>
+                                Enter the school's primary identification details.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-school-form-grid">
+
+                        <!-- SCHOOL NAME -->
+
+                        <div class="sa-school-field sa-field-span-2">
+
+                            <label for="school_name">
+                                School Name
+                                <span>*</span>
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-school"></i>
+
+                                <input type="text" id="school_name" name="name" maxlength="200"
+                                    autocomplete="organization" placeholder="Enter full school name" required>
+
+                            </div>
+
+                            <small>
+                                Official registered school name
+                            </small>
+
+                        </div>
+
+
+                        <!-- UDISE -->
+
+                        <div class="sa-school-field">
+
+                            <label for="school_udise">
+                                UDISE Number
+                                <span>*</span>
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-hashtag"></i>
+
+                                <input type="text" id="school_udise" name="udise_no" maxlength="30"
+                                    placeholder="Enter UDISE number" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SCHOOL CODE -->
+
+                        <div class="sa-school-field">
+
+                            <label for="school_code">
+                                School Code
+                                <span>*</span>
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-barcode"></i>
+
+                                <input type="text" id="school_code" name="school_code" maxlength="50"
+                                    placeholder="e.g. RHS01" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="sa-school-field sa-field-span-2">
+
+                            <label for="school_address">
+                                Address
+                            </label>
+
+                            <div class="sa-input-wrap sa-textarea-wrap">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <textarea id="school_address" name="address" maxlength="500" rows="3"
+                                    placeholder="Enter complete school address"></textarea>
+
+                            </div>
+
+                            <small>
+                                Maximum 500 characters
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 CONTACT INFORMATION
+            ================================================== -->
+
+                <div class="sa-form-section">
+
+                    <div class="sa-form-section-head">
+
+                        <div class="sa-form-section-icon contact">
+                            <i class="fa-solid fa-address-book"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>Contact Information</h3>
+
+                            <p>
+                                Add the school's primary communication details.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-school-form-grid">
+
+                        <!-- PHONE -->
+
+                        <div class="sa-school-field">
+
+                            <label for="school_phone">
+                                Phone Number
+                                <span>*</span>
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-phone"></i>
+
+                                <input type="tel" id="school_phone" name="phone" maxlength="15" inputmode="numeric"
+                                    autocomplete="tel" placeholder="Enter phone number" required>
+
+                            </div>
+
+                            <small>
+                                10–15 digits
+                            </small>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="sa-school-field">
+
+                            <label for="school_email">
+                                Email Address
+                                <span>*</span>
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-envelope"></i>
+
+                                <input type="email" id="school_email" name="email" maxlength="100" autocomplete="email"
+                                    placeholder="school@example.com" required>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 ADMINISTRATIVE INFORMATION
+            ================================================== -->
+
+                <div class="sa-form-section">
+
+                    <div class="sa-form-section-head">
+
+                        <div class="sa-form-section-icon admin">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>School Administration</h3>
+
+                            <p>
+                                Add optional administrative and board information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-school-form-grid">
+
+                        <!-- PRINCIPAL -->
+
+                        <div class="sa-school-field">
+
+                            <label for="school_principal">
+                                Principal Name
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-user-tie"></i>
+
+                                <input type="text" id="school_principal" name="principal_name" maxlength="150"
+                                    autocomplete="name" placeholder="Enter principal name">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- RECOGNITION -->
+
+                        <div class="sa-school-field">
+
+                            <label for="school_recognition">
+                                Recognition Number
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-certificate"></i>
+
+                                <input type="text" id="school_recognition" name="recognition_no" maxlength="100"
+                                    placeholder="Enter recognition number">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- MEDIUM -->
+
+                        <div class="sa-school-field">
+
+                            <label for="school_medium">
+                                Medium
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-language"></i>
+
+                                <input type="text" id="school_medium" name="medium" maxlength="50"
+                                    placeholder="e.g. English / Marathi">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SCHOOL INDEX -->
+
+                        <div class="sa-school-field">
+
+                            <label for="school_index_no">
+                                School Index Number
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-id-card"></i>
+
+                                <input type="text" id="school_index_no" name="school_index_no" maxlength="50"
+                                    placeholder="Enter school index number">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BOARD -->
+
+                        <div class="sa-school-field sa-field-span-2">
+
+                            <label for="school_board">
+                                Board Name
+                            </label>
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-landmark"></i>
+
+                                <input type="text" id="school_board" name="board_name" maxlength="100"
+                                    placeholder="e.g. Maharashtra State Board of Secondary & Higher Secondary Education">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 INFORMATION NOTE
+            ================================================== -->
+
+                <div class="sa-school-create-note">
+
+                    <div class="sa-note-icon">
+                        <i class="fa-solid fa-circle-info"></i>
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            What happens after registration?
+                        </strong>
+
+                        <p>
+                            The school will be created with the current system
+                            certificate and feature settings, a school sequence
+                            will be initialized, and its default subscription
+                            will be created automatically.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+                <div class="sa-school-modal-actions">
+
+                    <button type="button" class="sa-school-cancel-btn" onclick="closeSchoolModal()">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cancel
+                    </button>
+
+
+                    <button type="submit" class="sa-school-save-btn" id="saveSchoolBtn">
+
+                        <i class="fa-solid fa-school-circle-check"></i>
+
+                        <span>Create School</span>
+
+                    </button>
+
+                </div>
+
+            </form>
 
         </div>
 
-        <form method="POST" action="{{ url_for('update_school_certificates') }}">
-
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <input type="hidden" name="school_id" id="certificateSchoolId">
-
-            <div class="feature-grid">
-
-                <!-- TC PREFIX -->
-                <div class="feature-item">
-
-                    <label>TC Prefix</label>
-
-                    <input type="text" name="tc_prefix" id="tc_prefix" value="TC">
-
-                </div>
-
-                <!-- BONAFIDE PREFIX -->
-                <div class="feature-item">
-
-                    <label>Bonafide Prefix</label>
-
-                    <input type="text" name="bonafide_prefix" id="bonafide_prefix" value="BON">
-
-                </div>
-
-                <!-- AUTO NUMBERING -->
-                <div class="feature-item">
-
-                    <label>Auto Numbering</label>
-
-                    <select name="auto_numbering" id="auto_numbering">
-
-                        <option value="Enabled">
-                            Enabled
-                        </option>
-
-                        <option value="Disabled">
-                            Disabled
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <!-- CERTIFICATE LABELS -->
-                <div class="feature-item">
-
-                    <label>Certificate Labels</label>
-
-                    <select name="enable_certificate_labels" id="enable_certificate_labels">
-
-                        <option value="Enabled">
-                            Enabled
-                        </option>
-
-                        <option value="Disabled">
-                            Disabled
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <!-- TC LOGO -->
-                <div class="feature-item">
-
-                    <label>TC Logo</label>
-
-                    <select name="show_tc_logo" id="show_tc_logo">
-
-                        <option value="Enabled">
-                            Enabled
-                        </option>
-
-                        <option value="Disabled">
-                            Disabled
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <!-- TC WATERMARK -->
-                <div class="feature-item">
-
-                    <label>TC Watermark</label>
-
-                    <select name="show_tc_watermark" id="show_tc_watermark">
-
-                        <option value="Enabled">
-                            Enabled
-                        </option>
-
-                        <option value="Disabled">
-                            Disabled
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <!-- BONAFIDE LOGO -->
-                <div class="feature-item">
-
-                    <label>Bonafide Logo</label>
-
-                    <select name="show_bonafide_logo" id="show_bonafide_logo">
-
-                        <option value="Enabled">
-                            Enabled
-                        </option>
-
-                        <option value="Disabled">
-                            Disabled
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <!-- BONAFIDE WATERMARK -->
-                <div class="feature-item">
-
-                    <label>Bonafide Watermark</label>
-
-                    <select name="show_bonafide_watermark" id="show_bonafide_watermark">
-
-                        <option value="Enabled">
-                            Enabled
-                        </option>
-
-                        <option value="Disabled">
-                            Disabled
-                        </option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-            <div class="school-modal-actions">
-
-                <button type="button" class="cancel-btn" onclick="closeCertificateModal()">
-
-                    Cancel
-                </button>
-
-                <button type="submit" class="save-btn">
-
-                    Save Certificates
-                </button>
-
-            </div>
-
-        </form>
-
     </div>
 
-</div>
 
-<!-- ================= STATUS TOGGLE MODAL =================  -->
 
-<div class="school-modal" id="statusModal">
 
-    <div class="school-modal-box small">
 
-        <div class="modal-head">
-            <h2>Confirm Action</h2>
+    <!-- =========================================================
+     ✏️ EDIT SCHOOL MODAL
+========================================================= -->
+
+    <div class="sa-school-modal" id="editSchoolModal" aria-hidden="true">
+
+        <!-- BACKDROP -->
+
+        <div class="sa-school-modal-overlay" onclick="closeEditSchoolModal()"></div>
+
+
+        <!-- MODAL -->
+
+        <div class="sa-school-modal-box" role="dialog" aria-modal="true" aria-labelledby="editSchoolTitle">
+
+            <!-- =================================================
+             HEADER
+        ================================================== -->
+
+            <div class="sa-school-modal-header">
+
+                <div class="sa-school-modal-title-wrap">
+
+                    <div class="sa-school-modal-icon edit">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+
+                    <div>
+
+                        <h2 id="editSchoolTitle">
+                            Edit School
+                        </h2>
+
+                        <p>
+                            Update the school's registered information.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="sa-school-modal-close" onclick="closeEditSchoolModal()" aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+             FORM
+        ================================================== -->
+
+            <form method="POST" action="{{ url_for('update_school') }}" id="editSchoolForm" class="sa-add-school-form"
+                novalidate>
+
+                <!-- CSRF -->
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                <!-- SCHOOL ID -->
+
+                <input type="hidden" name="school_id" id="editSchoolId">
+
+
+                <!-- =================================================
+                 BASIC INFORMATION
+            ================================================== -->
+
+                <div class="sa-form-section">
+
+                    <div class="sa-form-section-head">
+
+                        <div class="sa-form-section-icon">
+
+                            <i class="fa-solid fa-building-columns"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Basic Information
+                            </h3>
+
+                            <p>
+                                Update the school's primary identification details.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-school-form-grid">
+
+
+                        <!-- SCHOOL NAME -->
+
+                        <div class="sa-school-field sa-field-span-2">
+
+                            <label for="editName">
+
+                                School Name
+
+                                <span>*</span>
+
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-school"></i>
+
+                                <input type="text" name="name" id="editName" maxlength="200" autocomplete="organization"
+                                    placeholder="Enter school name" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- UDISE -->
+
+                        <div class="sa-school-field">
+
+                            <label for="editUdise">
+
+                                UDISE Number
+
+                                <span>*</span>
+
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-hashtag"></i>
+
+                                <input type="text" name="udise_no" id="editUdise" maxlength="30"
+                                    placeholder="Enter UDISE number" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SCHOOL CODE -->
+
+                        <div class="sa-school-field">
+
+                            <label for="editCode">
+
+                                School Code
+
+                                <span>*</span>
+
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-barcode"></i>
+
+                                <input type="text" name="school_code" id="editCode" maxlength="50"
+                                    placeholder="School code" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="sa-school-field sa-field-span-2">
+
+                            <label for="editAddress">
+
+                                Address
+
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <textarea name="address" id="editAddress" maxlength="500" rows="3"
+                                    placeholder="Enter complete school address"></textarea>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 CONTACT
+            ================================================== -->
+
+                <div class="sa-form-section">
+
+                    <div class="sa-form-section-head">
+
+                        <div class="sa-form-section-icon contact">
+
+                            <i class="fa-solid fa-address-book"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Contact Information
+                            </h3>
+
+                            <p>
+                                Update the school's primary contact details.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-school-form-grid">
+
+
+                        <!-- PHONE -->
+
+                        <div class="sa-school-field">
+
+                            <label for="editPhone">
+
+                                Phone Number
+
+                                <span>*</span>
+
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-phone"></i>
+
+                                <input type="tel" name="phone" id="editPhone" maxlength="15" inputmode="numeric"
+                                    autocomplete="tel" placeholder="Phone number" required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="sa-school-field">
+
+                            <label for="editEmail">
+
+                                Email Address
+
+                                <span>*</span>
+
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-envelope"></i>
+
+                                <input type="email" name="email" id="editEmail" maxlength="100" autocomplete="email"
+                                    placeholder="school@example.com" required>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
+
+                <div class="sa-form-section">
+
+                    <div class="sa-form-section-head">
+
+                        <div class="sa-form-section-icon admin">
+
+                            <i class="fa-solid fa-user-tie"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                School Administration
+                            </h3>
+
+                            <p>
+                                Maintain principal, recognition and board information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-school-form-grid">
+
+
+                        <!-- PRINCIPAL -->
+
+                        <div class="sa-school-field">
+
+                            <label for="editPrincipal">
+                                Principal Name
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-user-tie"></i>
+
+                                <input type="text" name="principal_name" id="editPrincipal" maxlength="150"
+                                    placeholder="Principal name">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- RECOGNITION -->
+
+                        <div class="sa-school-field">
+
+                            <label for="editRecognition">
+                                Recognition Number
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-certificate"></i>
+
+                                <input type="text" name="recognition_no" id="editRecognition" maxlength="100"
+                                    placeholder="Recognition number">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- MEDIUM -->
+
+                        <div class="sa-school-field">
+
+                            <label for="editMedium">
+                                Medium
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-language"></i>
+
+                                <input type="text" name="medium" id="editMedium" maxlength="50"
+                                    placeholder="English / Marathi">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- INDEX -->
+
+                        <div class="sa-school-field">
+
+                            <label for="editIndex">
+                                School Index Number
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-id-card"></i>
+
+                                <input type="text" name="school_index_no" id="editIndex" maxlength="50"
+                                    placeholder="School index number">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BOARD -->
+
+                        <div class="sa-school-field sa-field-span-2">
+
+                            <label for="editBoard">
+                                Board Name
+                            </label>
+
+
+                            <div class="sa-input-wrap">
+
+                                <i class="fa-solid fa-landmark"></i>
+
+                                <input type="text" name="board_name" id="editBoard" maxlength="100"
+                                    placeholder="Board name">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 INFORMATION NOTE
+            ================================================== -->
+
+                <div class="sa-school-create-note edit-note">
+
+                    <div class="sa-note-icon">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Update safely
+                        </strong>
+
+                        <p>
+                            Certificate settings, feature modules, subscriptions
+                            and school sequences are not changed from this form.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+                <div class="sa-school-modal-actions">
+
+                    <button type="button" class="sa-school-cancel-btn" onclick="closeEditSchoolModal()">
+
+                        <i class="fa-solid fa-xmark"></i>
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit" class="sa-school-save-btn edit-save-btn" id="updateSchoolBtn">
+
+                        <i class="fa-solid fa-floppy-disk"></i>
+
+                        <span>Save Changes</span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
-        <p id="statusMessage">
-            Are you sure you want to change school status?
-        </p>
-
-        <form method="POST" action="{{ url_for('toggle_school_status') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="school_id" id="statusSchoolId">
-
-            <div class="school-modal-actions">
-                <button type="button" class="cancel-btn" onclick="closeStatusModal()">Cancel</button>
-                <button type="submit" class="save-btn">OK</button>
-            </div>
-        </form>
 
     </div>
 
+
+
+
+
+
+
+    <!-- =========================================================
+     ⚙️ SCHOOL FEATURES MODAL
+========================================================= -->
+
+    <div class="sa-school-modal" id="featureModal" aria-hidden="true">
+
+        <!-- BACKDROP -->
+
+        <div class="sa-school-modal-overlay" onclick="closeFeatureModal()"></div>
+
+
+        <!-- MODAL BOX -->
+
+        <div class="sa-school-modal-box sa-feature-modal-box" role="dialog" aria-modal="true"
+            aria-labelledby="featureModalTitle">
+
+            <!-- =================================================
+             HEADER
+        ================================================== -->
+
+            <div class="sa-school-modal-header">
+
+                <div class="sa-school-modal-title-wrap">
+
+                    <div class="sa-school-modal-icon feature">
+
+                        <i class="fa-solid fa-sliders"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2 id="featureModalTitle">
+                            Manage School Features
+                        </h2>
+
+                        <p>
+                            Control which ERP modules are available for this school.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="sa-school-modal-close" onclick="closeFeatureModal()" aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+             FORM
+        ================================================== -->
+
+            <form method="POST" action="{{ url_for('update_school_features') }}" id="featureForm"
+                class="sa-feature-form">
+
+                <!-- CSRF -->
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                <!-- SCHOOL ID -->
+
+                <input type="hidden" name="school_id" id="featureSchoolId">
+
+
+                <!-- =================================================
+                 FEATURE GRID
+            ================================================== -->
+
+                <div class="sa-feature-grid">
+
+
+                    <!-- ================= TC ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon tc">
+
+                                <i class="fa-solid fa-file-lines"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    TC Management
+                                </h3>
+
+                                <p>
+                                    Transfer certificate module
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_tc_management">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_tc_management" role="switch"
+                                aria-checked="false" aria-label="Toggle TC Management">
+
+                                <span class="sa-toggle-track">
+
+                                    <span class="sa-toggle-thumb"></span>
+
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_tc_management" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= BONAFIDE ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon bonafide">
+
+                                <i class="fa-solid fa-award"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    Bonafide Management
+                                </h3>
+
+                                <p>
+                                    Bonafide certificate module
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_bonafide_management">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_bonafide_management"
+                                role="switch" aria-checked="false" aria-label="Toggle Bonafide Management">
+
+                                <span class="sa-toggle-track">
+                                    <span class="sa-toggle-thumb"></span>
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_bonafide_management" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= IMPORT EXPORT ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon import">
+
+                                <i class="fa-solid fa-file-export"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    Import / Export
+                                </h3>
+
+                                <p>
+                                    Student data import and export
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_import_export">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_import_export" role="switch"
+                                aria-checked="false" aria-label="Toggle Import Export">
+
+                                <span class="sa-toggle-track">
+                                    <span class="sa-toggle-thumb"></span>
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_import_export" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= ATTENDANCE ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon attendance">
+
+                                <i class="fa-solid fa-calendar-check"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    Attendance
+                                </h3>
+
+                                <p>
+                                    Student attendance management
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_attendance">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_attendance" role="switch"
+                                aria-checked="false" aria-label="Toggle Attendance">
+
+                                <span class="sa-toggle-track">
+                                    <span class="sa-toggle-thumb"></span>
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_attendance" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= FEES ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon fees">
+
+                                <i class="fa-solid fa-wallet"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    Fee Management
+                                </h3>
+
+                                <p>
+                                    Student fee and payment management
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_fee_management">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_fee_management" role="switch"
+                                aria-checked="false" aria-label="Toggle Fee Management">
+
+                                <span class="sa-toggle-track">
+                                    <span class="sa-toggle-thumb"></span>
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_fee_management" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= TEACHERS ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon teacher">
+
+                                <i class="fa-solid fa-chalkboard-user"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    Teacher Management
+                                </h3>
+
+                                <p>
+                                    Teacher records and management
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_teacher_management">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_teacher_management"
+                                role="switch" aria-checked="false" aria-label="Toggle Teacher Management">
+
+                                <span class="sa-toggle-track">
+                                    <span class="sa-toggle-thumb"></span>
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_teacher_management" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= RESULTS ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon results">
+
+                                <i class="fa-solid fa-square-poll-vertical"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    Results Module
+                                </h3>
+
+                                <p>
+                                    Examination and result management
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_results">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_results" role="switch"
+                                aria-checked="false" aria-label="Toggle Results Module">
+
+                                <span class="sa-toggle-track">
+                                    <span class="sa-toggle-thumb"></span>
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_results" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= TIMETABLE ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon timetable">
+
+                                <i class="fa-solid fa-table-list"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    Timetable
+                                </h3>
+
+                                <p>
+                                    Class timetable management
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_timetable">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_timetable" role="switch"
+                                aria-checked="false" aria-label="Toggle Timetable">
+
+                                <span class="sa-toggle-track">
+                                    <span class="sa-toggle-thumb"></span>
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_timetable" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= NOTICE ================= -->
+
+                    <div class="sa-feature-item">
+
+                        <div class="sa-feature-info">
+
+                            <div class="sa-feature-icon notice">
+
+                                <i class="fa-solid fa-bullhorn"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    Notice Board
+                                </h3>
+
+                                <p>
+                                    School announcements and notices
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sa-feature-control">
+
+                            <span class="sa-feature-status" data-status-for="enable_notice_board">
+                                Disabled
+                            </span>
+
+                            <button type="button" class="sa-toggle" data-feature="enable_notice_board" role="switch"
+                                aria-checked="false" aria-label="Toggle Notice Board">
+
+                                <span class="sa-toggle-track">
+                                    <span class="sa-toggle-thumb"></span>
+                                </span>
+
+                            </button>
+
+                            <input type="hidden" name="enable_notice_board" value="Disabled">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 NOTE
+            ================================================== -->
+
+                <div class="sa-feature-note">
+
+                    <div class="sa-feature-note-icon">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Module access
+                        </strong>
+
+                        <p>
+                            Enabled modules will become available to users
+                            belonging to this school.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+                <div class="sa-school-modal-actions">
+
+                    <button type="button" class="sa-school-cancel-btn" onclick="closeFeatureModal()">
+
+                        <i class="fa-solid fa-xmark"></i>
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit" class="sa-school-save-btn feature-save-btn" id="saveFeaturesBtn">
+
+                        <i class="fa-solid fa-floppy-disk"></i>
+
+                        <span>Save Features</span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+    <!-- =========================================================
+     📜 CERTIFICATE SETTINGS MODAL
+========================================================= -->
+
+    <div class="sa-school-modal" id="certificateModal" aria-hidden="true">
+
+        <!-- =====================================================
+         BACKDROP
+    ====================================================== -->
+
+        <div class="sa-school-modal-overlay" onclick="closeCertificateModal()"></div>
+
+
+        <!-- =====================================================
+         MODAL BOX
+    ====================================================== -->
+
+        <div class="sa-school-modal-box sa-certificate-modal-box" role="dialog" aria-modal="true"
+            aria-labelledby="certificateModalTitle">
+
+
+            <!-- =================================================
+             HEADER
+        ================================================== -->
+
+            <div class="sa-school-modal-header">
+
+                <div class="sa-school-modal-title-wrap">
+
+                    <div class="sa-school-modal-icon certificate">
+
+                        <i class="fa-solid fa-certificate"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2 id="certificateModalTitle">
+                            Certificate Settings
+                        </h2>
+
+                        <p>
+                            Configure numbering, branding and certificate appearance.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="sa-school-modal-close" onclick="closeCertificateModal()"
+                    aria-label="Close certificate settings">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+             FORM
+        ================================================== -->
+
+            <form method="POST" action="{{ url_for('update_school_certificates') }}" id="certificateForm"
+                class="sa-certificate-form">
+
+                <!-- CSRF -->
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                <!-- SCHOOL ID -->
+
+                <input type="hidden" name="school_id" id="certificateSchoolId">
+
+
+                <!-- =================================================
+                 PREFIX SECTION
+            ================================================== -->
+
+                <div class="sa-certificate-section">
+
+                    <div class="sa-certificate-section-heading">
+
+                        <div class="sa-certificate-section-icon prefix">
+
+                            <i class="fa-solid fa-hashtag"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Certificate Numbering
+                            </h3>
+
+                            <p>
+                                Define the prefix used for certificate numbers.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-certificate-prefix-grid">
+
+
+                        <!-- TC PREFIX -->
+
+                        <div class="sa-certificate-input-card">
+
+                            <label for="tc_prefix" class="sa-certificate-label">
+
+                                TC Prefix
+
+                                <span class="required-mark">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <div class="sa-prefix-input-wrap">
+
+                                <span class="sa-prefix-icon">
+
+                                    <i class="fa-solid fa-file-lines"></i>
+
+                                </span>
+
+                                <input type="text" name="tc_prefix" id="tc_prefix" maxlength="20" autocomplete="off"
+                                    spellcheck="false" placeholder="TC" required>
+
+                            </div>
+
+                            <small>
+                                Example: TC, TCF, TRANS
+                            </small>
+
+                        </div>
+
+
+                        <!-- BONAFIDE PREFIX -->
+
+                        <div class="sa-certificate-input-card">
+
+                            <label for="bonafide_prefix" class="sa-certificate-label">
+
+                                Bonafide Prefix
+
+                                <span class="required-mark">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <div class="sa-prefix-input-wrap">
+
+                                <span class="sa-prefix-icon bonafide">
+
+                                    <i class="fa-solid fa-award"></i>
+
+                                </span>
+
+                                <input type="text" name="bonafide_prefix" id="bonafide_prefix" maxlength="20"
+                                    autocomplete="off" spellcheck="false" placeholder="BON" required>
+
+                            </div>
+
+                            <small>
+                                Example: BON, BNF, BONAFIDE
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 GENERAL SETTINGS
+            ================================================== -->
+
+                <div class="sa-certificate-section">
+
+                    <div class="sa-certificate-section-heading">
+
+                        <div class="sa-certificate-section-icon general">
+
+                            <i class="fa-solid fa-sliders"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                General Settings
+                            </h3>
+
+                            <p>
+                                Control certificate numbering and labels.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-certificate-toggle-grid">
+
+
+                        <!-- AUTO NUMBERING -->
+
+                        <div class="sa-certificate-setting">
+
+                            <div class="sa-certificate-setting-info">
+
+                                <div class="sa-certificate-setting-icon numbering">
+
+                                    <i class="fa-solid fa-arrow-up-1-9"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Auto Numbering
+                                    </h4>
+
+                                    <p>
+                                        Automatically generate certificate numbers.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="sa-certificate-control">
+
+                                <span class="sa-certificate-status" data-certificate-status-for="auto_numbering">
+                                    Disabled
+                                </span>
+
+                                <button type="button" class="sa-certificate-toggle"
+                                    data-certificate-feature="auto_numbering" role="switch" aria-checked="false"
+                                    aria-label="Toggle Auto Numbering">
+
+                                    <span class="sa-certificate-toggle-track">
+
+                                        <span class="sa-certificate-toggle-thumb"></span>
+
+                                    </span>
+
+                                </button>
+
+                                <input type="hidden" name="auto_numbering" value="Disabled">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CERTIFICATE LABELS -->
+
+                        <div class="sa-certificate-setting">
+
+                            <div class="sa-certificate-setting-info">
+
+                                <div class="sa-certificate-setting-icon labels">
+
+                                    <i class="fa-solid fa-tag"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Certificate Labels
+                                    </h4>
+
+                                    <p>
+                                        Display standard certificate labels.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="sa-certificate-control">
+
+                                <span class="sa-certificate-status"
+                                    data-certificate-status-for="enable_certificate_labels">
+                                    Disabled
+                                </span>
+
+                                <button type="button" class="sa-certificate-toggle"
+                                    data-certificate-feature="enable_certificate_labels" role="switch"
+                                    aria-checked="false" aria-label="Toggle Certificate Labels">
+
+                                    <span class="sa-certificate-toggle-track">
+
+                                        <span class="sa-certificate-toggle-thumb"></span>
+
+                                    </span>
+
+                                </button>
+
+                                <input type="hidden" name="enable_certificate_labels" value="Disabled">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 TC SETTINGS
+            ================================================== -->
+
+                <div class="sa-certificate-section">
+
+                    <div class="sa-certificate-section-heading">
+
+                        <div class="sa-certificate-section-icon tc">
+
+                            <i class="fa-solid fa-file-lines"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Transfer Certificate
+                            </h3>
+
+                            <p>
+                                Control the branding and visual elements of TC documents.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-certificate-toggle-grid">
+
+
+                        <!-- TC LOGO -->
+
+                        <div class="sa-certificate-setting">
+
+                            <div class="sa-certificate-setting-info">
+
+                                <div class="sa-certificate-setting-icon tc-logo">
+
+                                    <i class="fa-solid fa-image"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Show TC Logo
+                                    </h4>
+
+                                    <p>
+                                        Display the school's logo on TC.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="sa-certificate-control">
+
+                                <span class="sa-certificate-status" data-certificate-status-for="show_tc_logo">
+                                    Disabled
+                                </span>
+
+                                <button type="button" class="sa-certificate-toggle"
+                                    data-certificate-feature="show_tc_logo" role="switch" aria-checked="false"
+                                    aria-label="Toggle TC Logo">
+
+                                    <span class="sa-certificate-toggle-track">
+                                        <span class="sa-certificate-toggle-thumb"></span>
+                                    </span>
+
+                                </button>
+
+                                <input type="hidden" name="show_tc_logo" value="Disabled">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- TC WATERMARK -->
+
+                        <div class="sa-certificate-setting">
+
+                            <div class="sa-certificate-setting-info">
+
+                                <div class="sa-certificate-setting-icon tc-watermark">
+
+                                    <i class="fa-solid fa-droplet"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Show TC Watermark
+                                    </h4>
+
+                                    <p>
+                                        Display a watermark on TC documents.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="sa-certificate-control">
+
+                                <span class="sa-certificate-status" data-certificate-status-for="show_tc_watermark">
+                                    Disabled
+                                </span>
+
+                                <button type="button" class="sa-certificate-toggle"
+                                    data-certificate-feature="show_tc_watermark" role="switch" aria-checked="false"
+                                    aria-label="Toggle TC Watermark">
+
+                                    <span class="sa-certificate-toggle-track">
+                                        <span class="sa-certificate-toggle-thumb"></span>
+                                    </span>
+
+                                </button>
+
+                                <input type="hidden" name="show_tc_watermark" value="Disabled">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 BONAFIDE SETTINGS
+            ================================================== -->
+
+                <div class="sa-certificate-section">
+
+                    <div class="sa-certificate-section-heading">
+
+                        <div class="sa-certificate-section-icon bonafide">
+
+                            <i class="fa-solid fa-award"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Bonafide Certificate
+                            </h3>
+
+                            <p>
+                                Control the branding and visual elements of Bonafide documents.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sa-certificate-toggle-grid">
+
+
+                        <!-- BONAFIDE LOGO -->
+
+                        <div class="sa-certificate-setting">
+
+                            <div class="sa-certificate-setting-info">
+
+                                <div class="sa-certificate-setting-icon bonafide-logo">
+
+                                    <i class="fa-solid fa-image"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Show Bonafide Logo
+                                    </h4>
+
+                                    <p>
+                                        Display the school's logo on Bonafide.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="sa-certificate-control">
+
+                                <span class="sa-certificate-status" data-certificate-status-for="show_bonafide_logo">
+                                    Disabled
+                                </span>
+
+                                <button type="button" class="sa-certificate-toggle"
+                                    data-certificate-feature="show_bonafide_logo" role="switch" aria-checked="false"
+                                    aria-label="Toggle Bonafide Logo">
+
+                                    <span class="sa-certificate-toggle-track">
+                                        <span class="sa-certificate-toggle-thumb"></span>
+                                    </span>
+
+                                </button>
+
+                                <input type="hidden" name="show_bonafide_logo" value="Disabled">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BONAFIDE WATERMARK -->
+
+                        <div class="sa-certificate-setting">
+
+                            <div class="sa-certificate-setting-info">
+
+                                <div class="sa-certificate-setting-icon bonafide-watermark">
+
+                                    <i class="fa-solid fa-droplet"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Show Bonafide Watermark
+                                    </h4>
+
+                                    <p>
+                                        Display a watermark on Bonafide documents.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="sa-certificate-control">
+
+                                <span class="sa-certificate-status"
+                                    data-certificate-status-for="show_bonafide_watermark">
+                                    Disabled
+                                </span>
+
+                                <button type="button" class="sa-certificate-toggle"
+                                    data-certificate-feature="show_bonafide_watermark" role="switch"
+                                    aria-checked="false" aria-label="Toggle Bonafide Watermark">
+
+                                    <span class="sa-certificate-toggle-track">
+                                        <span class="sa-certificate-toggle-thumb"></span>
+                                    </span>
+
+                                </button>
+
+                                <input type="hidden" name="show_bonafide_watermark" value="Disabled">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 INFORMATION NOTE
+            ================================================== -->
+
+                <div class="sa-certificate-note">
+
+                    <div class="sa-certificate-note-icon">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Certificate configuration
+                        </strong>
+
+                        <p>
+                            These settings control how certificates are numbered
+                            and displayed for this school.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+                <div class="sa-school-modal-actions">
+
+                    <button type="button" class="sa-school-cancel-btn" onclick="closeCertificateModal()">
+
+                        <i class="fa-solid fa-xmark"></i>
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit" class="sa-school-save-btn certificate-save-btn" id="saveCertificateBtn">
+
+                        <i class="fa-solid fa-floppy-disk"></i>
+
+                        <span>
+                            Save Certificate Settings
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+     🔒 SCHOOL STATUS CONFIRMATION MODAL
+========================================================= -->
+
+    <div class="sa-school-modal" id="statusModal" aria-hidden="true">
+
+        <!-- =====================================================
+         BACKDROP
+    ====================================================== -->
+
+        <div class="sa-school-modal-overlay" onclick="closeStatusModal()"></div>
+
+
+        <!-- =====================================================
+         MODAL BOX
+    ====================================================== -->
+
+        <div class="sa-school-modal-box sa-status-modal-box" role="dialog" aria-modal="true"
+            aria-labelledby="statusModalTitle">
+
+
+            <!-- =================================================
+             STATUS ICON
+        ================================================== -->
+
+            <div class="sa-status-confirm-icon" id="statusConfirmIcon">
+
+                <i class="fa-solid fa-power-off" id="statusConfirmIconElement"></i>
+
+            </div>
+
+
+            <!-- =================================================
+             CONTENT
+        ================================================== -->
+
+            <div class="sa-status-confirm-content">
+
+                <h2 id="statusModalTitle">
+                    Change School Status?
+                </h2>
+
+
+                <p id="statusMessage" class="sa-status-message">
+                    Are you sure you want to change this school's status?
+                </p>
+
+
+                <!-- =============================================
+                 STATUS PREVIEW
+            ============================================== -->
+
+                <div class="sa-status-preview" id="statusPreview">
+
+                    <div class="sa-status-preview-item">
+
+                        <span class="sa-status-preview-label">
+                            Current status
+                        </span>
+
+                        <span class="sa-status-pill current" id="currentStatusBadge">
+                            Active
+                        </span>
+
+                    </div>
+
+
+                    <i class="fa-solid fa-arrow-right"></i>
+
+
+                    <div class="sa-status-preview-item">
+
+                        <span class="sa-status-preview-label">
+                            New status
+                        </span>
+
+                        <span class="sa-status-pill target" id="targetStatusBadge">
+                            Inactive
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                 WARNING
+            ============================================== -->
+
+                <div class="sa-status-warning" id="statusWarning">
+
+                    <div class="sa-status-warning-icon">
+
+                        <i class="fa-solid fa-circle-exclamation"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong id="statusWarningTitle">
+                            School access will be blocked
+                        </strong>
+
+                        <p id="statusWarningText">
+                            Users belonging to this school will not be
+                            able to access the school system while it is inactive.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             FORM
+        ================================================== -->
+
+            <form method="POST" action="{{ url_for('toggle_school_status') }}" id="statusForm" class="sa-status-form">
+
+                <!-- CSRF -->
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                <!-- SCHOOL ID -->
+
+                <input type="hidden" name="school_id" id="statusSchoolId">
+
+
+                <!-- =============================================
+                 ACTIONS
+            ============================================== -->
+
+                <div class="sa-status-actions">
+
+                    <button type="button" class="sa-status-cancel-btn" onclick="closeStatusModal()">
+
+                        <i class="fa-solid fa-xmark"></i>
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit" class="sa-status-confirm-btn" id="confirmStatusBtn">
+
+                        <i class="fa-solid fa-power-off" id="confirmStatusIcon"></i>
+
+                        <span id="confirmStatusText">
+                            Deactivate School
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
 </div>
+
+
+<!-- SEARCH AND FILTER JS SCRIPT -->
+
+<script>
+    /* =========================================================
+       SCHOOL SEARCH
+    ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const searchInput =
+            document.getElementById("schoolSearchInput");
+
+        const clearInput =
+            document.getElementById("clearSearchInput");
+
+        const searchForm =
+            document.getElementById("schoolSearchForm");
+
+
+        /* ==============================================
+           CLEAR INPUT
+        ============================================== */
+
+        if (clearInput && searchInput) {
+
+            clearInput.addEventListener("click", function () {
+
+                searchInput.value = "";
+
+                searchInput.focus();
+
+            });
+
+        }
+
+
+        /* ==============================================
+           ENTER KEY
+           Normal form submission is preserved.
+        ============================================== */
+
+        if (searchInput && searchForm) {
+
+            searchInput.addEventListener("keydown", function (event) {
+
+                if (event.key === "Enter") {
+
+                    event.preventDefault();
+
+                    searchForm.submit();
+
+                }
+
+            });
+
+        }
+
+    });
+</script>
 
 <script>
 
     /* =========================================================
-       🏫 ADD SCHOOL MODAL
-       Open + Close modal for new school creation
+       🏫 SCHOOL MANAGEMENT
+       Unified Modal Controller
     ========================================================= */
 
-    // Open Add School Modal
-    function openSchoolModal() {
-        document.getElementById("schoolModal").style.display = "flex";
-    }
+    (function () {
 
-    // Close Add School Modal
-    function closeSchoolModal() {
-        document.getElementById("schoolModal").style.display = "none";
-    }
+        "use strict";
 
 
-    /* =========================================================
-       ✏ EDIT SCHOOL MODAL
-       Open modal with existing school data prefilled
-    ========================================================= */
+        /* =====================================================
+           COMMON HELPERS
+        ===================================================== */
 
-    // Open Edit Modal + Fill Existing Values
-    function openEditSchoolModal(
-        id,
-        name,
-        udise,
-        address,
-        phone,
-        email,
-        code,
-        principal
-    ) {
-        document.getElementById("editSchoolModal").style.display = "flex";
+        function showModal(modal) {
 
-        document.getElementById("editSchoolId").value = id;
-        document.getElementById("editName").value = name;
-        document.getElementById("editUdise").value = udise;
-        document.getElementById("editAddress").value = address;
-        document.getElementById("editPhone").value = phone;
-        document.getElementById("editEmail").value = email;
-        document.getElementById("editCode").value = code;
-        document.getElementById("editPrincipal").value = principal;
-    }
+            if (!modal) {
+                return;
+            }
 
-    // Close Edit Modal
-    function closeEditSchoolModal() {
-        document.getElementById("editSchoolModal").style.display = "none";
-    }
+            modal.style.display = "flex";
 
-    /* =========================================================
-       ⚙ FEATURE MODAL
-    ========================================================= */
+            modal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
 
-    function openFeatureModal(button) {
+            document.body.classList.add(
+                "sa-modal-open"
+            );
 
-        // =========================================
-        // OPEN MODAL
-        // =========================================
-
-        document.getElementById(
-            "featureModal"
-        ).style.display = "flex";
-
-        // =========================================
-        // SCHOOL ID
-        // =========================================
-
-        document.getElementById(
-            "featureSchoolId"
-        ).value = button.dataset.schoolId;
-
-        // =========================================
-        // LOAD CURRENT VALUES
-        // =========================================
-
-        document.querySelector(
-            '[name="enable_tc_management"]'
-        ).value = (
-            button.dataset.tc || "Disabled"
-        ).trim();
-
-        document.querySelector(
-            '[name="enable_bonafide_management"]'
-        ).value = (
-            button.dataset.bonafide || "Disabled"
-        ).trim();
-
-        document.querySelector(
-            '[name="enable_import_export"]'
-        ).value = (
-            button.dataset.importExport || "Disabled"
-        ).trim();
-
-        document.querySelector(
-            '[name="enable_attendance"]'
-        ).value = (
-            button.dataset.attendance || "Disabled"
-        ).trim();
-
-        document.querySelector(
-            '[name="enable_fee_management"]'
-        ).value = (
-            button.dataset.fee || "Disabled"
-        ).trim();
-
-        document.querySelector(
-            '[name="enable_teacher_management"]'
-        ).value = (
-            button.dataset.teacher || "Disabled"
-        ).trim();
-
-        document.querySelector(
-            '[name="enable_results"]'
-        ).value = (
-            button.dataset.results || "Disabled"
-        ).trim();
-
-        document.querySelector(
-            '[name="enable_timetable"]'
-        ).value = (
-            button.dataset.timetable || "Disabled"
-        ).trim();
-
-        document.querySelector(
-            '[name="enable_notice_board"]'
-        ).value = (
-            button.dataset.notice || "Disabled"
-        ).trim();
-    }
-
-
-    /* =========================================================
-       CLOSE MODAL
-    ========================================================= */
-
-    function closeFeatureModal() {
-
-        document.getElementById(
-            "featureModal"
-        ).style.display = "none";
-    }
-
-
-    /* =========================================================
-       📜 CERTIFICATE MODAL
-    ========================================================= */
-
-    function openCertificateModal(
-
-        schoolId,
-
-        tcPrefix,
-        bonafidePrefix,
-
-        autoNumbering,
-        certificateLabels,
-
-        tcLogo,
-        tcWatermark,
-
-        bonafideLogo,
-        bonafideWatermark
-
-    ) {
-
-        // OPEN MODAL
-        document.getElementById(
-            "certificateModal"
-        ).style.display = "flex";
-
-        // SCHOOL ID
-        document.getElementById(
-            "certificateSchoolId"
-        ).value = schoolId;
-
-        // PREFIXES
-        document.getElementById(
-            "tc_prefix"
-        ).value = tcPrefix;
-
-        document.getElementById(
-            "bonafide_prefix"
-        ).value = bonafidePrefix;
-
-        // SETTINGS
-        document.getElementById(
-            "auto_numbering"
-        ).value = autoNumbering;
-
-        document.getElementById(
-            "enable_certificate_labels"
-        ).value = certificateLabels;
-
-        // TC
-        document.getElementById(
-            "show_tc_logo"
-        ).value = tcLogo;
-
-        document.getElementById(
-            "show_tc_watermark"
-        ).value = tcWatermark;
-
-        // BONAFIDE
-        document.getElementById(
-            "show_bonafide_logo"
-        ).value = bonafideLogo;
-
-        document.getElementById(
-            "show_bonafide_watermark"
-        ).value = bonafideWatermark;
-    }
-
-    function closeCertificateModal() {
-
-        document.getElementById(
-            "certificateModal"
-        ).style.display = "none";
-    }
-
-    /* =========================================================
-       🔒 SCHOOL STATUS MODAL
-       Activate / Deactivate confirmation modal
-    ========================================================= */
-    function toggleSchoolStatus(id, currentStatus) {
-
-        console.log("School ID:", id);
-        console.log("Current Status:", currentStatus);
-
-        // set school id in hidden field
-        document.getElementById("statusSchoolId").value = id;
-
-        // get modal message element
-        const msg = document.getElementById("statusMessage");
-
-        // dynamic message based on current status
-        if (Number(currentStatus) === 1) {
-            msg.innerText = "This school will be deactivated and login will be blocked.";
-        } else {
-            msg.innerText = "This school will be activated and login will be allowed.";
         }
 
-        // open modal
-        document.getElementById("statusModal").style.display = "flex";
-    }
+
+        function hideModal(modal) {
+
+            if (!modal) {
+                return;
+            }
+
+            modal.style.display = "none";
+
+            modal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
 
 
-    // Close Status Modal
-    function closeStatusModal() {
-        document.getElementById("statusModal").style.display = "none";
-    }
+            const openedModal =
+                document.querySelector(
+                    ".sa-school-modal[aria-hidden='false']"
+                );
 
 
-    /* =========================================================
-       📂 SCHOOL CARD NAVIGATION
-       Open selected school's student records
-    ========================================================= */
+            if (!openedModal) {
 
-    function goToSchool(id) {
-        window.location.href =
-            "/superadmin/superadmin_students?school_id=" + id;
-    }
+                document.body.classList.remove(
+                    "sa-modal-open"
+                );
 
+            }
 
-    /* =========================================================
-       ❌ CLOSE MODALS ON OUTSIDE CLICK
-       If user clicks outside modal box
-    ========================================================= */
-
-    window.onclick = function (e) {
-
-        const addModal = document.getElementById("schoolModal");
-        const editModal = document.getElementById("editSchoolModal");
-        const statusModal = document.getElementById("statusModal");
-
-        if (e.target === addModal) {
-            closeSchoolModal();
         }
 
-        if (e.target === editModal) {
-            closeEditSchoolModal();
+
+        function setValue(id, value) {
+
+            const element =
+                document.getElementById(id);
+
+
+            if (element) {
+
+                element.value =
+                    value == null
+                        ? ""
+                        : value;
+
+            }
+
         }
 
-        if (e.target === statusModal) {
-            closeStatusModal();
-        }
-    };
 
+        /* =====================================================
+           ➕ ADD SCHOOL
+        ===================================================== */
+
+        window.openSchoolModal = function () {
+
+            const modal =
+                document.getElementById(
+                    "schoolModal"
+                );
+
+            const form =
+                document.getElementById(
+                    "addSchoolForm"
+                );
+
+
+            if (form) {
+
+                form.reset();
+
+            }
+
+
+            showModal(modal);
+
+
+            setTimeout(function () {
+
+                const firstField =
+                    document.getElementById(
+                        "school_name"
+                    );
+
+
+                if (firstField) {
+
+                    firstField.focus();
+
+                }
+
+            }, 80);
+
+        };
+
+
+        window.closeSchoolModal = function () {
+
+            hideModal(
+                document.getElementById(
+                    "schoolModal"
+                )
+            );
+
+        };
+
+
+        /* =====================================================
+           ✏️ EDIT SCHOOL
+        ===================================================== */
+
+        window.openEditSchoolModal = function (button) {
+
+            if (!button) {
+                return;
+            }
+
+
+            setValue(
+                "editSchoolId",
+                button.dataset.schoolId
+            );
+
+            setValue(
+                "editName",
+                button.dataset.name
+            );
+
+            setValue(
+                "editUdise",
+                button.dataset.udise
+            );
+
+            setValue(
+                "editAddress",
+                button.dataset.address
+            );
+
+            setValue(
+                "editPhone",
+                button.dataset.phone
+            );
+
+            setValue(
+                "editEmail",
+                button.dataset.email
+            );
+
+            setValue(
+                "editCode",
+                button.dataset.schoolCode
+            );
+
+            setValue(
+                "editPrincipal",
+                button.dataset.principal
+            );
+
+            setValue(
+                "editRecognition",
+                button.dataset.recognition
+            );
+
+            setValue(
+                "editMedium",
+                button.dataset.medium
+            );
+
+            setValue(
+                "editIndex",
+                button.dataset.index
+            );
+
+            setValue(
+                "editBoard",
+                button.dataset.board
+            );
+
+
+            showModal(
+                document.getElementById(
+                    "editSchoolModal"
+                )
+            );
+
+
+            setTimeout(function () {
+
+                const input =
+                    document.getElementById(
+                        "editName"
+                    );
+
+
+                if (input) {
+
+                    input.focus();
+
+                    const length =
+                        input.value.length;
+
+                    input.setSelectionRange(
+                        length,
+                        length
+                    );
+
+                }
+
+            }, 80);
+
+        };
+
+
+        window.closeEditSchoolModal = function () {
+
+            hideModal(
+                document.getElementById(
+                    "editSchoolModal"
+                )
+            );
+
+        };
+
+
+        /* =====================================================
+           ⚙️ FEATURE HELPERS
+        ===================================================== */
+
+        function setFeatureState(
+            featureName,
+            value
+        ) {
+
+            const normalizedValue =
+                String(
+                    value || "Disabled"
+                ).trim();
+
+
+            const enabled =
+                normalizedValue === "Enabled";
+
+
+            const toggle =
+                document.querySelector(
+                    '.sa-toggle[data-feature="' +
+                    featureName +
+                    '"]'
+                );
+
+
+            const hiddenInput =
+                document.querySelector(
+                    '#featureForm input[name="' +
+                    featureName +
+                    '"]'
+                );
+
+
+            const status =
+                document.querySelector(
+                    '.sa-feature-status[data-status-for="' +
+                    featureName +
+                    '"]'
+                );
+
+
+            const item =
+                toggle
+                    ? toggle.closest(
+                        ".sa-feature-item"
+                    )
+                    : null;
+
+
+            if (hiddenInput) {
+
+                hiddenInput.value =
+                    enabled
+                        ? "Enabled"
+                        : "Disabled";
+
+            }
+
+
+            if (toggle) {
+
+                toggle.setAttribute(
+                    "aria-checked",
+                    enabled
+                        ? "true"
+                        : "false"
+                );
+
+            }
+
+
+            if (status) {
+
+                status.textContent =
+                    enabled
+                        ? "Enabled"
+                        : "Disabled";
+
+            }
+
+
+            if (item) {
+
+                item.classList.toggle(
+                    "feature-enabled",
+                    enabled
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           ⚙️ OPEN FEATURE MODAL
+        ===================================================== */
+
+        window.openFeatureModal = function (button) {
+
+            if (!button) {
+                return;
+            }
+
+
+            const modal =
+                document.getElementById(
+                    "featureModal"
+                );
+
+
+            setValue(
+                "featureSchoolId",
+                button.dataset.schoolId
+            );
+
+
+            /*
+             * Load existing values
+             */
+
+            setFeatureState(
+                "enable_tc_management",
+                button.dataset.tc
+            );
+
+
+            setFeatureState(
+                "enable_bonafide_management",
+                button.dataset.bonafide
+            );
+
+
+            setFeatureState(
+                "enable_import_export",
+                button.dataset.importExport
+            );
+
+
+            setFeatureState(
+                "enable_attendance",
+                button.dataset.attendance
+            );
+
+
+            setFeatureState(
+                "enable_fee_management",
+                button.dataset.fee
+            );
+
+
+            setFeatureState(
+                "enable_teacher_management",
+                button.dataset.teacher
+            );
+
+
+            setFeatureState(
+                "enable_results",
+                button.dataset.results
+            );
+
+
+            setFeatureState(
+                "enable_timetable",
+                button.dataset.timetable
+            );
+
+
+            setFeatureState(
+                "enable_notice_board",
+                button.dataset.notice
+            );
+
+
+            showModal(modal);
+
+        };
+
+
+        /* =====================================================
+           ⚙️ TOGGLE FEATURE
+        ===================================================== */
+
+        document.addEventListener(
+            "click",
+            function (event) {
+
+                const toggle =
+                    event.target.closest(
+                        ".sa-toggle"
+                    );
+
+
+                if (!toggle) {
+                    return;
+                }
+
+
+                const featureName =
+                    toggle.dataset.feature;
+
+
+                if (!featureName) {
+                    return;
+                }
+
+
+                const currentlyEnabled =
+                    toggle.getAttribute(
+                        "aria-checked"
+                    ) === "true";
+
+
+                setFeatureState(
+                    featureName,
+                    currentlyEnabled
+                        ? "Disabled"
+                        : "Enabled"
+                );
+
+            }
+        );
+
+
+        window.closeFeatureModal = function () {
+
+            hideModal(
+                document.getElementById(
+                    "featureModal"
+                )
+            );
+
+        };
+
+
+        /* =====================================================
+           ⚙️ FEATURE FORM SUBMIT
+        ===================================================== */
+
+        const featureForm =
+            document.getElementById(
+                "featureForm"
+            );
+
+
+        const saveFeaturesBtn =
+            document.getElementById(
+                "saveFeaturesBtn"
+            );
+
+
+        if (featureForm) {
+
+            featureForm.addEventListener(
+                "submit",
+                function (event) {
+
+                    /*
+                     * Make sure every feature has
+                     * a valid value before submission.
+                     */
+
+                    const featureInputs =
+                        featureForm.querySelectorAll(
+                            'input[type="hidden"][name^="enable_"]'
+                        );
+
+
+                    const validValues = [
+                        "Enabled",
+                        "Disabled"
+                    ];
+
+
+                    for (
+                        let i = 0;
+                        i < featureInputs.length;
+                        i++
+                    ) {
+
+                        if (
+                            !validValues.includes(
+                                featureInputs[i].value
+                            )
+                        ) {
+
+                            event.preventDefault();
+
+                            alert(
+                                "Invalid feature configuration."
+                            );
+
+                            return;
+
+                        }
+
+                    }
+
+
+                    /*
+                     * Prevent double submission.
+                     */
+
+                    if (saveFeaturesBtn) {
+
+                        saveFeaturesBtn.disabled =
+                            true;
+
+                        saveFeaturesBtn.innerHTML = `
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <span>Saving Features...</span>
+                    `;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+📜 CERTIFICATE HELPERS
+===================================================== */
+
+        function setCertificateState(
+            settingName,
+            value
+        ) {
+
+            const normalizedValue =
+                String(
+                    value || "Disabled"
+                ).trim();
+
+
+            const enabled =
+                normalizedValue === "Enabled";
+
+
+            const toggle =
+                document.querySelector(
+                    '.sa-certificate-toggle[data-certificate-feature="' +
+                    settingName +
+                    '"]'
+                );
+
+
+            const hiddenInput =
+                document.querySelector(
+                    '#certificateForm input[name="' +
+                    settingName +
+                    '"]'
+                );
+
+
+            const status =
+                document.querySelector(
+                    '.sa-certificate-status[data-certificate-status-for="' +
+                    settingName +
+                    '"]'
+                );
+
+
+            const item =
+                toggle
+                    ? toggle.closest(
+                        ".sa-certificate-setting"
+                    )
+                    : null;
+
+
+            /* -----------------------------------------
+               HIDDEN FORM VALUE
+            ----------------------------------------- */
+
+            if (hiddenInput) {
+
+                hiddenInput.value =
+                    enabled
+                        ? "Enabled"
+                        : "Disabled";
+
+            }
+
+
+            /* -----------------------------------------
+               TOGGLE STATE
+            ----------------------------------------- */
+
+            if (toggle) {
+
+                toggle.setAttribute(
+                    "aria-checked",
+                    enabled
+                        ? "true"
+                        : "false"
+                );
+
+            }
+
+
+            /* -----------------------------------------
+               STATUS TEXT
+            ----------------------------------------- */
+
+            if (status) {
+
+                status.textContent =
+                    enabled
+                        ? "Enabled"
+                        : "Disabled";
+
+            }
+
+
+            /* -----------------------------------------
+               CARD STATE
+            ----------------------------------------- */
+
+            if (item) {
+
+                item.classList.toggle(
+                    "certificate-enabled",
+                    enabled
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           📜 OPEN CERTIFICATE MODAL
+        ===================================================== */
+
+        window.openCertificateModal = function (button) {
+
+            /* -----------------------------------------
+               VALIDATE BUTTON
+            ----------------------------------------- */
+
+            if (!button) {
+                console.error(
+                    "Certificate button not found."
+                );
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               GET SCHOOL ID
+            ----------------------------------------- */
+
+            const schoolId =
+                String(
+                    button.dataset.schoolId || ""
+                ).trim();
+
+
+            /* -----------------------------------------
+               VALIDATE SCHOOL ID
+            ----------------------------------------- */
+
+            if (!schoolId || !/^\d+$/.test(schoolId)) {
+
+                console.error(
+                    "Invalid school ID:",
+                    schoolId
+                );
+
+                alert(
+                    "Unable to open certificate settings. Invalid school ID."
+                );
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               GET CERTIFICATE DATA
+            ----------------------------------------- */
+
+            const tcPrefix =
+                button.dataset.tcPrefix || "TC";
+
+
+            const bonafidePrefix =
+                button.dataset.bonafidePrefix || "BON";
+
+
+            const autoNumbering =
+                button.dataset.autoNumbering || "Disabled";
+
+
+            const certificateLabels =
+                button.dataset.certificateLabels || "Disabled";
+
+
+            const tcLogo =
+                button.dataset.tcLogo || "Disabled";
+
+
+            const tcWatermark =
+                button.dataset.tcWatermark || "Disabled";
+
+
+            const bonafideLogo =
+                button.dataset.bonafideLogo || "Disabled";
+
+
+            const bonafideWatermark =
+                button.dataset.bonafideWatermark || "Disabled";
+
+
+            /* -----------------------------------------
+               SCHOOL ID
+            ----------------------------------------- */
+
+            setValue(
+                "certificateSchoolId",
+                schoolId
+            );
+
+
+            /* -----------------------------------------
+               VERIFY HIDDEN SCHOOL ID
+            ----------------------------------------- */
+
+            const schoolIdInput =
+                document.getElementById(
+                    "certificateSchoolId"
+                );
+
+
+            if (
+                !schoolIdInput ||
+                !schoolIdInput.value
+            ) {
+
+                console.error(
+                    "certificateSchoolId could not be populated."
+                );
+
+                alert(
+                    "Unable to load school information."
+                );
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               PREFIXES
+            ----------------------------------------- */
+
+            setValue(
+                "tc_prefix",
+                tcPrefix
+            );
+
+
+            setValue(
+                "bonafide_prefix",
+                bonafidePrefix
+            );
+
+
+            /* -----------------------------------------
+               GENERAL SETTINGS
+            ----------------------------------------- */
+
+            setCertificateState(
+                "auto_numbering",
+                autoNumbering
+            );
+
+
+            setCertificateState(
+                "enable_certificate_labels",
+                certificateLabels
+            );
+
+
+            /* -----------------------------------------
+               TC SETTINGS
+            ----------------------------------------- */
+
+            setCertificateState(
+                "show_tc_logo",
+                tcLogo
+            );
+
+
+            setCertificateState(
+                "show_tc_watermark",
+                tcWatermark
+            );
+
+
+            /* -----------------------------------------
+               BONAFIDE SETTINGS
+            ----------------------------------------- */
+
+            setCertificateState(
+                "show_bonafide_logo",
+                bonafideLogo
+            );
+
+
+            setCertificateState(
+                "show_bonafide_watermark",
+                bonafideWatermark
+            );
+
+
+            /* -----------------------------------------
+               RESET SAVE BUTTON
+            ----------------------------------------- */
+
+            const saveButton =
+                document.getElementById(
+                    "saveCertificateBtn"
+                );
+
+
+            if (saveButton) {
+
+                saveButton.disabled = false;
+
+                saveButton.innerHTML = `
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>
+                Save Certificate Settings
+            </span>
+        `;
+
+            }
+
+
+            /* -----------------------------------------
+               OPEN MODAL
+            ----------------------------------------- */
+
+            showModal(
+                document.getElementById(
+                    "certificateModal"
+                )
+            );
+
+
+            /* -----------------------------------------
+               FOCUS TC PREFIX
+            ----------------------------------------- */
+
+            setTimeout(function () {
+
+                const input =
+                    document.getElementById(
+                        "tc_prefix"
+                    );
+
+
+                if (input) {
+
+                    input.focus();
+
+                    const length =
+                        input.value.length;
+
+                    input.setSelectionRange(
+                        length,
+                        length
+                    );
+
+                }
+
+            }, 80);
+
+        };
+
+
+        /* =====================================================
+           🔘 CERTIFICATE TOGGLE
+        ===================================================== */
+
+        document.addEventListener(
+            "click",
+            function (event) {
+
+                const toggle =
+                    event.target.closest(
+                        ".sa-certificate-toggle"
+                    );
+
+
+                if (!toggle) {
+                    return;
+                }
+
+
+                const settingName =
+                    toggle.dataset.certificateFeature;
+
+
+                if (!settingName) {
+                    return;
+                }
+
+
+                const currentlyEnabled =
+                    toggle.getAttribute(
+                        "aria-checked"
+                    ) === "true";
+
+
+                setCertificateState(
+                    settingName,
+                    currentlyEnabled
+                        ? "Disabled"
+                        : "Enabled"
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           📜 CERTIFICATE FORM SUBMIT
+        ===================================================== */
+
+        const certificateForm =
+            document.getElementById(
+                "certificateForm"
+            );
+
+
+        const saveCertificateBtn =
+            document.getElementById(
+                "saveCertificateBtn"
+            );
+
+
+        if (certificateForm) {
+
+            certificateForm.addEventListener(
+                "submit",
+                function (event) {
+
+                    /* -----------------------------------------
+              VERIFY SCHOOL ID
+           ----------------------------------------- */
+
+                    const schoolIdInput =
+                        document.getElementById(
+                            "certificateSchoolId"
+                        );
+
+
+                    const schoolId =
+                        schoolIdInput
+                            ? schoolIdInput.value.trim()
+                            : "";
+
+
+                    if (
+                        !schoolId ||
+                        !/^\d+$/.test(schoolId)
+                    ) {
+
+                        event.preventDefault();
+
+                        alert(
+                            "Invalid school ID. Please close and reopen certificate settings."
+                        );
+
+                        return;
+                    }
+
+
+                    /* -----------------------------------------
+                       PREFIX VALIDATION
+                    ----------------------------------------- */
+
+                    const tcPrefix =
+                        document.getElementById(
+                            "tc_prefix"
+                        );
+
+
+                    const bonafidePrefix =
+                        document.getElementById(
+                            "bonafide_prefix"
+                        );
+
+
+                    const prefixPattern =
+                        /^[A-Z0-9_-]+$/;
+
+
+                    if (
+                        !tcPrefix ||
+                        !prefixPattern.test(
+                            tcPrefix.value.trim().toUpperCase()
+                        )
+                    ) {
+
+                        event.preventDefault();
+
+                        alert(
+                            "Enter a valid TC prefix."
+                        );
+
+                        if (tcPrefix) {
+                            tcPrefix.focus();
+                        }
+
+                        return;
+
+                    }
+
+
+                    if (
+                        !bonafidePrefix ||
+                        !prefixPattern.test(
+                            bonafidePrefix.value.trim().toUpperCase()
+                        )
+                    ) {
+
+                        event.preventDefault();
+
+                        alert(
+                            "Enter a valid Bonafide prefix."
+                        );
+
+                        if (bonafidePrefix) {
+                            bonafidePrefix.focus();
+                        }
+
+                        return;
+
+                    }
+
+
+                    /* -----------------------------------------
+                       VERIFY HIDDEN TOGGLE VALUES
+                    ----------------------------------------- */
+
+                    const toggleInputs =
+                        certificateForm.querySelectorAll(
+                            'input[type="hidden"][name]'
+                        );
+
+
+                    const toggleNames = [
+                        "auto_numbering",
+                        "enable_certificate_labels",
+                        "show_tc_logo",
+                        "show_tc_watermark",
+                        "show_bonafide_logo",
+                        "show_bonafide_watermark"
+                    ];
+
+
+                    for (
+                        let i = 0;
+                        i < toggleNames.length;
+                        i++
+                    ) {
+
+                        const input =
+                            certificateForm.querySelector(
+                                'input[name="' +
+                                toggleNames[i] +
+                                '"]'
+                            );
+
+
+                        if (
+                            !input ||
+                            ![
+                                "Enabled",
+                                "Disabled"
+                            ].includes(
+                                input.value
+                            )
+                        ) {
+
+                            event.preventDefault();
+
+                            alert(
+                                "Invalid certificate configuration."
+                            );
+
+                            return;
+
+                        }
+
+                    }
+
+
+                    /* -----------------------------------------
+                       PREVENT DOUBLE SUBMIT
+                    ----------------------------------------- */
+
+                    if (saveCertificateBtn) {
+
+                        saveCertificateBtn.disabled =
+                            true;
+
+                        saveCertificateBtn.innerHTML = `
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <span>
+                        Saving Settings...
+                    </span>
+                `;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           INPUT CLEANUP
+        ===================================================== */
+
+        document.addEventListener(
+            "input",
+            function (event) {
+
+                if (
+                    event.target.id ===
+                    "tc_prefix"
+                ) {
+
+                    event.target.value =
+                        event.target.value
+                            .toUpperCase()
+                            .replace(
+                                /[^A-Z0-9_-]/g,
+                                ""
+                            )
+                            .slice(0, 20);
+
+                }
+
+
+                if (
+                    event.target.id ===
+                    "bonafide_prefix"
+                ) {
+
+                    event.target.value =
+                        event.target.value
+                            .toUpperCase()
+                            .replace(
+                                /[^A-Z0-9_-]/g,
+                                ""
+                            )
+                            .slice(0, 20);
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           CLOSE CERTIFICATE MODAL
+        ===================================================== */
+
+        window.closeCertificateModal = function () {
+
+            hideModal(
+                document.getElementById(
+                    "certificateModal"
+                )
+            );
+
+        };
+
+        /* =====================================================
+   🔒 SCHOOL STATUS MODAL
+===================================================== */
+
+        window.toggleSchoolStatus = function (
+            id,
+            currentStatus
+        ) {
+
+            /* -----------------------------------------
+               VALIDATE SCHOOL ID
+            ----------------------------------------- */
+
+            if (!id) {
+                return;
+            }
+
+
+            /* -----------------------------------------
+               STORE SCHOOL ID
+            ----------------------------------------- */
+
+            setValue(
+                "statusSchoolId",
+                id
+            );
+
+
+            /* -----------------------------------------
+               NORMALIZE STATUS
+            ----------------------------------------- */
+
+            const isCurrentlyActive =
+                Number(currentStatus) === 1;
+
+
+            const willActivate =
+                !isCurrentlyActive;
+
+
+            /* -----------------------------------------
+               ELEMENTS
+            ----------------------------------------- */
+
+            const modal =
+                document.getElementById(
+                    "statusModal"
+                );
+
+
+            const message =
+                document.getElementById(
+                    "statusMessage"
+                );
+
+
+            const currentBadge =
+                document.getElementById(
+                    "currentStatusBadge"
+                );
+
+
+            const targetBadge =
+                document.getElementById(
+                    "targetStatusBadge"
+                );
+
+
+            const warning =
+                document.getElementById(
+                    "statusWarning"
+                );
+
+
+            const warningTitle =
+                document.getElementById(
+                    "statusWarningTitle"
+                );
+
+
+            const warningText =
+                document.getElementById(
+                    "statusWarningText"
+                );
+
+
+            const confirmButton =
+                document.getElementById(
+                    "confirmStatusBtn"
+                );
+
+
+            const confirmIcon =
+                document.getElementById(
+                    "confirmStatusIcon"
+                );
+
+
+            const confirmText =
+                document.getElementById(
+                    "confirmStatusText"
+                );
+
+
+            const confirmModalIcon =
+                document.getElementById(
+                    "statusConfirmIcon"
+                );
+
+
+            /* -----------------------------------------
+               CURRENT STATUS
+            ----------------------------------------- */
+
+            if (currentBadge) {
+
+                currentBadge.textContent =
+                    isCurrentlyActive
+                        ? "Active"
+                        : "Inactive";
+
+
+                currentBadge.classList.toggle(
+                    "inactive",
+                    !isCurrentlyActive
+                );
+
+            }
+
+
+            /* -----------------------------------------
+               TARGET STATUS
+            ----------------------------------------- */
+
+            if (targetBadge) {
+
+                targetBadge.textContent =
+                    willActivate
+                        ? "Active"
+                        : "Inactive";
+
+
+                targetBadge.classList.toggle(
+                    "activate",
+                    willActivate
+                );
+
+            }
+
+
+            /* -----------------------------------------
+               MESSAGE
+            ----------------------------------------- */
+
+            if (message) {
+
+                message.textContent =
+                    willActivate
+
+                        ? "This school will be activated and access will be restored."
+
+                        : "This school will be deactivated and access will be blocked.";
+
+            }
+
+
+            /* -----------------------------------------
+               WARNING
+            ----------------------------------------- */
+
+            if (willActivate) {
+
+                if (warningTitle) {
+
+                    warningTitle.textContent =
+                        "School access will be restored";
+
+                }
+
+
+                if (warningText) {
+
+                    warningText.textContent =
+                        "Users belonging to this school will be able to access the school system again.";
+
+                }
+
+
+                if (warning) {
+
+                    warning.classList.add(
+                        "is-activate"
+                    );
+
+                }
+
+
+                if (confirmModalIcon) {
+
+                    confirmModalIcon.classList.remove(
+                        "is-deactivate"
+                    );
+
+                    confirmModalIcon.classList.add(
+                        "is-activate"
+                    );
+
+                }
+
+
+                if (confirmIcon) {
+
+                    confirmIcon.className =
+                        "fa-solid fa-check";
+
+                }
+
+
+                if (confirmText) {
+
+                    confirmText.textContent =
+                        "Activate School";
+
+                }
+
+
+                if (confirmButton) {
+
+                    confirmButton.classList.add(
+                        "is-activate"
+                    );
+
+                }
+
+            } else {
+
+                if (warningTitle) {
+
+                    warningTitle.textContent =
+                        "School access will be blocked";
+
+                }
+
+
+                if (warningText) {
+
+                    warningText.textContent =
+                        "Users belonging to this school will not be able to access the school system while it is inactive.";
+
+                }
+
+
+                if (warning) {
+
+                    warning.classList.remove(
+                        "is-activate"
+                    );
+
+                }
+
+
+                if (confirmModalIcon) {
+
+                    confirmModalIcon.classList.remove(
+                        "is-activate"
+                    );
+
+                    confirmModalIcon.classList.add(
+                        "is-deactivate"
+                    );
+
+                }
+
+
+                if (confirmIcon) {
+
+                    confirmIcon.className =
+                        "fa-solid fa-power-off";
+
+                }
+
+
+                if (confirmText) {
+
+                    confirmText.textContent =
+                        "Deactivate School";
+
+                }
+
+
+                if (confirmButton) {
+
+                    confirmButton.classList.remove(
+                        "is-activate"
+                    );
+
+                }
+
+            }
+
+
+            /* -----------------------------------------
+               RESET BUTTON
+            ----------------------------------------- */
+
+            if (confirmButton) {
+
+                confirmButton.disabled =
+                    false;
+
+            }
+
+
+            /* -----------------------------------------
+               OPEN MODAL
+            ----------------------------------------- */
+
+            showModal(modal);
+
+        };
+
+        /* =====================================================
+           🔒 CLOSE STATUS MODAL
+        ===================================================== */
+
+        window.closeStatusModal = function () {
+
+            hideModal(
+                document.getElementById(
+                    "statusModal"
+                )
+            );
+
+        };
+
+        /* =====================================================
+           🔒 STATUS FORM SUBMIT
+        ===================================================== */
+
+        const statusForm =
+            document.getElementById(
+                "statusForm"
+            );
+
+
+        const confirmStatusBtn =
+            document.getElementById(
+                "confirmStatusBtn"
+            );
+
+
+        if (statusForm) {
+
+            statusForm.addEventListener(
+                "submit",
+                function () {
+
+                    if (!confirmStatusBtn) {
+                        return;
+                    }
+
+
+                    confirmStatusBtn.disabled =
+                        true;
+
+
+                    const isActivate =
+                        confirmStatusBtn.classList.contains(
+                            "is-activate"
+                        );
+
+
+                    confirmStatusBtn.innerHTML = `
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>
+                    ${isActivate
+                            ? "Activating..."
+                            : "Deactivating..."
+                        }
+                </span>
+            `;
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           📂 SCHOOL NAVIGATION
+        ===================================================== */
+
+        window.goToSchool = function (id) {
+
+            if (!id) {
+                return;
+            }
+
+
+            window.location.href =
+                "/superadmin/superadmin_students?school_id="
+                + encodeURIComponent(id);
+
+        };
+
+
+        /* =====================================================
+           ❌ ESCAPE KEY
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key !== "Escape"
+                ) {
+                    return;
+                }
+
+
+                const modals = [
+                    "schoolModal",
+                    "editSchoolModal",
+                    "featureModal",
+                    "certificateModal",
+                    "statusModal"
+                ];
+
+
+                for (
+                    let i = 0;
+                    i < modals.length;
+                    i++
+                ) {
+
+                    const modal =
+                        document.getElementById(
+                            modals[i]
+                        );
+
+
+                    if (
+                        modal &&
+                        modal.getAttribute(
+                            "aria-hidden"
+                        ) === "false"
+                    ) {
+
+                        hideModal(modal);
+
+                        break;
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           🧹 PHONE INPUT CLEANUP
+        ===================================================== */
+
+        document.addEventListener(
+            "input",
+            function (event) {
+
+                if (
+                    event.target.id ===
+                    "editPhone"
+                ) {
+
+                    event.target.value =
+                        event.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 15);
+
+                }
+
+
+                if (
+                    event.target.id ===
+                    "school_phone"
+                ) {
+
+                    event.target.value =
+                        event.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 15);
+
+                }
+
+
+                if (
+                    event.target.id ===
+                    "editCode"
+                ) {
+
+                    event.target.value =
+                        event.target.value
+                            .trim()
+                            .toUpperCase();
+
+                }
+
+
+                if (
+                    event.target.id ===
+                    "school_code"
+                ) {
+
+                    event.target.value =
+                        event.target.value
+                            .trim()
+                            .toUpperCase();
+
+                }
+
+            }
+        );
+
+
+    })();
 </script>
 
 {% endblock %}

@@ -2,281 +2,1797 @@
 
 {% block content %}
 
+<!-- =========================================================
+     FONT AWESOME
+========================================================= -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+
+<!-- =========================================================
+     GLOBAL CSS
+========================================================= -->
+
 <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/students.css') }}">
 
-<!-- ================= HEADER ================= -->
-<div class="sa-header">
-
-    <div class="sa-header-left">
-        <h1>🎓 {{ school_name }} Students</h1>
-        <p>Manage and control students of this school</p>
-    </div>
-
-    <div class="sa-header-actions">
-        <button onclick="goBack()">← Back</button>
-        <button class="primary" onclick="goAllStudents()">All Students</button>
-    </div>
-
-</div>
-
-<!-- ================= STATS ================= -->
-<div class="sa-stats">
-
-    <div class="sa-stat-card">
-        <p>Total Students</p>
-        <h2>{{ total_students }}</h2>
-    </div>
-
-    <div class="sa-stat-card">
-        <p>Classes</p>
-        <h2>{{ total_classes }}</h2>
-    </div>
-
-    <div class="sa-stat-card">
-        <p>Active</p>
-        <h2>{{ total_students }}</h2>
-    </div>
-
-</div>
-
-<!-- ================= SEARCH ================= -->
-    <form method="GET" class="sa-search-bar">
-
-        <input
-            type="hidden"
-            name="school_id"
-            value="{{ school_id }}"
-        >
-
-        <input
-            type="text"
-            name="search"
-            value="{{ search }}"
-            placeholder="🔍 Search by name or admission no..."
-        >
-
-        <button type="submit">
-            Search
-        </button>
-
-        <a
-            href="/superadmin/superadmin_students?school_id={{ school_id }}"
-            class="clear"
-        >
-            Clear
-        </a>
-
-    </form>
-
-    {% if search %}
-    <p class="sa-filter-count">
-        Showing {{ total_filtered }} result(s) for "{{ search }}"
-    </p>
-    {% endif %}
-
-<!-- ================= TABLE ================= -->
-<div class="sa-table">
-
-    <table id="studentTable">
-
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Class</th>
-                <th>Admission No</th>
-                <th>Mobile</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for s in students %}
-            <tr>
-                <td>{{ s[1] }}</td>
-                <td>{{ s[2] }}</td>
-                <td>{{ s[3] }}</td>
-                <td>{{ s[4] or '-' }}</td>
-
-              <td class="actions">
-                <button class="view" onclick="openStudentModal('{{ s[0] }}')">View</button>
-                <button class="edit" onclick="editStudent('{{ s[0] }}')">Edit</button>
-                <!-- <button class="tc" onclick="generateTC('{{ s[0] }}')">TC</button> -->
-                <button class="delete" onclick="openDeleteModal('{{ s[0] }}')">Delete</button>
-             </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-
-    </table>
-
-</div>
-    <!-- ================= PAGINATION ================= -->
-    {% if total_pages > 1 %}
-
-    <div class="sa-pagination">
-
-        {% if page > 1 %}
-        <a href="/superadmin/superadmin_students?school_id={{ school_id }}&search={{ search }}&page={{ page - 1 }}">
-            ← Previous
-        </a>
-        {% endif %}
-
-        <span>
-            Page {{ page }} of {{ total_pages }}
-        </span>
-
-        {% if page < total_pages %}
-        <a href="/superadmin/superadmin_students?school_id={{ school_id }}&search={{ search }}&page={{ page + 1 }}">
-            Next →
-        </a>
-        {% endif %}
-
-    </div>
-
-    {% endif %}
 
 
-<!-- ================= STUDENT MODAL ================= -->
-<div id="studentModal" class="sa-modal">
-    <div class="sa-modal-card">
 
-        <div class="sa-modal-header">
-            <h2>🎓 Student Details</h2>
-            <button class="sa-close-btn"  onclick="closeStudentModal()">✖</button>
-        </div>
+<!-- =====================================================
+         PAGE WRAPPER
+    ====================================================== -->
 
-        <div id="studentData"></div>
+<div class="sa-student-wrapper">
 
-    </div>
-</div>
-<!-- ================= DELETE MODAL ================= -->
-<div id="deleteModal" class="modal">
+    <!-- =====================================================
+     STUDENT PAGE HEADER
+====================================================== -->
 
-    <div class="modal-content">
+    <div class="sa-student-page-header">
 
-        <h3>⚠️ Confirm Delete</h3>
+        <!-- LEFT : TITLE AREA -->
+        <div class="sa-student-header-content">
 
-        <p>Are you sure you want to delete this student?</p>
+            <!-- Breadcrumb -->
+            <div class="sa-student-breadcrumb">
 
-        <form method="POST" action="/superadmin/delete_student">
+                <span class="sa-breadcrumb-item">
+                    <i class="fa-solid fa-school"></i>
+                    Schools
+                </span>
 
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <i class="fa-solid fa-chevron-right sa-breadcrumb-arrow"></i>
 
-            <input type="hidden" name="student_id" id="deleteStudentId">
-
-            <div class="modal-actions">
-
-                <button type="button" onclick="closeDeleteModal()">
-                    Cancel
-                </button>
-
-                <button type="submit" class="danger">
-                    Delete
-                </button>
+                <span class="sa-breadcrumb-current">
+                    Students
+                </span>
 
             </div>
+
+
+            <!-- Main heading -->
+            <div class="sa-student-title-row">
+
+                <div class="sa-student-title-icon">
+
+                    <i class="fa-solid fa-user-graduate"></i>
+
+                </div>
+
+
+                <div class="sa-student-title-text">
+
+                    <h1>
+                        {{ school_name }}
+                        <span>Students</span>
+                    </h1>
+
+                    <p>
+                        Manage and control student records of this school
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Small contextual information -->
+            <div class="sa-student-header-meta">
+
+                <div class="sa-student-meta-chip">
+
+                    <span class="sa-meta-icon">
+                        <i class="fa-solid fa-users"></i>
+                    </span>
+
+                    <span>
+                        Student Management
+                    </span>
+
+                </div>
+
+
+                <div class="sa-student-meta-chip">
+
+                    <span class="sa-meta-icon active">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </span>
+
+                    <span>
+                        School Records
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RIGHT : ACTIONS -->
+        <div class="sa-student-header-actions">
+
+            <button type="button" class="sa-student-back-btn" onclick="goBack()">
+
+                <i class="fa-solid fa-arrow-left"></i>
+
+                <span>
+                    Back
+                </span>
+
+            </button>
+
+
+            <button type="button" class="sa-student-all-btn" onclick="goAllStudents()">
+
+                <span>
+                    All Students
+                </span>
+
+                <i class="fa-solid fa-arrow-right"></i>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+     STUDENT STATISTICS
+====================================================== -->
+
+    <section class="sa-student-stats" aria-label="Student statistics">
+
+        <!-- TOTAL STUDENTS -->
+        <article class="sa-student-stat-card stat-total">
+
+            <div class="sa-student-stat-top">
+
+                <div class="sa-student-stat-icon">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+
+                <span class="sa-student-stat-label">
+                    Overall
+                </span>
+
+            </div>
+
+
+            <div class="sa-student-stat-content">
+
+                <p class="sa-student-stat-title">
+                    Total Students
+                </p>
+
+                <h2 class="sa-student-stat-value">
+                    {{ total_students }}
+                </h2>
+
+                <p class="sa-student-stat-description">
+                    Students registered in this school
+                </p>
+
+            </div>
+
+
+            <div class="sa-student-stat-footer">
+
+                <span class="sa-student-stat-status">
+                    <i class="fa-solid fa-circle-check"></i>
+                    School Records
+                </span>
+
+                <i class="fa-solid fa-arrow-up-right-from-square sa-stat-arrow"></i>
+
+            </div>
+
+        </article>
+
+
+        <!-- TOTAL CLASSES -->
+        <article class="sa-student-stat-card stat-classes">
+
+            <div class="sa-student-stat-top">
+
+                <div class="sa-student-stat-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+
+                <span class="sa-student-stat-label">
+                    Academic
+                </span>
+
+            </div>
+
+
+            <div class="sa-student-stat-content">
+
+                <p class="sa-student-stat-title">
+                    Classes
+                </p>
+
+                <h2 class="sa-student-stat-value">
+                    {{ total_classes }}
+                </h2>
+
+                <p class="sa-student-stat-description">
+                    Classes currently registered
+                </p>
+
+            </div>
+
+
+            <div class="sa-student-stat-footer">
+
+                <span class="sa-student-stat-status">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    Academic Structure
+                </span>
+
+                <i class="fa-solid fa-arrow-up-right-from-square sa-stat-arrow"></i>
+
+            </div>
+
+        </article>
+
+
+        <!-- ACTIVE STUDENTS -->
+        <article class="sa-student-stat-card stat-active">
+
+            <div class="sa-student-stat-top">
+
+                <div class="sa-student-stat-icon">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+
+                <span class="sa-student-stat-label">
+                    Status
+                </span>
+
+            </div>
+
+
+            <div class="sa-student-stat-content">
+
+                <p class="sa-student-stat-title">
+                    Active Students
+                </p>
+
+                <!--
+                Currently using total_students because your
+                existing route provides total_students.
+
+                Later, when the route calculates active students,
+                replace this with:
+
+                {{ active_students }}
+            -->
+
+                <h2 class="sa-student-stat-value">
+                    {{ total_students }}
+                </h2>
+
+                <p class="sa-student-stat-description">
+                    Currently active student records
+                </p>
+
+            </div>
+
+
+            <div class="sa-student-stat-footer">
+
+                <span class="sa-student-stat-status active">
+                    <i class="fa-solid fa-circle"></i>
+                    Active Records
+                </span>
+
+                <i class="fa-solid fa-arrow-up-right-from-square sa-stat-arrow"></i>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+
+
+    <!-- =====================================================
+     STUDENT SEARCH
+====================================================== -->
+
+    <section class="sa-student-search-section">
+
+        <form method="GET" action="{{ url_for('superadmin_students') }}" class="sa-student-search-form"
+            autocomplete="off">
+
+            <!-- Preserve selected school -->
+            <input type="hidden" name="school_id" value="{{ school_id }}">
+
+
+            <!-- ================= SEARCH FIELD ================= -->
+
+            <div class="sa-student-search-field">
+
+                <div class="sa-student-search-icon">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+
+                <input type="search" name="search" value="{{ search }}"
+                    placeholder="Search by student name or admission number..." aria-label="Search students"
+                    maxlength="100">
+
+                {% if search %}
+
+                <button type="button" class="sa-search-clear-input" aria-label="Clear search"
+                    onclick="clearStudentSearchInput()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- ================= SEARCH BUTTON ================= -->
+
+            <button type="submit" class="sa-student-search-btn">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Search</span>
+            </button>
+
+
+            <!-- ================= CLEAR ================= -->
+
+            {% if search %}
+
+            <a href="{{ url_for('superadmin_students', school_id=school_id) }}" class="sa-student-clear-btn">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Clear</span>
+            </a>
+
+            {% endif %}
 
         </form>
 
+
+        <!-- ================= SEARCH RESULT INFO ================= -->
+
+        {% if search %}
+
+        <div class="sa-student-filter-info">
+
+            <div class="sa-student-filter-icon">
+                <i class="fa-solid fa-filter"></i>
+            </div>
+
+            <div class="sa-student-filter-text">
+
+                <span>
+                    Search results
+                </span>
+
+                <strong>
+                    {{ total_filtered }}
+                    {% if total_filtered == 1 %}
+                    student
+                    {% else %}
+                    students
+                    {% endif %}
+                </strong>
+
+                <small>
+                    matching
+                    <b>"{{ search }}"</b>
+                </small>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =====================================================
+     STUDENT TABLE SECTION
+====================================================== -->
+
+    <section class="sa-student-table-section">
+
+        <div class="sa-student-table-card">
+
+            <!-- ================= TABLE HEADER ================= -->
+
+            <div class="sa-student-table-head">
+
+                <div class="sa-student-table-heading">
+
+                    <div class="sa-student-table-heading-icon">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+
+                    <div>
+                        <h2>Student Records</h2>
+
+                        <p>
+                            Manage students registered under this school
+                        </p>
+                    </div>
+
+                </div>
+
+
+                {% if total_filtered is defined %}
+
+                <div class="sa-student-record-count">
+
+                    <i class="fa-solid fa-database"></i>
+
+                    <span>
+                        {{ total_filtered }}
+                        {% if total_filtered == 1 %}
+                        Student
+                        {% else %}
+                        Students
+                        {% endif %}
+                    </span>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- ================= TABLE WRAPPER ================= -->
+
+            <div class="sa-student-table-scroll">
+
+                <table id="studentTable" class="sa-student-data-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="student-name-column">
+                                Student
+                            </th>
+
+                            <th>
+                                Class
+                            </th>
+
+                            <th>
+                                Admission No.
+                            </th>
+
+                            <th>
+                                Mobile
+                            </th>
+
+                            <th class="student-actions-column">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for s in students %}
+
+                        <tr>
+
+                            <!-- ================= STUDENT ================= -->
+
+                            <td class="student-name-cell">
+
+                                <div class="student-profile-cell">
+
+                                    <div class="student-avatar">
+
+                                        {{ (s[1] or 'S')[0] | upper }}
+
+                                    </div>
+
+                                    <div class="student-name-details">
+
+                                        <strong>
+                                            {{ s[1] or 'Unnamed Student' }}
+                                        </strong>
+
+                                        <span>
+                                            Student Record
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ================= CLASS ================= -->
+
+                            <td>
+
+                                <span class="student-class-badge">
+
+                                    <i class="fa-solid fa-graduation-cap"></i>
+
+                                    {{ s[2] or '-' }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- ================= ADMISSION ================= -->
+
+                            <td>
+
+                                <span class="student-admission">
+
+                                    <i class="fa-regular fa-id-card"></i>
+
+                                    {{ s[3] or '-' }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- ================= MOBILE ================= -->
+
+                            <td>
+
+                                {% if s[4] %}
+
+                                <a href="tel:{{ s[4] }}" class="student-phone">
+
+                                    <i class="fa-solid fa-phone"></i>
+
+                                    {{ s[4] }}
+
+                                </a>
+
+                                {% else %}
+
+                                <span class="student-no-data">
+                                    —
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- ================= ACTIONS ================= -->
+
+                            <td class="student-actions">
+
+                                <div class="student-action-group">
+
+                                    <!-- VIEW -->
+
+                                    <button type="button" class="student-action-btn student-view-btn"
+                                        onclick="openStudentModal('{{ s[0] }}')" title="View student"
+                                        aria-label="View {{ s[1] or 'student' }}">
+
+                                        <i class="fa-regular fa-eye"></i>
+
+                                        <span>View</span>
+
+                                    </button>
+
+
+                                    <!-- EDIT -->
+
+                                    <button type="button" class="student-action-btn student-edit-btn"
+                                        onclick="editStudent('{{ s[0] }}')" title="Edit student"
+                                        aria-label="Edit {{ s[1] or 'student' }}">
+
+                                        <i class="fa-regular fa-pen-to-square"></i>
+
+                                        <span>Edit</span>
+
+                                    </button>
+
+
+                                    <!-- DELETE -->
+
+                                    <button type="button" class="student-action-btn student-delete-btn"
+                                        onclick="openDeleteModal('{{ s[0] }}')" title="Delete student"
+                                        aria-label="Delete {{ s[1] or 'student' }}">
+
+                                        <i class="fa-regular fa-trash-can"></i>
+
+                                        <span>Delete</span>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <!-- ================= EMPTY STATE ================= -->
+
+                        <tr>
+
+                            <td colspan="5" class="student-empty-cell">
+
+                                <div class="student-empty-state">
+
+                                    <div class="student-empty-icon">
+                                        <i class="fa-solid fa-user-slash"></i>
+                                    </div>
+
+                                    <h3>
+                                        No students found
+                                    </h3>
+
+                                    <p>
+
+                                        {% if search %}
+
+                                        No student records match
+                                        <strong>"{{ search }}"</strong>.
+
+                                        {% else %}
+
+                                        No students are currently
+                                        registered for this school.
+
+                                        {% endif %}
+
+                                    </p>
+
+                                    {% if search %}
+
+                                    <a href="{{ url_for(
+                                        'superadmin_students',
+                                        school_id=school_id
+                                    ) }}" class="student-empty-clear">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                        Clear Search
+                                    </a>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+         PAGINATION
+    ================================================== -->
+
+        {% if total_pages > 1 %}
+
+        <div class="sa-student-pagination">
+
+            <!-- PREVIOUS -->
+
+            {% if page > 1 %}
+
+            <a href="{{ url_for(
+                'superadmin_students',
+                school_id=school_id,
+                search=search,
+                page=page - 1
+            ) }}" class="student-page-btn" aria-label="Previous page">
+
+                <i class="fa-solid fa-chevron-left"></i>
+
+                <span>Previous</span>
+
+            </a>
+
+            {% else %}
+
+            <span class="student-page-btn disabled">
+
+                <i class="fa-solid fa-chevron-left"></i>
+
+                <span>Previous</span>
+
+            </span>
+
+            {% endif %}
+
+
+            <!-- PAGE INFORMATION -->
+
+            <div class="student-page-info">
+
+                <span class="student-current-page">
+                    {{ page }}
+                </span>
+
+                <span class="student-page-divider">
+                    /
+                </span>
+
+                <span>
+                    {{ total_pages }}
+                </span>
+
+            </div>
+
+
+            <!-- NEXT -->
+
+            {% if page < total_pages %} <a href="{{ url_for(
+                'superadmin_students',
+                school_id=school_id,
+                search=search,
+                page=page + 1
+            ) }}" class="student-page-btn" aria-label="Next page">
+
+                <span>Next</span>
+
+                <i class="fa-solid fa-chevron-right"></i>
+
+                </a>
+
+                {% else %}
+
+                <span class="student-page-btn disabled">
+
+                    <span>Next</span>
+
+                    <i class="fa-solid fa-chevron-right"></i>
+
+                </span>
+
+                {% endif %}
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =========================================================
+     STUDENT DETAILS MODAL
+========================================================= -->
+
+    <div id="studentModal" class="student-modal" aria-hidden="true">
+
+        <div class="student-modal-card" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle">
+
+            <!-- ================= MODAL HEADER ================= -->
+
+            <div class="student-modal-header">
+
+                <div class="student-modal-title-wrap">
+
+                    <div class="student-modal-title-icon">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+
+                    <div>
+
+                        <h2 id="studentModalTitle">
+                            Student Details
+                        </h2>
+
+                        <p>
+                            View student personal and academic information
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="student-modal-close" onclick="closeStudentModal()"
+                    aria-label="Close student details">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+
+            <!-- ================= MODAL BODY ================= -->
+
+            <div id="studentData" class="student-modal-body">
+
+                <!-- Loading state is inserted by JavaScript -->
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+     DELETE STUDENT MODAL
+========================================================= -->
+
+    <div id="deleteModal" class="student-delete-modal" aria-hidden="true">
+
+        <div class="student-delete-card" role="dialog" aria-modal="true" aria-labelledby="deleteStudentTitle">
+
+            <!-- ================= DELETE ICON ================= -->
+
+            <div class="student-delete-icon">
+
+                <i class="fa-solid fa-trash-can"></i>
+
+            </div>
+
+
+            <!-- ================= DELETE CONTENT ================= -->
+
+            <div class="student-delete-content">
+
+                <h3 id="deleteStudentTitle">
+                    Delete Student?
+                </h3>
+
+                <p>
+                    This action will permanently remove this student
+                    record. Please confirm before continuing.
+                </p>
+
+            </div>
+
+
+            <!-- ================= DELETE FORM ================= -->
+
+            <form method="POST" action="{{ url_for('delete_student') }}" id="deleteStudentForm">
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <input type="hidden" name="student_id" id="deleteStudentId">
+
+
+                <input type="hidden" name="school_id" value="{{ school_id }}">
+
+                <input type="hidden" name="search" value="{{ search }}">
+
+                <input type="hidden" name="page" value="{{ page }}">
+
+
+                <div class="student-delete-actions">
+
+                    <button type="button" class="student-modal-cancel-btn" onclick="closeDeleteModal()">
+                        Cancel
+                    </button>
+
+
+                    <button type="submit" class="student-confirm-delete-btn">
+                        <i class="fa-solid fa-trash-can"></i>
+
+                        Delete Student
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
     </div>
 
 </div>
 
 
-<!-- ================= JS ================= -->
 <script>
+    /* =========================================================
+       SCHOOL / STUDENT PAGE
+       UNIFIED JAVASCRIPT
+    ========================================================= */
 
-    const currentSchoolId = "{{ school_id }}";
+    (function () {
 
-// delete handled via hidden input in form for better security (POST request with CSRF token)
+        "use strict";
 
-function goBack(){
-    window.location.href = "/superadmin/schools";
-}
 
-function goAllStudents(){
-    window.location.href = "/superadmin/all-students";
-}
- 
-function viewStudent(id){
-    window.location.href = "/clerk/view-student/" + id + "?mode=admin";
-}
+        /* =====================================================
+           CURRENT SCHOOL
+        ===================================================== */
 
-function editStudent(id){
-    window.location.href = "/clerk/edit-student/" + id + "?mode=admin";
-}
+        const currentSchoolId = "{{ school_id }}";
 
-function generateTC(id){
-    window.location.href = "/clerk/tc/" + id + "?mode=admin";
-}
 
-// Student Modal 
-function openStudentModal(id){
+        /* =====================================================
+           SMALL HTML ESCAPE HELPER
+           Prevents database/API values from being interpreted
+           as HTML when inserted into the modal.
+        ===================================================== */
 
-    fetch("/get-student/" + id)
-    .then(res => res.json())
-    .then(data => {
+        function escapeHTML(value) {
 
-        let html = `
+            if (value === null || value === undefined) {
+                return "-";
+            }
 
-        <div class="sa-modal-section">
-            <h3>👤 Personal Information</h3>
+            const text = String(value);
 
-            <div class="sa-modal-grid">
-                <div><span>Name</span><p>${data.name}</p></div>
-                <div><span>Class</span><p>${data.class}</p></div>
-                <div><span>Admission No</span><p>${data.admission_no}</p></div>
-                <div><span>Mobile</span><p>${data.primary_mobile || '-'}</p></div>
-                <div><span>Father</span><p>${data.father_name || '-'}</p></div>
-                <div><span>Mother</span><p>${data.mother_name || '-'}</p></div>
-                <div><span>DOB</span><p>${formatDate(data.dob)}</p></div>
-                <div><span>Nationality</span><p>${data.nationality || '-'}</p></div>
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+
+        /* =====================================================
+           SAFE VALUE
+        ===================================================== */
+
+        function safeValue(value) {
+
+            if (
+                value === null ||
+                value === undefined ||
+                String(value).trim() === ""
+            ) {
+                return "-";
+            }
+
+            return escapeHTML(value);
+        }
+
+
+        /* =====================================================
+           DATE FORMATTER
+        ===================================================== */
+
+        function formatDate(date) {
+
+            if (!date) {
+                return "-";
+            }
+
+            try {
+
+                const parsedDate = new Date(date);
+
+                if (Number.isNaN(parsedDate.getTime())) {
+                    return "-";
+                }
+
+                return parsedDate.toLocaleDateString(
+                    "en-IN",
+                    {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric"
+                    }
+                );
+
+            } catch (error) {
+
+                console.warn(
+                    "Date formatting error:",
+                    error
+                );
+
+                return "-";
+            }
+        }
+
+
+        /* =====================================================
+           CLEAR SEARCH INPUT
+        ===================================================== */
+
+        window.clearStudentSearchInput = function () {
+
+            const input = document.querySelector(
+                '.sa-student-search-field input[name="search"]'
+            );
+
+            if (!input) {
+                return;
+            }
+
+            input.value = "";
+
+            input.focus();
+        };
+
+
+        /* =====================================================
+           PAGE NAVIGATION
+        ===================================================== */
+
+        window.goBack = function () {
+
+            window.location.href =
+                "/superadmin/schools";
+        };
+
+
+        window.goAllStudents = function () {
+
+            window.location.href =
+                "/superadmin/all-students";
+        };
+
+
+        window.viewStudent = function (id) {
+
+            if (!id) {
+                return;
+            }
+
+            window.location.href =
+                "/clerk/view-student/" +
+                encodeURIComponent(id) +
+                "?mode=admin";
+        };
+
+
+        window.editStudent = function (id) {
+
+            if (!id) {
+                return;
+            }
+
+            window.location.href =
+                "/clerk/edit-student/" +
+                encodeURIComponent(id) +
+                "?mode=admin";
+        };
+
+
+        /* =====================================================
+           GENERATE TC
+    
+           Keep only if this action is used elsewhere.
+        ===================================================== */
+
+        window.generateTC = function (id) {
+
+            if (!id) {
+                return;
+            }
+
+            window.location.href =
+                "/clerk/tc/" +
+                encodeURIComponent(id) +
+                "?mode=admin";
+        };
+
+
+        /* =====================================================
+           STUDENT MODAL ELEMENTS
+        ===================================================== */
+
+        const studentModal =
+            document.getElementById("studentModal");
+
+        const studentData =
+            document.getElementById("studentData");
+
+
+        /* =====================================================
+           STUDENT MODAL LOADING STATE
+        ===================================================== */
+
+        function showStudentLoading() {
+
+            if (!studentData) {
+                return;
+            }
+
+            studentData.innerHTML = `
+
+            <div class="student-modal-loading">
+
+                <div class="student-loading-spinner"></div>
+
+                <h3>
+                    Loading student details
+                </h3>
+
+                <p>
+                    Please wait while we retrieve the record.
+                </p>
+
             </div>
-        </div>
-
-        <div class="sa-modal-section">
-            <h3>📚 Academic Information</h3>
-
-            <div class="sa-modal-grid">
-                <div><span>Previous School</span><p>${data.previous_school || '-'}</p></div>
-                <div><span>Admission Date</span><p>${formatDate(data.admission_date)}</p></div>
-                <div><span>Progress</span><p>${data.progress || '-'}</p></div>
-                <div><span>Conduct</span><p>${data.conduct || '-'}</p></div>
-                <div><span>Aadhaar</span><p>${data.aadhaar || '-'}</p></div>
-            </div>
-        </div>
 
         `;
+        }
 
-        document.getElementById("studentData").innerHTML = html;
-        document.getElementById("studentModal").style.display = "flex";
-    });
-}
 
-// STUDENT MODAL CLOSE
-function closeStudentModal(){
-    const modal = document.getElementById("studentModal");
-    modal.style.display = "none";
-}
+        /* =====================================================
+           STUDENT MODAL ERROR
+        ===================================================== */
 
-function formatDate(date){
-    if(!date) return '-';
-    return new Date(date).toLocaleDateString("en-IN");
-}
+        function showStudentError(message, studentId) {
 
-// DELETE MODAL
-function openDeleteModal(id){
-    document.getElementById("deleteStudentId").value = id;
+            if (!studentData) {
+                return;
+            }
 
-    document.getElementById("deleteModal").style.display = "flex";
-}
+            studentData.innerHTML = `
 
-// DELETE MODAL CLOSE
-function closeDeleteModal(){
-    document.getElementById("deleteModal").style.display = "none";
-}
- 
+            <div class="student-modal-error">
 
+                <div class="student-modal-error-icon">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                </div>
+
+                <h3>
+                    Unable to load student
+                </h3>
+
+                <p>
+                    ${escapeHTML(
+                message ||
+                "Something went wrong while loading this student."
+            )}
+                </p>
+
+                <button
+                    type="button"
+                    class="student-modal-retry"
+                    onclick="openStudentModal('${escapeHTML(studentId)}')"
+                >
+
+                    <i class="fa-solid fa-rotate-right"></i>
+
+                    Try Again
+
+                </button>
+
+            </div>
+
+        `;
+        }
+
+
+        /* =====================================================
+           OPEN STUDENT MODAL
+        ===================================================== */
+
+        window.openStudentModal = async function (id) {
+
+            if (!id || !studentModal || !studentData) {
+                return;
+            }
+
+
+            /* ============================
+               SHOW MODAL
+            ============================ */
+
+            studentModal.style.display = "flex";
+
+            requestAnimationFrame(function () {
+
+                studentModal.classList.add("is-open");
+
+                studentModal.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+
+            });
+
+
+            /* ============================
+               LOADING
+            ============================ */
+
+            showStudentLoading();
+
+
+            /* ============================
+               PREVENT BODY SCROLL
+            ============================ */
+
+            document.body.classList.add(
+                "student-modal-open"
+            );
+
+
+            try {
+
+                const response = await fetch(
+                    "/get-student/" +
+                    encodeURIComponent(id) +
+                    "?school_id=" +
+                    encodeURIComponent(currentSchoolId),
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Accept": "application/json"
+                        },
+
+                        credentials: "same-origin"
+                    }
+                );
+
+
+                /* ============================
+                   HTTP ERROR
+                ============================ */
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to retrieve student information."
+                    );
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                /* ============================
+                   API ERROR
+                ============================ */
+
+                if (
+                    !data ||
+                    data.error
+                ) {
+
+                    throw new Error(
+                        data?.error ||
+                        "Student record could not be loaded."
+                    );
+                }
+
+
+                /* ============================
+                   PROFILE INITIAL
+                ============================ */
+
+                const studentName =
+                    data.name ||
+                    "Student";
+
+
+                const studentInitial =
+                    String(studentName)
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase() ||
+                    "S";
+
+
+                /* ============================
+                   BUILD MODAL CONTENT
+                ============================ */
+
+                studentData.innerHTML = `
+
+                <!-- ================= PROFILE ================= -->
+
+                <div class="student-modal-profile">
+
+                    <div class="student-modal-profile-avatar">
+
+                        ${escapeHTML(studentInitial)}
+
+                    </div>
+
+                    <div class="student-modal-profile-info">
+
+                        <strong>
+                            ${safeValue(data.name)}
+                        </strong>
+
+                        <span>
+                            Admission No:
+                            ${safeValue(data.admission_no)}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================= PERSONAL ================= -->
+
+                <section class="student-modal-section">
+
+                    <div class="student-modal-section-header">
+
+                        <div class="student-modal-section-icon">
+
+                            <i class="fa-solid fa-user"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Personal Information
+                            </h3>
+
+                            <p class="student-modal-section-subtitle">
+                                Basic student and family details
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="student-modal-grid">
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Student Name
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.name)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Class
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.class)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Admission Number
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.admission_no)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Mobile
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.primary_mobile)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Father's Name
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.father_name)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Mother's Name
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.mother_name)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Date of Birth
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${formatDate(data.dob)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Nationality
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.nationality)}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ================= ACADEMIC ================= -->
+
+                <section class="student-modal-section">
+
+                    <div class="student-modal-section-header">
+
+                        <div class="student-modal-section-icon">
+
+                            <i class="fa-solid fa-graduation-cap"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Academic Information
+                            </h3>
+
+                            <p class="student-modal-section-subtitle">
+                                Admission and academic record
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="student-modal-grid">
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Previous School
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.previous_school)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Admission Date
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${formatDate(data.admission_date)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Progress
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.progress)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Conduct
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.conduct)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="student-modal-field">
+
+                            <span class="student-modal-field-label">
+                                Aadhaar
+                            </span>
+
+                            <span class="student-modal-field-value">
+                                ${safeValue(data.aadhaar)}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            `;
+
+
+            } catch (error) {
+
+                console.error(
+                    "Student modal error:",
+                    error
+                );
+
+
+                showStudentError(
+                    error.message,
+                    id
+                );
+
+            }
+
+        };
+
+
+        /* =====================================================
+           CLOSE STUDENT MODAL
+        ===================================================== */
+
+        window.closeStudentModal = function () {
+
+            if (!studentModal) {
+                return;
+            }
+
+
+            studentModal.classList.remove(
+                "is-open"
+            );
+
+
+            studentModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
+            document.body.classList.remove(
+                "student-modal-open"
+            );
+
+
+            setTimeout(function () {
+
+                if (
+                    !studentModal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    studentModal.style.display = "none";
+
+                }
+
+            }, 180);
+
+        };
+
+
+        /* =====================================================
+           DELETE MODAL
+        ===================================================== */
+
+        const deleteModal =
+            document.getElementById("deleteModal");
+
+        const deleteStudentId =
+            document.getElementById("deleteStudentId");
+
+
+        /* =====================================================
+           OPEN DELETE MODAL
+        ===================================================== */
+
+        window.openDeleteModal = function (id) {
+
+            if (
+                !id ||
+                !deleteModal ||
+                !deleteStudentId
+            ) {
+                return;
+            }
+
+
+            deleteStudentId.value = id;
+
+
+            deleteModal.style.display =
+                "flex";
+
+
+            requestAnimationFrame(function () {
+
+                deleteModal.classList.add(
+                    "is-open"
+                );
+
+                deleteModal.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+
+            });
+
+
+            document.body.classList.add(
+                "student-modal-open"
+            );
+
+        };
+
+
+        /* =====================================================
+           CLOSE DELETE MODAL
+        ===================================================== */
+
+        window.closeDeleteModal = function () {
+
+            if (!deleteModal) {
+                return;
+            }
+
+
+            deleteModal.classList.remove(
+                "is-open"
+            );
+
+
+            deleteModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
+            document.body.classList.remove(
+                "student-modal-open"
+            );
+
+
+            setTimeout(function () {
+
+                if (
+                    !deleteModal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    deleteModal.style.display =
+                        "none";
+
+                }
+
+            }, 180);
+
+        };
+
+
+        /* =====================================================
+           CLOSE ON OVERLAY CLICK
+        ===================================================== */
+
+        document.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target ===
+                    studentModal
+                ) {
+
+                    closeStudentModal();
+
+                }
+
+
+                if (
+                    event.target ===
+                    deleteModal
+                ) {
+
+                    closeDeleteModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           ESCAPE KEY
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (event.key !== "Escape") {
+                    return;
+                }
+
+
+                if (
+                    studentModal &&
+                    studentModal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeStudentModal();
+
+                    return;
+                }
+
+
+                if (
+                    deleteModal &&
+                    deleteModal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeDeleteModal();
+
+                }
+
+            }
+        );
+
+
+    })();
 </script>
 
 {% endblock %}

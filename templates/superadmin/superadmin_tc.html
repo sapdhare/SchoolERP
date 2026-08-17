@@ -2,310 +2,2568 @@
 
 {% block content %}
 
+<!-- =========================================================
+     FONT AWESOME
+========================================================= -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+
+{% block extra_css %}
+
 <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/tc_management.css') }}">
+
+{% endblock %}
+
+<!-- =====================================================
+   TC MANAGEMENT PAGE WRAPPER
+====================================================== -->
 
 <div class="satc-wrapper">
 
-    <!-- HEADER -->
-    <div class="satc-header">
 
-        <div class="satc-header-left">
-            <h1>📄 Transfer Certificate Management</h1>
-            <p>Manage all school transfer certificates in one place</p>
+    <!-- =========================================================
+     TC MANAGEMENT — ADMIN PAGE HEADER
+========================================================= -->
+
+    <header class="satc-page-header">
+
+        <!-- LEFT -->
+        <div class="satc-header-main">
+
+            <!-- Breadcrumb -->
+            <div class="satc-breadcrumb">
+
+                <a href="{{ url_for('superadmin_dashboard') }}">
+                    <i class="fa-solid fa-house"></i>
+                    Dashboard
+                </a>
+
+                <i class="fa-solid fa-chevron-right"></i>
+
+                <span>
+                    Certificate Management
+                </span>
+
+                <i class="fa-solid fa-chevron-right"></i>
+
+                <strong>
+                    Transfer Certificates
+                </strong>
+
+            </div>
+
+
+            <!-- Title Row -->
+            <div class="satc-title-row">
+
+                <div class="satc-title-icon">
+
+                    <i class="fa-solid fa-file-certificate"></i>
+
+                </div>
+
+
+                <div class="satc-title-content">
+
+                    <div class="satc-title-label">
+
+                        <span>
+                            SUPER ADMIN
+                        </span>
+
+                        <span class="satc-admin-dot"></span>
+
+                        <span>
+                            SYSTEM-WIDE MANAGEMENT
+                        </span>
+
+                    </div>
+
+
+                    <h1>
+                        Transfer Certificate Management
+                    </h1>
+
+
+                    <p>
+                        Monitor, search and manage transfer certificates
+                        issued across all registered schools.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RIGHT -->
+        <div class="satc-header-actions">
+
+            <!-- System Status -->
+            <div class="satc-system-status">
+
+                <span class="satc-status-dot"></span>
+
+                <div>
+
+                    <span>
+                        SYSTEM STATUS
+                    </span>
+
+                    <strong>
+                        Operational
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- Refresh -->
+            <button type="button" class="satc-header-btn satc-refresh-btn" id="satcRefreshBtn" title="Refresh TC data">
+
+                <i class="fa-solid fa-arrows-rotate"></i>
+
+                <span>
+                    Refresh
+                </span>
+
+            </button>
+
+
+            <!-- Reset Filters -->
+            <a href="{{ url_for(
+                'superadmin_tc_management'
+            ) }}" class="satc-header-btn satc-reset-btn" title="Clear all filters">
+
+                <i class="fa-solid fa-filter-circle-xmark"></i>
+
+                <span>
+                    Reset
+                </span>
+
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+     HEADER META BAR
+========================================================= -->
+
+    <div class="satc-header-meta">
+
+        <div class="satc-meta-left">
+
+            <div class="satc-meta-item">
+
+                <span class="satc-meta-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </span>
+
+                <div>
+
+                    <span>
+                        RECORD SCOPE
+                    </span>
+
+                    <strong>
+                        All Schools
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="satc-meta-divider"></div>
+
+
+            <div class="satc-meta-item">
+
+                <span class="satc-meta-icon">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                </span>
+
+                <div>
+
+                    <span>
+                        TOTAL RECORDS
+                    </span>
+
+                    <strong>
+                        {{ total_tc }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="satc-last-updated">
+
+            <i class="fa-regular fa-clock"></i>
+
+            <span>
+                Last checked
+            </span>
+
+            <strong id="satcLastUpdated">
+                Just now
+            </strong>
+
         </div>
 
     </div>
 
-    <!-- STATS -->
-    <div class="satc-stats-grid">
 
-        <div class="satc-stat-card">
-            <div class="satc-stat-info">
-                <p>Total TC Generated</p>
-                <h2>{{ total_tc }}</h2>
-            </div>
-            <div class="satc-stat-icon">📄</div>
+
+
+    <!-- =========================================================
+     TC MANAGEMENT — ADMIN KPI SUMMARY
+========================================================= -->
+
+    <section class="satc-kpi-section" aria-label="Transfer certificate statistics">
+
+        <div class="satc-stats-grid">
+
+
+            <!-- =================================================
+             TOTAL TC
+        ================================================== -->
+
+            <article class="satc-stat-card satc-stat-total">
+
+                <div class="satc-stat-content">
+
+                    <div class="satc-stat-top">
+
+                        <span class="satc-stat-label">
+                            Total TC Generated
+                        </span>
+
+                        <span class="satc-stat-icon">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </span>
+
+                    </div>
+
+
+                    <div class="satc-stat-value-row">
+
+                        <h2>
+                            {{ total_tc }}
+                        </h2>
+
+                    </div>
+
+
+                    <div class="satc-stat-footer">
+
+                        <span class="satc-stat-indicator">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </span>
+
+                        <span>
+                            All active TC records
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- =================================================
+             MONTHLY TC
+        ================================================== -->
+
+            <article class="satc-stat-card satc-stat-month">
+
+                <div class="satc-stat-content">
+
+                    <div class="satc-stat-top">
+
+                        <span class="satc-stat-label">
+                            This Month
+                        </span>
+
+                        <span class="satc-stat-icon">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </span>
+
+                    </div>
+
+
+                    <div class="satc-stat-value-row">
+
+                        <h2>
+                            {{ month_tc }}
+                        </h2>
+
+                    </div>
+
+
+                    <div class="satc-stat-footer">
+
+                        <span class="satc-stat-indicator">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </span>
+
+                        <span>
+                            Certificates issued this month
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- =================================================
+             TODAY
+        ================================================== -->
+
+            <article class="satc-stat-card satc-stat-today">
+
+                <div class="satc-stat-content">
+
+                    <div class="satc-stat-top">
+
+                        <span class="satc-stat-label">
+                            Today
+                        </span>
+
+                        <span class="satc-stat-icon">
+                            <i class="fa-solid fa-bolt"></i>
+                        </span>
+
+                    </div>
+
+
+                    <div class="satc-stat-value-row">
+
+                        <h2>
+                            {{ today_tc }}
+                        </h2>
+
+                    </div>
+
+
+                    <div class="satc-stat-footer">
+
+                        <span class="satc-stat-indicator">
+                            <i class="fa-solid fa-clock"></i>
+                        </span>
+
+                        <span>
+                            Certificates issued today
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- =================================================
+             SCHOOLS
+        ================================================== -->
+
+            <article class="satc-stat-card satc-stat-schools">
+
+                <div class="satc-stat-content">
+
+                    <div class="satc-stat-top">
+
+                        <span class="satc-stat-label">
+                            Schools with TC
+                        </span>
+
+                        <span class="satc-stat-icon">
+                            <i class="fa-solid fa-school"></i>
+                        </span>
+
+                    </div>
+
+
+                    <div class="satc-stat-value-row">
+
+                        <h2>
+                            {{ school_tc_count }}
+                        </h2>
+
+                    </div>
+
+
+                    <div class="satc-stat-footer">
+
+                        <span class="satc-stat-indicator">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </span>
+
+                        <span>
+                            Schools with issued certificates
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
         </div>
 
-        <div class="satc-stat-card">
-            <div class="satc-stat-info">
-                <p>This Month TC</p>
-                <h2>{{ month_tc }}</h2>
+    </section>
+
+
+
+    <!-- =========================================================
+     TC MANAGEMENT — SEARCH & FILTER
+========================================================= -->
+
+    <section class="satc-filter-section">
+
+        <form method="GET" action="{{ url_for('superadmin_tc_management') }}" class="satc-filter-box"
+            id="satcFilterForm">
+
+            <!-- SEARCH -->
+
+            <div class="satc-filter-field satc-search-field">
+
+                <label for="satcSearch">
+                    Search
+                </label>
+
+                <div class="satc-input-wrap">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input type="search" id="satcSearch" name="search" value="{{ search }}"
+                        placeholder="Student, admission no, TC number..." autocomplete="off">
+
+                    {% if search %}
+
+                    <button type="button" class="satc-input-clear" id="satcSearchClear" aria-label="Clear search">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    {% endif %}
+
+                </div>
+
             </div>
-            <div class="satc-stat-icon">📅</div>
-        </div>
 
-        <div class="satc-stat-card">
-            <div class="satc-stat-info">
-                <p>Today TC</p>
-                <h2>{{ today_tc }}</h2>
+
+            <!-- SCHOOL -->
+
+            <div class="satc-filter-field">
+
+                <label for="satcSchoolFilter">
+                    School
+                </label>
+
+                <div class="satc-select-wrap">
+
+                    <i class="fa-solid fa-school"></i>
+
+                    <select id="satcSchoolFilter" name="school_id">
+
+                        <option value="">
+                            All Schools
+                        </option>
+
+                        {% for school in schools %}
+
+                        <option value="{{ school.school_id }}" {% if school_filter|string==school.school_id|string %}
+                            selected {% endif %}>
+                            {{ school.name }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
             </div>
-            <div class="satc-stat-icon">🔥</div>
-        </div>
 
-        <div class="satc-stat-card">
-            <div class="satc-stat-info">
-                <p>Total Schools with TC</p>
-                <h2>{{ school_tc_count }}</h2>
+
+            <!-- CLASS -->
+
+            <div class="satc-filter-field">
+
+                <label for="satcClassFilter">
+                    Class
+                </label>
+
+                <div class="satc-select-wrap">
+
+                    <i class="fa-solid fa-graduation-cap"></i>
+
+                    <select id="satcClassFilter" name="class">
+
+                        <option value="">
+                            All Classes
+                        </option>
+
+                        {% for student_class in classes %}
+
+                        <option value="{{ student_class }}" {% if class_filter|string==student_class|string %} selected
+                            {% endif %}>
+                            Class {{ student_class }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
             </div>
-            <div class="satc-stat-icon">🏫</div>
-        </div>
 
-    </div>
 
-    <!-- FILTER BAR -->
-    <form method="GET" action="{{ url_for('superadmin_tc_management') }}" class="satc-filter-box">
+            <!-- ACTIONS -->
 
-        <input
-            type="text"
-            name="search"
-            placeholder="Search student / admission / TC number..."
-            value="{{ search }}"
-        >
+            <div class="satc-filter-actions">
 
-        <select name="school_id">
-            <option value="">All Schools</option>
+                <button type="submit" class="satc-search-btn" id="satcSearchBtn">
 
-            {% for school in schools %}
-            <option
-                value="{{ school.school_id }}"
-                {% if school_filter|string == school.school_id|string %}
-                selected
-                {% endif %}
-            >
-                {{ school.name }}
-            </option>
-            {% endfor %}
-        </select>
+                    <i class="fa-solid fa-magnifying-glass"></i>
 
-        <select name="class">
-            <option value="">All Classes</option>
-            {% for i in range(1,13) %}
-            <option
-                value="{{ i }}"
-                {% if class_filter|string == i|string %}selected{% endif %}
-            >
-                Class {{ i }}
-            </option>
-            {% endfor %}
-            
-        </select>
+                    <span>
+                        Search
+                    </span>
 
-        <button type="submit" class="satc-search-btn">
-            Search
-        </button>
-
-        <button type="button" class="satc-clear-btn" onclick="clearFilters()">
-            Clear
-        </button>
-
-    </form>
-
-    <!-- TABLE -->
-    <div class="satc-table-box">
-
-        <table class="satc-table">
-
-            <thead>
-                <tr>
-                    <th>Student Name</th>
-                    <th>Admission No</th>
-                    <th>School Name</th>
-                    <th>TC Number</th>
-                    <th>Leaving Date</th>
-                    <th>Reason</th>
-                    <th>Generated Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% if tc_records %}
-                    {% for tc in tc_records %}
-                    <tr>
-
-                        <td>{{ tc.name }}</td>
-                        <td>{{ tc.admission_no }}</td>
-
-                        <td>
-                            <span class="satc-school-badge">
-                                {{ tc.school_name }}
-                            </span>
-                        </td>
-
-                        <td>{{ tc.tc_number }}</td>
-                        <td>{{ tc.leaving_date }}</td>
-                        <td>{{ tc.leaving_reason }}</td>
-                        <td>{{ tc.tc_date }}</td>
-
-                        <td>
-
-                            <div class="satc-action-group">
-
-                                <button
-                                    class="satc-view-btn"
-                                    onclick="viewTC('{{ tc.id }}')"
-                                >
-                                    View
-                                </button>
-
-                                <button
-                                    class="satc-print-btn"
-                                    onclick="printTC('{{ tc.id   }}')"
-                                >
-                                    Print
-                                </button>
-
-                                <button
-                                    class="satc-pdf-btn"
-                                    onclick="downloadPDF('{{ tc.id }}')"
-                                >
-                                    PDF
-                                </button>
-
-                                <button
-                                    class="satc-delete-btn"
-                                    onclick="deleteTC('{{ tc.id }}')"
-                                >
-                                    Delete
-                                </button>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-                    {% endfor %}
-
-                {% else %}
-
-                    <tr>
-                        <td colspan="8" class="satc-empty">
-                            No TC records found
-                        </td>
-                    </tr>
-
-                {% endif %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-<!-- PAGINATION -->
- 
-{% if total_pages > 1 %}
-
-<div class="satc-pagination">
-
-    {% if page > 1 %}
-    <a href="?page={{ page-1 }}&search={{ search }}{% if school_filter %}&school_id={{ school_filter }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}">
-        ← Prev
-    </a>
-    {% endif %}
-
-    <span>
-        Page {{ page }} of {{ total_pages }}
-    </span>
-
-    {% if page < total_pages %}
-    <a href="?page={{ page+1 }}&search={{ search }}{% if school_filter %}&school_id={{ school_filter }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}">
-        Next →
-    </a>
-    {% endif %}
-
-</div>
-
-{% endif %}
-<!-- DELETE TC MODAL -->
-<div id="deleteTcModal" class="satc-modal">
-
-    <div class="satc-modal-box">
-
-        <h3>⚠️ Confirm Delete</h3>
-
-        <p>
-            Are you sure you want to delete this TC?
-            This action cannot be undone.
-        </p>
-
-        <form method="POST"
-              action="{{ url_for('delete_tc') }}">
-
-            <input type="hidden"
-                   name="csrf_token"
-                   value="{{ csrf_token() }}">
-
-            <input type="hidden"
-                   name="tc_id"
-                   id="deleteTcId">
-
-            <div class="satc-action-group">
-
-                <button type="button"
-                        class="satc-print-btn"
-                        onclick="closeDeleteTCModal()">
-                    Cancel
                 </button>
 
-                <button type="submit"
-                        class="satc-delete-btn">
-                    Delete
+
+                <button type="button" class="satc-clear-btn" id="satcClearBtn">
+
+                    <i class="fa-solid fa-rotate-left"></i>
+
+                    <span>
+                        Clear
+                    </span>
+
                 </button>
 
             </div>
 
         </form>
 
+
+        <!-- =====================================================
+         RESULT SUMMARY
+    ====================================================== -->
+
+        <div class="satc-filter-summary">
+
+            <div class="satc-result-info">
+
+                <span class="satc-result-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </span>
+
+                <div>
+
+                    <strong>
+                        {{ total_records }}
+                    </strong>
+
+                    <span>
+                        TC record{% if total_records != 1 %}s{% endif %}
+                        found
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            {% if search or school_filter or class_filter %}
+
+            <div class="satc-active-filter">
+
+                <i class="fa-solid fa-filter"></i>
+
+                Filters applied
+
+            </div>
+
+            {% else %}
+
+            <div class="satc-active-filter satc-filter-default">
+
+                <i class="fa-solid fa-database"></i>
+
+                All active records
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================================
+     TC MANAGEMENT — RECORDS TABLE
+========================================================= -->
+
+    <section class="satc-records-section">
+
+        <!-- TABLE CARD -->
+
+        <!-- =========================================================
+     SUPER ADMIN — TC TABLE
+========================================================= -->
+
+        <div class="satc-table-box">
+
+            <div class="satc-table-scroll">
+
+                <table class="satc-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Student
+                            </th>
+
+                            <th>
+                                Admission No
+                            </th>
+
+                            <th>
+                                School
+                            </th>
+
+                            <th>
+                                Class
+                            </th>
+
+                            <th>
+                                TC Number
+                            </th>
+
+                            <th>
+                                Leaving Date
+                            </th>
+
+                            <th>
+                                Reason
+                            </th>
+
+                            <th>
+                                Generated
+                            </th>
+
+                            <th class="satc-actions-column">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% if tc_records %}
+
+                        {% for tc in tc_records %}
+
+                        <tr>
+
+                            <!-- STUDENT -->
+
+                            <td>
+
+                                <div class="satc-student-cell">
+
+                                    <div class="satc-student-avatar">
+
+                                        <i class="fa-solid fa-user"></i>
+
+                                    </div>
+
+                                    <div class="satc-student-info">
+
+                                        <strong>
+                                            {{ tc.name }}
+                                        </strong>
+
+                                        <span>
+                                            ID #{{ tc.id }}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ADMISSION -->
+
+                            <td>
+
+                                <span class="satc-admission">
+                                    {{ tc.admission_no }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- SCHOOL -->
+
+                            <td>
+
+                                <span class="satc-school-badge">
+
+                                    <i class="fa-solid fa-school"></i>
+
+                                    {{ tc.school_name }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- CLASS -->
+
+                            <td>
+
+                                <span class="satc-class-badge">
+
+                                    Class {{ tc.student_class }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- TC NUMBER -->
+
+                            <td>
+
+                                <strong class="satc-tc-number">
+                                    {{ tc.tc_number }}
+                                </strong>
+
+                            </td>
+
+
+                            <!-- LEAVING DATE -->
+
+                            <td>
+
+                                <span class="satc-date-value">
+                                    {{ tc.leaving_date }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- REASON -->
+
+                            <td>
+
+                                <span class="satc-reason-text" title="{{ tc.leaving_reason }}">
+
+                                    {{ tc.leaving_reason }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- GENERATED -->
+
+                            <td>
+
+                                <span class="satc-date-value">
+                                    {{ tc.tc_date }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- ACTIONS -->
+
+                            <td class="satc-actions-column">
+
+                                <div class="satc-action-group">
+
+                                    <!-- VIEW -->
+
+                                    <button type="button" class="satc-action-btn satc-view-btn"
+                                        onclick="openTCModal(this)" data-id="{{ tc.id }}"
+                                        data-student="{{ tc.name|default('', true)|e }}"
+                                        data-admission="{{ tc.admission_no|default('', true)|e }}"
+                                        data-school="{{ tc.school_name|default('', true)|e }}"
+                                        data-class="{{ tc.student_class|default('', true)|e }}"
+                                        data-tc-number="{{ tc.tc_number|default('', true)|e }}"
+                                        data-tc-date="{{ tc.tc_date|default('', true)|e }}"
+                                        data-leaving-date="{{ tc.leaving_date|default('', true)|e }}"
+                                        data-reason="{{ tc.leaving_reason|default('', true)|e }}"
+                                        data-created-at="{{ tc.created_at|default('', true)|e }}"
+                                        data-remark="{{ tc.remark|default('', true)|e }}"
+                                        aria-label="View transfer certificate">
+
+                                        <i class="fa-regular fa-eye"></i>
+
+                                        <span>
+                                            View
+                                        </span>
+
+                                    </button>
+
+
+                                    <!-- DELETE -->
+
+                                    <button type="button" class="satc-action-btn satc-delete-btn"
+                                        onclick="deleteTC(this)" data-id="{{ tc.id }}"
+                                        data-student="{{ tc.name|default('', true)|e }}"
+                                        data-admission="{{ tc.admission_no|default('', true)|e }}"
+                                        data-school="{{ tc.school_name|default('', true)|e }}"
+                                        data-tc-number="{{ tc.tc_number|default('', true)|e }}"
+                                        aria-label="Delete transfer certificate">
+
+                                        <i class="fa-regular fa-trash-can"></i>
+
+                                        <span>
+                                            Delete
+                                        </span>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="9" class="satc-empty">
+
+                                <div class="satc-empty-content">
+
+                                    <div class="satc-empty-icon">
+
+                                        <i class="fa-regular fa-folder-open"></i>
+
+                                    </div>
+
+                                    <strong>
+                                        No TC records found
+                                    </strong>
+
+                                    <span>
+                                        Try changing your search or filter.
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- =========================================================
+     PAGINATION
+========================================================= -->
+
+    {% if total_pages > 1 %}
+
+    <div class="satc-pagination">
+
+        <!-- PREVIOUS -->
+
+        {% if page > 1 %}
+
+        <a class="satc-page-btn satc-page-prev" href="{{ url_for(
+            'superadmin_tc_management',
+            page=page-1,
+            search=search,
+            school_id=school_filter,
+            class=class_filter
+        ) }}" aria-label="Previous page">
+
+            <i class="fa-solid fa-chevron-left"></i>
+
+            <span>
+                Previous
+            </span>
+
+        </a>
+
+        {% else %}
+
+        <span class="satc-page-btn satc-page-disabled">
+
+            <i class="fa-solid fa-chevron-left"></i>
+
+            <span>
+                Previous
+            </span>
+
+        </span>
+
+        {% endif %}
+
+
+        <!-- PAGE INFO -->
+
+        <div class="satc-page-info">
+
+            <span>
+                Page
+            </span>
+
+            <strong>
+                {{ page }}
+            </strong>
+
+            <span>
+                of
+            </span>
+
+            <strong>
+                {{ total_pages }}
+            </strong>
+
+        </div>
+
+
+        <!-- NEXT -->
+
+        {% if page < total_pages %} <a class="satc-page-btn satc-page-next" href="{{ url_for(
+            'superadmin_tc_management',
+            page=page+1,
+            search=search,
+            school_id=school_filter,
+            class=class_filter
+        ) }}" aria-label="Next page">
+
+            <span>
+                Next
+            </span>
+
+            <i class="fa-solid fa-chevron-right"></i>
+
+            </a>
+
+            {% else %}
+
+            <span class="satc-page-btn satc-page-disabled">
+
+                <span>
+                    Next
+                </span>
+
+                <i class="fa-solid fa-chevron-right"></i>
+
+            </span>
+
+            {% endif %}
+
+    </div>
+
+    {% endif %}
+
+ 
+
+
+<!-- =========================================================
+     SUPER ADMIN — TC VIEW MODAL
+========================================================= -->
+
+<div id="satcViewModal" class="satc-modal" aria-hidden="true">
+
+    <!-- OVERLAY -->
+
+    <div class="satc-modal-overlay" data-close-tc-modal></div>
+
+
+    <!-- MODAL -->
+
+    <div class="satc-view-modal" role="dialog" aria-modal="true" aria-labelledby="satcViewModalTitle">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <header class="satc-view-modal-header">
+
+            <div class="satc-view-heading">
+
+                <div class="satc-view-heading-icon">
+
+                    <i class="fa-solid fa-file-circle-check"></i>
+
+                </div>
+
+
+                <div class="satc-view-heading-content">
+
+                    <span class="satc-view-eyebrow">
+                        ADMIN RECORD
+                    </span>
+
+                    <h2 id="satcViewModalTitle">
+                        Transfer Certificate
+                    </h2>
+
+                    <p>
+                        Read-only TC record information
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button type="button" class="satc-view-close" id="satcViewCloseBtn" aria-label="Close">
+
+                <i class="fa-solid fa-xmark"></i>
+
+            </button>
+
+        </header>
+
+
+        <!-- =================================================
+             BODY
+        ================================================== -->
+
+        <div class="satc-view-modal-body">
+
+
+            <!-- =================================================
+                 RECORD STATUS
+            ================================================== -->
+
+            <div class="satc-view-status-card">
+
+                <div class="satc-view-status-main">
+
+                    <div class="satc-status-icon">
+
+                        <i class="fa-solid fa-circle-check"></i>
+
+                    </div>
+
+                    <div>
+
+                        <span>
+                            RECORD STATUS
+                        </span>
+
+                        <strong>
+                            Active
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="satc-status-record-id">
+
+                    <span>
+                        RECORD ID
+                    </span>
+
+                    <strong id="viewTcId">
+                        —
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 STUDENT INFORMATION
+            ================================================== -->
+
+            <section class="satc-view-section">
+
+                <div class="satc-view-section-header">
+
+                    <div class="satc-section-icon student">
+
+                        <i class="fa-solid fa-user-graduate"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Student Information
+                        </h3>
+
+                        <p>
+                            Student and school details
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="satc-view-grid">
+
+                    <div class="satc-view-field">
+
+                        <span>
+                            Student Name
+                        </span>
+
+                        <strong id="viewTcStudent">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="satc-view-field">
+
+                        <span>
+                            Admission Number
+                        </span>
+
+                        <strong id="viewTcAdmission">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="satc-view-field satc-view-field-wide">
+
+                        <span>
+                            School
+                        </span>
+
+                        <strong id="viewTcSchool">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="satc-view-field">
+
+                        <span>
+                            Class
+                        </span>
+
+                        <strong id="viewTcClass">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 TC INFORMATION
+            ================================================== -->
+
+            <section class="satc-view-section">
+
+                <div class="satc-view-section-header">
+
+                    <div class="satc-section-icon tc">
+
+                        <i class="fa-solid fa-file-lines"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Transfer Certificate
+                        </h3>
+
+                        <p>
+                            Certificate and leaving details
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="satc-view-grid">
+
+                    <div class="satc-view-field">
+
+                        <span>
+                            TC Number
+                        </span>
+
+                        <strong id="viewTcNumber" class="satc-highlight-value">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="satc-view-field">
+
+                        <span>
+                            Generated Date
+                        </span>
+
+                        <strong id="viewTcDate">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="satc-view-field">
+
+                        <span>
+                            Leaving Date
+                        </span>
+
+                        <strong id="viewTcLeavingDate">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="satc-view-field">
+
+                        <span>
+                            Record Created
+                        </span>
+
+                        <strong id="viewTcCreatedAt">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="satc-view-field satc-view-field-full">
+
+                        <span>
+                            Leaving Reason
+                        </span>
+
+                        <div id="viewTcReason" class="satc-view-text">
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div class="satc-view-field satc-view-field-full">
+
+                        <span>
+                            Administrative Remark
+                        </span>
+
+                        <div id="viewTcRemark" class="satc-view-text">
+                            —
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 ADMIN INFORMATION
+            ================================================== -->
+
+            <div class="satc-admin-note">
+
+                <div class="satc-admin-note-icon">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Administrator Access
+                    </strong>
+
+                    <p>
+                        This record is displayed in read-only mode.
+                        Deletion should only be performed when the
+                        TC record is no longer required.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <footer class="satc-view-modal-footer">
+
+            <button type="button" class="satc-modal-delete-btn" id="satcModalDeleteBtn">
+
+                <i class="fa-regular fa-trash-can"></i>
+
+                Delete
+
+            </button>
+
+
+            <button type="button" class="satc-modal-close-btn" data-close-tc-modal>
+
+                <i class="fa-solid fa-xmark"></i>
+
+                Close
+
+            </button>
+
+        </footer>
+
     </div>
 
 </div>
 
+
+
+
+<!-- =========================================================
+     SUPER ADMIN — DELETE TC MODAL
+========================================================= -->
+
+<div id="deleteTcModal" class="satc-delete-modal" aria-hidden="true">
+
+    <!-- OVERLAY -->
+
+    <div class="satc-delete-overlay" data-close-delete-tc></div>
+
+
+    <!-- MODAL -->
+
+    <div class="satc-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="satcDeleteTitle">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="satc-delete-header">
+
+            <div class="satc-delete-icon">
+
+                <i class="fa-solid fa-trash-can"></i>
+
+            </div>
+
+
+            <button type="button" class="satc-delete-close" id="satcDeleteCloseBtn" aria-label="Close">
+
+                <i class="fa-solid fa-xmark"></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+
+        <div class="satc-delete-content">
+
+            <span class="satc-delete-eyebrow">
+                ADMIN ACTION
+            </span>
+
+
+            <h2 id="satcDeleteTitle">
+                Delete Transfer Certificate?
+            </h2>
+
+
+            <p class="satc-delete-description">
+
+                This will remove the TC from the active
+                records list. The record will be soft-deleted
+                and will no longer appear in TC Management.
+
+            </p>
+
+
+            <!-- =================================================
+                 RECORD PREVIEW
+            ================================================== -->
+
+            <div class="satc-delete-record-card">
+
+                <div class="satc-delete-record-icon">
+
+                    <i class="fa-solid fa-file-lines"></i>
+
+                </div>
+
+
+                <div class="satc-delete-record-info">
+
+                    <div class="satc-delete-record-main">
+
+                        <strong id="deleteTcStudent">
+                            —
+                        </strong>
+
+                        <span id="deleteTcNumber">
+                            —
+                        </span>
+
+                    </div>
+
+
+                    <div class="satc-delete-record-meta">
+
+                        <span>
+
+                            <i class="fa-solid fa-hashtag"></i>
+
+                            <span id="deleteTcIdDisplay">
+                                —
+                            </span>
+
+                        </span>
+
+
+                        <span>
+
+                            <i class="fa-solid fa-school"></i>
+
+                            <span id="deleteTcSchool">
+                                —
+                            </span>
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 WARNING
+            ================================================== -->
+
+            <div class="satc-delete-warning">
+
+                <div class="satc-delete-warning-icon">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Please confirm this action
+                    </strong>
+
+                    <p>
+                        Make sure you are deleting the correct
+                        transfer certificate.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <div class="satc-delete-footer">
+
+            <button type="button" class="satc-delete-cancel-btn" id="satcDeleteCancelBtn">
+
+                <i class="fa-solid fa-xmark"></i>
+
+                Cancel
+
+            </button>
+
+
+            <form method="POST" action="{{ url_for('delete_tc') }}" id="deleteTcForm" class="satc-delete-form">
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                <input type="hidden" name="tc_id" id="deleteTcId">
+
+
+                <button type="submit" class="satc-confirm-delete-btn" id="satcConfirmDeleteBtn">
+
+                    <i class="fa-regular fa-trash-can"></i>
+
+                    <span>
+                        Delete TC
+                    </span>
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
 <script>
+    /* =========================================================
+       SUPER ADMIN — TC MANAGEMENT
+    ========================================================= */
 
-function clearFilters(){
-    window.location.href = "/superadmin/tc-management";
-}
+    (function () {
 
-function viewTC(id){
-    console.log("Viewing TC ID:", id);
-    window.location.href = "/clerk/tc/view/" + id + "?mode=admin";
-}
+        "use strict";
 
-function printTC(id){
-    console.log("Printing TC ID:", id);
-    window.location.href = "/clerk/tc/view/" + id + "?mode=admin&print=true";
-}
 
-function downloadPDF(id){
-    window.location.href = "/clerk/tc/pdf/" + id + "?mode=admin";
-}
+        /* =====================================================
+           ELEMENTS
+        ===================================================== */
 
-function deleteTC(id){
+        const filterForm =
+            document.getElementById("satcFilterForm");
 
-    document.getElementById("deleteTcId").value = id;
+        const searchInput =
+            document.getElementById("satcSearch");
 
-    document.getElementById("deleteTcModal").style.display = "flex";
-}
+        const searchClear =
+            document.getElementById("satcSearchClear");
 
-function closeDeleteTCModal(){
+        const clearButton =
+            document.getElementById("satcClearBtn");
 
-    document.getElementById("deleteTcModal").style.display = "none";
-}
-window.onclick = function(event){
+        const searchButton =
+            document.getElementById("satcSearchBtn");
 
-    let modal =
-        document.getElementById("deleteTcModal");
 
-    if(event.target === modal){
-        closeDeleteTCModal();
-    }
-}
+        /* =====================================================
+           CLEAR SEARCH FIELD
+        ===================================================== */
+
+        if (searchClear && searchInput) {
+
+            searchClear.addEventListener(
+                "click",
+                function () {
+
+                    searchInput.value = "";
+
+                    searchInput.focus();
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           CLEAR ALL FILTERS
+        ===================================================== */
+
+        if (clearButton) {
+
+            clearButton.addEventListener(
+                "click",
+                function () {
+
+                    const action =
+                        filterForm?.getAttribute("action");
+
+                    window.location.href =
+                        action || "/superadmin/tc-management";
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           FILTER SUBMIT
+        ===================================================== */
+
+        if (filterForm) {
+
+            filterForm.addEventListener(
+                "submit",
+                function () {
+
+                    if (!searchButton) {
+                        return;
+                    }
+
+
+                    searchButton.classList.add(
+                        "is-loading"
+                    );
+
+                    searchButton.disabled = true;
+
+
+                    const icon =
+                        searchButton.querySelector("i");
+
+                    const text =
+                        searchButton.querySelector("span");
+
+
+                    if (icon) {
+
+                        icon.className =
+                            "fa-solid fa-spinner";
+
+                    }
+
+
+                    if (text) {
+
+                        text.textContent =
+                            "Searching...";
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           ENTER KEY SEARCH
+        ===================================================== */
+
+        if (searchInput) {
+
+            searchInput.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (event.key !== "Enter") {
+                        return;
+                    }
+
+
+                    event.preventDefault();
+
+
+                    if (filterForm) {
+
+                        filterForm.requestSubmit();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+    })();
+
 
 </script>
 
+
+<!-- VIEW MODAL JS  -->
+<script>
+
+    /* =========================================================
+       SUPER ADMIN — TC VIEW MODAL
+       NO AJAX / NO FETCH
+    ========================================================= */
+
+    (function () {
+
+        "use strict";
+
+
+        /* =====================================================
+           ELEMENTS
+        ===================================================== */
+
+        const modal =
+            document.getElementById(
+                "satcViewModal"
+            );
+
+        const closeButton =
+            document.getElementById(
+                "satcViewCloseBtn"
+            );
+
+        const modalDeleteButton =
+            document.getElementById(
+                "satcModalDeleteBtn"
+            );
+
+
+        let currentTcId = null;
+
+
+        /* =====================================================
+           SET TEXT
+        ===================================================== */
+
+        function setText(
+            elementId,
+            value
+        ) {
+
+            const element =
+                document.getElementById(
+                    elementId
+                );
+
+
+            if (!element) {
+                return;
+            }
+
+
+            if (
+                value === null ||
+                value === undefined ||
+                String(value).trim() === ""
+            ) {
+
+                element.textContent =
+                    "—";
+
+                return;
+
+            }
+
+
+            element.textContent =
+                value;
+
+        }
+
+
+        /* =====================================================
+           OPEN TC MODAL
+        ===================================================== */
+
+        window.openTCModal = function (button) {
+
+            if (!button) {
+
+                console.error(
+                    "TC view button not found."
+                );
+
+                return;
+
+            }
+
+
+            if (!modal) {
+
+                console.error(
+                    "TC modal #satcViewModal not found."
+                );
+
+                return;
+
+            }
+
+
+            /* ================================================
+               READ DATA FROM BUTTON
+            ================================================ */
+
+            const data =
+                button.dataset;
+
+
+            currentTcId =
+                data.id || null;
+
+
+            /* ================================================
+               STUDENT
+            ================================================ */
+
+            setText(
+                "viewTcId",
+                data.id
+            );
+
+
+            setText(
+                "viewTcStudent",
+                data.student
+            );
+
+
+            setText(
+                "viewTcAdmission",
+                data.admission
+            );
+
+
+            setText(
+                "viewTcSchool",
+                data.school
+            );
+
+
+            setText(
+                "viewTcClass",
+                data.class
+            );
+
+
+            /* ================================================
+               TC
+            ================================================ */
+
+            setText(
+                "viewTcNumber",
+                data.tcNumber
+            );
+
+
+            setText(
+                "viewTcDate",
+                data.tcDate
+            );
+
+
+            setText(
+                "viewTcLeavingDate",
+                data.leavingDate
+            );
+
+
+            setText(
+                "viewTcCreatedAt",
+                data.createdAt
+            );
+
+
+            setText(
+                "viewTcReason",
+                data.reason
+            );
+
+
+            setText(
+                "viewTcRemark",
+                data.remark
+            );
+
+
+            /* ================================================
+               OPEN
+            ================================================ */
+
+            modal.classList.add(
+                "is-open"
+            );
+
+
+            modal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+
+            document.body.style.overflow =
+                "hidden";
+
+
+            /* ================================================
+               FOCUS
+            ================================================ */
+
+            if (closeButton) {
+
+                requestAnimationFrame(
+                    function () {
+
+                        closeButton.focus();
+
+                    }
+                );
+
+            }
+
+        };
+
+
+        /* =====================================================
+           CLOSE
+        ===================================================== */
+
+        function closeTCModal() {
+
+            if (!modal) {
+                return;
+            }
+
+
+            modal.classList.remove(
+                "is-open"
+            );
+
+
+            modal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
+            document.body.style.overflow =
+                "";
+
+
+            currentTcId =
+                null;
+
+        }
+
+
+        window.closeTCModal =
+            closeTCModal;
+
+
+        /* =====================================================
+           CLOSE BUTTON
+        ===================================================== */
+
+        if (closeButton) {
+
+            closeButton.addEventListener(
+                "click",
+                closeTCModal
+            );
+
+        }
+
+
+        /* =====================================================
+           OVERLAY / DATA CLOSE
+        ===================================================== */
+
+        document.addEventListener(
+            "click",
+            function (event) {
+
+                const closeTarget =
+                    event.target.closest(
+                        "[data-close-tc-modal]"
+                    );
+
+
+                if (!closeTarget) {
+                    return;
+                }
+
+
+                closeTCModal();
+
+            }
+        );
+
+
+        /* =====================================================
+           ESCAPE
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal &&
+                    modal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeTCModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           DELETE FROM VIEW MODAL
+        ===================================================== */
+
+        if (modalDeleteButton) {
+
+            modalDeleteButton.addEventListener(
+                "click",
+                function () {
+
+                    if (!currentTcId) {
+
+                        return;
+
+                    }
+
+
+                    closeTCModal();
+
+
+                    if (
+                        typeof window.deleteTC ===
+                        "function"
+                    ) {
+
+                        window.deleteTC(
+                            currentTcId
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+    })();
+
+</script>
+
+<!-- DELETE MODAL JS  -->
+
+<script>
+
+    /* =========================================================
+       SUPER ADMIN — DELETE TC
+    ========================================================= */
+
+    (function () {
+
+        "use strict";
+
+
+        const modal =
+            document.getElementById(
+                "deleteTcModal"
+            );
+
+
+        const idInput =
+            document.getElementById(
+                "deleteTcId"
+            );
+
+
+        const studentElement =
+            document.getElementById(
+                "deleteTcStudent"
+            );
+
+
+        const tcNumberElement =
+            document.getElementById(
+                "deleteTcNumber"
+            );
+
+
+        const schoolElement =
+            document.getElementById(
+                "deleteTcSchool"
+            );
+
+
+        const idDisplay =
+            document.getElementById(
+                "deleteTcIdDisplay"
+            );
+
+
+        const closeButton =
+            document.getElementById(
+                "satcDeleteCloseBtn"
+            );
+
+
+        const cancelButton =
+            document.getElementById(
+                "satcDeleteCancelBtn"
+            );
+
+
+        const form =
+            document.getElementById(
+                "deleteTcForm"
+            );
+
+
+        const submitButton =
+            document.getElementById(
+                "satcConfirmDeleteBtn"
+            );
+
+
+        let currentTcId = null;
+
+
+        /* =====================================================
+           HELPER
+        ===================================================== */
+
+        function setText(
+            element,
+            value
+        ) {
+
+            if (!element) {
+                return;
+            }
+
+
+            if (
+                value === null ||
+                value === undefined ||
+                String(value).trim() === ""
+            ) {
+
+                element.textContent =
+                    "—";
+
+                return;
+
+            }
+
+
+            element.textContent =
+                value;
+
+        }
+
+
+        /* =====================================================
+           OPEN DELETE MODAL
+           
+           Supports:
+           
+           deleteTC(button)
+           
+           OR
+           
+           deleteTC(123)
+        ===================================================== */
+
+        window.deleteTC = function (source) {
+
+            if (!modal || !idInput) {
+
+                console.error(
+                    "Delete TC modal is missing."
+                );
+
+                return;
+
+            }
+
+
+            let id = null;
+
+            let student = "";
+            let tcNumber = "";
+            let school = "";
+
+
+            /* ================================================
+               BUTTON SOURCE
+            ================================================ */
+
+            if (
+                source instanceof
+                HTMLElement
+            ) {
+
+                id =
+                    source.dataset.id;
+
+                student =
+                    source.dataset.student ||
+                    "";
+
+                tcNumber =
+                    source.dataset.tcNumber ||
+                    "";
+
+                school =
+                    source.dataset.school ||
+                    "";
+
+            }
+
+
+            /* ================================================
+               NUMERIC ID SOURCE
+            ================================================ */
+
+            else {
+
+                id =
+                    source;
+
+            }
+
+
+            const numericId =
+                Number.parseInt(
+                    id,
+                    10
+                );
+
+
+            if (
+                !Number.isInteger(numericId) ||
+                numericId <= 0
+            ) {
+
+                console.error(
+                    "Invalid TC ID:",
+                    id
+                );
+
+                return;
+
+            }
+
+
+            currentTcId =
+                numericId;
+
+
+            /* ================================================
+               SET HIDDEN ID
+            ================================================ */
+
+            idInput.value =
+                numericId;
+
+
+            /* ================================================
+               RECORD INFORMATION
+            ================================================ */
+
+            setText(
+                studentElement,
+                student
+            );
+
+
+            setText(
+                tcNumberElement,
+                tcNumber
+            );
+
+
+            setText(
+                schoolElement,
+                school
+            );
+
+
+            setText(
+                idDisplay,
+                numericId
+            );
+
+
+            /* ================================================
+               OPEN
+            ================================================ */
+
+            modal.classList.add(
+                "is-open"
+            );
+
+
+            modal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+
+            document.body.style.overflow =
+                "hidden";
+
+
+            /* ================================================
+               FOCUS CLOSE
+            ================================================ */
+
+            requestAnimationFrame(
+                function () {
+
+                    if (closeButton) {
+
+                        closeButton.focus();
+
+                    }
+
+                }
+            );
+
+        };
+
+
+        /* =====================================================
+           CLOSE
+        ===================================================== */
+
+        window.closeDeleteTCModal =
+            function () {
+
+                if (!modal) {
+                    return;
+                }
+
+
+                modal.classList.remove(
+                    "is-open"
+                );
+
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+
+                document.body.style.overflow =
+                    "";
+
+
+                currentTcId =
+                    null;
+
+
+                if (idInput) {
+
+                    idInput.value =
+                        "";
+
+                }
+
+            };
+
+
+        /* =====================================================
+           CLOSE BUTTON
+        ===================================================== */
+
+        if (closeButton) {
+
+            closeButton.addEventListener(
+                "click",
+                closeDeleteTCModal
+            );
+
+        }
+
+
+        /* =====================================================
+           CANCEL
+        ===================================================== */
+
+        if (cancelButton) {
+
+            cancelButton.addEventListener(
+                "click",
+                closeDeleteTCModal
+            );
+
+        }
+
+
+        /* =====================================================
+           OVERLAY
+        ===================================================== */
+
+        if (modal) {
+
+            modal.addEventListener(
+                "click",
+                function (event) {
+
+                    if (
+                        event.target.closest(
+                            "[data-close-delete-tc]"
+                        )
+                    ) {
+
+                        closeDeleteTCModal();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           ESCAPE
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal &&
+                    modal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeDeleteTCModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           SUBMIT PROTECTION
+        ===================================================== */
+
+        if (form) {
+
+            form.addEventListener(
+                "submit",
+                function () {
+
+                    if (
+                        !currentTcId ||
+                        !idInput.value
+                    ) {
+
+                        event.preventDefault();
+
+                        return;
+
+                    }
+
+
+                    if (submitButton) {
+
+                        submitButton.disabled =
+                            true;
+
+
+                        const icon =
+                            submitButton.querySelector(
+                                "i"
+                            );
+
+
+                        const text =
+                            submitButton.querySelector(
+                                "span"
+                            );
+
+
+                        if (icon) {
+
+                            icon.className =
+                                "fa-solid fa-spinner fa-spin";
+
+                        }
+
+
+                        if (text) {
+
+                            text.textContent =
+                                "Deleting...";
+
+                        }
+
+                    }
+
+                }
+            );
+
+        }
+
+
+    })();
+
+</script>
 {% endblock %}

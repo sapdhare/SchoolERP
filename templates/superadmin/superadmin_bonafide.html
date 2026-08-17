@@ -2,243 +2,2670 @@
 
 {% block content %}
 
+<!-- =========================================================
+     FONT AWESOME
+========================================================= -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+
+{% block extra_css %}
+
 <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin/superadmin_bonafide.css') }}">
+
+{% endblock %}
+
+<!-- =====================================================
+   TC MANAGEMENT PAGE WRAPPER
+====================================================== -->
 
 <div class="sab-container">
 
-    <!-- HEADER -->
-    <div class="sab-header">
-        <div>
-            <h1>📜 Bonafide Certificate Management</h1>
-            <p>Manage all school bonafide certificates in one place</p>
-        </div>
-    </div>
+    <!-- =========================================================
+     SUPER ADMIN — BONAFIDE MANAGEMENT
+     PAGE HEADER
+========================================================= -->
 
-    <!-- STATS -->
-    <div class="sab-stats-grid">
 
-        <div class="sab-stat-card">
-            <div>
-                <h3>Total Bonafide</h3>
-                <h2>{{ total_bonafide }}</h2>
+    <header class="sab-page-header">
+
+        <!-- LEFT -->
+        <div class="sab-header-main">
+
+            <!-- ICON -->
+
+            <div class="sab-header-icon">
+
+                <i class="fa-solid fa-file-circle-check"></i>
+
             </div>
-            <span>📄</span>
-        </div>
 
-        <div class="sab-stat-card">
-            <div>
-                <h3>This Month</h3>
-                <h2>{{ month_bonafide }}</h2>
+
+            <!-- TITLE -->
+
+            <div class="sab-header-content">
+
+                <!-- BREADCRUMB -->
+
+                <div class="sab-breadcrumb">
+
+                    <span>
+                        Admin
+                    </span>
+
+                    <i class="fa-solid fa-chevron-right"></i>
+
+                    <span class="sab-breadcrumb-current">
+                        Bonafide Management
+                    </span>
+
+                </div>
+
+
+                <!-- TITLE -->
+
+                <h1>
+                    Bonafide Certificate Management
+                </h1>
+
+
+                <!-- DESCRIPTION -->
+
+                <p>
+                    Manage, review and maintain bonafide certificates
+                    across all registered schools.
+                </p>
+
             </div>
-            <span>📅</span>
+
         </div>
 
-        <div class="sab-stat-card">
-            <div>
-                <h3>Last 7 Days</h3>
-                <h2>{{ week_bonafide }}</h2>
-            </div>
-            <span>🔥</span>
+    </header>
+
+    <!-- =========================================================
+     BONAFIDE MANAGEMENT — KPI STATS
+========================================================= -->
+
+    <section class="sab-stats-section">
+
+        <div class="sab-stats-grid">
+
+            <!-- TOTAL -->
+            <article class="sab-stat-card sab-stat-total">
+
+                <div class="sab-stat-content">
+
+                    <span class="sab-stat-label">
+                        Total Bonafide
+                    </span>
+
+                    <strong class="sab-stat-value">
+                        {{ total_bonafide }}
+                    </strong>
+
+                    <span class="sab-stat-meta">
+                        All active certificates
+                    </span>
+
+                </div>
+
+                <div class="sab-stat-icon">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                </div>
+
+            </article>
+
+
+            <!-- THIS MONTH -->
+            <article class="sab-stat-card sab-stat-month">
+
+                <div class="sab-stat-content">
+
+                    <span class="sab-stat-label">
+                        This Month
+                    </span>
+
+                    <strong class="sab-stat-value">
+                        {{ month_bonafide }}
+                    </strong>
+
+                    <span class="sab-stat-meta">
+                        Certificates generated
+                    </span>
+
+                </div>
+
+                <div class="sab-stat-icon">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+
+            </article>
+
+
+            <!-- LAST 7 DAYS -->
+            <article class="sab-stat-card sab-stat-week">
+
+                <div class="sab-stat-content">
+
+                    <span class="sab-stat-label">
+                        Last 7 Days
+                    </span>
+
+                    <strong class="sab-stat-value">
+                        {{ week_bonafide }}
+                    </strong>
+
+                    <span class="sab-stat-meta">
+                        Recent certificates
+                    </span>
+
+                </div>
+
+                <div class="sab-stat-icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+
+            </article>
+
+
+            <!-- SCHOOLS -->
+            <article class="sab-stat-card sab-stat-schools">
+
+                <div class="sab-stat-content">
+
+                    <span class="sab-stat-label">
+                        Schools Using
+                    </span>
+
+                    <strong class="sab-stat-value">
+                        {{ school_count }}
+                    </strong>
+
+                    <span class="sab-stat-meta">
+                        Schools with records
+                    </span>
+
+                </div>
+
+                <div class="sab-stat-icon">
+                    <i class="fa-solid fa-school"></i>
+                </div>
+
+            </article>
+
         </div>
 
-        <div class="sab-stat-card">
-            <div>
-                <h3>Schools Using</h3>
-                <h2>{{ school_count }}</h2>
-            </div>
-            <span>🏫</span>
-        </div>
+    </section>
 
-    </div>
+    <!-- =========================================================
+     BONAFIDE MANAGEMENT — SEARCH & FILTER
+========================================================= -->
 
-    <!-- FILTERS -->
-    <form method="GET" class="sab-filter-box">
+    <section class="sab-filter-section">
 
-        <input 
-            type="text"
-            name="search"
-            placeholder="Search student / admission / bonafide number..."
-            value="{{ search }}"
-        >
+        <form method="GET" action="{{ url_for('superadmin_bonafide_management') }}" class="sab-filter-box"
+            id="sabFilterForm">
 
-        <select name="school_id">
-            <option value="">All Schools</option>
-            {% for school in schools %}
-                <option
-                    value="{{ school.school_id }}"
-                    {% if school_filter|string == school.school_id|string %}
-                    selected
+            <!-- =================================================
+             SEARCH
+        ================================================== -->
+
+            <div class="sab-filter-field sab-search-field">
+
+                <label for="sabSearch">
+                    Search
+                </label>
+
+                <div class="sab-input-wrap">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input type="search" id="sabSearch" name="search" value="{{ search }}"
+                        placeholder="Student, admission no, bonafide number..." autocomplete="off">
+
+                    {% if search %}
+
+                    <button type="button" class="sab-input-clear" id="sabSearchClear" aria-label="Clear search"
+                        title="Clear search">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
                     {% endif %}
-                >
-                    {{ school.name }}
-                </option>
-                {% endfor %}
-        </select>
 
-        <select name="class">
-            <option value="">All Classes</option>
-            {% for i in range(1,13) %}
-                <option value="{{ i }}"
-                    {% if class_filter|string == i|string %}selected{% endif %}>
-                    Class {{ i }}
-                </option>
-            {% endfor %}
-        </select>
+                </div>
 
-        <button type="submit" class="sab-search-btn">Search</button>
-
-        <a href="{{ url_for('superadmin_bonafide_management') }}" class="sab-clear-btn">
-            Clear
-        </a>
-
-    </form>
-
-    <!-- TABLE -->
-    <div class="sab-table-wrapper">
-
-        <table class="sab-table">
-
-            <thead>
-                <tr>
-                    <th>Student Name</th>
-                    <th>Admission No</th>
-                    <th>School Name</th>
-                    <th>Class</th>
-                    <th>Certificate No</th>
-                    <th>Purpose</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for b in bonafides %}
-                <tr>
-
-                    <td>{{ b.name }}</td>
-                    <td>{{ b.admission_no }}</td>
-                    <td>
-                        <span class="sab-school-badge">
-                            {{ b.school_name }}
-                        </span>
-                    </td>
-                    <td>{{ b.class }}</td>
-                    <td>{{ b.bonafide_number }}</td>
-                    <td>{{ b.purpose }}</td>
-                    <td>{{ b.date }}</td>
-
-                    <td>
-                        <div class="sab-action-buttons">
-
-                            
-                            <a href="/clerk/bonafide/view/{{ b.id }}?mode=admin" class="sab-btn-view">
-                                View
-                            </a>
-                            
-                            <a href="/clerk/bonafide/view/{{ b.id }}?mode=admin&print=true" class="sab-btn-print">
-                                Print
-                            </a>
-
-                            <a href="/clerk/bonafide/pdf/{{ b.id }}?mode=admin" class="sab-btn-pdf">
-                                PDF
-                            </a>
-                            <button
-                                type="button"
-                                onclick="openDeleteBonafideModal('{{ b.id }}')"
-                                class="sab-btn-delete">
-                                Delete
-                            </button>
-
-                        </div>
-                    </td>
-
-                </tr>
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-<!-- PAGINATION -->
-
-{% if total_pages > 1 %}
-
-<div class="sab-pagination">
-
-    {% if page > 1 %}
-    <a href="?page={{ page-1 }}&search={{ search }}{% if school_filter %}&school_id={{ school_filter }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}">
-        ← Prev
-    </a>
-    {% endif %}
-
-    <span>
-        Page {{ page }} of {{ total_pages }}
-    </span>
-
-    {% if page < total_pages %}
-    <a href="?page={{ page+1 }}&search={{ search }}{% if school_filter %}&school_id={{ school_filter }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}">
-        Next →
-    </a>
-    {% endif %}
-
-</div>
-
-{% endif %}
+            </div>
 
 
-<!-- DELETE MODAL -->
+            <!-- =================================================
+             SCHOOL
+        ================================================== -->
 
-<div id="deleteBonafideModal" class="sab-modal">
+            <div class="sab-filter-field">
 
-    <div class="sab-modal-box">
+                <label for="sabSchoolFilter">
+                    School
+                </label>
 
-        <h3>⚠️ Confirm Delete</h3>
+                <div class="sab-select-wrap">
 
-        <p>Delete this bonafide certificate?</p>
+                    <i class="fa-solid fa-school"></i>
 
-        <form method="POST" action="{{ url_for('delete_bonafide') }}">
+                    <select id="sabSchoolFilter" name="school_id">
 
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <option value="">
+                            All Schools
+                        </option>
 
-            <input type="hidden" name="bonafide_id" id="deleteBonafideId">
+                        {% for school in schools %}
 
-            <div class="sab-action-buttons">
+                        <option value="{{ school.school_id }}" {% if school_filter|string==school.school_id|string %}
+                            selected {% endif %}>
+                            {{ school.name }}
+                        </option>
 
-                <button type="button" onclick="closeDeleteBonafideModal()">
-                    Cancel
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             CLASS
+        ================================================== -->
+
+            <div class="sab-filter-field">
+
+                <label for="sabClassFilter">
+                    Class
+                </label>
+
+                <div class="sab-select-wrap">
+
+                    <i class="fa-solid fa-graduation-cap"></i>
+
+                    <select id="sabClassFilter" name="class">
+
+                        <option value="">
+                            All Classes
+                        </option>
+
+                        {% for i in range(1, 13) %}
+
+                        <option value="{{ i }}" {% if class_filter|string==i|string %} selected {% endif %}>
+                            Class {{ i }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             ACTIONS
+        ================================================== -->
+
+            <div class="sab-filter-actions">
+
+                <button type="submit" class="sab-search-btn" id="sabSearchBtn">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <span>
+                        Search
+                    </span>
+
                 </button>
 
-                <button type="submit" class="sab-btn-delete">
-                    Delete
-                </button>
+
+                <a href="{{ url_for('superadmin_bonafide_management') }}" class="sab-clear-btn" id="sabClearBtn">
+
+                    <i class="fa-solid fa-rotate-left"></i>
+
+                    <span>
+                        Clear
+                    </span>
+
+                </a>
 
             </div>
 
         </form>
 
+
+        <!-- =========================================================
+         FILTER RESULT SUMMARY
+    ========================================================= -->
+
+        <div class="sab-filter-summary">
+
+            <!-- RESULT COUNT -->
+
+            <div class="sab-result-info">
+
+                <span class="sab-result-icon">
+
+                    <i class="fa-solid fa-layer-group"></i>
+
+                </span>
+
+                <div>
+
+                    <strong>
+                        {{ total_records }}
+                    </strong>
+
+                    <span>
+                        Bonafide record{% if total_records != 1 %}s{% endif %}
+                        found
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- FILTER STATUS -->
+
+            {% if search or school_filter or class_filter %}
+
+            <div class="sab-active-filter">
+
+                <i class="fa-solid fa-filter"></i>
+
+                Filters applied
+
+            </div>
+
+            {% else %}
+
+            <div class="sab-active-filter sab-filter-default">
+
+                <i class="fa-solid fa-database"></i>
+
+                All active records
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+    <!-- =========================================================
+     BONAFIDE RECORDS TABLE
+========================================================= -->
+
+    <section class="sab-table-section">
+
+        <div class="sab-table-card">
+
+            <!-- =================================================
+             TABLE HEADER
+        ================================================== -->
+
+            <div class="sab-table-heading">
+
+                <div class="sab-table-title">
+
+                    <div class="sab-table-title-icon">
+                        <i class="fa-solid fa-certificate"></i>
+                    </div>
+
+                    <div>
+                        <h2>Bonafide Records</h2>
+
+                        <p>
+                            {{ total_records }}
+                            active record{% if total_records != 1 %}s{% endif %}
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="sab-table-meta">
+
+                    <span>
+                        <i class="fa-solid fa-database"></i>
+                        {{ total_records }} Records
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             TABLE SCROLL AREA
+        ================================================== -->
+
+            <div class="sab-table-scroll">
+
+                <table class="sab-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="sab-student-col">
+                                Student
+                            </th>
+
+                            <th>
+                                Admission No
+                            </th>
+
+                            <th class="sab-school-col">
+                                School
+                            </th>
+
+                            <th>
+                                Class
+                            </th>
+
+                            <th>
+                                Certificate No
+                            </th>
+
+                            <th class="sab-purpose-col">
+                                Purpose
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th class="sab-actions-col">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% if bonafides %}
+
+                        {% for b in bonafides %}
+
+                        <tr>
+
+                            <!-- =====================================================
+         STUDENT
+    ====================================================== -->
+
+                            <td>
+
+                                <div class="sab-student-cell">
+
+                                    <div class="sab-student-avatar">
+
+                                        <i class="fa-solid fa-user"></i>
+
+                                    </div>
+
+                                    <div class="sab-student-info">
+
+                                        <strong>
+                                            {{ b.student_name }}
+                                        </strong>
+
+                                        <small>
+                                            ID #{{ b.id }}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- =====================================================
+         ADMISSION
+    ====================================================== -->
+
+                            <td>
+
+                                <span class="sab-admission-number">
+
+                                    {{ b.admission_no }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =====================================================
+         SCHOOL
+    ====================================================== -->
+
+                            <td>
+
+                                <span class="sab-school-badge">
+
+                                    <i class="fa-solid fa-school"></i>
+
+                                    {{ b.school_name }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =====================================================
+         CLASS
+    ====================================================== -->
+
+                            <td>
+
+                                <span class="sab-class-badge">
+
+                                    {{ b.student_class }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =====================================================
+         CERTIFICATE
+    ====================================================== -->
+
+                            <td>
+
+                                <strong class="sab-certificate-number">
+
+                                    {{ b.bonafide_number }}
+
+                                </strong>
+
+                            </td>
+
+
+                            <!-- =====================================================
+         PURPOSE
+    ====================================================== -->
+
+                            <td>
+
+                                <span class="sab-purpose" title="{{ b.purpose }}">
+
+                                    {{ b.purpose }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =====================================================
+         DATE
+    ====================================================== -->
+
+                            <td>
+
+                                <span class="sab-date">
+
+                                    <i class="fa-regular fa-calendar"></i>
+
+                                    {{ b.certificate_date }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =================================
+                                 ACTIONS
+                            ================================== -->
+
+                            <td>
+
+                                <div class="sab-action-buttons">
+
+                                    <button type="button" class="sab-btn-view" onclick="openBonafideModal(this)"
+                                        data-id="{{ b.id|default('', true)|e }}"
+                                        data-student="{{ b.student_name|default('', true)|e }}"
+                                        data-admission="{{ b.admission_no|default('', true)|e }}"
+                                        data-school="{{ b.school_name|default('', true)|e }}"
+                                        data-class="{{ b.student_class|default('', true)|e }}"
+                                        data-register-no="{{ b.school_register_no|default('', true)|e }}"
+                                        data-student-uid="{{ b.student_uid|default('', true)|e }}"
+                                        data-apaar-id="{{ b.apaar_id|default('', true)|e }}"
+                                        data-bonafide-number="{{ b.bonafide_number|default('', true)|e }}"
+                                        data-certificate-date="{{ b.certificate_date|default('', true)|e }}"
+                                        data-created-at="{{ b.created_at|default('', true)|e }}"
+                                        data-purpose="{{ b.purpose|default('', true)|e }}"
+                                        data-mobile="{{ b.primary_mobile|default('', true)|e }}"
+                                        data-email="{{ b.student_email|default('', true)|e }}"
+                                        data-school-code="{{ b.school_code|default('', true)|e }}"
+                                        data-school-phone="{{ b.school_phone|default('', true)|e }}"
+                                        data-school-email="{{ b.school_email|default('', true)|e }}"
+                                        aria-label="View Bonafide certificate">
+
+                                        <i class="fa-regular fa-eye"></i>
+
+                                        <span>
+                                            View
+                                        </span>
+
+                                    </button>
+
+
+                                    <button type="button" class="sab-btn-delete"
+                                        onclick="openDeleteBonafideModal('{{ b.id }}')">
+
+                                        <i class="fa-regular fa-trash-can"></i>
+
+                                        <span>
+                                            Delete
+                                        </span>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                        {% else %}
+
+                        <!-- =================================
+                             EMPTY STATE
+                        ================================== -->
+
+                        <tr>
+
+                            <td colspan="8" class="sab-empty-cell">
+
+                                <div class="sab-empty-state">
+
+                                    <div class="sab-empty-icon">
+
+                                        <i class="fa-regular fa-folder-open"></i>
+
+                                    </div>
+
+                                    <h3>
+                                        No Bonafide Records Found
+                                    </h3>
+
+                                    <p>
+                                        No active bonafide certificates
+                                        match your current search or filters.
+                                    </p>
+
+                                    {% if search or school_filter or class_filter %}
+
+                                    <a href="{{ url_for('superadmin_bonafide_management') }}" class="sab-empty-clear">
+                                        Clear Filters
+                                    </a>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+     PAGINATION
+========================================================= -->
+
+    {% if total_records > 0 %}
+
+    <nav class="sab-pagination" aria-label="Bonafide pagination">
+
+        <!-- =====================================================
+         PAGINATION INFO
+    ====================================================== -->
+
+        <div class="sab-pagination-info">
+
+            Showing
+
+            <strong>
+                {{ ((page - 1) * per_page) + 1 }}
+            </strong>
+
+            –
+
+            <strong>
+                {{ [page * per_page, total_records] | min }}
+            </strong>
+
+            of
+
+            <strong>
+                {{ total_records }}
+            </strong>
+
+        </div>
+
+
+        <!-- =====================================================
+         PAGINATION CONTROLS
+    ====================================================== -->
+
+        <div class="sab-pagination-controls">
+
+
+            <!-- FIRST -->
+
+            {% if page > 1 %}
+
+            <a href="{{ url_for(
+                'superadmin_bonafide_management',
+                page=1,
+                search=search,
+                school_id=school_filter,
+                class=class_filter
+            ) }}" class="sab-page-btn sab-page-arrow" aria-label="First page" title="First page">
+                <i class="fa-solid fa-angles-left"></i>
+            </a>
+
+
+            <!-- PREVIOUS -->
+
+            <a href="{{ url_for(
+                'superadmin_bonafide_management',
+                page=page-1,
+                search=search,
+                school_id=school_filter,
+                class=class_filter
+            ) }}" class="sab-page-btn">
+                <i class="fa-solid fa-chevron-left"></i>
+                <span>Prev</span>
+            </a>
+
+            {% else %}
+
+            <span class="sab-page-btn is-disabled">
+                <i class="fa-solid fa-chevron-left"></i>
+                <span>Prev</span>
+            </span>
+
+            {% endif %}
+
+
+            <!-- =================================================
+             PAGE NUMBERS
+        ================================================== -->
+
+            <div class="sab-page-numbers">
+
+                {% for p in pagination_pages %}
+
+                {% if p == "..." %}
+
+                <span class="sab-page-dots">
+                    ...
+                </span>
+
+                {% else %}
+
+                <a href="{{ url_for(
+                            'superadmin_bonafide_management',
+                            page=p,
+                            search=search,
+                            school_id=school_filter,
+                            class=class_filter
+                        ) }}" class="
+                            sab-page-number
+                            {% if p == page %}
+                                is-active
+                            {% endif %}
+                        ">
+                    {{ p }}
+                </a>
+
+                {% endif %}
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- =================================================
+             NEXT
+        ================================================== -->
+
+            {% if page < total_pages %} <a href="{{ url_for(
+                'superadmin_bonafide_management',
+                page=page+1,
+                search=search,
+                school_id=school_filter,
+                class=class_filter
+            ) }}" class="sab-page-btn">
+                <span>Next</span>
+                <i class="fa-solid fa-chevron-right"></i>
+                </a>
+
+
+                <!-- LAST -->
+
+                <a href="{{ url_for(
+                'superadmin_bonafide_management',
+                page=total_pages,
+                search=search,
+                school_id=school_filter,
+                class=class_filter
+            ) }}" class="sab-page-btn sab-page-arrow" aria-label="Last page" title="Last page">
+                    <i class="fa-solid fa-angles-right"></i>
+                </a>
+
+                {% else %}
+
+                <span class="sab-page-btn is-disabled">
+                    <span>Next</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </span>
+
+                {% endif %}
+
+        </div>
+
+    </nav>
+
+    {% endif %}
+
+
+
+    <!-- =========================================================
+     SUPER ADMIN — BONAFIDE VIEW MODAL
+     NO AJAX / NO FETCH
+========================================================= -->
+
+    <div id="sabBonafideViewModal" class="sab-view-modal" aria-hidden="true">
+
+        <!-- =====================================================
+         OVERLAY
+    ====================================================== -->
+
+        <div class="sab-view-overlay" data-close-bonafide-modal></div>
+
+
+        <!-- =====================================================
+         MODAL
+    ====================================================== -->
+
+        <div class="sab-view-modal-box" role="dialog" aria-modal="true" aria-labelledby="sabBonafideViewTitle">
+
+            <!-- =================================================
+             HEADER
+        ================================================== -->
+
+            <header class="sab-view-header">
+
+                <div class="sab-view-heading">
+
+                    <div class="sab-view-heading-icon">
+
+                        <i class="fa-solid fa-certificate"></i>
+
+                    </div>
+
+
+                    <div class="sab-view-heading-content">
+
+                        <span class="sab-view-eyebrow">
+                            ADMIN RECORD
+                        </span>
+
+                        <h2 id="sabBonafideViewTitle">
+                            Bonafide Certificate
+                        </h2>
+
+                        <p>
+                            Read-only Bonafide record information
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="sab-view-close" id="sabBonafideViewClose" aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </header>
+
+
+            <!-- =================================================
+             BODY
+        ================================================== -->
+
+            <div class="sab-view-body">
+
+                <!-- =============================================
+                 RECORD STATUS
+            ============================================== -->
+
+                <div class="sab-status-card">
+
+                    <div class="sab-status-main">
+
+                        <div class="sab-status-icon">
+
+                            <i class="fa-solid fa-circle-check"></i>
+
+                        </div>
+
+                        <div>
+
+                            <span>
+                                RECORD STATUS
+                            </span>
+
+                            <strong>
+                                Active
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sab-record-id">
+
+                        <span>
+                            RECORD ID
+                        </span>
+
+                        <strong id="viewBonafideId">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                 STUDENT INFORMATION
+            ============================================== -->
+
+                <section class="sab-view-section">
+
+                    <div class="sab-section-header">
+
+                        <div class="sab-section-icon student">
+
+                            <i class="fa-solid fa-user-graduate"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Student Information
+                            </h3>
+
+                            <p>
+                                Student and identification details
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sab-view-grid">
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Student Name
+                            </span>
+
+                            <strong id="viewBonafideStudent">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Admission Number
+                            </span>
+
+                            <strong id="viewBonafideAdmission">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Class
+                            </span>
+
+                            <strong id="viewBonafideClass">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                School Register No
+                            </span>
+
+                            <strong id="viewBonafideRegisterNo">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Student UID
+                            </span>
+
+                            <strong id="viewBonafideStudentUid">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                APAAR ID
+                            </span>
+
+                            <strong id="viewBonafideApaar">
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =============================================
+                 BONAFIDE INFORMATION
+            ============================================== -->
+
+                <section class="sab-view-section">
+
+                    <div class="sab-section-header">
+
+                        <div class="sab-section-icon certificate">
+
+                            <i class="fa-solid fa-file-circle-check"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Bonafide Certificate
+                            </h3>
+
+                            <p>
+                                Certificate and issue information
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sab-view-grid">
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Bonafide Number
+                            </span>
+
+                            <strong id="viewBonafideNumber" class="sab-highlight">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Certificate Date
+                            </span>
+
+                            <strong id="viewBonafideDate">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Record Created
+                            </span>
+
+                            <strong id="viewBonafideCreatedAt">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Purpose
+                            </span>
+
+                            <strong id="viewBonafidePurpose">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Student Mobile
+                            </span>
+
+                            <strong id="viewBonafideMobile">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                Student Email
+                            </span>
+
+                            <strong id="viewBonafideEmail">
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =============================================
+                 SCHOOL INFORMATION
+            ============================================== -->
+
+                <section class="sab-view-section">
+
+                    <div class="sab-section-header">
+
+                        <div class="sab-section-icon school">
+
+                            <i class="fa-solid fa-school"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                School Information
+                            </h3>
+
+                            <p>
+                                Institution associated with this record
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sab-view-grid">
+
+                        <div class="sab-view-field sab-field-wide">
+
+                            <span>
+                                School Name
+                            </span>
+
+                            <strong id="viewBonafideSchool">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                School Code
+                            </span>
+
+                            <strong id="viewBonafideSchoolCode">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field">
+
+                            <span>
+                                School Phone
+                            </span>
+
+                            <strong id="viewBonafideSchoolPhone">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="sab-view-field sab-field-wide">
+
+                            <span>
+                                School Email
+                            </span>
+
+                            <strong id="viewBonafideSchoolEmail">
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =============================================
+                 ADMIN NOTE
+            ============================================== -->
+
+                <div class="sab-admin-note">
+
+                    <div class="sab-admin-note-icon">
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Administrator Access
+                        </strong>
+
+                        <p>
+                            This Bonafide record is displayed in
+                            read-only mode. Use the Delete action only
+                            when the certificate should be removed from
+                            active records.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+            <footer class="sab-view-footer">
+
+                <button type="button" class="sab-modal-delete" id="sabBonafideModalDelete">
+
+                    <i class="fa-regular fa-trash-can"></i>
+
+                    Delete
+
+                </button>
+
+
+                <button type="button" class="sab-modal-close" data-close-bonafide-modal>
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                    Close
+
+                </button>
+
+            </footer>
+
+        </div>
+
     </div>
 
-</div>
 
-<script>
+    <!-- =========================================================
+     DELETE BONAFIDE MODAL
+========================================================= -->
 
-function openDeleteBonafideModal(id){
+    <div id="deleteBonafideModal" class="sab-delete-modal" aria-hidden="true">
 
-    document.getElementById("deleteBonafideId").value = id;
+        <!-- OVERLAY -->
 
-    document.getElementById("deleteBonafideModal").style.display = "flex";
-}
+        <div class="sab-delete-overlay" data-close-delete-modal></div>
 
-function closeDeleteBonafideModal(){
 
-    document.getElementById("deleteBonafideModal").style.display = "none";
-}
+        <!-- BOX -->
 
-</script>
+        <div class="sab-delete-modal-box" role="dialog" aria-modal="true" aria-labelledby="sabDeleteTitle">
 
-{% endblock %}
+            <!-- ICON -->
+
+            <div class="sab-delete-icon">
+
+                <i class="fa-solid fa-trash-can"></i>
+
+            </div>
+
+
+            <!-- CONTENT -->
+
+            <div class="sab-delete-content">
+
+                <span class="sab-delete-eyebrow">
+                    DELETE RECORD
+                </span>
+
+                <h3 id="sabDeleteTitle">
+                    Delete Bonafide Certificate?
+                </h3>
+
+                <p>
+                    This record will be moved to the deleted
+                    records state and will no longer appear in
+                    Bonafide Management.
+                </p>
+
+            </div>
+
+
+            <!-- RECORD INFO -->
+
+            <div class="sab-delete-record">
+
+                <div>
+
+                    <span>
+                        BONAFIDE NUMBER
+                    </span>
+
+                    <strong id="deleteBonafideNumber">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        RECORD ID
+                    </span>
+
+                    <strong id="deleteBonafideDisplayId">
+                        —
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- FORM -->
+
+            <form method="POST" action="{{ url_for('delete_bonafide') }}" id="deleteBonafideForm">
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <input type="hidden" name="bonafide_id" id="deleteBonafideId">
+
+
+                <div class="sab-delete-actions">
+
+                    <button type="button" class="sab-delete-cancel" data-close-delete-modal>
+
+                        <i class="fa-solid fa-xmark"></i>
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit" class="sab-delete-confirm" id="confirmDeleteBonafide">
+
+                        <i class="fa-solid fa-trash-can"></i>
+
+                        <span>
+                            Delete Record
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        /* =========================================================
+           SUPER ADMIN — BONAFIDE MANAGEMENT
+           COMPLETE PAGE JAVASCRIPT
+           STABLE VERSION
+        ========================================================= */
+
+        (function () {
+
+            "use strict";
+
+
+            /* =====================================================
+               DOM HELPERS
+            ===================================================== */
+
+            const $ = function (selector, parent) {
+
+                return (
+                    parent || document
+                ).querySelector(selector);
+
+            };
+
+
+            const $$ = function (selector, parent) {
+
+                return Array.from(
+                    (
+                        parent || document
+                    ).querySelectorAll(selector)
+                );
+
+            };
+
+
+            /* =====================================================
+               ELEMENTS — FILTER
+            ===================================================== */
+
+            const filterForm =
+                document.getElementById(
+                    "sabFilterForm"
+                );
+
+
+            const searchInput =
+                document.getElementById(
+                    "sabSearch"
+                );
+
+
+            const searchClear =
+                document.getElementById(
+                    "sabSearchClear"
+                );
+
+
+            const schoolFilter =
+                document.getElementById(
+                    "sabSchoolFilter"
+                );
+
+
+            const classFilter =
+                document.getElementById(
+                    "sabClassFilter"
+                );
+
+
+            const searchButton =
+                document.getElementById(
+                    "sabSearchBtn"
+                );
+
+
+            /* =====================================================
+               FILTER — CLEAR SEARCH
+            ===================================================== */
+
+            if (
+                searchClear &&
+                searchInput
+            ) {
+
+                searchClear.addEventListener(
+                    "click",
+                    function () {
+
+                        searchInput.value = "";
+
+                        searchInput.focus();
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               FILTER LOADING
+            ===================================================== */
+
+            function setFilterLoading(
+                text
+            ) {
+
+                if (!searchButton) {
+                    return;
+                }
+
+
+                searchButton.classList.add(
+                    "is-loading"
+                );
+
+
+                searchButton.disabled = true;
+
+
+                const icon =
+                    searchButton.querySelector("i");
+
+
+                const label =
+                    searchButton.querySelector("span");
+
+
+                if (icon) {
+
+                    icon.className =
+                        "fa-solid fa-spinner fa-spin";
+
+                }
+
+
+                if (label) {
+
+                    label.textContent =
+                        text || "Loading...";
+
+                }
+
+            }
+
+
+            /* =====================================================
+               FILTER SUBMIT
+            ===================================================== */
+
+            if (filterForm) {
+
+                filterForm.addEventListener(
+                    "submit",
+                    function () {
+
+                        setFilterLoading(
+                            "Searching..."
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               ENTER SEARCH
+            ===================================================== */
+
+            if (searchInput) {
+
+                searchInput.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                        if (
+                            event.key !== "Enter"
+                        ) {
+                            return;
+                        }
+
+
+                        event.preventDefault();
+
+
+                        if (
+                            filterForm &&
+                            typeof filterForm.requestSubmit ===
+                            "function"
+                        ) {
+
+                            filterForm.requestSubmit();
+
+                        }
+
+                        else if (filterForm) {
+
+                            filterForm.submit();
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               QUICK FILTER
+            ===================================================== */
+
+            function submitQuickFilter() {
+
+                if (!filterForm) {
+                    return;
+                }
+
+
+                setFilterLoading(
+                    "Filtering..."
+                );
+
+
+                /*
+                 * Normal form submission.
+                 *
+                 * Server starts from page 1.
+                 */
+
+                if (
+                    typeof filterForm.requestSubmit ===
+                    "function"
+                ) {
+
+                    filterForm.requestSubmit();
+
+                }
+
+                else {
+
+                    filterForm.submit();
+
+                }
+
+            }
+
+
+            if (schoolFilter) {
+
+                schoolFilter.addEventListener(
+                    "change",
+                    submitQuickFilter
+                );
+
+            }
+
+
+            if (classFilter) {
+
+                classFilter.addEventListener(
+                    "change",
+                    submitQuickFilter
+                );
+
+            }
+
+
+            /* =====================================================
+               VIEW MODAL ELEMENTS
+            ===================================================== */
+
+            const viewModal =
+                document.getElementById(
+                    "sabBonafideViewModal"
+                );
+
+
+            const viewClose =
+                document.getElementById(
+                    "sabBonafideViewClose"
+                );
+
+
+            const viewDeleteButton =
+                document.getElementById(
+                    "sabBonafideModalDelete"
+                );
+
+
+            /* =====================================================
+               DELETE MODAL ELEMENTS
+            ===================================================== */
+
+            const deleteModal =
+                document.getElementById(
+                    "deleteBonafideModal"
+                );
+
+
+            const deleteIdInput =
+                document.getElementById(
+                    "deleteBonafideId"
+                );
+
+
+            const deleteNumber =
+                document.getElementById(
+                    "deleteBonafideNumber"
+                );
+
+
+            const deleteDisplayId =
+                document.getElementById(
+                    "deleteBonafideDisplayId"
+                );
+
+
+            const deleteForm =
+                document.getElementById(
+                    "deleteBonafideForm"
+                );
+
+
+            const confirmDelete =
+                document.getElementById(
+                    "confirmDeleteBonafide"
+                );
+
+
+            /* =====================================================
+               STATE
+            ===================================================== */
+
+            let currentBonafideId = null;
+
+            let currentBonafideNumber = null;
+
+            let activeModal = null;
+
+
+            /* =====================================================
+               BODY SCROLL
+            ===================================================== */
+
+            function lockBody() {
+
+                document.body.classList.add(
+                    "sab-modal-open"
+                );
+
+                document.body.style.overflow =
+                    "hidden";
+
+            }
+
+
+            function unlockBody() {
+
+                /*
+                 * Only unlock when neither
+                 * modal is open.
+                 */
+
+                const viewOpen =
+                    viewModal &&
+                    viewModal.classList.contains(
+                        "is-open"
+                    );
+
+
+                const deleteOpen =
+                    deleteModal &&
+                    deleteModal.classList.contains(
+                        "is-open"
+                    );
+
+
+                if (
+                    !viewOpen &&
+                    !deleteOpen
+                ) {
+
+                    document.body.classList.remove(
+                        "sab-modal-open"
+                    );
+
+                    document.body.style.overflow =
+                        "";
+
+                }
+
+            }
+
+
+            /* =====================================================
+               TEXT HELPER
+            ===================================================== */
+
+            function setText(
+                id,
+                value
+            ) {
+
+                const element =
+                    document.getElementById(id);
+
+
+                if (!element) {
+                    return;
+                }
+
+
+                if (
+                    value === null ||
+                    value === undefined ||
+                    String(value).trim() === ""
+                ) {
+
+                    element.textContent =
+                        "—";
+
+                    return;
+
+                }
+
+
+                element.textContent =
+                    String(value);
+
+            }
+
+
+            /* =====================================================
+               OPEN VIEW MODAL
+            ===================================================== */
+
+            window.openBonafideModal =
+                function (button) {
+
+
+                    if (!button) {
+
+                        console.error(
+                            "Bonafide view button missing."
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (!viewModal) {
+
+                        console.error(
+                            "Bonafide view modal missing."
+                        );
+
+                        return;
+
+                    }
+
+
+                    const data =
+                        button.dataset;
+
+
+                    /* =============================================
+                       CURRENT RECORD
+                    ============================================== */
+
+                    currentBonafideId =
+                        data.id || null;
+
+
+                    currentBonafideNumber =
+                        data.bonafideNumber || null;
+
+
+                    /* =============================================
+                       RECORD
+                    ============================================== */
+
+                    setText(
+                        "viewBonafideId",
+                        data.id
+                    );
+
+
+                    /* =============================================
+                       STUDENT
+                    ============================================== */
+
+                    setText(
+                        "viewBonafideStudent",
+                        data.student
+                    );
+
+
+                    setText(
+                        "viewBonafideAdmission",
+                        data.admission
+                    );
+
+
+                    setText(
+                        "viewBonafideClass",
+                        data.class
+                    );
+
+
+                    setText(
+                        "viewBonafideRegisterNo",
+                        data.registerNo
+                    );
+
+
+                    setText(
+                        "viewBonafideStudentUid",
+                        data.studentUid
+                    );
+
+
+                    setText(
+                        "viewBonafideApaar",
+                        data.apaarId
+                    );
+
+
+                    /* =============================================
+                       BONAFIDE
+                    ============================================== */
+
+                    setText(
+                        "viewBonafideNumber",
+                        data.bonafideNumber
+                    );
+
+
+                    setText(
+                        "viewBonafideDate",
+                        data.certificateDate
+                    );
+
+
+                    setText(
+                        "viewBonafideCreatedAt",
+                        data.createdAt
+                    );
+
+
+                    setText(
+                        "viewBonafidePurpose",
+                        data.purpose
+                    );
+
+
+                    setText(
+                        "viewBonafideMobile",
+                        data.mobile
+                    );
+
+
+                    setText(
+                        "viewBonafideEmail",
+                        data.email
+                    );
+
+
+                    /* =============================================
+                       SCHOOL
+                    ============================================== */
+
+                    setText(
+                        "viewBonafideSchool",
+                        data.school
+                    );
+
+
+                    setText(
+                        "viewBonafideSchoolCode",
+                        data.schoolCode
+                    );
+
+
+                    setText(
+                        "viewBonafideSchoolPhone",
+                        data.schoolPhone
+                    );
+
+
+                    setText(
+                        "viewBonafideSchoolEmail",
+                        data.schoolEmail
+                    );
+
+
+                    /* =============================================
+                       OPEN
+                    ============================================== */
+
+                    viewModal.classList.add(
+                        "is-open"
+                    );
+
+
+                    viewModal.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+
+                    activeModal =
+                        "view";
+
+
+                    lockBody();
+
+
+                    if (viewClose) {
+
+                        setTimeout(
+                            function () {
+
+                                viewClose.focus();
+
+                            },
+                            50
+                        );
+
+                    }
+
+                };
+
+
+            /* =====================================================
+               CLOSE VIEW MODAL
+            ===================================================== */
+
+            function closeBonafideModal() {
+
+                if (!viewModal) {
+                    return;
+                }
+
+
+                viewModal.classList.remove(
+                    "is-open"
+                );
+
+
+                viewModal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+
+                /*
+                 * Do NOT clear current ID immediately.
+                 * View → Delete needs it.
+                 */
+
+                activeModal = null;
+
+
+                unlockBody();
+
+            }
+
+
+            window.closeBonafideModal =
+                closeBonafideModal;
+
+
+            /* =====================================================
+               VIEW CLOSE BUTTON
+            ===================================================== */
+
+            if (viewClose) {
+
+                viewClose.addEventListener(
+                    "click",
+                    function () {
+
+                        closeBonafideModal();
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               VIEW → DELETE
+            ===================================================== */
+
+            if (viewDeleteButton) {
+
+                viewDeleteButton.addEventListener(
+                    "click",
+                    function () {
+
+
+                        if (
+                            !currentBonafideId
+                        ) {
+
+                            console.error(
+                                "Current Bonafide ID missing."
+                            );
+
+                            return;
+
+                        }
+
+
+                        const id =
+                            currentBonafideId;
+
+
+                        const number =
+                            currentBonafideNumber;
+
+
+                        closeBonafideModal();
+
+
+                        /*
+                         * Open delete modal
+                         * after view closes.
+                         */
+
+                        setTimeout(
+                            function () {
+
+                                openDeleteBonafideModal(
+                                    id,
+                                    number
+                                );
+
+                            },
+                            120
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               OPEN DELETE MODAL
+            ===================================================== */
+
+            window.openDeleteBonafideModal =
+                function (
+                    id,
+                    number
+                ) {
+
+
+                    const numericId =
+                        Number.parseInt(
+                            id,
+                            10
+                        );
+
+
+                    if (
+                        !Number.isInteger(
+                            numericId
+                        ) ||
+                        numericId <= 0
+                    ) {
+
+                        console.error(
+                            "Invalid Bonafide ID:",
+                            id
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (!deleteModal) {
+
+                        console.error(
+                            "Delete Bonafide modal missing."
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (!deleteIdInput) {
+
+                        console.error(
+                            "Delete Bonafide ID input missing."
+                        );
+
+                        return;
+
+                    }
+
+
+                    /* =============================================
+                       STATE
+                    ============================================== */
+
+                    currentBonafideId =
+                        numericId;
+
+
+                    currentBonafideNumber =
+                        number ||
+                        null;
+
+
+                    /* =============================================
+                       FORM VALUE
+                    ============================================== */
+
+                    deleteIdInput.value =
+                        String(
+                            numericId
+                        );
+
+
+                    /* =============================================
+                       DISPLAY
+                    ============================================== */
+
+                    setText(
+                        "deleteBonafideDisplayId",
+                        numericId
+                    );
+
+
+                    setText(
+                        "deleteBonafideNumber",
+                        number
+                    );
+
+
+                    /* =============================================
+                       OPEN
+                    ============================================== */
+
+                    deleteModal.classList.add(
+                        "is-open"
+                    );
+
+
+                    deleteModal.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+
+                    activeModal =
+                        "delete";
+
+
+                    lockBody();
+
+
+                    const cancelButton =
+                        deleteModal.querySelector(
+                            ".sab-delete-cancel"
+                        );
+
+
+                    if (cancelButton) {
+
+                        setTimeout(
+                            function () {
+
+                                cancelButton.focus();
+
+                            },
+                            50
+                        );
+
+                    }
+
+                };
+
+
+            /* =====================================================
+               CLOSE DELETE MODAL
+            ===================================================== */
+
+            window.closeDeleteBonafideModal =
+                function () {
+
+
+                    if (!deleteModal) {
+                        return;
+                    }
+
+
+                    deleteModal.classList.remove(
+                        "is-open"
+                    );
+
+
+                    deleteModal.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+
+                    activeModal = null;
+
+
+                    /*
+                     * Don't destroy the ID until
+                     * after closing.
+                     */
+
+                    unlockBody();
+
+                };
+
+
+            /* =====================================================
+               DELETE MODAL — OUTSIDE CLICK
+            ===================================================== */
+
+            if (deleteModal) {
+
+                deleteModal.addEventListener(
+                    "click",
+                    function (event) {
+
+
+                        /*
+                         * Only close when the actual
+                         * overlay is clicked.
+                         */
+
+                        if (
+                            event.target.closest(
+                                "[data-close-delete-modal]"
+                            )
+                        ) {
+
+                            closeDeleteBonafideModal();
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               VIEW MODAL — OUTSIDE CLICK
+            ===================================================== */
+
+            if (viewModal) {
+
+                viewModal.addEventListener(
+                    "click",
+                    function (event) {
+
+
+                        if (
+                            event.target.closest(
+                                "[data-close-bonafide-modal]"
+                            )
+                        ) {
+
+                            closeBonafideModal();
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               GLOBAL ESCAPE
+            ===================================================== */
+
+            document.addEventListener(
+                "keydown",
+                function (event) {
+
+
+                    if (
+                        event.key !== "Escape"
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    if (
+                        deleteModal &&
+                        deleteModal.classList.contains(
+                            "is-open"
+                        )
+                    ) {
+
+                        closeDeleteBonafideModal();
+
+                        return;
+
+                    }
+
+
+                    if (
+                        viewModal &&
+                        viewModal.classList.contains(
+                            "is-open"
+                        )
+                    ) {
+
+                        closeBonafideModal();
+
+                        return;
+
+                    }
+
+                }
+            );
+
+
+            /* =====================================================
+               DELETE FORM SUBMIT PROTECTION
+            ===================================================== */
+
+            if (deleteForm) {
+
+                deleteForm.addEventListener(
+                    "submit",
+                    function (event) {
+
+
+                        const id =
+                            Number.parseInt(
+                                deleteIdInput
+                                    ? deleteIdInput.value
+                                    : "",
+                                10
+                            );
+
+
+                        if (
+                            !Number.isInteger(id) ||
+                            id <= 0
+                        ) {
+
+                            event.preventDefault();
+
+                            console.error(
+                                "Invalid Bonafide ID during delete."
+                            );
+
+                            return;
+
+                        }
+
+
+                        /*
+                         * Prevent double-click
+                         * deletion requests.
+                         */
+
+                        if (
+                            confirmDelete &&
+                            confirmDelete.classList.contains(
+                                "is-loading"
+                            )
+                        ) {
+
+                            event.preventDefault();
+
+                            return;
+
+                        }
+
+
+                        if (confirmDelete) {
+
+                            confirmDelete.classList.add(
+                                "is-loading"
+                            );
+
+
+                            confirmDelete.disabled =
+                                true;
+
+
+                            const icon =
+                                confirmDelete.querySelector(
+                                    "i"
+                                );
+
+
+                            const text =
+                                confirmDelete.querySelector(
+                                    "span"
+                                );
+
+
+                            if (icon) {
+
+                                icon.className =
+                                    "fa-solid fa-spinner fa-spin";
+
+                            }
+
+
+                            if (text) {
+
+                                text.textContent =
+                                    "Deleting...";
+
+                            }
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               INITIAL STATE
+            ===================================================== */
+
+            if (viewModal) {
+
+                viewModal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+            }
+
+
+            if (deleteModal) {
+
+                deleteModal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+            }
+
+
+        })();
+    </script>
+
+
+    {% endblock %}

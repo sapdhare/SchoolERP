@@ -169,3 +169,208 @@ document.addEventListener(
         }
     }
 );
+
+
+/* =========================================================
+   GLOBAL FLASH / TOAST SYSTEM
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const flashMessages =
+        document.querySelectorAll(
+            ".flash-message[data-auto-dismiss='true']"
+        );
+
+
+    /* =====================================================
+       REMOVE FLASH
+    ===================================================== */
+
+    function removeFlash(message) {
+
+        if (!message || message.classList.contains("flash-removing")) {
+            return;
+        }
+
+        message.classList.add("flash-removing");
+
+        setTimeout(function () {
+
+            if (message && message.parentNode) {
+                message.remove();
+            }
+
+            cleanupFlashWrapper();
+
+        }, 300);
+    }
+
+
+    /* =====================================================
+       REMOVE EMPTY WRAPPER
+    ===================================================== */
+
+    function cleanupFlashWrapper() {
+
+        const wrapper =
+            document.getElementById("globalFlashWrapper");
+
+        if (!wrapper) {
+            return;
+        }
+
+        if (!wrapper.querySelector(".flash-message")) {
+            wrapper.remove();
+        }
+
+    }
+
+
+    /* =====================================================
+       CLOSE BUTTON
+    ===================================================== */
+
+    flashMessages.forEach(function (message) {
+
+        const closeButton =
+            message.querySelector(".flash-close");
+
+
+        if (closeButton) {
+
+            closeButton.addEventListener(
+                "click",
+                function () {
+
+                    removeFlash(message);
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           AUTO DISMISS
+        ================================================= */
+
+        const AUTO_DISMISS_TIME = 5000;
+
+
+        message._flashTimer =
+            setTimeout(function () {
+
+                removeFlash(message);
+
+            }, AUTO_DISMISS_TIME);
+
+    });
+
+
+    /* =====================================================
+       EVENT DELEGATION
+       Also handles dynamically inserted flash messages
+    ===================================================== */
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            const closeButton =
+                event.target.closest(".flash-close");
+
+
+            if (!closeButton) {
+                return;
+            }
+
+
+            const message =
+                closeButton.closest(".flash-message");
+
+
+            if (!message) {
+                return;
+            }
+
+
+            if (message._flashTimer) {
+
+                clearTimeout(
+                    message._flashTimer
+                );
+
+            }
+
+
+            removeFlash(message);
+
+        }
+    );
+
+
+    /* =====================================================
+       PAUSE AUTO DISMISS ON HOVER
+    ===================================================== */
+
+    flashMessages.forEach(function (message) {
+
+        message.addEventListener(
+            "mouseenter",
+            function () {
+
+                if (message._flashTimer) {
+
+                    clearTimeout(
+                        message._flashTimer
+                    );
+
+                }
+
+                const progress =
+                    message.querySelector(
+                        ".flash-progress"
+                    );
+
+                if (progress) {
+
+                    progress.style.animationPlayState =
+                        "paused";
+
+                }
+
+            }
+        );
+
+
+        message.addEventListener(
+            "mouseleave",
+            function () {
+
+                const progress =
+                    message.querySelector(
+                        ".flash-progress"
+                    );
+
+                if (progress) {
+
+                    progress.style.animationPlayState =
+                        "running";
+
+                }
+
+
+                message._flashTimer =
+                    setTimeout(function () {
+
+                        removeFlash(message);
+
+                    }, 2000);
+
+            }
+        );
+
+    });
+
+});

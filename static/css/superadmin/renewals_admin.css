@@ -1,562 +1,2218 @@
-/* =====================================================
-   RENEWAL CENTER - PREMIUM UI
-===================================================== */
+/* =========================================================
+   RENEWAL PAGE WRAPPER
+========================================================= */
 
-.renew-admin-wrapper{
-    padding:35px;
-    min-height:100vh;
-    background:#f8fafc;
+.renew-admin-wrapper {
+
+     width: 100%;
+    
+    max-width: 1500px;
+
+    margin: 0 auto;
+
+    padding: 28px 34px 50px;
+
+    box-sizing: border-box;
+
+}
+/* =========================================================
+   RENEWAL CENTER
+   PAGE HEADER
+========================================================= */
+
+.renew-page-header {
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 24px;
+
+    margin-bottom: 26px;
+
 }
 
-/* HEADER */
 
-.renew-admin-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:20px;
-    margin-bottom:30px;
+/* =========================================================
+   HEADER CONTENT
+========================================================= */
+
+.renew-header-content {
+
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
 }
 
-.renew-admin-header h1{
-    font-size:34px;
-    font-weight:800;
-    color:#0f172a;
-    margin-bottom:6px;
+
+/* =========================================================
+   HEADER ICON
+========================================================= */
+
+.renew-header-icon {
+
+    width: 54px;
+    height: 54px;
+
+    flex: 0 0 54px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(15, 170, 163, 0.14),
+            rgba(37, 99, 235, 0.10)
+        );
+
+    border: 1px solid
+        rgba(15, 170, 163, 0.16);
+
+    color: var(--plans-primary, #0faaa3);
+
+    font-size: 20px;
+
+    box-shadow:
+        0 8px 22px
+        rgba(15, 170, 163, 0.08);
+
 }
 
-.renew-admin-header p{
-    color:#64748b;
-    font-size:15px;
+
+/* =========================================================
+   HEADER TEXT
+========================================================= */
+
+.renew-header-text {
+
+    min-width: 0;
+
 }
 
-.renew-admin-export-btn{
-    background:linear-gradient(135deg,#0ea5a4,#14b8a6);
-    color:white;
-    padding:14px 24px;
-    border-radius:14px;
-    text-decoration:none;
-    font-weight:700;
-    transition:.25s;
+
+.renew-header-eyebrow {
+
+    margin-bottom: 3px;
+
+    color: var(--plans-primary, #0faaa3);
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.8px;
+
+    text-transform: uppercase;
+
 }
 
-.renew-admin-export-btn:hover{
-    transform:translateY(-2px);
+
+.renew-header-text h1 {
+
+    margin: 0;
+
+    color: var(--plans-text, #0f172a);
+
+    font-size: 30px;
+
+    line-height: 1.2;
+
+    font-weight: 800;
+
+    letter-spacing: -0.6px;
+
 }
 
-/* KPI CARDS */
 
-.renew-admin-stats{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-    gap:22px;
-    margin-bottom:30px;
-}
+.renew-header-text p {
 
-.renew-admin-stat-card{
-    border-radius:26px;
-    padding:28px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    color:white;
-    box-shadow:0 20px 40px rgba(15,23,42,.08);
-    transition:.25s;
+    margin: 6px 0 0;
+
+    color: var(--plans-muted, #64748b);
+
+    font-size: 13px;
+
+    line-height: 1.5;
+
 }
 
-.renew-admin-stat-card:hover{
-    transform:translateY(-4px);
+
+/* =========================================================
+   HEADER ACTION
+========================================================= */
+
+.renew-header-actions {
+
+    flex: 0 0 auto;
+
+    display: flex;
+
+    align-items: center;
+
 }
 
-.renew-admin-stat-card h4{
-    font-size:14px;
-    margin-bottom:8px;
-    color:white;
-    opacity:.9;
+
+.renew-primary-btn {
+
+    min-height: 44px;
+
+    padding: 0 18px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--plans-primary, #0faaa3),
+            var(--plans-primary-dark, #087f79)
+        );
+
+    border: 0;
+
+    color: #ffffff;
+
+    text-decoration: none;
+
+    font-size: 12px;
+
+    font-weight: 750;
+
+    box-shadow:
+        0 8px 20px
+        rgba(15, 170, 163, 0.20);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
+
 }
 
-.renew-admin-stat-card h2{
-    font-size:32px;
-    font-weight:800;
-    color:white;
+
+.renew-primary-btn:hover {
+
+    color: #ffffff;
+
+    text-decoration: none;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 12px 26px
+        rgba(15, 170, 163, 0.27);
+
+    filter: brightness(1.02);
+
 }
 
-.renew-admin-stat-card span{
-    font-size:48px;
+
+.renew-primary-btn:active {
+
+    transform: translateY(0);
+
 }
 
-.renew-admin-stat-card.expired{
-    background:linear-gradient(135deg,#ef4444,#dc2626);
+
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .renew-page-header {
+
+        align-items: flex-start;
+
+    }
+
+    .renew-header-text h1 {
+
+        font-size: 26px;
+
+    }
+
 }
 
-.renew-admin-stat-card.today{
-    background:linear-gradient(135deg,#f97316,#ea580c);
+
+/* =========================================================
+   RENEWAL HEADER — TABLET / MOBILE
+   768px AND BELOW
+========================================================= */
+
+@media (max-width: 768px) {
+
+    /* =====================================================
+       PAGE WRAPPER
+    ===================================================== */
+
+    .renew-admin-wrapper {
+
+        width: 100%;
+
+        padding:
+            22px
+            18px
+            35px;
+
+        box-sizing: border-box;
+
+    }
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .renew-page-header {
+
+        width: 100%;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 16px;
+
+        margin-bottom: 22px;
+
+    }
+
+
+    /* =====================================================
+       HEADER CONTENT
+    ===================================================== */
+
+    .renew-header-content {
+
+        width: 100%;
+
+        display: flex;
+
+        align-items: flex-start;
+
+        gap: 12px;
+
+    }
+
+
+    /* =====================================================
+       HEADER ICON
+    ===================================================== */
+
+    .renew-header-icon {
+
+        width: 48px;
+
+        height: 48px;
+
+        flex: 0 0 48px;
+
+        border-radius: 14px;
+
+        font-size: 18px;
+
+    }
+
+
+    /* =====================================================
+       HEADER TEXT
+    ===================================================== */
+
+    .renew-header-text {
+
+        min-width: 0;
+
+        flex: 1;
+
+    }
+
+
+    .renew-header-eyebrow {
+
+        margin-bottom: 3px;
+
+        font-size: 9px;
+
+        line-height: 1.2;
+
+        letter-spacing: 0.75px;
+
+    }
+
+
+    .renew-header-text h1 {
+
+        margin: 0;
+
+        font-size: 25px;
+
+        line-height: 1.2;
+
+        letter-spacing: -0.45px;
+
+    }
+
+
+    .renew-header-text p {
+
+        margin: 6px 0 0;
+
+        max-width: 100%;
+
+        font-size: 11px;
+
+        line-height: 1.5;
+
+    }
+
+
+    /* =====================================================
+       HEADER ACTION
+    ===================================================== */
+
+    .renew-header-actions {
+
+        width: 100%;
+
+        display: flex;
+
+        align-items: stretch;
+
+    }
+
+
+    .renew-primary-btn {
+
+        width: 100%;
+
+        min-height: 43px;
+
+        padding: 0 15px;
+
+        border-radius: 11px;
+
+        font-size: 11px;
+
+        gap: 7px;
+
+    }
+
+
+    .renew-primary-btn i {
+
+        font-size: 11px;
+
+    }
+
+
+    /* =====================================================
+       TOUCH / HOVER
+    ===================================================== */
+
+    .renew-primary-btn:hover {
+
+        transform: none;
+
+    }
+
 }
 
-.renew-admin-stat-card.week{
-    background:linear-gradient(135deg,#f59e0b,#d97706);
+
+
+
+/* =========================================================
+   RENEWAL KPI SUMMARY
+========================================================= */
+
+.renew-admin-stats {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 22px;
+
 }
 
-.renew-admin-stat-card.month{
-    background:linear-gradient(135deg,#0ea5a4,#14b8a6);
+
+/* =========================================================
+   KPI CARD
+========================================================= */
+
+.renew-admin-stat-card {
+
+    position: relative;
+
+    min-width: 0;
+
+    min-height: 112px;
+
+    padding: 18px 19px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    overflow: hidden;
+
+    border-radius: 17px;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 10px 28px rgba(15, 23, 42, 0.08);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
 }
 
-/* FILTERS */
 
-.renew-admin-filter-box{
-    display:flex;
-    gap:15px;
-    flex-wrap:wrap;
-    background:#fff;
-    padding:22px;
-    border-radius:24px;
-    border:1px solid #e2e8f0;
-    margin-bottom:25px;
-     min-width:110px;
-    text-align:center;
-    box-shadow:0 12px 35px rgba(15,23,42,.05);
-}
+/* subtle decorative glow */
 
-.renew-admin-filter-box input,
-.renew-admin-filter-box select{
-    padding:13px 16px;
-    border:1px solid #dbe3ee;
-    border-radius:14px;
-    min-width:220px;
-    font-size:14px;
-}
-.renew-admin-filter-box input{
-    flex:1.5;
+.renew-admin-stat-card::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 90px;
+    height: 90px;
+
+    right: -28px;
+    bottom: -35px;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,0.12);
+
+    pointer-events: none;
+
 }
 
-.renew-admin-filter-box select{
-    flex:1;
-}
-.renew-admin-filter-box input:focus,
-.renew-admin-filter-box select:focus{
-    outline:none;
-    border-color:#0ea5a4;
-    box-shadow:0 0 0 4px rgba(14,165,164,.13);
+
+.renew-admin-stat-card:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 15px 32px rgba(15, 23, 42, 0.12);
+
 }
 
-.renew-admin-filter-box button{
-     min-width:110px;
-    text-align:center;
-    background:#0ea5a4;
-    color:#fff;
-    border:none;
-    border-radius:14px;
-    padding:13px 22px;
-    font-weight:700;
-    cursor:pointer;
+
+/* =========================================================
+   CARD CONTENT
+========================================================= */
+
+.renew-stat-content {
+
+    position: relative;
+
+    z-index: 2;
+
+    min-width: 0;
+
 }
 
-.renew-admin-clear-btn{
-    background:#f1f5f9;
-    padding:13px 18px;
-    border-radius:14px;
-    text-decoration:none;
-    color:#334155;
-    font-weight:700;
+
+.renew-stat-label {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: rgba(255,255,255,0.90);
+
+    font-size: 12px;
+
+    font-weight: 700;
+
 }
 
-.renew-filter-count{
-     padding:18px;
-    text-align:left;
-    color:#475569; 
-    font-size:14px;
-    font-weight:800;
+
+.renew-stat-value {
+
+    display: block;
+
+    color: #ffffff;
+
+    font-size: 27px;
+
+    line-height: 1.1;
+
+    font-weight: 800;
+
+    letter-spacing: -0.5px;
+
 }
 
-/* TABLE */
 
-.renew-admin-table-box{
-    background:#fff;
-    border-radius:28px;
-    overflow:hidden;
-    border:1px solid #e2e8f0;
-    box-shadow:0 20px 45px rgba(15,23,42,.06);
-}
+.renew-stat-description {
 
-.renew-admin-table{
-    width:100%;
-    border-collapse:collapse;
-}
+    display: block;
 
-.renew-admin-table thead{
-    background:#f8fafc;
+    margin-top: 6px;
+
+    color: rgba(255,255,255,0.72);
+
+    font-size: 9px;
+
+    font-weight: 600;
+
 }
 
-.renew-admin-table th{
-    padding:18px;
-    text-align:left;
-    color:#475569;
-    font-size:14px;
-    font-weight:800;
-    white-space:nowrap;
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.renew-stat-icon {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: 42px;
+    height: 42px;
+
+    flex: 0 0 42px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: rgba(255,255,255,0.16);
+
+    border: 1px solid rgba(255,255,255,0.16);
+
+    color: #ffffff;
+
+    font-size: 16px;
+
+    backdrop-filter: blur(4px);
+
 }
 
-.renew-admin-table td{
-    padding:18px;
-    border-top:1px solid #eef2f7;
-    color:#334155;
-    vertical-align:middle;
+
+/* =========================================================
+   SOFT GRADIENT COLORS
+========================================================= */
+
+.renew-admin-stat-card.expired {
+
+    background:
+        linear-gradient(
+            135deg,
+            #f87171 0%,
+            #ef4444 48%,
+            #dc2626 100%
+        );
+
 }
 
-.renew-admin-table tbody tr:hover{
-    background:#f8fafc;
+
+.renew-admin-stat-card.today {
+
+    background:
+        linear-gradient(
+            135deg,
+            #fb923c 0%,
+            #f97316 48%,
+            #ea580c 100%
+        );
+
 }
 
-.renew-admin-table td strong{
-    display:block;
-    color:#0f172a;
-    font-size:15px;
+
+.renew-admin-stat-card.week {
+
+    background:
+        linear-gradient(
+            135deg,
+            #fbbf24 0%,
+            #f59e0b 48%,
+            #d97706 100%
+        );
+
 }
 
-.renew-admin-table td small{
-    display:block;
-    color:#94a3b8;
-    margin-top:4px;
-}
-.renew-row.expired{
-    background:#fff5f5;
+
+.renew-admin-stat-card.month {
+
+    background:
+        linear-gradient(
+            135deg,
+            #2dd4bf 0%,
+            #14b8a6 48%,
+            #0faaa3 100%
+        );
+
 }
 
-.renew-row.today{
-    background:#fff7ed;
+/* =========================================================
+   TABLET / MOBILE
+   768px AND BELOW
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .renew-admin-stats {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 12px;
+
+        margin-bottom: 18px;
+
+    }
+
+
+    .renew-admin-stat-card {
+
+        min-height: 100px;
+
+        padding: 15px;
+
+        border-radius: 14px;
+
+    }
+
+
+    .renew-stat-label {
+
+        font-size: 10px;
+
+        margin-bottom: 5px;
+
+    }
+
+
+    .renew-stat-value {
+
+        font-size: 23px;
+
+    }
+
+
+    .renew-stat-description {
+
+        margin-top: 5px;
+
+        font-size: 8px;
+
+    }
+
+
+    .renew-stat-icon {
+
+        width: 35px;
+        height: 35px;
+
+        flex-basis: 35px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+
+    }
+
+}
+@media (max-width: 420px) {
+
+    .renew-admin-stats {
+
+        gap: 9px;
+
+    }
+
+
+    .renew-admin-stat-card {
+
+        min-height: 92px;
+
+        padding: 12px;
+
+        border-radius: 13px;
+
+    }
+
+
+    .renew-stat-label {
+
+        font-size: 9px;
+
+    }
+
+
+    .renew-stat-value {
+
+        font-size: 21px;
+
+    }
+
+
+    .renew-stat-description {
+
+        font-size: 7px;
+
+    }
+
+
+    .renew-stat-icon {
+
+        width: 31px;
+        height: 31px;
+
+        flex-basis: 31px;
+
+        font-size: 11px;
+
+        border-radius: 9px;
+
+    }
+
 }
 
-.renew-row.warning{
-    background:#fffbeb;
-}
-.school-info{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
+/* =========================================================
+   RENEWAL FILTER TOOLBAR
+========================================================= */
+
+.renew-admin-filter-box {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 12px;
+
+    margin-bottom: 10px;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.045);
+
 }
 
-.school-info small{
-    color:#94a3b8;
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.renew-filter-search {
+
+    position: relative;
+
+    flex: 1.5;
+
+    min-width: 220px;
+
 }
 
-.renew-school-link{
-    font-weight:700;
-    color:#0f172a;
-    text-decoration:none;
+
+.renew-filter-search > i {
+
+    position: absolute;
+
+    left: 14px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    font-size: 13px;
+
+    pointer-events: none;
+
 }
 
-.renew-school-link:hover{
-    color:#14b8a6;
+
+.renew-filter-search input {
+
+    width: 100%;
+
+    height: 42px;
+
+    box-sizing: border-box;
+
+    padding: 0 14px 0 38px;
+
+    border: 1px solid #dbe3ee;
+
+    border-radius: 10px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #0f172a;
+
+    font-size: 12px;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+
 }
 
-.renew-empty-state{
-    text-align:center;
-    padding:50px;
-    color:#64748b;
-    font-weight:600;
+
+.renew-filter-search input::placeholder {
+
+    color: #94a3b8;
+
 }
 
-/* BADGES */
 
-.renew-plan-pill{
-    background:#ecfeff;
-    color:#0f766e;
-    padding:8px 14px;
-    border-radius:999px;
-    font-size:13px;
-    font-weight:800;
+.renew-filter-search input:focus {
+
+    border-color: #0ea5a4;
+
+    box-shadow:
+        0 0 0 3px rgba(14, 165, 164, .09);
+
 }
+
+
+/* =========================================================
+   SELECT CONTROLS
+========================================================= */
+
+.renew-filter-control {
+
+    position: relative;
+
+    min-width: 155px;
+
+}
+
+
+.renew-filter-control > i {
+
+    position: absolute;
+
+    left: 13px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    pointer-events: none;
+
+    z-index: 1;
+
+}
+
+
+.renew-filter-control select {
+
+    width: 100%;
+
+    height: 42px;
+
+    padding: 0 32px 0 34px;
+
+    border: 1px solid #dbe3ee;
+
+    border-radius: 10px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #334155;
+
+    font-size: 11px;
+
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.renew-filter-control select:focus {
+
+    border-color: #0ea5a4;
+
+    box-shadow:
+        0 0 0 3px rgba(14, 165, 164, .09);
+
+}
+
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+.renew-admin-clear-btn {
+
+    min-height: 42px;
+
+    padding: 0 14px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    flex: 0 0 auto;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+
+    color: #475569;
+
+    text-decoration: none;
+
+    font-size: 11px;
+
+    font-weight: 750;
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease;
+
+}
+
+
+.renew-admin-clear-btn:hover {
+
+    background: #f1f5f9;
+
+    border-color: #cbd5e1;
+
+    color: #0f172a;
+
+}
+
+
+/* =========================================================
+   RESULT COUNT
+========================================================= */
+
+.renew-filter-count {
+
+    padding: 7px 3px 16px;
+
+    color: #64748b;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+}
+
+
+.renew-filter-count strong {
+
+    color: #0f172a;
+
+    font-weight: 800;
+
+}
+/* =========================================================
+   RENEWAL FILTER LOADING
+========================================================= */
+
+.renew-admin-filter-box {
+    position: relative;
+}
+
+
+.renew-filter-loading {
+    width: 30px;
+    height: 30px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 30px;
+
+    color: #0ea5a4;
+
+    font-size: 14px;
+
+    background: #ecfeff;
+
+    border: 1px solid #ccfbf1;
+
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   FILTERING STATE
+========================================================= */
+
+.renew-admin-filter-box.is-filtering {
+    border-color: #b7e9e5;
+}
+
+
+.renew-admin-filter-box.is-filtering
+.renew-filter-search input {
+    border-color: #9bded9;
+}
+
+
+/* =========================================================
+   FILTER ERROR
+========================================================= */
+
+.renew-filter-error {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    margin-top: 10px;
+
+    padding: 10px 14px;
+
+    border: 1px solid #fecaca;
+
+    border-radius: 10px;
+
+    background: #fff1f2;
+
+    color: #b91c1c;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+
+.renew-filter-error i {
+    font-size: 13px;
+}
+
+
+/* MOBILE */
+@media (max-width: 768px) {
+
+    .renew-admin-filter-box {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 9px;
+
+        padding: 11px;
+
+        border-radius: 14px;
+
+    }
+
+
+    .renew-filter-search {
+
+        grid-column: 1 / -1;
+
+        min-width: 0;
+
+    }
+
+
+    .renew-filter-search input {
+
+        height: 40px;
+
+        font-size: 11px;
+
+    }
+
+
+    .renew-filter-control {
+
+        min-width: 0;
+
+        width: 100%;
+
+    }
+
+
+    .renew-filter-control select {
+
+        height: 40px;
+
+        font-size: 10px;
+
+        padding-left: 31px;
+
+        padding-right: 25px;
+
+    }
+
+
+    .renew-admin-clear-btn {
+
+        width: 100%;
+
+        min-height: 40px;
+
+        box-sizing: border-box;
+
+    }
+
+
+    .renew-filter-count {
+
+        padding: 6px 2px 14px;
+
+        font-size: 10px;
+
+    }
+
+}
+
+
+
+
+
+
+
+
+ 
+/* =========================================================
+   RENEWAL TABLE SECTION
+========================================================= */
+
+.renew-admin-table-section {
+    width: 100%;
+}
+
+
+/* =========================================================
+   TABLE CARD
+========================================================= */
+
+.renew-admin-table-box {
+
+    width: 100%;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 12px 32px rgba(15, 23, 42, 0.045);
+
+}
+
+
+.renew-table-scroll {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+    scrollbar-width: thin;
+
+    scrollbar-color: #cbd5e1 transparent;
+
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.renew-admin-table {
+
+    width: 100%;
+
+    min-width: 1050px;
+
+    border-collapse: separate;
+
+    border-spacing: 0;
+
+    table-layout: auto;
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.renew-admin-table thead {
+
+    background: #f8fafc;
+
+}
+
+
+.renew-admin-table th {
+
+    height: 46px;
+
+    padding: 0 15px;
+
+    text-align: left;
+
+    color: #64748b;
+
+    border-bottom: 1px solid #e5eaf0;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: .45px;
+
+    white-space: nowrap;
+
+}
+
+
+.renew-admin-table th:first-child {
+
+    padding-left: 18px;
+
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.renew-admin-table td {
+
+    padding: 13px 15px;
+
+    border-bottom: 1px solid #edf1f5;
+
+    color: #334155;
+
+    font-size: 11px;
+
+    vertical-align: middle;
+
+}
+
+
+.renew-admin-table tbody tr:last-child td {
+
+    border-bottom: 0;
+
+}
+
+
+.renew-admin-table tbody tr {
+
+    transition:
+        background .18s ease;
+
+}
+
+
+.renew-admin-table tbody tr:hover {
+
+    background: #f8fbfb;
+
+}
+
+
+/* =========================================================
+   ALERT ROWS
+========================================================= */
+
+.renew-row.expired {
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(254, 226, 226, .55),
+            rgba(255, 255, 255, 0)
+        );
+
+}
+
+
+.renew-row.today {
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255, 237, 213, .55),
+            rgba(255, 255, 255, 0)
+        );
+
+}
+
+
+.renew-row.warning {
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(254, 243, 199, .42),
+            rgba(255, 255, 255, 0)
+        );
+
+}
+
+
+/* =========================================================
+   SCHOOL
+========================================================= */
+
+.renew-school-cell {
+
+    min-width: 220px;
+
+}
+
+
+.school-info {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+}
+
+
+.renew-school-link {
+
+    display: block;
+
+    max-width: 280px;
+
+    color: #0f172a;
+
+    text-decoration: none;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    line-height: 1.35;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+}
+
+
+.renew-school-link:hover {
+
+    color: #0ea5a4;
+
+}
+
+
+.renew-school-email {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    max-width: 250px;
+
+    color: #94a3b8;
+
+    text-decoration: none;
+
+    font-size: 9px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+}
+
+
+.renew-school-email:hover {
+
+    color: #0ea5a4;
+
+}
+
+
+.renew-school-email i {
+
+    font-size: 9px;
+
+}
+
+
+.renew-no-email {
+
+    color: #cbd5e1;
+
+    font-size: 9px;
+
+}
+
+
+/* =========================================================
+   PLAN BADGE
+========================================================= */
+
+.renew-plan-pill {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 6px 9px;
+
+    border-radius: 8px;
+
+    background: #ecfeff;
+
+    border: 1px solid #ccfbf1;
+
+    color: #0f766e;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
+}
+
+
+.renew-plan-pill i {
+
+    font-size: 9px;
+
+}
+
+
+/* =========================================================
+   EXPIRY
+========================================================= */
+
+.renew-expiry {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+}
+
+
+.renew-expiry strong {
+
+    color: #334155;
+
+    font-size: 11px;
+
+    font-weight: 750;
+
+    white-space: nowrap;
+
+}
+
+
+.renew-expiry small {
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+}
+
+
+/* =========================================================
+   DAYS BADGES
+========================================================= */
 
 .days-pill,
-.renew-status-pill{
-    padding:8px 14px;
-    border-radius:999px;
-    font-size:13px;
-    font-weight:800;
-    white-space:nowrap;
+.renew-status-pill {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    min-height: 25px;
+
+    padding: 0 9px;
+
+    border-radius: 999px;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
 }
+
+
+.days-pill i,
+.renew-status-pill i {
+
+    font-size: 8px;
+
+}
+
+
+/* EXPIRED */
 
 .days-pill.expired,
-.renew-status-pill.expired{
-    background:#fee2e2;
-    color:#b91c1c;
+.renew-status-pill.expired {
+
+    background: #fee2e2;
+
+    border: 1px solid #fecaca;
+
+    color: #b91c1c;
+
 }
+
+
+/* TODAY */
 
 .days-pill.today,
-.renew-status-pill.today{
-    background:#ffedd5;
-    color:#c2410c;
+.renew-status-pill.today {
+
+    background: #ffedd5;
+
+    border: 1px solid #fed7aa;
+
+    color: #c2410c;
+
 }
+
+
+/* WARNING */
+
+.days-pill.warning,
+.renew-status-pill.warning {
+
+    background: #fef3c7;
+
+    border: 1px solid #fde68a;
+
+    color: #b45309;
+
+}
+
+
+/* SAFE */
 
 .days-pill.active,
-.renew-status-pill.warning{
-    background:#fef3c7;
-    color:#b45309;
+.renew-status-pill.safe {
+
+    background: #dcfce7;
+
+    border: 1px solid #bbf7d0;
+
+    color: #15803d;
+
 }
 
-.renew-status-pill.safe{
-    background:#dcfce7;
-    color:#15803d;
+
+/* =========================================================
+   AMOUNT
+========================================================= */
+
+.renew-amount {
+
+    color: #0f172a;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
 }
 
-/* ACTIONS */
 
-.renew-actions{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.renew-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 5px;
+
+    min-width: 260px;
+
 }
 
-.inline-action-form{
-    display:inline;
+
+.inline-action-form {
+
+    display: inline-flex;
+
+    margin: 0;
+
 }
 
-.renew-action-btn{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    border:none;
-    text-decoration:none;
-    border-radius:10px;
-    padding:9px 12px;
-    font-size:12px;
-    font-weight:800;
-    cursor:pointer;
-    transition:.25s;
+
+.renew-action-btn {
+
+    min-height: 28px;
+
+    padding: 0 8px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 4px;
+
+    border: 1px solid transparent;
+
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        transform .18s ease,
+        background .18s ease;
+
 }
 
-.renew-action-btn:hover{
-    transform:translateY(-2px);
+
+.renew-action-btn:hover {
+
+    transform: translateY(-1px);
+
 }
 
-.renew-action-btn.email{
-    background:#dbeafe;
-    color:#1d4ed8;
+
+/* EMAIL */
+
+.renew-action-btn.email {
+
+    background: #eff6ff;
+
+    border-color: #dbeafe;
+
+    color: #1d4ed8;
+
 }
 
-.renew-action-btn.whatsapp{
-    background:#dcfce7;
-    color:#15803d;
+
+/* WHATSAPP */
+
+.renew-action-btn.whatsapp {
+
+    background: #ecfdf5;
+
+    border-color: #d1fae5;
+
+    color: #15803d;
+
 }
 
-.renew-action-btn.subscription{
-    background:#ede9fe;
-    color:#6d28d9;
+
+/* SUBSCRIPTION */
+
+.renew-action-btn.subscription {
+
+    background: #f5f3ff;
+
+    border-color: #ede9fe;
+
+    color: #6d28d9;
+
 }
 
-.renew-action-btn.payment{
-    background:#fef3c7;
-    color:#b45309;
+
+/* PAYMENT */
+
+.renew-action-btn.payment {
+
+    background: #fffbeb;
+
+    border-color: #fef3c7;
+
+    color: #b45309;
+
 }
 
-/* PAGINATION */
 
-.renew-pagination{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:14px;
-    margin-top:25px;
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.renew-empty-state {
+
+    padding: 55px 20px !important;
+
+    text-align: center !important;
+
 }
 
-.renew-pagination a{
-    padding:12px 18px;
-    border-radius:12px;
-    background:#0ea5a4;
-    color:#fff;
-    text-decoration:none;
-    font-weight:800;
+
+.renew-empty-icon {
+
+    width: 44px;
+
+    height: 44px;
+
+    margin: 0 auto 10px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #f1f5f9;
+
+    color: #94a3b8;
+
+    font-size: 17px;
+
 }
 
-.renew-pagination span{
-    font-weight:800;
-    color:#334155;
-    padding:12px 16px;
-    border-radius:12px;
-    background:#fff;
-    border:1px solid #e2e8f0;
+
+.renew-empty-state strong {
+
+    display: block;
+
+    color: #334155;
+
+    font-size: 12px;
+
 }
- /* =====================================================
-   RENEWAL CENTER - PREMIUM MOBILE RESPONSIVE
-===================================================== */
 
-@media(max-width:576px){
 
-    html,
-    body{
-        width:100%;
-        overflow-x:hidden;
-        background:#f8fafc;
+.renew-empty-state span {
+
+    display: block;
+
+    margin-top: 4px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.renew-pagination {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    margin-top: 16px;
+
+}
+
+
+.renew-page-btn {
+
+    min-height: 34px;
+
+    padding: 0 11px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    border: 1px solid #dbe3ea;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    text-decoration: none;
+
+    font-size: 10px;
+
+    font-weight: 750;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        border-color .18s ease;
+
+}
+
+
+.renew-page-btn:hover {
+
+    background: #ecfdfb;
+
+    border-color: #99f6e4;
+
+    color: #087f79;
+
+}
+
+
+.renew-page-info {
+
+    min-height: 34px;
+
+    padding: 0 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 4px;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+}
+
+
+.renew-page-info strong {
+
+    color: #0f172a;
+
+    font-weight: 800;
+
+}
+
+
+.renew-page-info small {
+
+    margin-left: 5px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+}
+
+@media (max-width: 768px) {
+
+    /* =====================================================
+       TABLE CARD
+    ====================================================== */
+
+    .renew-admin-table-box {
+
+        border-radius: 14px;
+
+        box-shadow:
+            0 8px 24px rgba(15, 23, 42, .04);
+
     }
 
-    .renew-admin-wrapper{
-        padding:14px;
-        min-height:100vh;
+
+    .renew-table-scroll {
+
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling: touch;
+
     }
 
-    .renew-admin-header{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:14px;
-        margin-bottom:22px;
+
+    .renew-admin-table {
+
+        min-width: 900px;
+
     }
 
-    .renew-admin-header h1{
-        font-size:25px;
-        line-height:1.3;
+
+    /* =====================================================
+       TABLE
+    ====================================================== */
+
+    .renew-admin-table th {
+
+        height: 42px;
+
+        padding: 0 11px;
+
+        font-size: 9px;
+
     }
 
-    .renew-admin-header p{
-        font-size:13px;
-        line-height:1.5;
+
+    .renew-admin-table td {
+
+        padding: 11px;
+
+        font-size: 10px;
+
     }
 
-    .renew-admin-export-btn{
-        width:100%;
-        text-align:center;
-        padding:13px;
-        border-radius:13px;
-        font-size:13px;
+
+    .renew-admin-table th:first-child {
+
+        padding-left: 13px;
+
     }
 
-    .renew-admin-stats{
-        grid-template-columns:1fr;
-        gap:14px;
-        margin-bottom:22px;
+
+    /* SCHOOL */
+
+    .renew-school-cell {
+
+        min-width: 190px;
+
     }
 
-    .renew-admin-stat-card{
-        padding:20px;
-        border-radius:18px;
+
+    .renew-school-link {
+
+        max-width: 190px;
+
+        font-size: 11px;
+
     }
 
-    .renew-admin-stat-card:hover{
-        transform:none;
+
+    .renew-school-email {
+
+        max-width: 180px;
+
+        font-size: 8px;
+
     }
 
-    .renew-admin-stat-card h4{
-        font-size:13px;
+
+    /* PLAN */
+
+    .renew-plan-pill {
+
+        padding: 5px 8px;
+
+        font-size: 9px;
+
     }
 
-    .renew-admin-stat-card h2{
-        font-size:30px;
+
+    /* EXPIRY */
+
+    .renew-expiry strong {
+
+        font-size: 10px;
+
     }
 
-    .renew-admin-stat-card span{
-        width:50px;
-        height:50px;
-        border-radius:15px;
-        background:rgba(255,255,255,.18);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:25px;
+
+    .renew-expiry small {
+
+        font-size: 8px;
+
     }
 
-    .renew-admin-filter-box{
-        flex-direction:column;
-        gap:10px;
-        padding:14px;
-        border-radius:18px;
-        margin-bottom:14px;
-    }
 
-    .renew-admin-filter-box input,
-    .renew-admin-filter-box select,
-    .renew-admin-filter-box button,
-    .renew-admin-clear-btn{
-        width:100%;
-        min-width:100%;
-        height:48px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        border-radius:12px;
-        font-size:13px;
-    }
+    /* BADGES */
 
-    .renew-filter-count{
-        padding:10px 4px 14px;
-        font-size:13px;
-        line-height:1.5;
-    }
-
-    .renew-admin-table-box{
-        border-radius:18px;
-        overflow-x:auto;
-    }
-
-    .renew-admin-table{
-        min-width:980px;
-    }
-
-    .renew-admin-table th{
-        padding:13px;
-        font-size:12px;
-        white-space:nowrap;
-    }
-
-    .renew-admin-table td{
-        padding:13px;
-        font-size:13px;
-        white-space:nowrap;
-    }
-
-    .renew-admin-table tbody tr:hover{
-        background:inherit;
-    }
-
-    .school-info strong,
-    .renew-school-link{
-        font-size:13px;
-        max-width:210px;
-        white-space:normal;
-        line-height:1.35;
-    }
-
-    .school-info small{
-        font-size:11px;
-        max-width:210px;
-        white-space:normal;
-        line-height:1.35;
-    }
-
-    .renew-plan-pill,
     .days-pill,
-    .renew-status-pill{
-        padding:6px 10px;
-        font-size:11px;
+    .renew-status-pill {
+
+        min-height: 23px;
+
+        padding: 0 8px;
+
+        font-size: 8px;
+
     }
 
-    .renew-actions{
-        flex-wrap:nowrap;
-        gap:6px;
+
+    /* AMOUNT */
+
+    .renew-amount {
+
+        font-size: 10px;
+
     }
 
-    .renew-action-btn{
-        padding:8px 10px;
-        border-radius:9px;
-        font-size:11px;
-        white-space:nowrap;
+
+    /* ACTIONS */
+
+    .renew-actions {
+
+        min-width: 245px;
+
+        gap: 4px;
+
     }
 
-    .renew-empty-state{
-        padding:35px 20px;
-        font-size:13px;
+
+    .renew-action-btn {
+
+        min-height: 27px;
+
+        padding: 0 7px;
+
+        font-size: 8px;
+
     }
 
-    .renew-pagination{
-        flex-direction:column;
-        gap:10px;
-        margin:22px 0;
+
+    /* =====================================================
+       PAGINATION
+    ====================================================== */
+
+    .renew-pagination {
+
+        flex-wrap: wrap;
+
+        gap: 6px;
+
+        margin-top: 13px;
+
     }
 
-    .renew-pagination a,
-    .renew-pagination span{
-        width:100%;
-        text-align:center;
-        padding:12px;
-        border-radius:12px;
-        font-size:13px;
+
+    .renew-page-btn {
+
+        min-height: 32px;
+
+        padding: 0 9px;
+
+        font-size: 9px;
+
     }
+
+
+    .renew-page-info {
+
+        min-height: 32px;
+
+        font-size: 9px;
+
+        padding: 0 9px;
+
+    }
+
+
+    .renew-page-info small {
+
+        display: none;
+
+    }
+
 }

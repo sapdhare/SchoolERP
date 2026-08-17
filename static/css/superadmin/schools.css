@@ -1,776 +1,8081 @@
-/* ================= MAIN WRAPPER ================= */
-body {
-    background: #f8fafc;
-}
+/* =========================================================
+   PAGE WRAPPER
+========================================================= */
 
-/* ================= HERO ================= */
-.sa-hero {
-    background: linear-gradient(135deg, #0ea5a4, #22c55e);
-    padding: 35px;
-    border-radius: 24px;
-    color: white;
-    margin-bottom: 30px;
+.sa-wrapper {
 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 30px;
-
-    box-shadow: 0 20px 40px rgba(14, 165, 164, 0.18);
-}
-
-.hero-left h1 {
-    font-size: 34px;
-    font-weight: 700;
-    margin-bottom: 10px;
-}
-
-.hero-left p {
-    font-size: 15px;
-    opacity: 0.95;
-}
-
-/* ================= HERO STATS ================= */
-.hero-stats {
-    display: flex;
-    gap: 15px;
-}
-
-.hero-stat-card {
-    min-width: 160px;
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(12px);
-    padding: 20px;
-    border-radius: 18px;
-}
-
-.hero-stat-card span {
-    font-size: 13px;
-    opacity: 0.9;
-}
-
-.hero-stat-card h3 {
-    margin-top: 10px;
-    font-size: 30px;
-}
-
-/* ================= SEARCH ================= */
-.sa-search-box {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 30px;
-    align-items: center;
-}
-
-.search-wrapper {
-    flex: 1;
-}
-
-.sa-search-box input {
     width: 100%;
-    padding: 16px 18px;
-    border-radius: 14px;
-    border: 1px solid #dbe2ea;
-    font-size: 14px;
-    background: white;
+    
+    max-width: 1500px;
+
+    margin: 0 auto;
+
+    padding: 28px 34px 50px;
+
+    box-sizing: border-box;
 }
 
-.sa-search-box button {
-    padding: 14px 22px;
-    border: none;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #0ea5a4, #14b8a6);
-    color: white;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.3s;
-}
+/* =========================================================
+   SCHOOL MANAGEMENT HEADER
+========================================================= */
 
-.sa-search-box button:hover {
-    transform: translateY(-2px);
-}
+.sa-school-header {
 
-.clear-btn {
-    padding: 14px 22px;
-    border: none;
-    border-radius: 14px;
-    background:#fff;
-    color:black;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.3s;
-}
+    width: 100%;
 
-/* ================= SECTION HEAD ================= */
-.section-head {
+    min-height: 148px;
+
     display: flex;
-    justify-content: space-between;
+
     align-items: center;
-    margin: 25px 0;
-}
 
-.section-head-left h2{
-    margin: 0;
-}
+    justify-content: space-between;
 
-.section-head-left p{
-    margin-top: 8px;
-}
+    gap: 28px;
 
-/* ADD BUTTON */
-.add-school-btn{
-    border: none;
-    cursor: pointer;
-    padding: 14px 22px;
-    border-radius: 14px;
-    font-weight: 700;
-    font-size: 14px;
-    color: white;
-    background: linear-gradient(
-        135deg,
-        #0f766e,
-        #10b981
-    );
-    box-shadow: 0 10px 25px rgba(16,185,129,0.25);
-    transition: 0.25s ease;
-}
+    padding: 24px 28px;
 
-.add-school-btn:hover{
-    transform: translateY(-2px);
-}
+    margin-bottom: 24px;
 
-/* ================= GRID ================= */
-.sa-grid {
-    display: grid;
-    align-items:stretch;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 22px;
-}
+    border-radius: 22px;
 
-/* ================= CARD ================= */
-.sa-card {
-   
+    background:
+        linear-gradient(
+            135deg,
+            #0ea5a4 0%,
+            #14b8a6 48%,
+            #22c55e 100%
+        );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 18px 40px rgba(14, 165, 164, 0.16);
+
     position: relative;
+
     overflow: hidden;
 
-     display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-
-    background: white;
-    padding: 25px;
-    border-radius: 24px;
-
-    border: 1px solid #eef2f7;
-
-    box-shadow: 0 12px 25px rgba(0,0,0,0.04);
-
-    cursor: pointer;
-    transition: 0.35s;
 }
 
-.sa-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 25px 40px rgba(0,0,0,0.08);
-}
 
-.card-glow {
+/* =========================================================
+   DECORATIVE LIGHT EFFECT
+========================================================= */
+
+.sa-school-header::before {
+
+    content: "";
+
     position: absolute;
-    width: 160px;
-    height: 160px;
-    background: rgba(14,165,164,0.06);
+
+    width: 260px;
+
+    height: 260px;
+
+    right: 180px;
+
+    top: -150px;
+
     border-radius: 50%;
-    right: -50px;
-    top: -50px;
+
+    background: rgba(255,255,255,0.08);
+
+    pointer-events: none;
+
 }
 
-/* ================= CARD TOP ================= */
-.sa-top {
+
+.sa-school-header::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+
+    height: 180px;
+
+    right: -70px;
+
+    bottom: -100px;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,0.08);
+
+    pointer-events: none;
+
+}
+
+
+/* =========================================================
+   HEADER CONTENT
+========================================================= */
+
+.sa-school-header-content {
+
+    position: relative;
+
+    z-index: 2;
+
+    min-width: 0;
+
+}
+
+
+.sa-school-title-row {
+
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    
-}
 
-.sa-top h2 {
-    font-size: 24px;
-    margin-bottom: 5px;
-    line-height:1.3;
-    word-break:break-word;
-}
-
-.school-label {
-    color: #94a3b8;
-    font-size: 13px;
-}
-
-/* ================= BADGE ================= */
-.badge {
-    background: linear-gradient(135deg, #0ea5a4, #14b8a6);
-    color: white;
-    padding: 7px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-/* ================= CARD MIDDLE ================= */
-.sa-middle {
-    margin: 30px 0;
-}
-
-.metric-box {
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 18px;
-}
-
-.metric-box span {
-    color: #64748b;
-    font-size: 14px;
-}
-
-.metric-box h3 {
-    margin-top: 10px;
-    font-size: 34px;
-    font-weight: 700;
-}
-
-/* ================= CARD BOTTOM ================= */
-.sa-bottom{
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    flex-wrap:wrap;
-}
-
-.card-btn{
-     flex:1 1 auto;
-    min-width:95px;
-    border: none;
-    padding: 12px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.view-btn{
-    background: #0ea5a4;
-    color: white;
-}
-
-.edit-btn{
-    background: #f59e0b;
-    color: white;
-}
-
-.activate-btn{
-    background: #16a34a;
-    color: white;
-}
-
-.deactivate-btn{
-    background: #dc2626;
-    color: white;
-}
- 
-/* ================= SCHOOL MODAL ================= */
-
-.school-modal{
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: none;
     align-items: center;
+
+    gap: 15px;
+
+}
+
+
+/* =========================================================
+   TITLE ICON
+========================================================= */
+
+.sa-school-title-icon {
+
+    width: 52px;
+
+    height: 52px;
+
+    flex: 0 0 52px;
+
+    display: flex;
+
+    align-items: center;
+
     justify-content: center;
-    z-index: 9999;
-    backdrop-filter: blur(8px);
+
+    border-radius: 16px;
+
+    background: rgba(255,255,255,0.16);
+
+    border: 1px solid rgba(255,255,255,0.18);
+
+    backdrop-filter: blur(10px);
+
+    -webkit-backdrop-filter: blur(10px);
+
+    font-size: 22px;
+
+    color: #ffffff;
+
 }
 
-.school-modal-box{
-    width: 760px;
-    background: white;
-    border-radius: 24px;
-    padding: 28px;
-    box-shadow: 0 25px 80px rgba(0,0,0,0.15);
-    animation: modalPop .25s ease;
+
+.sa-school-title-row h1 {
+
+    margin: 0 0 5px;
+
+    color: #ffffff;
+
+    font-size: 29px;
+
+    line-height: 1.15;
+
+    font-weight: 800;
+
+    letter-spacing: -0.4px;
+
 }
 
-@keyframes modalPop{
-    from{
-        transform: scale(.92);
-        opacity: 0;
-    }
-    to{
-        transform: scale(1);
-        opacity: 1;
-    }
+
+.sa-school-title-row p {
+
+    margin: 0;
+
+    color: rgba(255,255,255,0.88);
+
+    font-size: 13.5px;
+
+    line-height: 1.5;
+
 }
 
-.modal-head{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-}
 
-.modal-head h2{
-    font-size: 24px;
-    font-weight: 700;
-}
+/* =========================================================
+   HEADER STATS
+========================================================= */
 
-.modal-head span{
-    font-size: 28px;
-    cursor: pointer;
-}
+.sa-school-header-stats {
 
-.school-form-grid{
+    position: relative;
+
+    z-index: 2;
+
     display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 18px;
-}
-
-.school-form-group{
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.school-form-group.full{
-    grid-column: span 2;
-}
-
-.school-form-group label{
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.school-form-group input{
-    padding: 14px;
-    border: 1px solid #dbe4ee;
-    border-radius: 12px;
-    font-size: 14px;
-    outline: none;
-}
-
-.school-form-group input:focus{
-    border-color: #0b8f8e;
-}
-
-.school-modal-actions{
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.cancel-btn,
-.save-btn{
-    padding: 12px 20px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.cancel-btn{
-    background: #f1f5f9;
-}
-
-.save-btn{
-    background: linear-gradient(135deg,#0b8f8e,#22c55e);
-    color: white;
-}
-
- 
-
-/* =========================================
-   FEATURE BUTTON
-========================================= */
-
-.feature-btn{
-    background: linear-gradient(
-        135deg,
-        #6366f1,
-        #8b5cf6
-    );
-
-    color: white;
-}
-
-/* =========================================
-   FEATURE MODAL
-========================================= */
-
-.feature-grid{
-
-    display:grid;
 
     grid-template-columns:
-    repeat(2,1fr);
+        repeat(2, minmax(145px, 1fr));
 
-    gap:18px;
+    gap: 12px;
 
-    margin-top:20px;
 }
 
-.feature-item{
 
-    background:#f8fafc;
+/* =========================================================
+   STAT CARD
+========================================================= */
 
-    border:1px solid #e2e8f0;
+.sa-header-stat {
 
-    border-radius:18px;
+    min-width: 145px;
 
-    padding:18px;
+    min-height: 76px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    padding: 13px 15px;
+
+    border-radius: 16px;
+
+    background: rgba(255,255,255,0.14);
+
+    border: 1px solid rgba(255,255,255,0.16);
+
+    backdrop-filter: blur(12px);
+
+    -webkit-backdrop-filter: blur(12px);
+
+    transition:
+        transform .25s ease,
+        background .25s ease;
+
 }
 
-.feature-item label{
 
-    display:block;
+.sa-header-stat:hover {
 
-    font-size:14px;
+    transform: translateY(-2px);
 
-    font-weight:700;
+    background: rgba(255,255,255,0.19);
 
-    margin-bottom:12px;
-
-    color:#0f172a;
 }
 
-.feature-item select{
 
-    width:100%;
+/* =========================================================
+   STAT ICON
+========================================================= */
 
-    padding:14px;
+.sa-header-stat-icon {
 
-    border-radius:12px;
+    width: 38px;
 
-    border:1px solid #dbe4ee;
+    height: 38px;
 
-    font-size:14px;
+    flex: 0 0 38px;
 
-    outline:none;
-}
-.sa-pagination{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:14px;
-    margin:28px 0;
-}
+    display: flex;
 
-.sa-pagination a{
-    padding:12px 18px;
-    border-radius:12px;
-    background:#0ea5a4;
-    color:#fff;
-    font-weight:700;
-    text-decoration:none;
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: rgba(255,255,255,0.16);
+
+    font-size: 15px;
+
 }
 
-.sa-pagination span{
-    font-weight:700;
-    color:#334155;
+
+.sa-header-stat-icon.total {
+
+    color: #ffffff;
+
 }
- 
 
-/* =====================================================
-   SCHOOL MANAGEMENT - PREMIUM MOBILE RESPONSIVE 576px
-===================================================== */
 
-@media(max-width:576px){
+.sa-header-stat-icon.active {
 
-    html,
-    body{
-        width:100%;
-        overflow-x:hidden;
-        background:#f8fafc;
+    color: #dcfce7;
+
+}
+
+
+/* =========================================================
+   STAT CONTENT
+========================================================= */
+
+.sa-header-stat-content {
+
+    display: flex;
+
+    flex-direction: column;
+
+    min-width: 0;
+
+}
+
+
+.sa-header-stat-content span {
+
+    margin-bottom: 3px;
+
+    color: rgba(255,255,255,0.82);
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+}
+
+
+.sa-header-stat-content strong {
+
+    color: #ffffff;
+
+    font-size: 25px;
+
+    line-height: 1;
+
+    font-weight: 800;
+
+}
+
+/* =========================================================
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .sa-school-header {
+
+        min-height: auto;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 18px;
+
+        padding: 20px;
+
+        margin-bottom: 18px;
+
+        border-radius: 18px;
+
     }
 
-    /* HERO */
 
-    .sa-hero{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:20px;
+    /* TITLE */
 
-        padding:22px;
+    .sa-school-title-row {
 
-        border-radius:20px;
+        align-items: flex-start;
 
-        margin-bottom:22px;
+        gap: 12px;
 
-        box-shadow:
-        0 14px 35px rgba(14,165,164,.18);
     }
 
-    .hero-left h1{
-        font-size:24px;
-        line-height:1.25;
-        margin-bottom:8px;
+
+    .sa-school-title-icon {
+
+        width: 44px;
+
+        height: 44px;
+
+        flex-basis: 44px;
+
+        border-radius: 13px;
+
+        font-size: 18px;
+
     }
 
-    .hero-left p{
-        font-size:13px;
-        line-height:1.5;
+
+    .sa-school-title-row h1 {
+
+        font-size: 23px;
+
+        line-height: 1.2;
+
+        margin-bottom: 4px;
+
     }
 
-    .hero-stats{
-        width:100%;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:12px;
+
+    .sa-school-title-row p {
+
+        font-size: 12px;
+
+        line-height: 1.45;
+
+        max-width: 480px;
+
     }
 
-    .hero-stat-card{
-        min-width:0;
-        width:100%;
-        padding:16px;
-        border-radius:16px;
+
+    /* STATS */
+
+    .sa-school-header-stats {
+
+        width: 100%;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 10px;
+
     }
 
-    .hero-stat-card span{
-        font-size:12px;
+
+    .sa-header-stat {
+
+        min-width: 0;
+
+        min-height: 68px;
+
+        padding: 11px 12px;
+
+        border-radius: 14px;
+
     }
 
-    .hero-stat-card h3{
-        font-size:24px;
-        margin-top:8px;
+
+    .sa-header-stat-icon {
+
+        width: 34px;
+
+        height: 34px;
+
+        flex-basis: 34px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+
     }
 
-    /* SEARCH */
 
-    .sa-search-box{
-        flex-direction:column;
-        align-items:stretch;
-        gap:12px;
-        margin-bottom:22px;
+    .sa-header-stat-content span {
+
+        font-size: 10px;
+
     }
 
-    .search-wrapper{
-        width:100%;
+
+    .sa-header-stat-content strong {
+
+        font-size: 21px;
+
     }
 
-    .sa-search-box input{
-        width:100%;
-        padding:14px 15px;
-        border-radius:13px;
-        font-size:13px;
+}
+/* =========================================================
+   EXTRA SMALL MOBILE — 480px
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .sa-school-header {
+
+        padding: 16px;
+
+        gap: 15px;
+
+        border-radius: 16px;
+
     }
 
-    .sa-search-box button,
-    .sa-search-box a,
-    .clear-btn{
-        width:100%;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        text-align:center;
-        padding:13px;
-        border-radius:13px;
-        font-size:13px;
+
+    .sa-school-title-row {
+
+        gap: 10px;
+
     }
 
-    /* SECTION HEAD */
 
-    .section-head{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:14px;
-        margin:20px 0 18px;
+    .sa-school-title-icon {
+
+        width: 40px;
+
+        height: 40px;
+
+        flex-basis: 40px;
+
+        border-radius: 11px;
+
+        font-size: 16px;
+
     }
 
-    .section-head-left h2{
-        font-size:22px;
-        line-height:1.3;
+
+    .sa-school-title-row h1 {
+
+        font-size: 20px;
+
     }
 
-    .section-head-left p{
-        font-size:13px;
-        line-height:1.5;
-        color:#64748b;
+
+    .sa-school-title-row p {
+
+        font-size: 11px;
+
+        line-height: 1.4;
+
     }
 
-    .add-school-btn{
-        width:100%;
-        padding:13px;
-        border-radius:13px;
+
+    .sa-school-header-stats {
+
+        gap: 8px;
+
     }
+
+
+    .sa-header-stat {
+
+        min-height: 62px;
+
+        padding: 9px 10px;
+
+        gap: 8px;
+
+        border-radius: 12px;
+
+    }
+
+
+    .sa-header-stat-icon {
+
+        width: 30px;
+
+        height: 30px;
+
+        flex-basis: 30px;
+
+        border-radius: 8px;
+
+        font-size: 11px;
+
+    }
+
+
+    .sa-header-stat-content span {
+
+        font-size: 9px;
+
+    }
+
+
+    .sa-header-stat-content strong {
+
+        font-size: 19px;
+
+    }
+
+}
+
+
+
+
+
+/* =========================================================
+   SCHOOL SEARCH & FILTER SECTION
+========================================================= */
+
+.sa-school-search-section {
+
+    width: 100%;
+
+    margin-bottom: 25px;
+
+    padding: 18px 20px;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 8px 24px rgba(15, 23, 42, 0.045);
+
+}
+
+
+/* =========================================================
+   SEARCH HEADER
+========================================================= */
+
+.sa-search-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 14px;
+
+}
+
+
+.sa-search-heading {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+}
+
+
+.sa-search-heading-icon {
+
+    width: 38px;
+
+    height: 38px;
+
+    flex: 0 0 38px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #e9f8f7;
+
+    color: #0f9f9b;
+
+    font-size: 14px;
+
+}
+
+
+.sa-search-heading h2 {
+
+    margin: 0 0 3px;
+
+    color: #0f172a;
+
+    font-size: 16px;
+
+    font-weight: 800;
+
+    line-height: 1.2;
+
+}
+
+
+.sa-search-heading p {
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 11.5px;
+
+    line-height: 1.4;
+
+}
+
+
+/* =========================================================
+   SEARCH FORM
+========================================================= */
+
+.sa-school-search-form {
+
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 10px;
+
+}
+
+
+/* =========================================================
+   SEARCH FIELD
+========================================================= */
+
+.sa-school-search-field {
+
+    min-width: 0;
+
+    height: 46px;
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    border: 1px solid #dbe3eb;
+
+    border-radius: 12px;
+
+    background: #f8fafc;
+
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.sa-school-search-field:hover {
+
+    border-color: #cbd5e1;
+
+}
+
+
+.sa-school-search-field:focus-within {
+
+    background: #ffffff;
+
+    border-color: #16a5a1;
+
+    box-shadow:
+        0 0 0 3px rgba(20, 184, 166, 0.09);
+
+}
+
+
+/* =========================================================
+   SEARCH ICON
+========================================================= */
+
+.sa-search-icon {
+
+    width: 45px;
+
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex: 0 0 45px;
+
+    color: #94a3b8;
+
+    font-size: 13px;
+
+    pointer-events: none;
+
+}
+
+
+.sa-school-search-field:focus-within
+.sa-search-icon {
+
+    color: #0f9f9b;
+
+}
+
+
+/* =========================================================
+   SEARCH INPUT
+========================================================= */
+
+.sa-school-search-field input {
+
+    width: 100%;
+
+    min-width: 0;
+
+    height: 100%;
+
+    padding: 0 42px 0 0;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    color: #0f172a;
+
+    font-family: inherit;
+
+    font-size: 12.5px;
+
+    font-weight: 500;
+
+}
+
+
+.sa-school-search-field input::placeholder {
+
+    color: #94a3b8;
+
+    font-weight: 400;
+
+}
+
+
+.sa-school-search-field input:-webkit-autofill {
+
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+
+    -webkit-text-fill-color: #0f172a;
+
+}
+
+
+/* =========================================================
+   INPUT CLEAR BUTTON
+========================================================= */
+
+.sa-search-clear-input {
+
+    position: absolute;
+
+    right: 10px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 27px;
+
+    height: 27px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #e2e8f0;
+
+    color: #64748b;
+
+    cursor: pointer;
+
+    font-size: 10px;
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        transform .2s ease;
+
+}
+
+
+.sa-search-clear-input:hover {
+
+    background: #dbe3eb;
+
+    color: #0f172a;
+
+    transform:
+        translateY(-50%)
+        scale(1.05);
+
+}
+
+
+/* =========================================================
+   SEARCH ACTIONS
+========================================================= */
+
+.sa-search-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+}
+
+
+/* =========================================================
+   SEARCH BUTTON
+========================================================= */
+
+.sa-search-submit-btn {
+
+    height: 46px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 0 19px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0ea5a4,
+            #14b8a6
+        );
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 7px 16px rgba(14, 165, 164, 0.18);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.sa-search-submit-btn:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 20px rgba(14, 165, 164, 0.24);
+
+}
+
+
+.sa-search-submit-btn:active {
+
+    transform: translateY(0);
+
+}
+
+
+.sa-search-submit-btn i {
+
+    font-size: 11px;
+
+}
+
+
+/* =========================================================
+   CLEAR BUTTON
+========================================================= */
+
+.sa-search-clear-btn {
+
+    height: 46px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 0 17px;
+
+    border: 1px solid #dbe3eb;
+
+    border-radius: 12px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    text-decoration: none;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease;
+
+}
+
+
+.sa-search-clear-btn:hover {
+
+    background: #f8fafc;
+
+    border-color: #cbd5e1;
+
+    color: #0f172a;
+
+    transform: translateY(-1px);
+
+}
+
+
+.sa-search-clear-btn i {
+
+    font-size: 10px;
+
+}
+
+
+/* =========================================================
+   SEARCH RESULT ROW
+========================================================= */
+
+.sa-search-result-row {
+
+    min-height: 25px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-top: 11px;
+
+    padding: 0 2px;
+
+}
+
+
+.sa-search-result-info {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    min-width: 0;
+
+    color: #94a3b8;
+
+    font-size: 10.5px;
+
+}
+
+
+.sa-search-result-info i {
+
+    color: #0ea5a4;
+
+    font-size: 10px;
+
+}
+
+
+.sa-search-result-info strong {
+
+    color: #475569;
+
+    font-weight: 700;
+
+}
+
+
+.sa-search-result-count {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 5px 9px;
+
+    border-radius: 8px;
+
+    background: #f1f5f9;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+
+}
+
+
+.sa-search-result-count strong {
+
+    color: #0f172a;
+
+    font-weight: 800;
+
+}
+
+/* =========================================================
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .sa-school-search-section {
+
+        margin-bottom: 18px;
+
+        padding: 15px;
+
+        border-radius: 16px;
+
+    }
+
+
+    /* HEADER */
+
+    .sa-search-header {
+
+        margin-bottom: 12px;
+
+    }
+
+
+    .sa-search-heading {
+
+        gap: 9px;
+
+    }
+
+
+    .sa-search-heading-icon {
+
+        width: 34px;
+
+        height: 34px;
+
+        flex-basis: 34px;
+
+        border-radius: 9px;
+
+        font-size: 12px;
+
+    }
+
+
+    .sa-search-heading h2 {
+
+        font-size: 14px;
+
+    }
+
+
+    .sa-search-heading p {
+
+        font-size: 10px;
+
+    }
+
+
+    /* FORM */
+
+    .sa-school-search-form {
+
+        grid-template-columns: 1fr;
+
+        gap: 9px;
+
+    }
+
+
+    /* SEARCH FIELD */
+
+    .sa-school-search-field {
+
+        height: 44px;
+
+        border-radius: 11px;
+
+    }
+
+
+    .sa-search-icon {
+
+        width: 40px;
+
+        flex-basis: 40px;
+
+    }
+
+
+    .sa-school-search-field input {
+
+        font-size: 12px;
+
+    }
+
+
+    /* ACTIONS */
+
+    .sa-search-actions {
+
+        width: 100%;
+
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr);
+
+        gap: 8px;
+
+    }
+
+
+    .sa-search-submit-btn,
+    .sa-search-clear-btn {
+
+        width: 100%;
+
+        height: 42px;
+
+        border-radius: 11px;
+
+    }
+
+
+    /* RESULT */
+
+    .sa-search-result-row {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 7px;
+
+        margin-top: 10px;
+
+    }
+
+
+    .sa-search-result-info {
+
+        font-size: 10px;
+
+        line-height: 1.4;
+
+    }
+
+
+    .sa-search-result-count {
+
+        font-size: 9.5px;
+
+    }
+
+}
+/* =========================================================
+   EXTRA SMALL MOBILE — 480px
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .sa-school-search-section {
+
+        padding: 13px;
+
+        border-radius: 14px;
+
+    }
+
+
+    .sa-search-heading-icon {
+
+        width: 32px;
+
+        height: 32px;
+
+        flex-basis: 32px;
+
+    }
+
+
+    .sa-search-heading h2 {
+
+        font-size: 13px;
+
+    }
+
+
+    .sa-search-heading p {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .sa-school-search-field {
+
+        height: 42px;
+
+    }
+
+
+    .sa-search-icon {
+
+        width: 37px;
+
+        flex-basis: 37px;
+
+    }
+
+
+    .sa-school-search-field input {
+
+        font-size: 11.5px;
+
+    }
+
+
+    .sa-search-submit-btn,
+    .sa-search-clear-btn {
+
+        height: 40px;
+
+        font-size: 11px;
+
+    }
+
+
+    .sa-search-result-info {
+
+        font-size: 9.5px;
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   REGISTERED SCHOOLS SECTION
+========================================================= */
+
+.sa-schools-section {
+
+    width: 100%;
+
+    margin-top: 24px;
+
+}
+
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+.sa-section-head {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 18px;
+
+}
+
+
+.sa-section-title {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+}
+
+
+.sa-section-icon {
+
+    width: 40px;
+
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex: 0 0 40px;
+
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #e6fffb,
+            #ecfeff
+        );
+
+    border: 1px solid #c9f3ee;
+
+    color: #0f9f9b;
+
+    font-size: 14px;
+
+}
+
+
+.sa-section-title h2 {
+
+    margin: 0 0 3px;
+
+    color: #0f172a;
+
+    font-size: 19px;
+
+    font-weight: 800;
+
+    line-height: 1.2;
+
+}
+
+
+.sa-section-title p {
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 11.5px;
+
+    line-height: 1.4;
+
+}
+
+
+/* =========================================================
+   ADD SCHOOL BUTTON
+========================================================= */
+
+.sa-add-school-btn {
+
+    min-height: 42px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 0 17px;
+
+    border: 1px solid #0ea5a4;
+
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0ea5a4,
+            #14b8a6
+        );
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 18px rgba(14, 165, 164, .16);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.sa-add-school-btn:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 22px rgba(14, 165, 164, .22);
+
+}
+
+
+/* =========================================================
+   SCHOOL GRID
+========================================================= */
+
+.sa-school-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 18px;
+
+    align-items: stretch;
+
+}
+
+
+/* =========================================================
+   SCHOOL CARD
+========================================================= */
+
+.sa-school-card {
+
+    position: relative;
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    overflow: hidden;
+
+    padding: 19px;
+
+    border-radius: 19px;
+
+    border: 1px solid #dce8ed;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #f8fffe 52%,
+            #f1fbfa 100%
+        );
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, .055);
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease;
+
+}
+
+
+.sa-school-card:nth-child(3n + 2) {
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #f8fbff 55%,
+            #f2f7ff 100%
+        );
+
+    border-color: #dbe7f5;
+
+}
+
+
+.sa-school-card:nth-child(3n + 3) {
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fcf9ff 55%,
+            #f7f2ff 100%
+        );
+
+    border-color: #e6ddf4;
+
+}
+
+
+.sa-school-card:hover {
+
+    transform: translateY(-4px);
+
+    border-color: #b9deda;
+
+    box-shadow:
+        0 15px 32px rgba(15, 23, 42, .085);
+
+}
+
+
+/* =========================================================
+   DECORATIVE GLOW
+========================================================= */
+
+.sa-card-decoration {
+
+    position: absolute;
+
+    width: 125px;
+
+    height: 125px;
+
+    right: -55px;
+
+    top: -58px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(14, 165, 164, .055);
+
+    pointer-events: none;
+
+}
+
+
+.sa-school-card:nth-child(3n + 2)
+.sa-card-decoration {
+
+    background:
+        rgba(37, 99, 235, .045);
+
+}
+
+
+.sa-school-card:nth-child(3n + 3)
+.sa-card-decoration {
+
+    background:
+        rgba(139, 92, 246, .045);
+
+}
+
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.sa-school-card-header {
+
+    position: relative;
+
+    z-index: 1;
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+}
+
+
+.sa-school-identity {
+
+    min-width: 0;
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 10px;
+
+}
+
+
+.sa-school-icon {
+
+    width: 37px;
+
+    height: 37px;
+
+    flex: 0 0 37px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #e6f8f6;
+
+    border: 1px solid #c7ece8;
+
+    color: #0f9f9b;
+
+    font-size: 13px;
+
+}
+
+
+.sa-school-card:nth-child(3n + 2)
+.sa-school-icon {
+
+    background: #edf4ff;
+
+    border-color: #d8e6ff;
+
+    color: #2563eb;
+
+}
+
+
+.sa-school-card:nth-child(3n + 3)
+.sa-school-icon {
+
+    background: #f4edff;
+
+    border-color: #e7dcff;
+
+    color: #7c3aed;
+
+}
+
+
+.sa-school-title {
+
+    min-width: 0;
+
+}
+
+
+.sa-school-title h3 {
+
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 16px;
+
+    font-weight: 800;
+
+    line-height: 1.35;
+
+    overflow-wrap: anywhere;
+
+}
+
+
+.sa-school-title p {
+
+    margin: 3px 0 0;
+
+    color: #94a3b8;
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+}
+
+
+/* =========================================================
+   SCHOOL CODE
+========================================================= */
+
+.sa-school-code {
+
+    flex: 0 0 auto;
+
+    padding: 6px 9px;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    border: 1px solid #dbe7e8;
+
+    color: #0f766e;
+
+    font-size: 9.5px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
+}
+
+
+.sa-school-card:nth-child(3n + 2)
+.sa-school-code {
+
+    color: #2563eb;
+
+    border-color: #dbe6fa;
+
+}
+
+
+.sa-school-card:nth-child(3n + 3)
+.sa-school-code {
+
+    color: #7c3aed;
+
+    border-color: #e5dcf7;
+
+}
+
+
+/* =========================================================
+   STATUS ROW
+========================================================= */
+
+.sa-school-status-row {
+
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-top: 13px;
+
+}
+
+
+.sa-school-status {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 5px 8px;
+
+    border-radius: 8px;
+
+    font-size: 10px;
+
+    font-weight: 750;
+
+}
+
+
+.sa-school-status.active {
+
+    background: #e9f9ef;
+
+    border: 1px solid #c9efd8;
+
+    color: #15803d;
+
+}
+
+
+.sa-school-status.inactive {
+
+    background: #fff1f2;
+
+    border: 1px solid #ffd7dc;
+
+    color: #be123c;
+
+}
+
+
+.status-dot {
+
+    width: 6px;
+
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: currentColor;
+
+}
+
+
+.sa-school-udise {
+
+    max-width: 180px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    padding: 5px 8px;
+
+    border-radius: 8px;
+
+    background: rgba(255, 255, 255, .75);
+
+    border: 1px solid #e2e8f0;
+
+    color: #64748b;
+
+    font-size: 9.5px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   STUDENT METRIC
+========================================================= */
+
+.sa-school-metric {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    margin-top: 15px;
+
+    padding: 13px;
+
+    border-radius: 13px;
+
+    background:
+        rgba(255, 255, 255, .72);
+
+    border: 1px solid rgba(226, 232, 240, .85);
+
+}
+
+
+.sa-metric-icon {
+
+    width: 34px;
+
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #eaf8f7;
+
+    color: #0f9f9b;
+
+    font-size: 12px;
+
+}
+
+
+.sa-metric-content {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+
+}
+
+
+.sa-metric-content span {
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+}
+
+
+.sa-metric-content strong {
+
+    color: #0f172a;
+
+    font-size: 22px;
+
+    line-height: 1;
+
+    font-weight: 800;
+
+}
+
+
+/* =========================================================
+   SCHOOL INFORMATION
+========================================================= */
+
+.sa-school-info {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+
+    margin-top: 10px;
+
+}
+
+
+.sa-info-item {
+
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 8px;
+
+    border-radius: 9px;
+
+    background: rgba(255, 255, 255, .55);
+
+    border: 1px solid rgba(226, 232, 240, .65);
+
+}
+
+
+.sa-info-item > i {
+
+    flex: 0 0 auto;
+
+    color: #0f9f9b;
+
+    font-size: 10px;
+
+}
+
+
+.sa-info-item div {
+
+    min-width: 0;
+
+}
+
+
+.sa-info-item span {
+
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #94a3b8;
+
+    font-size: 8.5px;
+
+    font-weight: 600;
+
+}
+
+
+.sa-info-item strong {
+
+    display: block;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: #334155;
+
+    font-size: 9.5px;
+
+    font-weight: 700;
+
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.sa-school-actions {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 6px;
+
+    margin-top: 15px;
+
+}
+
+
+.sa-card-action {
+
+    min-width: 0;
+
+    height: 34px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    padding: 0 7px;
+
+    border-radius: 9px;
+
+    border: 1px solid transparent;
+
+    font-family: inherit;
+
+    font-size: 9.5px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition:
+        transform .18s ease,
+        background .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease;
+
+}
+
+
+.sa-card-action:hover {
+
+    transform: translateY(-1px);
+
+}
+
+
+.sa-card-action i {
+
+    font-size: 9px;
+
+}
+
+
+/* VIEW */
+
+.primary-action {
+
+    background: #e8f8f7;
+
+    border-color: #bce8e4;
+
+    color: #0f766e;
+
+}
+
+
+.primary-action:hover {
+
+    background: #d9f3f0;
+
+}
+
+
+/* EDIT */
+
+.edit-btn {
+
+    background: #fff6df;
+
+    border-color: #f9df9d;
+
+    color: #b45309;
+
+}
+
+
+.edit-btn:hover {
+
+    background: #ffefc2;
+
+}
+
+
+/* FEATURES */
+
+.feature-action {
+
+    background: #f1edff;
+
+    border-color: #ded5ff;
+
+    color: #6d45d8;
+
+}
+
+
+.feature-action:hover {
+
+    background: #e9e1ff;
+
+}
+
+
+/* CERTIFICATES */
+
+.certificate-btn {
+
+    background: #eff6ff;
+
+    border-color: #d6e5ff;
+
+    color: #2563eb;
+
+}
+
+
+.certificate-btn:hover {
+
+    background: #e5efff;
+
+}
+
+
+/* STATUS */
+
+.status-action.deactivate {
+
+    background: #fff0f1;
+
+    border-color: #ffd4d8;
+
+    color: #c62828;
+
+}
+
+
+.status-action.activate {
+
+    background: #eaf9ef;
+
+    border-color: #c8ecd4;
+
+    color: #15803d;
+
+}
+
+
+.status-action.deactivate:hover {
+
+    background: #ffe5e8;
+
+}
+
+
+.status-action.activate:hover {
+
+    background: #dcf7e5;
+
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.sa-school-pagination {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-top: 18px;
+
+    padding: 11px 13px;
+
+    border-radius: 13px;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+}
+
+
+.sa-pagination-info {
+
+    color: #64748b;
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+}
+
+
+.sa-pagination-info strong {
+
+    color: #0f172a;
+
+    font-weight: 800;
+
+}
+
+
+.sa-pagination-controls {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+}
+
+
+.sa-page-btn {
+
+    min-height: 34px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 0 11px;
+
+    border-radius: 9px;
+
+    border: 1px solid #dbe3eb;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    text-decoration: none;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease;
+
+}
+
+
+.sa-page-btn:hover {
+
+    background: #effaf9;
+
+    border-color: #9edbd7;
+
+    color: #0f766e;
+
+}
+
+
+.sa-page-btn.disabled {
+
+    opacity: .45;
+
+    cursor: not-allowed;
+
+    pointer-events: none;
+
+}
+
+
+.sa-page-indicator {
+
+    min-height: 34px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    padding: 0 11px;
+
+    border-radius: 9px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e2e8f0;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+}
+
+
+.sa-page-indicator strong {
+
+    color: #0f172a;
+
+    font-weight: 800;
+
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.sa-school-empty {
+
+    padding: 45px 20px;
+
+    text-align: center;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 18px;
+
+}
+
+
+.sa-empty-icon {
+
+    width: 50px;
+
+    height: 50px;
+
+    margin: 0 auto 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 14px;
+
+    background: #f1f5f9;
+
+    color: #94a3b8;
+
+    font-size: 18px;
+
+}
+
+
+.sa-school-empty h3 {
+
+    margin: 0 0 5px;
+
+    color: #0f172a;
+
+    font-size: 16px;
+
+    font-weight: 800;
+
+}
+
+
+.sa-school-empty p {
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 11px;
+
+}
+
+
+.sa-empty-clear-btn {
+
+    display: inline-flex;
+
+    margin-top: 13px;
+
+    padding: 8px 13px;
+
+    border-radius: 9px;
+
+    background: #eaf8f7;
+
+    border: 1px solid #c5e9e5;
+
+    color: #0f766e;
+
+    text-decoration: none;
+
+    font-size: 10px;
+
+    font-weight: 750;
+
+}
+/* =========================================================
+   MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .sa-schools-section {
+
+        margin-top: 18px;
+
+    }
+
+
+    /* SECTION HEADER */
+
+    .sa-section-head {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 12px;
+
+        margin-bottom: 14px;
+
+    }
+
+
+    .sa-section-title {
+
+        width: 100%;
+
+    }
+
+
+    .sa-section-icon {
+
+        width: 36px;
+
+        height: 36px;
+
+        flex-basis: 36px;
+
+        border-radius: 10px;
+
+        font-size: 12px;
+
+    }
+
+
+    .sa-section-title h2 {
+
+        font-size: 16px;
+
+    }
+
+
+    .sa-section-title p {
+
+        font-size: 10px;
+
+    }
+
+
+    .sa-add-school-btn {
+
+        width: 100%;
+
+        height: 42px;
+
+    }
+
 
     /* SCHOOL GRID */
 
-    .sa-grid{
-        grid-template-columns:1fr;
-        gap:18px;
+    .sa-school-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 12px;
+
     }
 
-    /* SCHOOL CARD */
 
-    .sa-card{
-        padding:20px;
-        border-radius:20px;
-        min-height:auto;
+    /* CARD */
+
+    .sa-school-card {
+
+        padding: 16px;
+
+        border-radius: 16px;
+
+    }
+
+
+    /* CARD HEADER */
+
+    .sa-school-title h3 {
+
+        font-size: 15px;
+
+        line-height: 1.35;
+
+    }
+
+
+    .sa-school-title p {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .sa-school-icon {
+
+        width: 34px;
+
+        height: 34px;
+
+        flex-basis: 34px;
+
+        border-radius: 9px;
+
+    }
+
+
+    .sa-school-code {
+
+        font-size: 9px;
+
+        padding: 5px 8px;
+
+    }
+
+
+    /* STATUS */
+
+    .sa-school-status-row {
+
+        margin-top: 11px;
+
+    }
+
+
+    .sa-school-status {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .sa-school-udise {
+
+        max-width: 150px;
+
+        font-size: 9px;
+
+    }
+
+
+    /* METRIC */
+
+    .sa-school-metric {
+
+        margin-top: 12px;
+
+        padding: 12px;
+
+    }
+
+
+    .sa-metric-icon {
+
+        width: 32px;
+
+        height: 32px;
+
+        flex-basis: 32px;
+
+    }
+
+
+    .sa-metric-content span {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .sa-metric-content strong {
+
+        font-size: 21px;
+
+    }
+
+
+    /* INFO */
+
+    .sa-school-info {
+
+        grid-template-columns: 1fr 1fr;
+
+        gap: 7px;
+
+    }
+
+
+    .sa-info-item {
+
+        padding: 7px;
+
+    }
+
+
+    .sa-info-item span {
+
+        font-size: 8px;
+
+    }
+
+
+    .sa-info-item strong {
+
+        font-size: 9px;
+
+    }
+
+
+    /* ACTIONS */
+
+    .sa-school-actions {
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 7px;
+
+        margin-top: 13px;
+
+    }
+
+
+    .sa-card-action {
+
+        height: 36px;
+
+        font-size: 9.5px;
+
+    }
+
+
+    /* Make the final two actions span nicely */
+
+    .sa-card-action:nth-child(4) {
+
+        grid-column: span 1;
+
+    }
+
+
+    .sa-card-action:nth-child(5) {
+
+        grid-column: span 1;
+
+    }
+
+
+    /* PAGINATION */
+
+    .sa-school-pagination {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 10px;
+
+        margin-top: 14px;
+
+        padding: 10px;
+
+    }
+
+
+    .sa-pagination-info {
+
+        text-align: center;
+
+        font-size: 10px;
+
+    }
+
+
+    .sa-pagination-controls {
+
+        justify-content: center;
+
+    }
+
+
+    .sa-page-btn {
+
+        flex: 1;
+
+        max-width: 110px;
+
+    }
+
+
+    .sa-page-indicator {
+
+        min-width: 65px;
+
+    }
+
+}
+/* =========================================================
+   EXTRA SMALL MOBILE — 480px
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .sa-section-title h2 {
+
+        font-size: 15px;
+
+    }
+
+
+    .sa-section-title p {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .sa-school-card {
+
+        padding: 14px;
+
+        border-radius: 15px;
+
+    }
+
+
+    .sa-school-card-header {
+
+        gap: 8px;
+
+    }
+
+
+    .sa-school-identity {
+
+        gap: 8px;
+
+    }
+
+
+    .sa-school-icon {
+
+        width: 32px;
+
+        height: 32px;
+
+        flex-basis: 32px;
+
+    }
+
+
+    .sa-school-title h3 {
+
+        font-size: 14px;
+
+    }
+
+
+    .sa-school-code {
+
+        padding: 5px 7px;
+
+        font-size: 8.5px;
+
+    }
+
+
+    .sa-school-info {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .sa-school-actions {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 6px;
+
+    }
+
+
+    .sa-card-action {
+
+        height: 35px;
+
+        font-size: 9px;
+
+    }
+
+
+    .sa-school-pagination {
+
+        border-radius: 12px;
+
+    }
+
+
+    .sa-pagination-controls {
+
+        width: 100%;
+
+    }
+
+
+    .sa-page-btn {
+
+        max-width: none;
+
+    }
+
+}
+
+
+
+
+
+
+
+ 
+/* =========================================================
+   ADD SCHOOL MODAL
+========================================================= */
+
+.sa-school-modal {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 10000;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+
+}
+
+
+/* =========================================================
+   OVERLAY
+========================================================= */
+
+.sa-school-modal-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        rgba(15, 23, 42, .48);
+
+    backdrop-filter:
+        blur(8px);
+
+    -webkit-backdrop-filter:
+        blur(8px);
+
+}
+
+
+/* =========================================================
+   MODAL BOX
+========================================================= */
+
+.sa-school-modal-box {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: min(860px, 100%);
+
+    max-height: calc(100vh - 40px);
+
+    overflow-y: auto;
+
+    border-radius: 22px;
+
+    border: 1px solid rgba(255,255,255,.75);
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fbffff 58%,
+            #f5fbfa 100%
+        );
+
+    box-shadow:
+        0 30px 80px rgba(15,23,42,.18),
+        0 8px 25px rgba(15,23,42,.08);
+
+    animation:
+        saSchoolModalIn .25s ease;
+
+}
+
+
+@keyframes saSchoolModalIn {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(12px)
+            scale(.98);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+
+    }
+
+}
+
+
+/* =========================================================
+   CUSTOM SCROLLBAR
+========================================================= */
+
+.sa-school-modal-box::-webkit-scrollbar {
+
+    width: 7px;
+
+}
+
+
+.sa-school-modal-box::-webkit-scrollbar-track {
+
+    background: transparent;
+
+}
+
+
+.sa-school-modal-box::-webkit-scrollbar-thumb {
+
+    background: #cbd5e1;
+
+    border-radius: 20px;
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.sa-school-modal-header {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding:
+        22px 24px 19px;
+
+    border-bottom:
+        1px solid #e7eef2;
+
+}
+
+
+.sa-school-modal-title-wrap {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+}
+
+
+.sa-school-modal-icon {
+
+    width: 43px;
+
+    height: 43px;
+
+    flex: 0 0 43px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #e3f9f6,
+            #effdfa
+        );
+
+    border: 1px solid #c5ece7;
+
+    color: #0f9f9b;
+
+    font-size: 16px;
+
+}
+
+
+.sa-school-modal-header h2 {
+
+    margin: 0 0 4px;
+
+    color: #0f172a;
+
+    font-size: 21px;
+
+    font-weight: 800;
+
+    line-height: 1.2;
+
+}
+
+
+.sa-school-modal-header p {
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 11px;
+
+    line-height: 1.4;
+
+}
+
+
+.sa-school-modal-close {
+
+    width: 34px;
+
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    cursor: pointer;
+
+    font-size: 13px;
+
+    transition:
+        .2s ease;
+
+}
+
+
+.sa-school-modal-close:hover {
+
+    background: #fff1f2;
+
+    border-color: #fecdd3;
+
+    color: #e11d48;
+
+    transform: rotate(3deg);
+
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.sa-add-school-form {
+
+    padding: 20px 24px 22px;
+
+}
+
+
+/* =========================================================
+   FORM SECTION
+========================================================= */
+
+.sa-form-section {
+
+    padding: 17px;
+
+    margin-bottom: 14px;
+
+    border-radius: 15px;
+
+    border: 1px solid #e4edf0;
+
+    background:
+        rgba(255,255,255,.68);
+
+}
+
+
+.sa-form-section-head {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    margin-bottom: 15px;
+
+}
+
+
+.sa-form-section-icon {
+
+    width: 31px;
+
+    height: 31px;
+
+    flex: 0 0 31px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #e9f8f7;
+
+    border: 1px solid #ccebe8;
+
+    color: #0f9f9b;
+
+    font-size: 11px;
+
+}
+
+
+.sa-form-section-icon.contact {
+
+    background: #edf5ff;
+
+    border-color: #d7e6ff;
+
+    color: #2563eb;
+
+}
+
+
+.sa-form-section-icon.admin {
+
+    background: #f5efff;
+
+    border-color: #e6d9ff;
+
+    color: #7c3aed;
+
+}
+
+
+.sa-form-section-head h3 {
+
+    margin: 0 0 2px;
+
+    color: #1e293b;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+}
+
+
+.sa-form-section-head p {
+
+    margin: 0;
+
+    color: #94a3b8;
+
+    font-size: 9.5px;
+
+}
+
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.sa-school-form-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 13px;
+
+}
+
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.sa-school-field {
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+
+}
+
+
+.sa-field-span-2 {
+
+    grid-column: span 2;
+
+}
+
+
+.sa-school-field label {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 3px;
+
+    color: #334155;
+
+    font-size: 10.5px;
+
+    font-weight: 750;
+
+}
+
+
+.sa-school-field label span {
+
+    color: #e11d48;
+
+}
+
+
+/* =========================================================
+   INPUT WRAPPER
+========================================================= */
+
+.sa-input-wrap {
+
+    position: relative;
+
+}
+
+
+.sa-input-wrap > i {
+
+    position: absolute;
+
+    left: 12px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+    pointer-events: none;
+
+    transition: .2s ease;
+
+}
+
+
+.sa-school-field input,
+.sa-school-field textarea {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dce6eb;
+
+    border-radius: 10px;
+
+    outline: none;
+
+    background: #f9fbfc;
+
+    color: #0f172a;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+
+    font-weight: 500;
+
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.sa-school-field input {
+
+    height: 40px;
+
+    padding:
+        0 12px 0 34px;
+
+}
+
+
+.sa-school-field textarea {
+
+    min-height: 70px;
+
+    padding:
+        11px 12px 11px 34px;
+
+    resize: vertical;
+
+    line-height: 1.45;
+
+}
+
+
+.sa-school-field input::placeholder,
+.sa-school-field textarea::placeholder {
+
+    color: #a8b3bf;
+
+    font-weight: 400;
+
+}
+
+
+.sa-school-field input:hover,
+.sa-school-field textarea:hover {
+
+    border-color: #c7d6dd;
+
+    background: #ffffff;
+
+}
+
+
+.sa-school-field input:focus,
+.sa-school-field textarea:focus {
+
+    border-color: #28aaa4;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 3px rgba(20,184,166,.08);
+
+}
+
+
+.sa-school-field
+.sa-input-wrap:focus-within > i {
+
+    color: #0f9f9b;
+
+}
+
+
+.sa-school-field small {
+
+    color: #94a3b8;
+
+    font-size: 8.5px;
+
+    line-height: 1.2;
+
+}
+
+
+/* =========================================================
+   CREATE NOTE
+========================================================= */
+
+.sa-school-create-note {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 9px;
+
+    padding: 11px 12px;
+
+    margin-bottom: 16px;
+
+    border-radius: 11px;
+
+    border: 1px solid #dcecf0;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f0fbfa,
+            #f7fcff
+        );
+
+}
+
+
+.sa-note-icon {
+
+    width: 27px;
+
+    height: 27px;
+
+    flex: 0 0 27px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    border: 1px solid #d3e9e7;
+
+    color: #0f9f9b;
+
+    font-size: 10px;
+
+}
+
+
+.sa-school-create-note strong {
+
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #334155;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+}
+
+
+.sa-school-create-note p {
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    line-height: 1.45;
+
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.sa-school-modal-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+
+}
+
+
+.sa-school-cancel-btn,
+.sa-school-save-btn {
+
+    min-height: 39px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 0 15px;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+
+    font-size: 10.5px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+
+}
+
+
+.sa-school-cancel-btn {
+
+    border: 1px solid #dce4eb;
+
+    background: #ffffff;
+
+    color: #475569;
+
+}
+
+
+.sa-school-cancel-btn:hover {
+
+    background: #f8fafc;
+
+    border-color: #cbd5e1;
+
+}
+
+
+.sa-school-save-btn {
+
+    border: 1px solid #0e9f97;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0ea5a4,
+            #22c55e
+        );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 7px 17px rgba(16,185,129,.18);
+
+}
+
+
+.sa-school-save-btn:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 21px rgba(16,185,129,.25);
+
+}
+
+
+.sa-school-save-btn:disabled {
+
+    opacity: .65;
+
+    cursor: wait;
+
+    transform: none;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .sa-school-modal {
+
+        align-items: flex-end;
+
+        padding: 0;
+
+    }
+
+
+    .sa-school-modal-box {
+
+        width: 100%;
+
+        max-height: 94vh;
+
+        border-radius:
+            20px 20px 0 0;
+
         box-shadow:
-        0 12px 28px rgba(15,23,42,.06);
+            0 -15px 50px rgba(15,23,42,.18);
+
     }
 
-    .sa-card:hover{
-        transform:none;
+
+    .sa-school-modal-header {
+
+        padding:
+            18px 17px 15px;
+
     }
 
-    .card-glow{
-        width:130px;
-        height:130px;
-        right:-55px;
-        top:-55px;
+
+    .sa-school-modal-title-wrap {
+
+        gap: 9px;
+
     }
 
-    .sa-top{
-        gap:12px;
+
+    .sa-school-modal-icon {
+
+        width: 38px;
+
+        height: 38px;
+
+        flex-basis: 38px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+
     }
 
-    .sa-top h2{
-        font-size:20px;
-        line-height:1.35;
-        margin-bottom:6px;
+
+    .sa-school-modal-header h2 {
+
+        font-size: 17px;
+
     }
 
-    .school-label{
-        font-size:12px;
+
+    .sa-school-modal-header p {
+
+        font-size: 9.5px;
+
     }
 
-    .badge{
-        font-size:11px;
-        padding:6px 10px;
-        border-radius:999px;
-        white-space:nowrap;
+
+    .sa-school-modal-close {
+
+        width: 32px;
+
+        height: 32px;
+
+        flex-basis: 32px;
+
     }
 
-    .sa-middle{
-        margin:22px 0 18px;
+
+    .sa-add-school-form {
+
+        padding:
+            15px 14px 18px;
+
     }
 
-    .metric-box{
-        padding:16px;
-        border-radius:16px;
+
+    .sa-form-section {
+
+        padding: 13px;
+
+        border-radius: 13px;
+
     }
 
-    .metric-box span{
-        font-size:13px;
+
+    .sa-form-section-head {
+
+        margin-bottom: 12px;
+
     }
 
-    .metric-box h3{
-        font-size:28px;
-        margin-top:8px;
+
+    .sa-form-section-head h3 {
+
+        font-size: 12px;
+
     }
 
-    /* CARD BUTTONS */
 
-    .sa-bottom{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
-        margin-top:18px;
+    .sa-form-section-head p {
+
+        font-size: 8.5px;
+
     }
 
-    .card-btn{
-        width:100%;
-        min-width:0;
-        padding:11px 8px;
-        border-radius:11px;
-        font-size:12px;
-        font-weight:700;
+
+    .sa-school-form-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 11px;
+
     }
 
-    /* MODAL */
 
-    .school-modal{
-        padding:14px;
-        align-items:flex-start;
-        overflow-y:auto;
+    .sa-field-span-2 {
+
+        grid-column: auto;
+
     }
 
-    .school-modal-box{
-        width:100%;
-        max-width:100%;
-        max-height:92vh;
-        overflow-y:auto;
-        padding:20px;
-        border-radius:20px;
-        margin-top:20px;
+
+    .sa-school-field label {
+
+        font-size: 10px;
+
     }
 
-    .modal-head{
-        margin-bottom:18px;
-        gap:12px;
+
+    .sa-school-field input {
+
+        height: 41px;
+
     }
 
-    .modal-head h2{
-        font-size:20px;
-        line-height:1.3;
+
+    .sa-school-field input,
+    .sa-school-field textarea {
+
+        font-size: 11px;
+
     }
 
-    .modal-head span{
-        font-size:26px;
-        width:34px;
-        height:34px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        border-radius:10px;
-        background:#f1f5f9;
+
+    .sa-school-create-note {
+
+        padding: 10px;
+
     }
 
-    .school-form-grid{
-        grid-template-columns:1fr;
-        gap:14px;
+
+    .sa-school-modal-actions {
+
+        display: grid;
+
+        grid-template-columns:
+            1fr 1.35fr;
+
+        gap: 8px;
+
     }
 
-    .school-form-group.full{
-        grid-column:span 1;
+
+    .sa-school-cancel-btn,
+    .sa-school-save-btn {
+
+        width: 100%;
+
     }
 
-    .school-form-group label{
-        font-size:13px;
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .sa-school-modal-box {
+
+        max-height: 96vh;
+
     }
 
-    .school-form-group input,
-    .feature-item select{
-        padding:13px;
-        border-radius:11px;
-        font-size:13px;
+
+    .sa-school-modal-header {
+
+        padding:
+            15px 13px 13px;
+
     }
 
-    .school-modal-actions{
-        flex-direction:column;
-        gap:10px;
-        margin-top:20px;
+
+    .sa-add-school-form {
+
+        padding:
+            12px 11px 15px;
+
     }
 
-    .cancel-btn,
-    .save-btn{
-        width:100%;
-        padding:13px;
-        border-radius:12px;
+
+    .sa-form-section {
+
+        padding: 11px;
+
     }
 
-    /* FEATURE MODAL */
 
-    .feature-grid{
-        grid-template-columns:1fr;
-        gap:14px;
-        margin-top:16px;
+    .sa-school-modal-header h2 {
+
+        font-size: 16px;
+
     }
 
-    .feature-item{
-        padding:15px;
-        border-radius:15px;
+
+    .sa-school-modal-header p {
+
+        max-width: 210px;
+
+        font-size: 9px;
+
     }
 
-    .feature-item label{
-        font-size:13px;
-        margin-bottom:10px;
+
+    .sa-school-create-note p {
+
+        font-size: 8.5px;
+
     }
+
+
+    .sa-school-cancel-btn,
+    .sa-school-save-btn {
+
+        min-height: 38px;
+
+        font-size: 10px;
+
+    }
+
+}
+
+
+/* =========================================================
+   EDIT SCHOOL MODAL
+========================================================= */
+
+.sa-school-modal-icon.edit {
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7e8,
+            #fffaf0
+        );
+
+    border-color:
+        #f7dca8;
+
+    color:
+        #d97706;
+}
+
+
+/* EDIT NOTE */
+
+.sa-school-create-note.edit-note {
+
+    background:
+        linear-gradient(
+            135deg,
+            #fffaf0,
+            #f8fafc
+        );
+
+    border-color:
+        #f1dfbd;
+
+}
+
+
+.sa-school-create-note.edit-note
+.sa-note-icon {
+
+    color:
+        #d97706;
+
+    border-color:
+        #f1dfbd;
+
+}
+
+
+/* EDIT SAVE BUTTON */
+
+.edit-save-btn {
+
+    background:
+        linear-gradient(
+            135deg,
+            #f59e0b,
+            #f97316
+        );
+
+    border-color:
+        #ea8b0b;
+
+    box-shadow:
+        0 7px 17px
+        rgba(245,158,11,.18);
+
+}
+
+
+.edit-save-btn:hover {
+
+    box-shadow:
+        0 10px 21px
+        rgba(245,158,11,.25);
+
+}
+
+
+/* =========================================================
+   ⚙️ PREMIUM SCHOOL FEATURE MODAL
+========================================================= */
+
+.sa-feature-modal-box {
+
+    /* -----------------------------------------
+       SIZE
+    ----------------------------------------- */
+
+    width:
+        min(1080px, calc(100vw - 40px));
+
+    min-height:
+        720px;
+
+    max-height:
+        calc(100vh - 40px);
+
+    overflow-y:
+        auto;
+
+    padding:
+        0;
+
+    border-radius:
+        26px;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 30px 90px
+        rgba(15, 23, 42, .18);
+
+    border:
+        1px solid
+        rgba(226, 232, 240, .9);
+
+    animation:
+        featureModalIn .24s
+        cubic-bezier(.22, 1, .36, 1);
+
+}
+
+
+/* =========================================================
+   MODAL ANIMATION
+========================================================= */
+
+@keyframes featureModalIn {
+
+    from {
+
+        opacity:
+            0;
+
+        transform:
+            translateY(12px)
+            scale(.975);
+
+    }
+
+    to {
+
+        opacity:
+            1;
+
+        transform:
+            translateY(0)
+            scale(1);
+
+    }
+
+}
+
+
+/* =========================================================
+   PREMIUM SCROLLBAR
+========================================================= */
+
+.sa-feature-modal-box::-webkit-scrollbar {
+
+    width:
+        7px;
+
+}
+
+
+.sa-feature-modal-box::-webkit-scrollbar-track {
+
+    background:
+        transparent;
+
+}
+
+
+.sa-feature-modal-box::-webkit-scrollbar-thumb {
+
+    background:
+        #cbd5e1;
+
+    border-radius:
+        999px;
+
+}
+
+
+.sa-feature-modal-box::-webkit-scrollbar-thumb:hover {
+
+    background:
+        #94a3b8;
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.sa-feature-modal-box
+.sa-school-modal-header {
+
+    min-height:
+        100px;
+
+    padding:
+        24px 28px 22px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        20px;
+
+    border-bottom:
+        1px solid
+        #e8edf3;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #fbfdff 100%
+        );
+
+}
+
+
+/* =========================================================
+   TITLE AREA
+========================================================= */
+
+.sa-feature-modal-box
+.sa-school-modal-title-wrap {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        15px;
+
+    min-width:
+        0;
+
+}
+
+
+.sa-feature-modal-box
+.sa-school-modal-title-wrap > div:last-child {
+
+    min-width:
+        0;
+
+}
+
+
+.sa-feature-modal-box
+.sa-school-modal-title-wrap h2 {
+
+    margin:
+        0 0 5px;
+
+    color:
+        #172033;
+
+    font-size:
+        22px;
+
+    line-height:
+        1.25;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        -.35px;
+
+}
+
+
+.sa-feature-modal-box
+.sa-school-modal-title-wrap p {
+
+    margin:
+        0;
+
+    color:
+        #64748b;
+
+    font-size:
+        12px;
+
+    line-height:
+        1.45;
+
+}
+
+
+/* =========================================================
+   HEADER ICON
+========================================================= */
+
+.sa-feature-modal-box
+.sa-school-modal-icon.feature {
+
+    width:
+        46px;
+
+    height:
+        46px;
+
+    flex:
+        0 0 46px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eef2ff,
+            #f5f3ff
+        );
+
+    border:
+        1px solid
+        #ddd6fe;
+
+    color:
+        #6366f1;
+
+    font-size:
+        17px;
+
+    box-shadow:
+        0 5px 15px
+        rgba(99, 102, 241, .08);
+
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
+.sa-feature-modal-box
+.sa-school-modal-close {
+
+    width:
+        38px;
+
+    height:
+        38px;
+
+    flex:
+        0 0 38px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        1px solid
+        #dbe3ec;
+
+    border-radius:
+        11px;
+
+    background:
+        #ffffff;
+
+    color:
+        #64748b;
+
+    cursor:
+        pointer;
+
+    font-size:
+        13px;
+
+    transition:
+        all .2s ease;
+
+}
+
+
+.sa-feature-modal-box
+.sa-school-modal-close:hover {
+
+    background:
+        #f8fafc;
+
+    color:
+        #0f172a;
+
+    border-color:
+        #cbd5e1;
+
+    transform:
+        rotate(3deg);
+
+}
+
+
+/* =========================================================
+   FORM CONTENT
+========================================================= */
+
+.sa-feature-form {
+
+    padding:
+        24px 28px 28px;
+
+}
+
+
+/* =========================================================
+   FEATURE GRID
+========================================================= */
+
+.sa-feature-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        16px;
+
+    width:
+        100%;
+
+}
+
+
+/* =========================================================
+   FEATURE CARD
+========================================================= */
+
+.sa-feature-item {
+
+    min-height:
+        102px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        22px;
+
+    padding:
+        19px 20px;
+
+    border:
+        1px solid
+        #e1e8f0;
+
+    border-radius:
+        18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #f9fbfd 100%
+        );
+
+    box-shadow:
+        0 3px 12px
+        rgba(15, 23, 42, .025);
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        transform .2s ease,
+        background .2s ease;
+
+}
+
+
+.sa-feature-item:hover {
+
+    border-color:
+        #d3dce7;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 8px 24px
+        rgba(15, 23, 42, .055);
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+/* =========================================================
+   ENABLED CARD
+========================================================= */
+
+.sa-feature-item.feature-enabled {
+
+    border-color:
+        #cdeee6;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #f8fffd 100%
+        );
+
+}
+
+
+/* =========================================================
+   FEATURE INFORMATION
+========================================================= */
+
+.sa-feature-info {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        14px;
+
+    min-width:
+        0;
+
+    flex:
+        1 1 auto;
+
+}
+
+
+/* =========================================================
+   FEATURE ICON
+========================================================= */
+
+.sa-feature-icon {
+
+    width:
+        46px;
+
+    height:
+        46px;
+
+    flex:
+        0 0 46px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        14px;
+
+    border:
+        1px solid
+        #e2e8f0;
+
+    background:
+        #f8fafc;
+
+    color:
+        #64748b;
+
+    font-size:
+        16px;
+
+}
+
+
+/* =========================================================
+   INDIVIDUAL ICON COLORS
+========================================================= */
+
+.sa-feature-icon.tc {
+
+    background:
+        #eff6ff;
+
+    border-color:
+        #dbeafe;
+
+    color:
+        #2563eb;
+
+}
+
+
+.sa-feature-icon.bonafide {
+
+    background:
+        #fff7ed;
+
+    border-color:
+        #fed7aa;
+
+    color:
+        #ea580c;
+
+}
+
+
+.sa-feature-icon.import {
+
+    background:
+        #ecfeff;
+
+    border-color:
+        #cffafe;
+
+    color:
+        #0891b2;
+
+}
+
+
+.sa-feature-icon.attendance {
+
+    background:
+        #ecfdf5;
+
+    border-color:
+        #d1fae5;
+
+    color:
+        #059669;
+
+}
+
+
+.sa-feature-icon.fees {
+
+    background:
+        #f0fdf4;
+
+    border-color:
+        #dcfce7;
+
+    color:
+        #16a34a;
+
+}
+
+
+.sa-feature-icon.teacher {
+
+    background:
+        #f5f3ff;
+
+    border-color:
+        #ede9fe;
+
+    color:
+        #7c3aed;
+
+}
+
+
+.sa-feature-icon.results {
+
+    background:
+        #fdf4ff;
+
+    border-color:
+        #fae8ff;
+
+    color:
+        #c026d3;
+
+}
+
+
+.sa-feature-icon.timetable {
+
+    background:
+        #f0fdfa;
+
+    border-color:
+        #ccfbf1;
+
+    color:
+        #0f766e;
+
+}
+
+
+.sa-feature-icon.notice {
+
+    background:
+        #fff1f2;
+
+    border-color:
+        #ffe4e6;
+
+    color:
+        #e11d48;
+
+}
+
+
+/* =========================================================
+   FEATURE TEXT
+========================================================= */
+
+.sa-feature-info h3 {
+
+    margin:
+        0 0 5px;
+
+    color:
+        #172033;
+
+    font-size:
+        14px;
+
+    line-height:
+        1.35;
+
+    font-weight:
+        750;
+
+    letter-spacing:
+        -.1px;
+
+}
+
+
+.sa-feature-info p {
+
+    margin:
+        0;
+
+    max-width:
+        310px;
+
+    color:
+        #64748b;
+
+    font-size:
+        12px;
+
+    line-height:
+        1.45;
+
+}
+
+
+/* =========================================================
+   FEATURE CONTROL
+========================================================= */
+
+.sa-feature-control {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        flex-end;
+
+    gap:
+        11px;
+
+    flex:
+        0 0 auto;
+
+}
+
+
+.sa-feature-status {
+
+    min-width:
+        61px;
+
+    text-align:
+        right;
+
+    color:
+        #94a3b8;
+
+    font-size:
+        11px;
+
+    font-weight:
+        750;
+
+    letter-spacing:
+        -.1px;
+
+}
+
+
+.sa-feature-item.feature-enabled
+.sa-feature-status {
+
+    color:
+        #059669;
+
+}
+
+
+/* =========================================================
+   PREMIUM TOGGLE
+========================================================= */
+
+.sa-toggle {
+
+    position:
+        relative;
+
+    width:
+        54px;
+
+    height:
+        31px;
+
+    flex:
+        0 0 54px;
+
+    padding:
+        0;
+
+    border:
+        0;
+
+    background:
+        transparent;
+
+    cursor:
+        pointer;
+
+}
+
+
+.sa-toggle-track {
+
+    position:
+        absolute;
+
+    inset:
+        0;
+
+    display:
+        block;
+
+    border-radius:
+        999px;
+
+    background:
+        #d2dce8;
+
+    border:
+        1px solid
+        #c5d0dd;
+
+    box-shadow:
+        inset 0 1px 2px
+        rgba(15, 23, 42, .07);
+
+    transition:
+        background .22s ease,
+        border-color .22s ease,
+        box-shadow .22s ease;
+
+}
+
+
+.sa-toggle-thumb {
+
+    position:
+        absolute;
+
+    top:
+        4px;
+
+    left:
+        4px;
+
+    width:
+        21px;
+
+    height:
+        21px;
+
+    border-radius:
+        50%;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 2px 7px
+        rgba(15, 23, 42, .20);
+
+    transition:
+        transform .22s
+        cubic-bezier(.4, 0, .2, 1);
+
+}
+
+
+/* =========================================================
+   ENABLED TOGGLE
+========================================================= */
+
+.sa-toggle[aria-checked="true"]
+.sa-toggle-track {
+
+    background:
+        linear-gradient(
+            135deg,
+            #0ea5a4,
+            #10b981
+        );
+
+    border-color:
+        #0ea5a4;
+
+    box-shadow:
+        0 4px 13px
+        rgba(16, 185, 129, .22);
+
+}
+
+
+.sa-toggle[aria-checked="true"]
+.sa-toggle-thumb {
+
+    transform:
+        translateX(23px);
+
+}
+
+
+/* =========================================================
+   TOGGLE FOCUS
+========================================================= */
+
+.sa-toggle:focus-visible {
+
+    outline:
+        3px solid
+        rgba(14, 165, 164, .18);
+
+    outline-offset:
+        4px;
+
+}
+
+
+/* =========================================================
+   INFORMATION NOTE
+========================================================= */
+
+.sa-feature-note {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    margin-top:
+        18px;
+
+    padding:
+        14px 16px;
+
+    border:
+        1px solid
+        #d7e7fb;
+
+    border-radius:
+        15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8fbff,
+            #f9fbfd
+        );
+
+}
+
+
+.sa-feature-note-icon {
+
+    width:
+        31px;
+
+    height:
+        31px;
+
+    flex:
+        0 0 31px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        9px;
+
+    background:
+        #eff6ff;
+
+    color:
+        #2563eb;
+
+    font-size:
+        13px;
+
+}
+
+
+.sa-feature-note strong {
+
+    display:
+        block;
+
+    margin-bottom:
+        2px;
+
+    color:
+        #334155;
+
+    font-size:
+        12px;
+
+    font-weight:
+        750;
+
+}
+
+
+.sa-feature-note p {
+
+    margin:
+        0;
+
+    color:
+        #64748b;
+
+    font-size:
+        11.5px;
+
+    line-height:
+        1.45;
+
+}
+
+
+/* =========================================================
+   ACTION FOOTER
+========================================================= */
+
+.sa-feature-modal-box
+.sa-school-modal-actions {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        flex-end;
+
+    gap:
+        10px;
+
+    margin-top:
+        18px;
+
+    padding-top:
+        18px;
+
+    border-top:
+        1px solid
+        #edf1f5;
+
+}
+
+
+/* =========================================================
+   CANCEL BUTTON
+========================================================= */
+
+.sa-feature-modal-box
+.sa-school-cancel-btn {
+
+    min-height:
+        42px;
+
+    padding:
+        0 17px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        7px;
+
+    border:
+        1px solid
+        #dbe3ec;
+
+    border-radius:
+        11px;
+
+    background:
+        #ffffff;
+
+    color:
+        #475569;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+    transition:
+        all .2s ease;
+
+}
+
+
+.sa-feature-modal-box
+.sa-school-cancel-btn:hover {
+
+    background:
+        #f8fafc;
+
+    border-color:
+        #cbd5e1;
+
+    color:
+        #0f172a;
+
+}
+
+
+/* =========================================================
+   SAVE BUTTON
+========================================================= */
+
+.sa-feature-modal-box
+.feature-save-btn {
+
+    min-height:
+        42px;
+
+    padding:
+        0 20px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        8px;
+
+    border:
+        1px solid
+        #6366f1;
+
+    border-radius:
+        11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #8b5cf6
+        );
+
+    color:
+        #ffffff;
+
+    font-size:
+        12px;
+
+    font-weight:
+        750;
+
+    cursor:
+        pointer;
+
+    box-shadow:
+        0 6px 16px
+        rgba(99, 102, 241, .20);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.sa-feature-modal-box
+.feature-save-btn:hover {
+
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 9px 22px
+        rgba(99, 102, 241, .27);
+
+}
+
+
+.sa-feature-modal-box
+.feature-save-btn:disabled {
+
+    opacity:
+        .65;
+
+    cursor:
+        not-allowed;
+
+    transform:
+        none;
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .sa-feature-modal-box {
+
+        width:
+            calc(100vw - 28px);
+
+        min-height:
+            680px;
+
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .sa-feature-modal-box {
+
+        width:
+            calc(100vw - 20px);
+
+        min-height:
+            auto;
+
+        max-height:
+            calc(100vh - 20px);
+
+        border-radius:
+            21px;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-modal-header {
+
+        min-height:
+            auto;
+
+        padding:
+            18px;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-modal-title-wrap {
+
+        gap:
+            11px;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-modal-title-wrap h2 {
+
+        font-size:
+            18px;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-modal-title-wrap p {
+
+        font-size:
+            10.5px;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-modal-icon.feature {
+
+        width:
+            40px;
+
+        height:
+            40px;
+
+        flex-basis:
+            40px;
+
+        border-radius:
+            12px;
+
+        font-size:
+            15px;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-modal-close {
+
+        width:
+            34px;
+
+        height:
+            34px;
+
+        flex-basis:
+            34px;
+
+    }
+
+
+    .sa-feature-form {
+
+        padding:
+            16px;
+
+    }
+
+
+    .sa-feature-grid {
+
+        grid-template-columns:
+            1fr;
+
+        gap:
+            10px;
+
+    }
+
+
+    .sa-feature-item {
+
+        min-height:
+            78px;
+
+        padding:
+            13px;
+
+        border-radius:
+            15px;
+
+    }
+
+
+    .sa-feature-info {
+
+        gap:
+            10px;
+
+    }
+
+
+    .sa-feature-icon {
+
+        width:
+            38px;
+
+        height:
+            38px;
+
+        flex-basis:
+            38px;
+
+        border-radius:
+            11px;
+
+        font-size:
+            14px;
+
+    }
+
+
+    .sa-feature-info h3 {
+
+        font-size:
+            13px;
+
+    }
+
+
+    .sa-feature-info p {
+
+        font-size:
+            10.5px;
+
+        max-width:
+            190px;
+
+    }
+
+
+    .sa-feature-status {
+
+        display:
+            none;
+
+    }
+
+
+    .sa-toggle {
+
+        width:
+            48px;
+
+        height:
+            28px;
+
+        flex-basis:
+            48px;
+
+    }
+
+
+    .sa-toggle-thumb {
+
+        width:
+            18px;
+
+        height:
+            18px;
+
+        top:
+            4px;
+
+        left:
+            4px;
+
+    }
+
+
+    .sa-toggle[aria-checked="true"]
+    .sa-toggle-thumb {
+
+        transform:
+            translateX(20px);
+
+    }
+
+
+    .sa-feature-note {
+
+        align-items:
+            flex-start;
+
+        margin-top:
+            12px;
+
+        padding:
+            11px 12px;
+
+    }
+
+
+    .sa-feature-note p {
+
+        font-size:
+            10.5px;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-modal-actions {
+
+        margin-top:
+            14px;
+
+        padding-top:
+            14px;
+
+        gap:
+            8px;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-cancel-btn,
+    .sa-feature-modal-box
+    .feature-save-btn {
+
+        min-height:
+            42px;
+
+        padding:
+            0 13px;
+
+        font-size:
+            11px;
+
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+    .sa-feature-modal-box
+    .sa-school-modal-header {
+
+        padding:
+            15px;
+
+    }
+
+
+    .sa-feature-form {
+
+        padding:
+            13px;
+
+    }
+
+
+    .sa-feature-item {
+
+        padding:
+            11px;
+
+    }
+
+
+    .sa-feature-info p {
+
+        display:
+            none;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-modal-actions {
+
+        flex-direction:
+            row;
+
+    }
+
+
+    .sa-feature-modal-box
+    .sa-school-cancel-btn,
+    .sa-feature-modal-box
+    .feature-save-btn {
+
+        flex:
+            1;
+
+    }
+
+}
+
+
+/* =========================================================
+   📜 CERTIFICATE MODAL
+========================================================= */
+
+.sa-certificate-modal-box {
+
+    width:
+        min(1080px, calc(100vw - 40px));
+
+    max-height:
+        calc(100vh - 40px);
+
+    overflow-y:
+        auto;
+
+    padding:
+        0;
+
+    border-radius:
+        26px;
+
+    background:
+        #ffffff;
+
+    border:
+        1px solid
+        rgba(226, 232, 240, .9);
+
+    box-shadow:
+        0 30px 90px
+        rgba(15, 23, 42, .18);
+
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.sa-certificate-modal-box::-webkit-scrollbar {
+
+    width:
+        7px;
+
+}
+
+.sa-certificate-modal-box::-webkit-scrollbar-track {
+
+    background:
+        transparent;
+
+}
+
+.sa-certificate-modal-box::-webkit-scrollbar-thumb {
+
+    background:
+        #cbd5e1;
+
+    border-radius:
+        999px;
+
+}
+
+.sa-certificate-modal-box::-webkit-scrollbar-thumb:hover {
+
+    background:
+        #94a3b8;
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.sa-certificate-modal-box
+.sa-school-modal-header {
+
+    min-height:
+        100px;
+
+    padding:
+        24px 28px 22px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        20px;
+
+    border-bottom:
+        1px solid
+        #e8edf3;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #fbfdff 100%
+        );
+
+}
+
+
+/* =========================================================
+   CERTIFICATE HEADER ICON
+========================================================= */
+
+.sa-school-modal-icon.certificate {
+
+    width:
+        46px;
+
+    height:
+        46px;
+
+    flex:
+        0 0 46px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7ed,
+            #fef3c7
+        );
+
+    border:
+        1px solid
+        #fed7aa;
+
+    color:
+        #d97706;
+
+    font-size:
+        17px;
+
+    box-shadow:
+        0 5px 15px
+        rgba(217, 119, 6, .08);
+
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.sa-certificate-form {
+
+    padding:
+        24px 28px 28px;
+
+}
+
+
+/* =========================================================
+   SECTION
+========================================================= */
+
+.sa-certificate-section {
+
+    margin-bottom:
+        20px;
+
+    padding:
+        20px;
+
+    border:
+        1px solid
+        #e3e9f0;
+
+    border-radius:
+        19px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fafcff 100%
+        );
+
+}
+
+
+.sa-certificate-section:last-of-type {
+
+    margin-bottom:
+        0;
+
+}
+
+
+/* =========================================================
+   SECTION HEADING
+========================================================= */
+
+.sa-certificate-section-heading {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    margin-bottom:
+        17px;
+
+}
+
+
+.sa-certificate-section-icon {
+
+    width:
+        40px;
+
+    height:
+        40px;
+
+    flex:
+        0 0 40px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        12px;
+
+    font-size:
+        14px;
+
+}
+
+
+.sa-certificate-section-icon.prefix {
+
+    background:
+        #eff6ff;
+
+    border:
+        1px solid
+        #dbeafe;
+
+    color:
+        #2563eb;
+
+}
+
+
+.sa-certificate-section-icon.general {
+
+    background:
+        #f5f3ff;
+
+    border:
+        1px solid
+        #ede9fe;
+
+    color:
+        #7c3aed;
+
+}
+
+
+.sa-certificate-section-icon.tc {
+
+    background:
+        #ecfeff;
+
+    border:
+        1px solid
+        #cffafe;
+
+    color:
+        #0891b2;
+
+}
+
+
+.sa-certificate-section-icon.bonafide {
+
+    background:
+        #fff7ed;
+
+    border:
+        1px solid
+        #fed7aa;
+
+    color:
+        #ea580c;
+
+}
+
+
+.sa-certificate-section-heading h3 {
+
+    margin:
+        0 0 3px;
+
+    color:
+        #172033;
+
+    font-size:
+        14px;
+
+    font-weight:
+        800;
+
+}
+
+
+.sa-certificate-section-heading p {
+
+    margin:
+        0;
+
+    color:
+        #64748b;
+
+    font-size:
+        11.5px;
+
+    line-height:
+        1.4;
+
+}
+
+
+/* =========================================================
+   PREFIX GRID
+========================================================= */
+
+.sa-certificate-prefix-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        16px;
+
+}
+
+
+/* =========================================================
+   PREFIX CARD
+========================================================= */
+
+.sa-certificate-input-card {
+
+    padding:
+        16px;
+
+    border:
+        1px solid
+        #e2e8f0;
+
+    border-radius:
+        15px;
+
+    background:
+        #ffffff;
+
+}
+
+
+.sa-certificate-label {
+
+    display:
+        block;
+
+    margin-bottom:
+        8px;
+
+    color:
+        #172033;
+
+    font-size:
+        12px;
+
+    font-weight:
+        750;
+
+}
+
+
+.required-mark {
+
+    color:
+        #ef4444;
+
+}
+
+
+/* =========================================================
+   PREFIX INPUT
+========================================================= */
+
+.sa-prefix-input-wrap {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    height:
+        46px;
+
+    overflow:
+        hidden;
+
+    border:
+        1px solid
+        #dbe4ee;
+
+    border-radius:
+        12px;
+
+    background:
+        #ffffff;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.sa-prefix-input-wrap:focus-within {
+
+    border-color:
+        #6366f1;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(99, 102, 241, .08);
+
+}
+
+
+.sa-prefix-icon {
+
+    width:
+        44px;
+
+    height:
+        100%;
+
+    flex:
+        0 0 44px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    background:
+        #eff6ff;
+
+    color:
+        #2563eb;
+
+    border-right:
+        1px solid
+        #dbeafe;
+
+}
+
+
+.sa-prefix-icon.bonafide {
+
+    background:
+        #fff7ed;
+
+    color:
+        #ea580c;
+
+    border-color:
+        #fed7aa;
+
+}
+
+
+.sa-prefix-input-wrap input {
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    padding:
+        0 13px;
+
+    border:
+        0;
+
+    outline:
+        none;
+
+    background:
+        transparent;
+
+    color:
+        #172033;
+
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+
+    text-transform:
+        uppercase;
+
+}
+
+
+.sa-certificate-input-card small {
+
+    display:
+        block;
+
+    margin-top:
+        7px;
+
+    color:
+        #94a3b8;
+
+    font-size:
+        10.5px;
+
+}
+
+
+/* =========================================================
+   TOGGLE GRID
+========================================================= */
+
+.sa-certificate-toggle-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        14px;
+
+}
+
+
+/* =========================================================
+   SETTING CARD
+========================================================= */
+
+.sa-certificate-setting {
+
+    min-height:
+        92px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        18px;
+
+    padding:
+        16px 17px;
+
+    border:
+        1px solid
+        #e2e8f0;
+
+    border-radius:
+        16px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff,
+            #f9fbfd
+        );
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        transform .2s ease;
+
+}
+
+
+.sa-certificate-setting:hover {
+
+    border-color:
+        #cfd9e5;
+
+    box-shadow:
+        0 7px 20px
+        rgba(15, 23, 42, .045);
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+.sa-certificate-setting.certificate-enabled {
+
+    border-color:
+        #cdeee6;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff,
+            #f7fffc
+        );
+
+}
+
+
+/* =========================================================
+   SETTING INFO
+========================================================= */
+
+.sa-certificate-setting-info {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    min-width:
+        0;
+
+}
+
+
+.sa-certificate-setting-info > div:last-child {
+
+    min-width:
+        0;
+
+}
+
+
+.sa-certificate-setting-icon {
+
+    width:
+        42px;
+
+    height:
+        42px;
+
+    flex:
+        0 0 42px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        12px;
+
+    font-size:
+        14px;
+
+}
+
+
+/* =========================================================
+   SETTING ICON COLORS
+========================================================= */
+
+.sa-certificate-setting-icon.numbering {
+
+    background:
+        #eff6ff;
+
+    border:
+        1px solid
+        #dbeafe;
+
+    color:
+        #2563eb;
+
+}
+
+
+.sa-certificate-setting-icon.labels {
+
+    background:
+        #f5f3ff;
+
+    border:
+        1px solid
+        #ede9fe;
+
+    color:
+        #7c3aed;
+
+}
+
+
+.sa-certificate-setting-icon.tc-logo {
+
+    background:
+        #ecfeff;
+
+    border:
+        1px solid
+        #cffafe;
+
+    color:
+        #0891b2;
+
+}
+
+
+.sa-certificate-setting-icon.tc-watermark {
+
+    background:
+        #ecfdf5;
+
+    border:
+        1px solid
+        #d1fae5;
+
+    color:
+        #059669;
+
+}
+
+
+.sa-certificate-setting-icon.bonafide-logo {
+
+    background:
+        #fff7ed;
+
+    border:
+        1px solid
+        #fed7aa;
+
+    color:
+        #ea580c;
+
+}
+
+
+.sa-certificate-setting-icon.bonafide-watermark {
+
+    background:
+        #fdf4ff;
+
+    border:
+        1px solid
+        #fae8ff;
+
+    color:
+        #c026d3;
+
+}
+
+
+/* =========================================================
+   SETTING TEXT
+========================================================= */
+
+.sa-certificate-setting h4 {
+
+    margin:
+        0 0 4px;
+
+    color:
+        #172033;
+
+    font-size:
+        13px;
+
+    line-height:
+        1.3;
+
+    font-weight:
+        750;
+
+}
+
+
+.sa-certificate-setting p {
+
+    margin:
+        0;
+
+    max-width:
+        270px;
+
+    color:
+        #64748b;
+
+    font-size:
+        11px;
+
+    line-height:
+        1.4;
+
+}
+
+
+/* =========================================================
+   CONTROL
+========================================================= */
+
+.sa-certificate-control {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        9px;
+
+    flex:
+        0 0 auto;
+
+}
+
+
+.sa-certificate-status {
+
+    min-width:
+        57px;
+
+    text-align:
+        right;
+
+    color:
+        #94a3b8;
+
+    font-size:
+        10.5px;
+
+    font-weight:
+        750;
+
+}
+
+
+.sa-certificate-setting.certificate-enabled
+.sa-certificate-status {
+
+    color:
+        #059669;
+
+}
+
+
+/* =========================================================
+   PREMIUM CERTIFICATE TOGGLE
+========================================================= */
+
+.sa-certificate-toggle {
+
+    position:
+        relative;
+
+    width:
+        52px;
+
+    height:
+        30px;
+
+    flex:
+        0 0 52px;
+
+    padding:
+        0;
+
+    border:
+        0;
+
+    background:
+        transparent;
+
+    cursor:
+        pointer;
+
+}
+
+
+.sa-certificate-toggle-track {
+
+    position:
+        absolute;
+
+    inset:
+        0;
+
+    display:
+        block;
+
+    border-radius:
+        999px;
+
+    background:
+        #d2dce8;
+
+    border:
+        1px solid
+        #c5d0dd;
+
+    box-shadow:
+        inset 0 1px 2px
+        rgba(15, 23, 42, .07);
+
+    transition:
+        all .22s ease;
+
+}
+
+
+.sa-certificate-toggle-thumb {
+
+    position:
+        absolute;
+
+    top:
+        4px;
+
+    left:
+        4px;
+
+    width:
+        20px;
+
+    height:
+        20px;
+
+    border-radius:
+        50%;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 2px 7px
+        rgba(15, 23, 42, .20);
+
+    transition:
+        transform .22s
+        cubic-bezier(.4, 0, .2, 1);
+
+}
+
+
+.sa-certificate-toggle[aria-checked="true"]
+.sa-certificate-toggle-track {
+
+    background:
+        linear-gradient(
+            135deg,
+            #0ea5a4,
+            #10b981
+        );
+
+    border-color:
+        #0ea5a4;
+
+    box-shadow:
+        0 4px 13px
+        rgba(16, 185, 129, .20);
+
+}
+
+
+.sa-certificate-toggle[aria-checked="true"]
+.sa-certificate-toggle-thumb {
+
+    transform:
+        translateX(22px);
+
+}
+
+
+.sa-certificate-toggle:focus-visible {
+
+    outline:
+        3px solid
+        rgba(14, 165, 164, .18);
+
+    outline-offset:
+        4px;
+
+}
+
+
+/* =========================================================
+   NOTE
+========================================================= */
+
+.sa-certificate-note {
+
+    display:
+        flex;
+
+    align-items:
+        flex-start;
+
+    gap:
+        11px;
+
+    margin-top:
+        18px;
+
+    padding:
+        13px 15px;
+
+    border:
+        1px solid
+        #dbeafe;
+
+    border-radius:
+        14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8fbff,
+            #f9fbfd
+        );
+
+}
+
+
+.sa-certificate-note-icon {
+
+    width:
+        30px;
+
+    height:
+        30px;
+
+    flex:
+        0 0 30px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        9px;
+
+    background:
+        #eff6ff;
+
+    color:
+        #2563eb;
+
+    font-size:
+        12px;
+
+}
+
+
+.sa-certificate-note strong {
+
+    display:
+        block;
+
+    margin-bottom:
+        2px;
+
+    color:
+        #334155;
+
+    font-size:
+        11.5px;
+
+    font-weight:
+        750;
+
+}
+
+
+.sa-certificate-note p {
+
+    margin:
+        0;
+
+    color:
+        #64748b;
+
+    font-size:
+        10.5px;
+
+    line-height:
+        1.45;
+
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.sa-certificate-modal-box
+.sa-school-modal-actions {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        flex-end;
+
+    gap:
+        10px;
+
+    margin-top:
+        18px;
+
+    padding-top:
+        18px;
+
+    border-top:
+        1px solid
+        #edf1f5;
+
+}
+
+
+.sa-certificate-modal-box
+.sa-school-cancel-btn {
+
+    min-height:
+        42px;
+
+    padding:
+        0 17px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        7px;
+
+    border:
+        1px solid
+        #dbe3ec;
+
+    border-radius:
+        11px;
+
+    background:
+        #ffffff;
+
+    color:
+        #475569;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+}
+
+
+.sa-certificate-modal-box
+.certificate-save-btn {
+
+    min-height:
+        42px;
+
+    padding:
+        0 19px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        8px;
+
+    border:
+        1px solid
+        #6366f1;
+
+    border-radius:
+        11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #8b5cf6
+        );
+
+    color:
+        #ffffff;
+
+    font-size:
+        12px;
+
+    font-weight:
+        750;
+
+    cursor:
+        pointer;
+
+    box-shadow:
+        0 6px 16px
+        rgba(99, 102, 241, .20);
+
+    transition:
+        all .2s ease;
+
+}
+
+
+.sa-certificate-modal-box
+.certificate-save-btn:hover {
+
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 9px 22px
+        rgba(99, 102, 241, .27);
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .sa-certificate-modal-box {
+
+        width:
+            calc(100vw - 20px);
+
+        max-height:
+            calc(100vh - 20px);
+
+        border-radius:
+            21px;
+
+    }
+
+
+    .sa-certificate-modal-box
+    .sa-school-modal-header {
+
+        min-height:
+            auto;
+
+        padding:
+            18px;
+
+    }
+
+
+    .sa-certificate-form {
+
+        padding:
+            16px;
+
+    }
+
+
+    .sa-certificate-section {
+
+        padding:
+            15px;
+
+        margin-bottom:
+            13px;
+
+        border-radius:
+            16px;
+
+    }
+
+
+    .sa-certificate-prefix-grid,
+    .sa-certificate-toggle-grid {
+
+        grid-template-columns:
+            1fr;
+
+        gap:
+            10px;
+
+    }
+
+
+    .sa-certificate-setting {
+
+        min-height:
+            78px;
+
+        padding:
+            13px;
+
+        border-radius:
+            14px;
+
+    }
+
+
+    .sa-certificate-setting-icon {
+
+        width:
+            38px;
+
+        height:
+            38px;
+
+        flex-basis:
+            38px;
+
+    }
+
+
+    .sa-certificate-setting h4 {
+
+        font-size:
+            12px;
+
+    }
+
+
+    .sa-certificate-setting p {
+
+        font-size:
+            10px;
+
+    }
+
+
+    .sa-certificate-status {
+
+        display:
+            none;
+
+    }
+
+
+    .sa-certificate-toggle {
+
+        width:
+            48px;
+
+        height:
+            28px;
+
+        flex-basis:
+            48px;
+
+    }
+
+
+    .sa-certificate-toggle-thumb {
+
+        width:
+            18px;
+
+        height:
+            18px;
+
+        top:
+            4px;
+
+        left:
+            4px;
+
+    }
+
+
+    .sa-certificate-toggle[aria-checked="true"]
+    .sa-certificate-toggle-thumb {
+
+        transform:
+            translateX(20px);
+
+    }
+
+
+    .sa-certificate-note {
+
+        margin-top:
+            12px;
+
+    }
+
+
+    .sa-certificate-modal-box
+    .sa-school-modal-actions {
+
+        margin-top:
+            14px;
+
+        padding-top:
+            14px;
+
+    }
+
+
+    .sa-certificate-modal-box
+    .sa-school-cancel-btn,
+    .sa-certificate-modal-box
+    .certificate-save-btn {
+
+        min-height:
+            42px;
+
+        padding:
+            0 13px;
+
+        font-size:
+            11px;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+    .sa-certificate-section-heading p {
+
+        display:
+            none;
+
+    }
+
+
+    .sa-certificate-setting p {
+
+        display:
+            none;
+
+    }
+
+
+    .sa-certificate-modal-box
+    .sa-school-modal-actions {
+
+        display:
+            grid;
+
+        grid-template-columns:
+            1fr 1.3fr;
+
+    }
+
+
+    .sa-certificate-modal-box
+    .sa-school-cancel-btn,
+    .sa-certificate-modal-box
+    .certificate-save-btn {
+
+        width:
+            100%;
+
+    }
+
+}
+
+
+
+/* =========================================================
+   🔒 SCHOOL STATUS MODAL
+========================================================= */
+
+.sa-status-modal-box {
+
+    width:
+        min(500px, calc(100vw - 32px));
+
+    padding:
+        32px;
+
+    border-radius:
+        24px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fbfdff 100%
+        );
+
+    border:
+        1px solid
+        #e2e8f0;
+
+    box-shadow:
+        0 30px 90px
+        rgba(15, 23, 42, .18);
+
+    text-align:
+        center;
+
+    animation:
+        saStatusModalPop .22s
+        ease-out;
+
+}
+
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes saStatusModalPop {
+
+    from {
+
+        opacity:
+            0;
+
+        transform:
+            translateY(10px)
+            scale(.97);
+
+    }
+
+    to {
+
+        opacity:
+            1;
+
+        transform:
+            translateY(0)
+            scale(1);
+
+    }
+
+}
+
+
+/* =========================================================
+   CONFIRM ICON
+========================================================= */
+
+.sa-status-confirm-icon {
+
+    width:
+        62px;
+
+    height:
+        62px;
+
+    margin:
+        0 auto 17px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        18px;
+
+    background:
+        #fff7ed;
+
+    border:
+        1px solid
+        #fed7aa;
+
+    color:
+        #ea580c;
+
+    font-size:
+        22px;
+
+    box-shadow:
+        0 8px 22px
+        rgba(234, 88, 12, .10);
+
+    transition:
+        all .2s ease;
+
+}
+
+
+/* ACTIVE -> INACTIVE */
+
+.sa-status-confirm-icon.is-deactivate {
+
+    background:
+        #fff7ed;
+
+    border-color:
+        #fed7aa;
+
+    color:
+        #ea580c;
+
+}
+
+
+/* INACTIVE -> ACTIVE */
+
+.sa-status-confirm-icon.is-activate {
+
+    background:
+        #ecfdf5;
+
+    border-color:
+        #bbf7d0;
+
+    color:
+        #16a34a;
+
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.sa-status-confirm-content h2 {
+
+    margin:
+        0 0 8px;
+
+    color:
+        #172033;
+
+    font-size:
+        20px;
+
+    line-height:
+        1.3;
+
+    font-weight:
+        800;
+
+}
+
+
+.sa-status-message {
+
+    max-width:
+        410px;
+
+    margin:
+        0 auto;
+
+    color:
+        #64748b;
+
+    font-size:
+        12px;
+
+    line-height:
+        1.6;
+
+}
+
+
+/* =========================================================
+   STATUS PREVIEW
+========================================================= */
+
+.sa-status-preview {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        15px;
+
+    margin:
+        22px 0;
+
+    padding:
+        14px 16px;
+
+    border:
+        1px solid
+        #e2e8f0;
+
+    border-radius:
+        15px;
+
+    background:
+        #f8fafc;
+
+}
+
+
+.sa-status-preview > i {
+
+    color:
+        #94a3b8;
+
+    font-size:
+        12px;
+
+}
+
+
+.sa-status-preview-item {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    gap:
+        6px;
+
+    min-width:
+        105px;
+
+}
+
+
+.sa-status-preview-label {
+
+    color:
+        #94a3b8;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    text-transform:
+        uppercase;
+
+    letter-spacing:
+        .04em;
+
+}
+
+
+/* =========================================================
+   STATUS PILLS
+========================================================= */
+
+.sa-status-pill {
+
+    min-width:
+        78px;
+
+    padding:
+        6px 10px;
+
+    border-radius:
+        999px;
+
+    font-size:
+        10.5px;
+
+    font-weight:
+        750;
+
+}
+
+
+.sa-status-pill.current {
+
+    background:
+        #ecfdf5;
+
+    border:
+        1px solid
+        #bbf7d0;
+
+    color:
+        #15803d;
+
+}
+
+
+.sa-status-pill.target {
+
+    background:
+        #fff7ed;
+
+    border:
+        1px solid
+        #fed7aa;
+
+    color:
+        #c2410c;
+
+}
+
+
+.sa-status-pill.target.activate {
+
+    background:
+        #ecfdf5;
+
+    border-color:
+        #bbf7d0;
+
+    color:
+        #15803d;
+
+}
+
+
+/* =========================================================
+   WARNING
+========================================================= */
+
+.sa-status-warning {
+
+    display:
+        flex;
+
+    align-items:
+        flex-start;
+
+    gap:
+        11px;
+
+    padding:
+        13px 14px;
+
+    margin-bottom:
+        22px;
+
+    text-align:
+        left;
+
+    border:
+        1px solid
+        #fde2c4;
+
+    border-radius:
+        14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fffaf5,
+            #fffdfb
+        );
+
+}
+
+
+.sa-status-warning-icon {
+
+    width:
+        30px;
+
+    height:
+        30px;
+
+    flex:
+        0 0 30px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        9px;
+
+    background:
+        #fff7ed;
+
+    color:
+        #ea580c;
+
+    font-size:
+        12px;
+
+}
+
+
+.sa-status-warning strong {
+
+    display:
+        block;
+
+    margin-bottom:
+        3px;
+
+    color:
+        #7c2d12;
+
+    font-size:
+        11.5px;
+
+    font-weight:
+        750;
+
+}
+
+
+.sa-status-warning p {
+
+    margin:
+        0;
+
+    color:
+        #9a3412;
+
+    font-size:
+        10.5px;
+
+    line-height:
+        1.45;
+
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.sa-status-actions {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr 1.35fr;
+
+    gap:
+        10px;
+
+    padding-top:
+        19px;
+
+    border-top:
+        1px solid
+        #edf1f5;
+
+}
+
+
+.sa-status-cancel-btn,
+.sa-status-confirm-btn {
+
+    min-height:
+        44px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        8px;
+
+    padding:
+        0 15px;
+
+    border-radius:
+        11px;
+
+    font-size:
+        12px;
+
+    font-weight:
+        750;
+
+    cursor:
+        pointer;
+
+    transition:
+        all .2s ease;
+
+}
+
+
+/* =========================================================
+   CANCEL
+========================================================= */
+
+.sa-status-cancel-btn {
+
+    background:
+        #ffffff;
+
+    border:
+        1px solid
+        #dbe3ec;
+
+    color:
+        #475569;
+
+}
+
+
+.sa-status-cancel-btn:hover {
+
+    background:
+        #f8fafc;
+
+    border-color:
+        #cbd5e1;
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+/* =========================================================
+   CONFIRM - DEACTIVATE
+========================================================= */
+
+.sa-status-confirm-btn {
+
+    border:
+        1px solid
+        #ea580c;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f97316,
+            #ea580c
+        );
+
+    color:
+        #ffffff;
+
+    box-shadow:
+        0 7px 18px
+        rgba(234, 88, 12, .20);
+
+}
+
+
+.sa-status-confirm-btn:hover {
+
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 10px 24px
+        rgba(234, 88, 12, .27);
+
+}
+
+
+/* =========================================================
+   CONFIRM - ACTIVATE
+========================================================= */
+
+.sa-status-confirm-btn.is-activate {
+
+    border-color:
+        #16a34a;
+
+    background:
+        linear-gradient(
+            135deg,
+            #22c55e,
+            #16a34a
+        );
+
+    box-shadow:
+        0 7px 18px
+        rgba(22, 163, 74, .20);
+
+}
+
+
+.sa-status-confirm-btn.is-activate:hover {
+
+    box-shadow:
+        0 10px 24px
+        rgba(22, 163, 74, .27);
+
+}
+
+
+/* =========================================================
+   DISABLED
+========================================================= */
+
+.sa-status-confirm-btn:disabled,
+.sa-status-cancel-btn:disabled {
+
+    opacity:
+        .65;
+
+    cursor:
+        not-allowed;
+
+    transform:
+        none;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .sa-status-modal-box {
+
+        width:
+            calc(100vw - 24px);
+
+        padding:
+            24px 18px 18px;
+
+        border-radius:
+            21px;
+
+    }
+
+
+    .sa-status-confirm-icon {
+
+        width:
+            56px;
+
+        height:
+            56px;
+
+        margin-bottom:
+            14px;
+
+        border-radius:
+            16px;
+
+    }
+
+
+    .sa-status-confirm-content h2 {
+
+        font-size:
+            18px;
+
+    }
+
+
+    .sa-status-message {
+
+        font-size:
+            11.5px;
+
+    }
+
+
+    .sa-status-preview {
+
+        gap:
+            8px;
+
+        padding:
+            12px 8px;
+
+    }
+
+
+    .sa-status-preview-item {
+
+        min-width:
+            90px;
+
+    }
+
+
+    .sa-status-preview-label {
+
+        font-size:
+            9px;
+
+    }
+
+
+    .sa-status-pill {
+
+        min-width:
+            68px;
+
+        font-size:
+            10px;
+
+    }
+
+
+    .sa-status-warning {
+
+        padding:
+            11px;
+
+    }
+
+
+    .sa-status-actions {
+
+        grid-template-columns:
+            1fr 1.25fr;
+
+    }
+
+
+    .sa-status-cancel-btn,
+    .sa-status-confirm-btn {
+
+        min-height:
+            42px;
+
+        font-size:
+            11px;
+
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .sa-status-preview-item {
+
+        min-width:
+            75px;
+
+    }
+
+
+    .sa-status-preview {
+
+        gap:
+            4px;
+
+    }
+
+
+    .sa-status-preview > i {
+
+        font-size:
+            10px;
+
+    }
+
 }
