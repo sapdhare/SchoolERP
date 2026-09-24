@@ -541,7 +541,8 @@ async function markContacted(leadId){
                 method: "POST",
 
                 headers: {
-                    "X-Requested-With": "XMLHttpRequest"
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": csrfToken
                 }
             }
         );
@@ -603,7 +604,11 @@ async function scheduleDemo(leadId){
             `/superadmin/lead/demo/${leadId}`,
 
             {
-                method:"POST"
+                method:"POST",
+
+                headers: {
+                    "X-CSRFToken": csrfToken
+                }
             }
 
         );
@@ -667,7 +672,8 @@ async function convertLead(leadId){
 
                 headers:{
                     "X-Requested-With":
-                    "XMLHttpRequest"
+                    "XMLHttpRequest",
+                    "X-CSRFToken": csrfToken
                 }
             }
 

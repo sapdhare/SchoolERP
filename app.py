@@ -9236,7 +9236,6 @@ def submit_lead():
 # =========================================================
 
 
-@csrf.exempt
 @app.route("/superadmin/lead/contacted/<int:lead_id>", methods=["POST"])
 @admin_required
 def mark_lead_contacted(lead_id):
@@ -9294,7 +9293,6 @@ def mark_lead_contacted(lead_id):
 # =========================================================
 
 
-@csrf.exempt
 @app.route("/superadmin/lead/demo/<int:lead_id>", methods=["POST"])
 @admin_required
 def schedule_demo(lead_id):
@@ -9352,7 +9350,6 @@ def schedule_demo(lead_id):
 # =========================================================
 
 
-@csrf.exempt
 @app.route("/superadmin/lead/converted/<int:lead_id>", methods=["POST"])
 @admin_required
 def convert_lead(lead_id):
