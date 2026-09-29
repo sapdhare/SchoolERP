@@ -2,255 +2,1024 @@
 
 {% block content %}
 
-<link rel="stylesheet"
-href="{{ url_for(
-'static',
-filename='css/subscription/history.css'
-) }}">
+<link rel="stylesheet" href="{{ url_for(
+        'static',
+        filename='css/subscription/history.css'
+    ) }}">
 
 <div class="sh-container">
 
-    <!-- ===================================== -->
-    <!-- PAGE HEADER -->
-    <!-- ===================================== -->
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
 
-    <div class="sh-header">
+    <section class="sh-page-header">
 
-        <div>
+        <div class="sh-header-main">
 
-            <h1>
-                📜 Subscription History
-            </h1>
-
-            <p>
-                View all subscription payments,
-                renewals and billing transactions.
-            </p>
-
-        </div>
-
-    </div>
-
-    <!-- ===================================== -->
-    <!-- SUMMARY CARDS -->
-    <!-- ===================================== -->
-
-    <div class="sh-stats-grid">
-
-        <div class="sh-stat-card sh-card-blue">
+            <div class="sh-header-icon">
+                <i class="fa-solid fa-receipt"></i>
+            </div>
 
             <div>
 
-                <span>Total Transactions</span>
+                <div class="sh-eyebrow">
+                    ACCOUNT & BILLING
+                </div>
 
-                <h2>
+                <h1>
+                    Subscription History
+                </h1>
+
+                <p>
+                    View subscription payments, renewals,
+                    invoices and billing transactions.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="sh-header-badge">
+
+            <i class="fa-solid fa-shield-check"></i>
+
+            <span>
+                Secure Billing Records
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         STATISTICS
+    ====================================================== -->
+
+    <section class="sh-stats-grid">
+
+        <!-- TOTAL TRANSACTIONS -->
+
+        <div class="sh-stat-card sh-stat-blue">
+
+            <div class="sh-stat-content">
+
+                <span class="sh-stat-label">
+                    Total Transactions
+                </span>
+
+                <strong class="sh-stat-value">
                     {{ summary.total_transactions }}
-                </h2>
+                </strong>
+
+                <span class="sh-stat-helper">
+                    All billing records
+                </span>
 
             </div>
 
-            <div class="sh-icon">
-                📄
+            <div class="sh-stat-icon">
+                <i class="fa-solid fa-receipt"></i>
             </div>
 
         </div>
 
-        <div class="sh-stat-card sh-card-green">
+
+        <!-- SUCCESSFUL PAYMENTS -->
+
+        <div class="sh-stat-card sh-stat-green">
+
+            <div class="sh-stat-content">
+
+                <span class="sh-stat-label">
+                    Successful Payments
+                </span>
+
+                <strong class="sh-stat-value">
+                    {{ summary.successful_transactions }}
+                </strong>
+
+                <span class="sh-stat-helper">
+                    Completed successfully
+                </span>
+
+            </div>
+
+            <div class="sh-stat-icon">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL PAID -->
+
+        <div class="sh-stat-card sh-stat-teal">
+
+            <div class="sh-stat-content">
+
+                <span class="sh-stat-label">
+                    Total Paid
+                </span>
+
+                <strong class="sh-stat-value sh-money">
+                    ₹{{ "{:,.2f}".format(summary.total_paid|float) }}
+                </strong>
+
+                <span class="sh-stat-helper">
+                    Successful payments only
+                </span>
+
+            </div>
+
+            <div class="sh-stat-icon">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+            </div>
+
+        </div>
+
+
+        <!-- FAILED / PENDING -->
+
+        <div class="sh-stat-card sh-stat-orange">
+
+            <div class="sh-stat-content">
+
+                <span class="sh-stat-label">
+                    Failed / Pending
+                </span>
+
+                <strong class="sh-stat-value">
+                    {{ summary.failed_pending }}
+                </strong>
+
+                <span class="sh-stat-helper">
+                    Requires attention
+                </span>
+
+            </div>
+
+            <div class="sh-stat-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         BILLING SNAPSHOT
+    ====================================================== -->
+
+    <section class="sh-billing-card">
+
+        <div class="sh-billing-header">
 
             <div>
 
-                <span>Total Revenue</span>
+                <span class="sh-section-eyebrow">
+                    BILLING SNAPSHOT
+                </span>
 
                 <h2>
-                    ₹{{ summary.total_amount }}
+                    Latest successful payment
                 </h2>
 
             </div>
 
-            <div class="sh-icon">
-                💰
+            {% if latest_successful_payment %}
+
+            <span class="sh-live-badge">
+                <i class="fa-solid fa-circle"></i>
+                Payment Verified
+            </span>
+
+            {% endif %}
+
+        </div>
+
+
+        {% if latest_successful_payment %}
+
+        <div class="sh-billing-grid">
+
+            <!-- PLAN -->
+
+            <div class="sh-billing-item">
+
+                <div class="sh-billing-item-icon">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Plan
+                    </span>
+
+                    <strong>
+                        {{ latest_successful_payment.plan_name or '—' }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- AMOUNT -->
+
+            <div class="sh-billing-item">
+
+                <div class="sh-billing-item-icon">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Amount
+                    </span>
+
+                    <strong>
+                        ₹{{ "{:,.2f}".format(
+                        latest_successful_payment.amount|float
+                        ) }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- DATE -->
+
+            <div class="sh-billing-item">
+
+                <div class="sh-billing-item-icon">
+                    <i class="fa-regular fa-calendar"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Payment Date
+                    </span>
+
+                    <strong>
+                        {% if latest_successful_payment.created_at %}
+                        {{ latest_successful_payment.created_at.strftime('%d %b %Y') }}
+                        {% else %}
+                        —
+                        {% endif %}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- GATEWAY -->
+
+            <div class="sh-billing-item">
+
+                <div class="sh-billing-item-icon">
+                    <i class="fa-solid fa-credit-card"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Gateway
+                    </span>
+
+                    <strong>
+                        {{ latest_successful_payment.payment_gateway or '—' }}
+                    </strong>
+
+                </div>
+
             </div>
 
         </div>
 
-    </div>
+        {% else %}
 
-    <!-- ===================================== -->
-    <!-- SEARCH BAR -->
-    <!-- ===================================== -->
+        <div class="sh-empty-billing">
 
-    <div class="sh-search-box">
+            <div class="sh-empty-billing-icon">
+                <i class="fa-solid fa-receipt"></i>
+            </div>
 
-        <input
-            type="text"
-            id="historySearch"
-            placeholder="Search invoice number, payment id, plan..."
-        >
+            <div>
 
-    </div>
+                <strong>
+                    No successful payment found
+                </strong>
 
-    <!-- ===================================== -->
-    <!-- TABLE CARD -->
-    <!-- ===================================== -->
+                <span>
+                    Successful subscription payments will appear here.
+                </span>
 
-    <div class="sh-table-card">
+            </div>
 
-        <table class="sh-table">
+        </div>
 
-            <thead>
+        {% endif %}
 
-                <tr>
-
-                    <th>Date</th>
-                    <th>Invoice</th>
-                    <th>Plan</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Gateway</th>
-                    <th>Payment ID</th>
-                    <th>Actions</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody id="historyTable">
-
-                {% for item in history %}
-
-                <tr>
-
-                    <td>
-                        {{ item.created_at.strftime('%d %b %Y') }}
-                    </td>
-
-                    <td>
-                        {{ item.invoice_number or '-' }}
-                    </td>
-
-                    <td>
-
-                        <span class="sh-plan-badge">
-
-                            {{ item.plan_name }}
-
-                        </span>
-
-                    </td>
-
-                    <td>
-
-                        ₹{{ item.amount }}
-
-                    </td>
-
-                    <td>
-
-                        {% if item.payment_status == "success" %}
-
-                            <span class="sh-status sh-success">
-
-                                Success
-
-                            </span>
-
-                        {% elif item.payment_status == "failed" %}
-
-                            <span class="sh-status sh-failed">
-
-                                Failed
-
-                            </span>
-
-                        {% else %}
-
-                            <span class="sh-status sh-pending">
-
-                                Pending
-
-                            </span>
-
-                        {% endif %}
-
-                    </td>
-
-                    <td>
-
-                        {{ item.payment_gateway }}
-
-                    </td>
-
-                    <td>
-
-                        {{ item.payment_id or '-' }}
-
-                    </td>
+    </section>
 
 
-                    <td>
+    <!-- =====================================================
+         PAYMENT HISTORY SECTION
+    ====================================================== -->
+
+    <section class="sh-history-card">
+
+        <!-- HEADER -->
+
+        <div class="sh-history-header">
+
+            <div>
+
+                <span class="sh-section-eyebrow">
+                    TRANSACTION HISTORY
+                </span>
+
+                <h2>
+                    Payment Records
+                </h2>
+
+                <p>
+                    Search and review your school's billing activity.
+                </p>
+
+            </div>
+
+            <div class="sh-record-count">
+
+                <i class="fa-solid fa-list"></i>
+
+                <span id="visibleRecordCount">
+                    {{ history|length }}
+                </span>
+
+                <small>
+                    records
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FILTER TOOLBAR
+        ================================================== -->
+
+        <div class="sh-toolbar">
+
+            <!-- SEARCH -->
+
+            <div class="sh-search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input type="search" id="historySearch" autocomplete="off"
+                    placeholder="Search invoice, payment ID, plan, gateway..." aria-label="Search subscription history">
+
+        
+
+            </div>
+
+
+            <!-- STATUS FILTER -->
+
+            <div class="sh-status-filter">
+
+                <button type="button" class="sh-filter-btn active" data-status="all">
+                    All
+                </button>
+
+                <button type="button" class="sh-filter-btn" data-status="success">
+                    Success
+                </button>
+
+                <button type="button" class="sh-filter-btn" data-status="pending">
+                    Pending
+                </button>
+
+                <button type="button" class="sh-filter-btn" data-status="failed">
+                    Failed
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TABLE
+        ================================================== -->
+
+        <div class="sh-table-wrapper">
+
+            <table class="sh-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Invoice
+                        </th>
+
+                        <th>
+                            Plan
+                        </th>
+
+                        <th>
+                            Transaction
+                        </th>
+
+                        <th>
+                            Amount
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Gateway
+                        </th>
+
+                        <th>
+                            Payment ID
+                        </th>
+
+                        <th class="sh-action-column">
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="historyTable">
+
+                    {% for item in history %}
+
+                    <tr class="sh-history-row" data-status="{{ (item.payment_status or 'pending')|lower }}">
+
+                        <!-- DATE -->
+
+                        <td>
+
+                            <div class="sh-date-cell">
+
+                                <strong>
+                                    {% if item.created_at %}
+                                    {{ item.created_at.strftime('%d %b %Y') }}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </strong>
+
+                                {% if item.created_at %}
+
+                                <span>
+                                    {{ item.created_at.strftime('%I:%M %p') }}
+                                </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- INVOICE -->
+
+                        <td>
+
                             {% if item.invoice_number %}
 
-                                <a href="{{ url_for(
-                                    'view_invoice',
-                                    payment_log_id=item.id
-                                ) }}"
-                                class="sh-invoice-btn">
-
-                                    View Invoice
-
-                                </a>
+                            <span class="sh-invoice-number">
+                                {{ item.invoice_number }}
+                            </span>
 
                             {% else %}
 
-                                -
+                            <span class="sh-muted">
+                                No invoice
+                            </span>
 
                             {% endif %}
 
                         </td>
 
-                </tr>
 
-                {% endfor %}
+                        <!-- PLAN -->
 
-            </tbody>
+                        <td>
 
-        </table>
+                            <span class="sh-plan-badge">
+                                <i class="fa-solid fa-layer-group"></i>
+                                {{ item.plan_name or 'Unknown Plan' }}
+                            </span>
 
-    </div>
+                        </td>
+
+
+                        <!-- TRANSACTION -->
+
+                        <td>
+
+                            <span class="sh-transaction-badge">
+
+                                {% if item.transaction_type %}
+
+                                {% set transaction_type =
+                                item.transaction_type|replace('_', ' ')|title
+                                %}
+
+                                {{ transaction_type }}
+
+                                {% else %}
+
+                                Payment
+
+                                {% endif %}
+
+                            </span>
+
+                            {% if item.order_id %}
+
+                            <span class="sh-order-id">
+                                Order: {{ item.order_id }}
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- AMOUNT -->
+
+                        <td>
+
+                            <strong class="sh-amount">
+                                ₹{{ "{:,.2f}".format(item.amount|float) }}
+                            </strong>
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% set status =
+                            (item.payment_status or 'pending')|lower
+                            %}
+
+                            {% if status == "success" %}
+
+                            <span class="sh-status sh-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Success
+                            </span>
+
+                            {% elif status == "failed" %}
+
+                            <span class="sh-status sh-failed">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                                Failed
+                            </span>
+
+                            {% else %}
+
+                            <span class="sh-status sh-pending">
+                                <i class="fa-solid fa-clock"></i>
+                                Pending
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- GATEWAY -->
+
+                        <td>
+
+                            <span class="sh-gateway">
+
+                                <i class="fa-solid fa-building-columns"></i>
+
+                                {{ item.payment_gateway or '—' }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- PAYMENT ID -->
+
+                        <td>
+
+                            {% if item.payment_id %}
+
+                            <span class="sh-payment-id" title="{{ item.payment_id }}">
+                                {{ item.payment_id }}
+                            </span>
+
+                            {% else %}
+
+                            <span class="sh-muted">
+                                —
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACTION -->
+
+                        <td class="sh-action-column">
+
+                            {% if item.invoice_number %}
+
+                            <a href="{{ url_for(
+                                            'view_invoice',
+                                            payment_log_id=item.id
+                                        ) }}" class="sh-invoice-btn">
+
+                                <i class="fa-regular fa-file-lines"></i>
+
+                                <span>
+                                    View Invoice
+                                </span>
+
+                            </a>
+
+                            {% else %}
+
+                            <span class="sh-muted">
+                                —
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+
+            <!-- =================================================
+                 EMPTY SEARCH RESULT
+            ================================================== -->
+
+            <div id="historyNoResults" class="sh-no-results hidden">
+
+                <div class="sh-no-results-icon">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+
+                <strong>
+                    No matching transactions
+                </strong>
+
+                <span>
+                    Try a different search term or status filter.
+                </span>
+
+                <button type="button" id="resetHistoryFilters" class="sh-reset-btn">
+                    Reset Filters
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         BILLING INFORMATION
+    ====================================================== -->
+
+    <section class="sh-info-card">
+
+        <div class="sh-info-icon">
+            <i class="fa-solid fa-circle-info"></i>
+        </div>
+
+        <div>
+
+            <strong>
+                About your billing history
+            </strong>
+
+            <p>
+                Successful payments are included in the
+                <b>Total Paid</b> amount. Failed and pending
+                transactions remain visible for reference and
+                do not increase the total paid amount.
+            </p>
+
+        </div>
+
+    </section>
 
 </div>
 
+
+<!-- =========================================================
+     PAGE JAVASCRIPT
+========================================================= -->
+
 <script>
 
-const searchInput =
-document.getElementById(
-"historySearch"
-);
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
 
-searchInput.addEventListener(
-"keyup",
-function(){
+            const searchInput =
+                document.getElementById(
+                    "historySearch"
+                );
 
-let value =
-this.value.toLowerCase();
+            const clearSearchButton =
+                document.getElementById(
+                    "clearHistorySearch"
+                );
 
-let rows =
-document.querySelectorAll(
-"#historyTable tr"
-);
+            const rows =
+                Array.from(
+                    document.querySelectorAll(
+                        "#historyTable .sh-history-row"
+                    )
+                );
 
-rows.forEach(row=>{
+            const statusButtons =
+                document.querySelectorAll(
+                    ".sh-filter-btn"
+                );
 
-row.style.display =
-row.innerText
-.toLowerCase()
-.includes(value)
-? ""
-: "none";
+            const visibleCount =
+                document.getElementById(
+                    "visibleRecordCount"
+                );
 
-});
+            const noResults =
+                document.getElementById(
+                    "historyNoResults"
+                );
 
-});
+            const resetButton =
+                document.getElementById(
+                    "resetHistoryFilters"
+                );
+
+
+            let activeStatus = "all";
+
+
+            /* =====================================================
+               FILTER TABLE
+            ===================================================== */
+
+            function filterHistory() {
+
+                const searchValue =
+                    (
+                        searchInput?.value || ""
+                    )
+                        .trim()
+                        .toLowerCase();
+
+
+                let visibleRows = 0;
+
+
+                rows.forEach(
+                    function (row) {
+
+                        const rowText =
+                            row.innerText
+                                .toLowerCase();
+
+                        const rowStatus =
+                            (
+                                row.dataset.status ||
+                                "pending"
+                            ).toLowerCase();
+
+
+                        const matchesSearch =
+                            !searchValue ||
+                            rowText.includes(
+                                searchValue
+                            );
+
+
+                        const matchesStatus =
+                            activeStatus === "all" ||
+                            rowStatus === activeStatus;
+
+
+                        const shouldShow =
+                            matchesSearch &&
+                            matchesStatus;
+
+
+                        row.style.display =
+                            shouldShow
+                                ? ""
+                                : "none";
+
+
+                        if (shouldShow) {
+                            visibleRows++;
+                        }
+
+                    }
+                );
+
+
+                if (visibleCount) {
+
+                    visibleCount.innerText =
+                        visibleRows;
+
+                }
+
+
+                if (noResults) {
+
+                    noResults.classList.toggle(
+                        "hidden",
+                        visibleRows !== 0
+                    );
+
+                }
+
+
+                if (clearSearchButton) {
+
+                    clearSearchButton.classList.toggle(
+                        "visible",
+                        Boolean(searchValue)
+                    );
+
+                }
+
+            }
+
+
+            /* =====================================================
+               SEARCH
+            ===================================================== */
+
+            if (searchInput) {
+
+                searchInput.addEventListener(
+                    "input",
+                    filterHistory
+                );
+
+            }
+
+
+            /* =====================================================
+               STATUS FILTER
+            ===================================================== */
+
+            statusButtons.forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        function () {
+
+                            statusButtons.forEach(
+                                function (item) {
+
+                                    item.classList.remove(
+                                        "active"
+                                    );
+
+                                }
+                            );
+
+
+                            this.classList.add(
+                                "active"
+                            );
+
+
+                            activeStatus =
+                                this.dataset.status ||
+                                "all";
+
+
+                            filterHistory();
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /* =====================================================
+               CLEAR SEARCH
+            ===================================================== */
+
+            if (clearSearchButton) {
+
+                clearSearchButton.addEventListener(
+                    "click",
+                    function () {
+
+                        if (searchInput) {
+
+                            searchInput.value =
+                                "";
+
+                            searchInput.focus();
+
+                        }
+
+                        filterHistory();
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               RESET ALL FILTERS
+            ===================================================== */
+
+            if (resetButton) {
+
+                resetButton.addEventListener(
+                    "click",
+                    function () {
+
+                        if (searchInput) {
+                            searchInput.value = "";
+                        }
+
+
+                        activeStatus = "all";
+
+
+                        statusButtons.forEach(
+                            function (button) {
+
+                                button.classList.toggle(
+                                    "active",
+                                    button.dataset.status === "all"
+                                );
+
+                            }
+                        );
+
+
+                        filterHistory();
+
+                    }
+                );
+
+            }
+
+
+            /* =====================================================
+               INITIAL STATE
+            ===================================================== */
+
+            filterHistory();
+
+        }
+    );
 
 </script>
 

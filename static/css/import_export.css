@@ -1,1206 +1,5022 @@
-/* ================= PAGE ================= */
-.ie-page{
-    padding:24px 28px;
-}
-
-.ie-page > div{
-    margin-bottom:24px;
-}
-
-/* ================= PREMIUM HEADER ================= */
-
-.ie-header{
-    position:relative;
-    overflow:hidden;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:20px;
-
-    padding:34px 36px;
-    border-radius:28px;
-
-    background:rgba(255,255,255,.92);
-    border:1px solid rgba(20,184,166,.18);
-
-    box-shadow:0 18px 48px rgba(15,23,42,.07);
-}
-
-.ie-header::after{
-    content:"";
-    position:absolute;
-    right:-75px;
-    top:-85px;
-
-    width:220px;
-    height:220px;
-    border-radius:50%;
-
-    background:rgba(20,184,166,.10);
-}
-
-.ie-header-left{
-    position:relative;
-    z-index:2;
-}
-
-.ie-page-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:7px;
-
-    padding:8px 14px;
-    border-radius:999px;
-
-    background:#ecfeff;
-    color:#0f766e;
-
-    font-size:12px;
-    font-weight:900;
-
-    margin-bottom:14px;
-}
-
-.ie-header-left h1{
-    margin:0;
-    font-size:30px;
-    font-weight:900;
-    color:#0f172a;
-    letter-spacing:-.5px;
-}
-
-.ie-header-left p{
-    margin-top:10px;
-    font-size:14px;
-    color:#475569;
-    line-height:1.6;
-}
-
-.ie-header-left p span{
-    color:#94a3b8;
-}
-
-.ie-header-status{
-    position:relative;
-    z-index:2;
-
-    padding:10px 16px;
-    border-radius:999px;
-
-    background:#dcfce7;
-    color:#16a34a;
-    border:1px solid #bbf7d0;
-
-    font-size:13px;
-    font-weight:900;
-    white-space:nowrap;
-}
-
-/* ================= MOBILE ================= */
-
-@media(max-width:576px){
-
-    .ie-page{
-        padding:16px;
-    }
-
-    .ie-header{
-        flex-direction:column;
-        align-items:flex-start;
-
-        padding:24px 20px;
-        border-radius:24px;
-    }
-
-    .ie-header-left h1{
-        font-size:24px;
-        line-height:1.2;
-    }
-
-    .ie-header-left p{
-        font-size:13px;
-    }
-
-    .ie-header-status{
-        font-size:12px;
-        padding:8px 13px;
-    }
-}
-
-/* ================= OVERVIEW SECTION ================= */
-
-.ie-overview-row{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:18px;
-}
-
-/* ================= CARD ================= */
-
-.ie-overview-card{
-    position:relative;
-    overflow:hidden;
-
-    display:flex;
-    align-items:center;
-    gap:18px;
-
-    padding:24px;
-    min-height:110px;
-
-    border-radius:22px;
-    color:#fff;
-
-    transition:.25s ease;
-}
-
-.ie-overview-card:hover{
-    transform:translateY(-4px);
-}
-
-/* decorative circle */
-
-.ie-overview-card::after{
-    content:"";
-    position:absolute;
-
-    top:-25px;
-    right:-25px;
-
-    width:110px;
-    height:110px;
-
-    border-radius:50%;
-    background:rgba(255,255,255,.12);
-}
-
-/* ================= CARD 1 ================= */
-
-.ie-overview-card:nth-child(1){
-    background:linear-gradient(
-        135deg,
-        #14b8a6,
-        #0f766e
-    );
-}
-
-/* ================= CARD 2 ================= */
-
-.ie-overview-card:nth-child(2){
-    background:linear-gradient(
-        135deg,
-        #0ea5e9,
-        #2563eb
-    );
-}
-
-/* ================= CARD 3 ================= */
-
-.ie-overview-card:nth-child(3){
-    background:linear-gradient(
-        135deg,
-        #8b5cf6,
-        #6366f1
-    );
-}
-
-/* ================= ICON ================= */
-
-.ie-overview-icon{
-    width:58px;
-    height:58px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:18px;
-
-    background:rgba(255,255,255,.15);
-
-    backdrop-filter:blur(8px);
-
-    font-size:24px;
-
-    flex-shrink:0;
-}
-
-/* ================= CONTENT ================= */
-
-.ie-overview-card h3{
-    margin:0;
-
-    font-size:34px;
-    font-weight:900;
-
-    color:#fff;
-}
-
-.ie-overview-card p{
-    margin-top:4px;
-
-    font-size:14px;
-    font-weight:700;
-
-    color:#fff;
-}
-
-.ie-overview-card span{
-    display:block;
-
-    margin-top:2px;
-
-    font-size:12px;
-    color:rgba(255,255,255,.85);
-}
-
-/* ================= MOBILE ================= */
-
-@media(max-width:576px){
-
-    .ie-overview-row{
-        grid-template-columns:1fr;
-        gap:14px;
-    }
-
-    .ie-overview-card{
-        min-height:95px;
-        padding:18px;
-        border-radius:18px;
-    }
-
-    .ie-overview-icon{
-        width:50px;
-        height:50px;
-        font-size:20px;
-    }
-
-    .ie-overview-card h3{
-        font-size:28px;
-    }
-
-    .ie-overview-card p{
-        font-size:13px;
-    }
-
-    .ie-overview-card span{
-        font-size:11px;
-    }
-}
-
-
- 
-/* ================= PREMIUM TABS ================= */
-
-.ie-tabs{
-    display:inline-flex;
-    gap:10px;
-
-    padding:8px;
-    border-radius:18px;
-
-    background:#ffffff;
-    border:1px solid #e2e8f0;
-
-    box-shadow:0 12px 30px rgba(15,23,42,.06);
-}
-
-.ie-tab{
-    display:flex;
-    align-items:center;
-    gap:10px;
-
-    min-width:165px;
-
-    padding:12px 16px;
-    border:none;
-    border-radius:14px;
-
-    background:transparent;
-    color:#475569;
-
-    cursor:pointer;
-    transition:.25s ease;
-}
-
-.ie-tab .tab-icon{
-    width:38px;
-    height:38px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:12px;
-    background:#f1f5f9;
-
-    font-size:17px;
-}
-
-.ie-tab span:not(.tab-icon){
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-
-    font-size:13px;
-    font-weight:900;
-}
-
-.ie-tab small{
-    margin-top:2px;
-    font-size:11px;
-    font-weight:600;
-    color:#94a3b8;
-}
-
-.ie-tab.active{
-    background:linear-gradient(135deg,#14b8a6,#0f766e);
-    color:#ffffff;
-    box-shadow:0 10px 24px rgba(20,184,166,.28);
-}
-
-.ie-tab.active .tab-icon{
-    background:rgba(255,255,255,.18);
-}
-
-.ie-tab.active small{
-    color:rgba(255,255,255,.86);
-}
-
-.ie-tab:hover{
-    transform:translateY(-2px);
-}
-
-/* ================= TAB CONTENT ================= */
-
-.ie-tab-content{
-    display:none;
-    animation:fadeIn .3s ease;
-}
-
-.ie-tab-content.active{
-    display:block;
-}
-
-@keyframes fadeIn{
-    from{
-        opacity:0;
-        transform:translateY(6px);
-    }
-    to{
-        opacity:1;
-        transform:translateY(0);
-    }
-}
-
-/* ================= MOBILE ================= */
-
-@media(max-width:576px){
-
-    .ie-tabs{
-        width:100%;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:8px;
-        padding:7px;
-    }
-
-    .ie-tab{
-        min-width:0;
-        padding:10px;
-        gap:8px;
-    }
-
-    .ie-tab .tab-icon{
-        width:34px;
-        height:34px;
-        font-size:15px;
-    }
-
-    .ie-tab span:not(.tab-icon){
-        font-size:12px;
-    }
-
-    .ie-tab small{
-        font-size:10px;
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-/* ================= IMPORT CARD ================= */
-
-.ie-import-card{
-    position:relative;
-    overflow:hidden;
-
-    background:#ffffff;
-    border-radius:26px;
-    padding:28px;
-
-    border:1px solid rgba(20,184,166,.16);
-    box-shadow:0 18px 45px rgba(15,23,42,.07);
-
-    margin-top:28px;
-}
-
-.ie-import-card::after{
-    content:"";
-    position:absolute;
-    right:-80px;
-    top:-90px;
-    width:220px;
-    height:220px;
-    border-radius:50%;
-    background:rgba(20,184,166,.08);
-}
-
-.ie-card-header{
-    position:relative;
-    z-index:2;
-    margin-bottom:18px;
-}
-
-.ie-card-badge{
-    display:inline-flex;
-    padding:7px 13px;
-    border-radius:999px;
-    background:#ecfeff;
-    color:#0f766e;
-    font-size:12px;
-    font-weight:900;
-    margin-bottom:12px;
-}
-
-.ie-import-card h2{
-    margin:0;
-    font-size:26px;
-    font-weight:900;
-    color:#0f172a;
-}
-
-.ie-import-card p{
-    margin-top:8px;
-    font-size:14px;
-    color:#475569;
-    line-height:1.6;
-}
-
-.ie-import-card small{
-    color:#94a3b8;
-}
+/* ==========================================================
+   IMPORT / EXPORT PAGE
+   HEADER + OVERVIEW + TABS
+   UI ONLY
+========================================================== */
 
-/* NOTE */
 
-.ie-import-note{
-    position:relative;
-    z-index:2;
+/* ==========================================================
+   PAGE WRAPPER
+========================================================== */
 
-    padding:16px 18px;
-    border-radius:18px;
-    margin-bottom:20px;
+.ie-page {
+    width: 100%;
+    max-width: 1600px;
 
-    background:#f0fdf4;
-    border:1px solid #bbf7d0;
-}
-
-.ie-import-note strong{
-    display:block;
-    color:#166534;
-    font-size:14px;
-    font-weight:900;
-}
-
-.ie-import-note p{
-    margin:5px 0 0;
-    font-size:13px;
-    color:#334155;
-}
-
-/* UPLOAD BOX */
-
-.ie-upload-box{
-    position:relative;
-    z-index:2;
-
-    min-height:170px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border:2px dashed #bae6fd;
-    border-radius:22px;
-
-    background:linear-gradient(135deg,#f8fafc,#f0fdfa);
-
-    cursor:pointer;
-    transition:.25s ease;
-}
-
-.ie-upload-box:hover{
-    border-color:#14b8a6;
-    background:#ecfeff;
-    transform:translateY(-2px);
-}
-
-.ie-upload-content{
-    text-align:center;
-}
-
-.upload-icon{
-    font-size:40px;
-    margin-bottom:10px;
-}
-
-.ie-upload-content h3{
-    margin:0;
-    font-size:15px;
-    font-weight:900;
-    color:#0f172a;
-}
-
-.ie-upload-content p{
-    margin:6px 0 0;
-    font-size:13px;
-    color:#64748b;
-}
-
-.ie-upload-content span{
-    display:block;
-    margin-top:4px;
-    font-size:12px;
-    color:#94a3b8;
-}
-
-/* FILE PREVIEW */
-
-.ie-file-preview{
-    position:relative;
-    z-index:2;
-
-    margin-top:14px;
-    padding:12px 15px;
-
-    background:#ecfeff;
-    border:1px solid #99f6e4;
-    border-radius:14px;
-
-    font-size:13px;
-    font-weight:800;
-    color:#0f766e;
-}
-
-.hidden{
-    display:none;
-}
-
-/* ACTION */
-
-.ie-import-actions{
-    position:relative;
-    z-index:2;
-
-    margin-top:18px;
-    display:flex;
-    justify-content:flex-start;
-}
-
-.btn-import{
-    height:46px;
-    padding:0 22px;
-
-    border:none;
-    border-radius:14px;
-
-    background:linear-gradient(135deg,#14b8a6,#0f766e);
-    color:#ffffff;
-
-    font-size:14px;
-    font-weight:900;
-
-    cursor:pointer;
-    box-shadow:0 12px 28px rgba(20,184,166,.28);
-    transition:.25s ease;
-}
-
-.btn-import:hover{
-    transform:translateY(-2px);
-}
-
-/* MOBILE */
-
-@media(max-width:576px){
-
-    .ie-import-card{
-        padding:20px;
-        border-radius:22px;
-        margin-top:20px;
-    }
-
-    .ie-import-card h2{
-        font-size:22px;
-    }
-
-    .ie-import-note{
-        padding:14px;
-    }
-
-    .ie-upload-box{
-        min-height:150px;
-        border-radius:18px;
-    }
-
-    .upload-icon{
-        font-size:34px;
-    }
-
-    .btn-import{
-        width:100%;
-    }
-}
- 
-
-/* ================= EXPORT CARD ================= */
-
-.ie-export-card{
-    position:relative;
-    overflow:hidden;
-
-    margin-top:28px;
-    padding:28px;
-
-    background:#ffffff;
-    border:1px solid rgba(59,130,246,.16);
-    border-radius:26px;
-
-    box-shadow:0 18px 45px rgba(15,23,42,.07);
-}
-
-.ie-export-card::after{
-    content:"";
-    position:absolute;
-    right:-80px;
-    top:-90px;
-    width:220px;
-    height:220px;
-    border-radius:50%;
-    background:rgba(59,130,246,.08);
-}
-
-.ie-card-badge.export{
-    background:#eff6ff;
-    color:#2563eb;
-}
-
-.ie-export-card h2{
-    margin:0;
-    font-size:26px;
-    font-weight:900;
-    color:#0f172a;
-}
-
-.ie-export-card p{
-    margin-top:8px;
-    font-size:14px;
-    color:#475569;
-    line-height:1.6;
-}
-
-.ie-export-card small{
-    color:#94a3b8;
-}
-
-/* NOTE */
-
-.ie-export-note{
-    position:relative;
-    z-index:2;
-
-    margin:18px 0;
-    padding:16px 18px;
-
-    background:#eff6ff;
-    border:1px solid #bfdbfe;
-    border-radius:18px;
-}
-
-.ie-export-note strong{
-    display:block;
-    color:#1d4ed8;
-    font-size:14px;
-    font-weight:900;
-}
-
-.ie-export-note p{
-    margin:5px 0 0;
-    font-size:13px;
-    color:#334155;
-}
-
-/* FILTER BAR */
-
-.ie-export-filters{
-    position:relative;
-    z-index:2;
-
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr auto;
-    gap:14px;
-
-    padding:16px;
-    border-radius:20px;
-
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
-}
-
-.ie-select{
-    height:48px;
-    padding:0 14px;
-
-    border-radius:14px;
-    border:1.5px solid #dbe5ef;
+    margin: 0 auto;
 
-    background:#ffffff;
-    color:#0f172a;
-
-    font-size:14px;
-    outline:none;
-    cursor:pointer;
-}
-
-.ie-select:focus{
-    border-color:#3b82f6;
-    box-shadow:0 0 0 4px rgba(59,130,246,.12);
-}
-
-.btn-export-main{
-    height:48px;
-    padding:0 24px;
-
-    border:none;
-    border-radius:14px;
-
-    background:linear-gradient(135deg,#2563eb,#06b6d4);
-    color:#ffffff;
-
-    font-size:14px;
-    font-weight:900;
-
-    cursor:pointer;
-    white-space:nowrap;
-
-    box-shadow:0 12px 28px rgba(37,99,235,.25);
-    transition:.25s ease;
-}
-
-.btn-export-main:hover{
-    transform:translateY(-2px);
-}
-
-/* ================= MOBILE ================= */
-
-@media(max-width:576px){
-
-    .ie-export-card{
-        padding:20px;
-        border-radius:22px;
-        margin-top:20px;
-    }
-
-    .ie-export-card h2{
-        font-size:22px;
-    }
-
-    .ie-export-filters{
-        grid-template-columns:1fr;
-        padding:14px;
-        gap:12px;
-    }
-
-    .btn-export-main{
-        width:100%;
-    }
-}
-
-
-/* ================= IMPORT CONFIRM MODAL ================= */
-
-.ie-modal{
-    position:fixed;
-    inset:0;
-    z-index:99999;
-
-    display:none;
-    align-items:center;
-    justify-content:center;
-
-    padding:18px;
-
-    background:rgba(15,23,42,.60);
-    backdrop-filter:blur(9px);
-}
-
-.ie-modal-content{
-    width:100%;
-    max-width:420px;
-
-    padding:26px;
-    border-radius:26px;
-
-    background:#ffffff;
-
-    text-align:center;
-
-    box-shadow:0 35px 90px rgba(15,23,42,.30);
-    animation:modalPop .25s ease;
-}
-
-.ie-modal-icon{
-    width:62px;
-    height:62px;
-
-    margin:0 auto 14px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:20px;
-
-    background:#ecfeff;
-    color:#0f766e;
-
-    font-size:28px;
-}
-
-.ie-modal-content h3{
-    margin:0;
-    font-size:22px;
-    font-weight:900;
-    color:#0f172a;
-}
-
-.ie-modal-content p{
-    margin-top:10px;
-
-    font-size:14px;
-    line-height:1.6;
-
-    color:#475569;
-}
-
-.ie-modal-content small{
-    color:#94a3b8;
-}
-
-.ie-modal-warning{
-    margin-top:16px;
-    padding:13px 14px;
-
-    border-radius:16px;
-
-    background:#fffbeb;
-    border:1px solid #fde68a;
-
-    color:#92400e;
-
-    font-size:13px;
-    font-weight:800;
-}
-
-.modal-actions{
-    margin-top:22px;
-
-    display:flex;
-    gap:12px;
-}
-
-.modal-actions button{
-    flex:1;
-    height:46px;
-
-    border:none;
-    border-radius:14px;
-
-    font-size:14px;
-    font-weight:900;
-
-    cursor:pointer;
-}
-
-.btn-cancel{
-    background:#f1f5f9;
-    color:#475569;
-}
-
-.btn-confirm{
-    background:linear-gradient(135deg,#14b8a6,#0f766e);
-    color:#ffffff;
-    box-shadow:0 12px 28px rgba(20,184,166,.25);
+    padding: 24px 28px 40px;
 }
 
-@keyframes modalPop{
-    from{
-        opacity:0;
-        transform:translateY(12px) scale(.96);
-    }
-    to{
-        opacity:1;
-        transform:translateY(0) scale(1);
-    }
-}
-
-/* ================= MODAL MOBILE ================= */
-
-@media(max-width:576px){
-
-    .ie-modal{
-        padding:16px;
-        align-items:center;
-    }
-
-    .ie-modal-content{
-        max-width:390px;
-        padding:22px 18px;
-        border-radius:24px;
-    }
-
-    .ie-modal-icon{
-        width:56px;
-        height:56px;
-        border-radius:18px;
-        font-size:25px;
-        margin-bottom:12px;
-    }
-
-    .ie-modal-content h3{
-        font-size:20px;
-        line-height:1.3;
-    }
-
-    .ie-modal-content p{
-        font-size:13px;
-        line-height:1.6;
-    }
-
-    .ie-modal-warning{
-        padding:12px;
-        font-size:12px;
-        border-radius:14px;
-    }
-
-    .modal-actions{
-        flex-direction:row;
-        gap:10px;
-        margin-top:20px;
-    }
-
-    .modal-actions button{
-        width:100%;
-        height:46px;
-        font-size:13px;
-    }
-}
 
-/* ==========================================
-   SUCCESS MODAL
-========================================== */
+/* Keep vertical rhythm consistent */
 
-.success-box{
-    text-align:center;
+.ie-page>div {
+    margin-bottom: 22px;
 }
-
-.success-icon{
-    width:80px;
-    height:80px;
-
-    margin:0 auto 18px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:50%;
 
-    background:#dcfce7;
-    color:#16a34a;
+/* ==========================================================
+   HEADER
+========================================================== */
 
-    font-size:38px;
-    font-weight:900;
+.ie-header {
 
-    animation:successPop .45s ease;
-}
-
-.success-box h3{
-    margin:0;
-    font-size:24px;
-    font-weight:900;
-    color:#0f172a;
-}
+    position: relative;
 
-.success-box p{
-    margin-top:12px;
-    color:#475569;
-    line-height:1.7;
-    font-size:14px;
-}
-
-.success-box small{
-    color:#94a3b8;
-}
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-.btn-success-ok{
-    width:100%;
-    height:48px;
+    gap: 32px;
 
-    margin-top:20px;
+    min-height: 176px;
 
-    border:none;
-    border-radius:14px;
+    padding: 30px 34px;
 
-    background:linear-gradient(
-        135deg,
-        #14b8a6,
-        #0f766e
-    );
+    border-radius: 24px;
 
-    color:#fff;
-    font-size:14px;
-    font-weight:900;
+    background: #ffffff;
 
-    cursor:pointer;
+    border: 1px solid #e2e8f0;
 
     box-shadow:
-    0 12px 28px rgba(20,184,166,.25);
+        0 10px 35px rgba(15, 23, 42, 0.055);
+
+    overflow: hidden;
 }
 
-.btn-success-ok:hover{
-    transform:translateY(-2px);
+
+/* subtle top accent */
+
+.ie-header::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 4px;
+
+    background: linear-gradient(90deg,
+            #14b8a6,
+            #0f766e);
 }
 
-/* ==========================================
-   LOADING MODAL
-========================================== */
 
-.loading-box{
-    text-align:center;
+/* very subtle decorative element */
+
+.ie-header::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 170px;
+    height: 170px;
+
+    right: -85px;
+    top: -90px;
+
+    border-radius: 50%;
+
+    background: rgba(20, 184, 166, 0.055);
+
+    pointer-events: none;
 }
 
-.loading-box h3{
-    margin:0;
-    font-size:24px;
-    font-weight:900;
-    color:#0f172a;
+
+/* ==========================================================
+   HEADER MAIN
+========================================================== */
+
+.ie-header-main {
+
+    position: relative;
+
+    z-index: 2;
+
+    min-width: 0;
 }
 
-.loading-box p{
-    margin-top:12px;
-    color:#475569;
-    line-height:1.7;
-    font-size:14px;
+
+/* ==========================================================
+   HEADER TITLE ROW
+========================================================== */
+
+.ie-header-title-row {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 12px;
 }
 
-.loading-box small{
-    color:#94a3b8;
+
+/* ==========================================================
+   PAGE BADGE
+========================================================== */
+
+.ie-page-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    height: 30px;
+
+    padding: 0 11px;
+
+    border-radius: 8px;
+
+    background: #ecfdf5;
+
+    border: 1px solid #ccfbf1;
+
+    color: #0f766e;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.1px;
+
+    white-space: nowrap;
 }
 
-.loading-note{
-    margin-top:16px;
 
-    padding:12px;
+.ie-page-badge i {
 
-    border-radius:14px;
-
-    background:#eff6ff;
-    border:1px solid #bfdbfe;
-
-    color:#2563eb;
-    font-size:13px;
-    font-weight:800;
+    font-size: 11px;
 }
 
-/* ==========================================
-   PREMIUM SPINNER
-========================================== */
+/* ==========================================================
+   HEADER CONTEXT
+========================================================== */
 
-.loader{
-    width:72px;
-    height:72px;
+.ie-header-context {
 
-    margin:0 auto 20px;
+    display: inline-flex;
 
-    border-radius:50%;
+    align-items: center;
 
-    border:6px solid #e2e8f0;
-    border-top:6px solid #14b8a6;
+    height: 30px;
 
-    animation:spin .9s linear infinite;
+    padding: 0 10px;
+
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e2e8f0;
+
+    color: #64748b;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
 }
 
-/* ==========================================
-   ANIMATIONS
-========================================== */
 
-@keyframes spin{
-    from{
-        transform:rotate(0deg);
+/* ==========================================================
+   HEADER HEADING
+========================================================== */
+
+.ie-header-main h1 {
+
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 27px;
+
+    line-height: 1.2;
+
+    font-weight: 800;
+
+    letter-spacing: -0.45px;
+}
+
+
+/* ==========================================================
+   HEADER DESCRIPTION
+========================================================== */
+
+.ie-header-description {
+
+    margin: 8px 0 0;
+
+    color: #475569;
+
+    font-size: 13px;
+
+    line-height: 1.55;
+
+    font-weight: 500;
+
+    max-width: 700px;
+}
+
+
+/* ==========================================================
+   HEADER MARATHI
+========================================================== */
+
+.ie-header-marathi {
+
+    margin: 3px 0 0;
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+
+    font-weight: 500;
+}
+
+
+/* ==========================================================
+   HEADER SIDE
+========================================================== */
+
+.ie-header-side {
+
+    position: relative;
+
+    z-index: 2;
+
+    flex-shrink: 0;
+}
+
+
+/* ==========================================================
+   HEADER INFO CARD
+========================================================== */
+
+.ie-header-info {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    min-width: 175px;
+
+    padding: 11px 14px;
+
+    border-radius: 13px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e2e8f0;
+}
+
+
+.ie-header-info-icon {
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: #ecfdf5;
+
+    color: #0f766e;
+
+    font-size: 16px;
+}
+
+
+/* ==========================================================
+   HEADER INFO CONTENT
+========================================================== */
+
+.ie-header-info-content {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    min-width: 0;
+}
+
+
+.ie-header-info-label {
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.35px;
+}
+
+
+.ie-header-info-content strong {
+
+    margin-top: 2px;
+
+    color: #0f172a;
+
+    font-size: 14px;
+
+    line-height: 1.25;
+
+    font-weight: 800;
+}
+
+
+.ie-header-info-content small {
+
+    margin-top: 1px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+    font-weight: 600;
+}
+
+
+
+/* ================= MOBILE ================= */
+
+@media(max-width:768px) {
+
+    .ie-page {
+
+        padding: 20px 20px 34px;
     }
-    to{
-        transform:rotate(360deg);
+
+
+    /* Header */
+
+    .ie-header {
+
+        min-height: auto;
+
+        padding: 26px 26px;
+
+        border-radius: 21px;
+
+        gap: 24px;
+    }
+
+
+    .ie-header-main h1 {
+
+        font-size: 25px;
+    }
+
+
+    .ie-header-description {
+
+        font-size: 12.5px;
+
+        max-width: 560px;
+    }
+
+
+    .ie-header-marathi {
+
+        font-size: 10.5px;
+    }
+
+
+    .ie-header-side {
+
+        width: 100%;
+    }
+
+
+    .ie-header-info {
+
+        width: fit-content;
+
+        min-width: 170px;
     }
 }
 
-@keyframes successPop{
+@media (max-width: 480px) {
 
-    0%{
-        opacity:0;
-        transform:scale(.4);
+    .ie-page {
+
+        padding: 15px 13px 28px;
     }
 
-    70%{
-        transform:scale(1.08);
+
+    .ie-page>div {
+
+        margin-bottom: 16px;
     }
 
-    100%{
-        opacity:1;
-        transform:scale(1);
+
+    /* Header */
+
+    .ie-header {
+
+        display: block;
+
+        padding: 22px 19px;
+
+        border-radius: 19px;
+    }
+
+
+    .ie-header-title-row {
+
+        flex-wrap: wrap;
+
+        gap: 7px;
+
+        margin-bottom: 10px;
+    }
+
+
+    .ie-page-badge {
+
+        height: 28px;
+
+        padding: 0 9px;
+
+        font-size: 10px;
+    }
+
+
+    .ie-header-context {
+
+        height: 28px;
+
+        padding: 0 9px;
+
+        font-size: 10px;
+    }
+
+
+    .ie-header-main h1 {
+
+        font-size: 22px;
+
+        line-height: 1.25;
+
+        letter-spacing: -0.3px;
+    }
+
+
+    .ie-header-description {
+
+        margin-top: 7px;
+
+        font-size: 11.5px;
+
+        line-height: 1.55;
+    }
+
+
+    .ie-header-marathi {
+
+        margin-top: 3px;
+
+        font-size: 10px;
+    }
+
+
+    .ie-header-side {
+
+        margin-top: 16px;
+    }
+
+
+    .ie-header-info {
+
+        width: 100%;
+
+        min-width: 0;
+
+        padding: 10px 12px;
+
+        border-radius: 11px;
+    }
+
+
+    .ie-header-info-icon {
+
+        width: 34px;
+        height: 34px;
+
+        border-radius: 9px;
+
+        font-size: 14px;
+    }
+
+
+    .ie-header-info-label {
+
+        font-size: 9px;
+    }
+
+
+    .ie-header-info-content strong {
+
+        font-size: 13px;
+    }
+
+
+    .ie-header-info-content small {
+
+        font-size: 9px;
     }
 }
 
-/* ==========================================
+
+
+
+
+/* ==========================================================
+   OVERVIEW ROW
+========================================================== */
+
+.ie-overview-row {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 16px;
+
+    width: 100%;
+}
+
+
+/* ==========================================================
+   STAT CARD
+========================================================== */
+
+.ie-stat-card {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    min-height: 112px;
+
+    padding: 20px;
+
+    border-radius: 18px;
+
+    color: #ffffff;
+
+    overflow: hidden;
+
+    transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+
+.ie-stat-card:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+
+/* ==========================================================
+   CARD BACKGROUND
+========================================================== */
+
+.stat-students {
+
+    background: linear-gradient(135deg,
+            #14b8a6 0%,
+            #0f766e 100%);
+}
+
+
+.stat-today {
+
+    background: linear-gradient(135deg,
+            #0ea5e9 0%,
+            #2563eb 100%);
+}
+
+
+.stat-limit {
+
+    background: linear-gradient(135deg,
+            #7c6df2 0%,
+            #6366f1 100%);
+}
+
+
+/* ==========================================================
+   STAT CARD DECORATION
+========================================================== */
+
+.ie-stat-card::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 100px;
+    height: 100px;
+
+    right: -35px;
+    top: -42px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.09);
+
+    pointer-events: none;
+}
+
+
+.ie-stat-card::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 42px;
+    height: 42px;
+
+    right: 28px;
+    bottom: -23px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.055);
+
+    pointer-events: none;
+}
+
+
+/* ==========================================================
+   STAT ICON
+========================================================== */
+
+.ie-stat-icon {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: 50px;
+    height: 50px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, 0.15);
+
+    border: 1px solid rgba(255, 255, 255, 0.10);
+
+    color: #ffffff;
+
+    font-size: 19px;
+}
+
+
+/* ==========================================================
+   STAT CONTENT
+========================================================== */
+
+.ie-stat-content {
+
+    position: relative;
+
+    z-index: 2;
+
+    display: flex;
+
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+
+.ie-stat-label {
+
+    color: rgba(255, 255, 255, 0.86);
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+}
+
+
+.ie-stat-value {
+
+    margin-top: 2px;
+
+    color: #ffffff;
+
+    font-size: 27px;
+
+    line-height: 1.15;
+
+    font-weight: 800;
+
+    letter-spacing: -0.4px;
+}
+
+
+.ie-stat-secondary {
+
+    margin-top: 3px;
+
+    color: rgba(255, 255, 255, 0.78);
+
+    font-size: 10.5px;
+
+    line-height: 1.35;
+
+    font-weight: 500;
+}
+
+
+/* ==========================================================
+   STAT RIGHT ICON
+========================================================== */
+
+.ie-stat-arrow {
+
+    position: absolute;
+
+    z-index: 2;
+
+    right: 18px;
+
+    bottom: 17px;
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: rgba(255, 255, 255, 0.10);
+
+    color: rgba(255, 255, 255, 0.68);
+
+    font-size: 11px;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:768px) {
+
+    .ie-overview-row {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 14px;
+    }
+
+
+    .ie-stat-card {
+
+        min-height: 104px;
+
+        padding: 18px;
+    }
+
+
+    .ie-stat-icon {
+
+        width: 46px;
+        height: 46px;
+
+        border-radius: 12px;
+
+        font-size: 17px;
+    }
+
+
+    .ie-stat-value {
+
+        font-size: 25px;
+    }
+
+
+    /* Make third card span full width */
+
+    .stat-limit {
+
+        grid-column: 1 / -1;
+    }
+
+
+}
+
+@media (max-width: 480px) {
+
+    .ie-overview-row {
+
+        grid-template-columns: 1fr;
+
+        gap: 10px;
+    }
+
+
+    .ie-stat-card {
+
+        min-height: 88px;
+
+        padding: 15px;
+
+        border-radius: 15px;
+
+        gap: 12px;
+    }
+
+
+    .ie-stat-icon {
+
+        width: 43px;
+        height: 43px;
+
+        border-radius: 11px;
+
+        font-size: 16px;
+    }
+
+
+    .ie-stat-label {
+
+        font-size: 10px;
+    }
+
+
+    .ie-stat-value {
+
+        font-size: 23px;
+    }
+
+
+    .ie-stat-secondary {
+
+        font-size: 9px;
+
+        margin-top: 2px;
+    }
+
+
+    .ie-stat-arrow {
+
+        right: 13px;
+
+        bottom: 13px;
+
+        width: 24px;
+        height: 24px;
+
+        font-size: 9px;
+    }
+
+
+    .stat-limit {
+
+        grid-column: auto;
+    }
+
+}
+
+
+/* ==========================================================
+  TABS SECTION CSS
+========================================================== */
+
+
+/* ==========================================================
+   TABS WRAPPER
+========================================================== */
+
+.ie-tabs-wrapper {
+
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+}
+
+
+/* ==========================================================
+   TABS
+========================================================== */
+
+.ie-tabs {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 5px;
+
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    box-shadow:
+        0 7px 22px rgba(15, 23, 42, 0.055);
+}
+
+
+/* ==========================================================
+   TAB
+========================================================== */
+
+.ie-tab {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 170px;
+
+    padding: 9px 13px;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: #475569;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    font-family: inherit;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.ie-tab:hover {
+
+    background: #f8fafc;
+
+    color: #0f766e;
+}
+
+
+/* ==========================================================
+   TAB ICON
+========================================================== */
+
+.ie-tab .tab-icon {
+
+    width: 35px;
+    height: 35px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 9px;
+
+    background: #f1f5f9;
+
+    color: #64748b;
+
+    font-size: 14px;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+/* ==========================================================
+   TAB CONTENT
+========================================================== */
+
+.ie-tab .tab-content {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    min-width: 0;
+}
+
+
+.ie-tab .tab-content strong {
+
+    color: inherit;
+
+    font-size: 12px;
+
+    line-height: 1.3;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+
+.ie-tab .tab-content small {
+
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    line-height: 1.3;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================================
+   ACTIVE TAB
+========================================================== */
+
+.ie-tab.active {
+
+    background: linear-gradient(135deg,
+            #14b8a6 0%,
+            #0f766e 100%);
+
+    color: #ffffff;
+
+    box-shadow:
+        0 7px 18px rgba(20, 184, 166, 0.23);
+}
+
+
+.ie-tab.active .tab-icon {
+
+    background: rgba(255, 255, 255, 0.16);
+
+    color: #ffffff;
+}
+
+
+.ie-tab.active .tab-content small {
+
+    color: rgba(255, 255, 255, 0.80);
+}
+
+
+.ie-tab.active:hover {
+
+    background: linear-gradient(135deg,
+            #14b8a6 0%,
+            #0f766e 100%);
+
+    color: #ffffff;
+
+    transform: translateY(-1px);
+}
+
+
+/* ==========================================================
+   TAB CONTENT
+   Existing JS depends on these classes.
+========================================================== */
+
+.ie-tab-content {
+
+    display: none;
+
+    animation: ieFadeIn 0.25s ease;
+}
+
+
+.ie-tab-content.active {
+
+    display: block;
+}
+
+
+@keyframes ieFadeIn {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(5px);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+
+/* ================= MOBILE ================= */
+
+@media(max-width:768px) {
+
+    .ie-tabs {
+
+        width: 100%;
+
+        max-width: 420px;
+    }
+
+
+    .ie-tab {
+
+        flex: 1;
+
+        min-width: 0;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .ie-tabs-wrapper {
+
+        width: 100%;
+    }
+
+
+    .ie-tabs {
+
+        display: grid;
+
+        grid-template-columns: 1fr 1fr;
+
+        width: 100%;
+
+        max-width: none;
+
+        gap: 4px;
+
+        padding: 4px;
+
+        border-radius: 12px;
+    }
+
+
+    .ie-tab {
+
+        min-width: 0;
+
+        width: 100%;
+
+        padding: 8px 8px;
+
+        gap: 7px;
+
+        border-radius: 9px;
+    }
+
+
+    .ie-tab .tab-icon {
+
+        width: 31px;
+        height: 31px;
+
+        border-radius: 8px;
+
+        font-size: 12px;
+    }
+
+
+    .ie-tab .tab-content strong {
+
+        font-size: 10.5px;
+    }
+
+
+    .ie-tab .tab-content small {
+
+        font-size: 8px;
+
+        margin-top: 1px;
+    }
+
+}
+
+
+
+
+
+
+/* =========================================================
+   IMPORT PAGE SECTION CSS
+========================================================= */
+
+
+/* =========================================================
+   IMPORT CARD
+========================================================= */
+
+.ie-import-card {
+    position: relative;
+    overflow: hidden;
+
+    margin-top: 24px;
+    padding: 26px;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+
+    box-shadow:
+        0 12px 35px rgba(15, 23, 42, .06);
+}
+
+/* =========================================================
+   IMPORT HEADER
+========================================================= */
+
+.ie-import-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding-bottom: 22px;
+
+    border-bottom: 1px solid #eef2f7;
+}
+
+.ie-import-title-area {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+}
+
+.ie-import-title-icon {
+    width: 48px;
+    height: 48px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background: #ecfdf5;
+
+    border: 1px solid #ccfbf1;
+
+    color: #0f766e;
+
+    font-size: 17px;
+}
+
+.ie-section-label {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #0f766e;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.55px;
+
+    text-transform: uppercase;
+}
+
+.ie-import-header h2 {
+
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 22.5px;
+
+    line-height: 1.25;
+
+    font-weight: 850;
+}
+
+.ie-import-header p {
+
+    margin: 5px 0 0;
+
+    color: #64748b;
+
+    font-size: 10.5px;
+
+    line-height: 1.45;
+}
+
+.ie-import-marathi {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+.ie-import-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 12px;
+
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+
+    background: #f0fdf4;
+
+    color: #166534;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, .12);
+}
+
+/* =========================================================
+   IMPORT STEPS
+========================================================= */
+
+.ie-import-steps {
+    display: flex;
+    align-items: center;
+
+    margin: 20px 0 22px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 15px;
+
+    background: #f8fafc;
+}
+
+.ie-import-step {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    flex: 1;
+}
+
+.step-number {
+    width: 27px;
+    height: 27px;
+
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #e2e8f0;
+    color: #64748b;
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.ie-import-step.active .step-number {
+    background: #14b8a6;
+    color: #ffffff;
+
+    box-shadow:
+        0 0 0 4px rgba(20, 184, 166, .10);
+}
+
+.ie-import-step strong {
+    display: block;
+
+    color: #334155;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.ie-import-step small {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+.step-line {
+    width: 30px;
+    height: 1px;
+
+    flex-shrink: 0;
+
+    margin: 0 10px;
+
+    background: #dbe3ec;
+}
+
+/* =========================================================
+   TEMPLATE STRIP
+========================================================= */
+
+.ie-template-strip {
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    padding: 14px 16px;
+
+    margin-bottom: 18px;
+
+    border: 1px solid #dbeafe;
+    border-radius: 15px;
+
+    background: #f8fbff;
+}
+
+.ie-template-main {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    flex: 1;
+}
+
+.ie-template-icon {
+    width: 40px;
+    height: 40px;
+
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+
+    border-radius: 11px;
+
+    background: #dcfce7;
+    color: #15803d;
+
+    font-size: 18px;
+}
+
+.ie-template-text strong {
+    display: block;
+
+    color: #0f172a;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.ie-template-text span {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+.ie-template-rules {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.template-rule {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 6px 8px;
+
+    border-radius: 8px;
+
+    background: #ecfdf5;
+
+    color: #047857;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+.template-rule.warning {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.template-rule.danger {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.btn-template-download {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    min-height: 38px;
+
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: #2563eb;
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition: .2s ease;
+}
+
+.btn-template-download:hover {
+    background: #1d4ed8;
+    color: #ffffff;
+
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   UPLOAD BOX
+========================================================= */
+
+.ie-upload-box {
+    position: relative;
+
+    min-height: 190px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1.5px dashed #94a3b8;
+    border-radius: 17px;
+
+    background: #fbfdff;
+
+    cursor: pointer;
+
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        transform .2s ease;
+}
+
+.ie-upload-box:hover,
+.ie-upload-box.dragging {
+    border-color: #14b8a6;
+
+    background: #f0fdfa;
+
+    transform: translateY(-1px);
+}
+
+.ie-upload-content {
+    text-align: center;
+}
+
+.upload-icon {
+    width: 54px;
+    height: 54px;
+
+    display: grid;
+    place-items: center;
+
+    margin: 0 auto 12px;
+
+    border-radius: 15px;
+
+    background: #ecfeff;
+    color: #0f766e;
+
+    font-size: 23px;
+}
+
+.ie-upload-content h3 {
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.ie-upload-content p {
+    margin: 6px 0 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+.ie-upload-content span {
+    display: inline-flex;
+
+    margin-top: 9px;
+
+    padding: 5px 9px;
+
+    border-radius: 7px;
+
+    background: #f1f5f9;
+
+    color: #64748b;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+/* =========================================================
+   FILE PREVIEW
+========================================================= */
+
+.ie-file-preview {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 12px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #99f6e4;
+    border-radius: 12px;
+
+    background: #f0fdfa;
+}
+
+.ie-file-preview-icon {
+    width: 36px;
+    height: 36px;
+
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+
+    border-radius: 9px;
+
+    background: #dcfce7;
+    color: #15803d;
+
+    font-size: 15px;
+}
+
+.ie-file-details {
+    min-width: 0;
+    flex: 1;
+}
+
+.ie-file-details strong {
+    display: block;
+
+    overflow: hidden;
+
+    color: #134e4a;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ie-file-details span {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+.ie-file-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    color: #15803d;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+/* =========================================================
+   VALIDATION ACTION
+========================================================= */
+
+.ie-import-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-top: 14px;
+}
+
+.btn-check-validation {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    height: 43px;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 11px;
+
+    background: #0f766e;
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 7px 18px rgba(15, 118, 110, .18);
+
+    transition: .2s ease;
+}
+
+.btn-check-validation:hover:not(:disabled) {
+    background: #115e59;
+
+    transform: translateY(-1px);
+}
+
+.btn-check-validation:disabled {
+    opacity: .45;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   VALIDATION PANEL
+========================================================= */
+
+.ie-validation-panel {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #f8fafc;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, 0.045);
+}
+
+.ie-validation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 16px;
+}
+
+.ie-validation-label {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #64748b;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.ie-validation-header h3 {
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.validation-status {
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   VALIDATION SUMMARY
+========================================================= */
+
+.ie-validation-summary {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 9px;
+
+    margin-bottom: 20px;
+}
+
+.validation-stat {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    min-height: 60px;
+
+    padding: 10px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+
+    background: #ffffff;
+}
+
+.validation-stat-icon {
+    width: 32px;
+    height: 32px;
+
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+}
+
+.validation-stat strong {
+    display: block;
+
+    color: #0f172a;
+
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.validation-stat span {
+    display: block;
+
+    margin-top: 1px;
+
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+.validation-stat.valid .validation-stat-icon {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.validation-stat.error .validation-stat-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.validation-stat.duplicate .validation-stat-icon {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.validation-stat.missing .validation-stat-icon {
+    background: #ffedd5;
+    color: #ea580c;
+}
+
+/* ==========================================================
+   IMPORT PREVIEW
+========================================================== */
+
+.ie-import-preview {
+    position: relative;
+
+    margin-top: 0;
+    margin-bottom: 20px;
+
+    background: #ffffff;
+
+    border: 1px solid #dfe7ef;
+    border-radius: 17px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 5px 18px rgba(15, 23, 42, 0.045);
+}
+
+/* ==========================================================
+   PREVIEW HEADER
+========================================================== */
+
+.ie-preview-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 18px 20px;
+
+    border-bottom: 1px solid #eef2f7;
+
+    background: #ffffff;
+}
+
+
+.ie-preview-title-area {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+}
+
+
+.ie-preview-icon {
+
+    width: 42px;
+
+    height: 42px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #ecfdf5;
+
+    color: #0f766e;
+
+    border: 1px solid #ccfbf1;
+
+    font-size: 16px;
+}
+
+
+.ie-preview-eyebrow {
+
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #0f766e;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+}
+
+
+.ie-preview-title-area h3 {
+
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 15px;
+
+    line-height: 1.3;
+
+    font-weight: 800;
+}
+
+
+.ie-preview-title-area p {
+
+    margin: 3px 0 0;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    line-height: 1.4;
+}
+
+
+/* ==========================================================
+   STATUS BADGE
+========================================================== */
+
+.ie-preview-status {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    flex-shrink: 0;
+
+    padding: 7px 10px;
+
+    border-radius: 8px;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+
+.ie-preview-status.valid {
+
+    color: #047857;
+
+    background: #ecfdf5;
+
+    border: 1px solid #a7f3d0;
+}
+
+
+.ie-preview-status.invalid {
+
+    color: #b91c1c;
+
+    background: #fef2f2;
+
+    border: 1px solid #fecaca;
+}
+
+
+.ie-preview-status i {
+
+    font-size: 10px;
+}
+
+
+/* ==========================================================
+   PREVIEW META
+========================================================== */
+
+.ie-preview-meta {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    border-bottom: 1px solid #eef2f7;
+
+    background: #f8fafc;
+}
+
+
+.ie-preview-meta-item {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+    min-width: 0;
+
+    padding: 12px 16px;
+
+    border-right: 1px solid #e2e8f0;
+}
+
+
+.ie-preview-meta-item:last-child {
+
+    border-right: 0;
+}
+
+
+.ie-preview-meta-item span {
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.35px;
+}
+
+
+.ie-preview-meta-item strong {
+
+    overflow: hidden;
+
+    color: #0f172a;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================================
+   PREVIEW TABLE
+========================================================== */
+
+.ie-preview-table-wrapper {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+    max-height: 430px;
+
+    overflow-y: auto;
+}
+
+
+.ie-preview-table {
+
+    width: 100%;
+
+    min-width: 760px;
+
+    border-collapse: separate;
+
+    border-spacing: 0;
+
+    font-size: 11px;
+}
+
+
+.ie-preview-table thead {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 3;
+
+    background: #f8fafc;
+}
+
+
+.ie-preview-table th {
+
+    padding: 10px 12px;
+
+    border-bottom: 1px solid #e2e8f0;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    text-align: left;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.35px;
+
+    white-space: nowrap;
+}
+
+
+.ie-preview-table td {
+
+    padding: 10px 12px;
+
+    border-bottom: 1px solid #f1f5f9;
+
+    color: #334155;
+
+    vertical-align: middle;
+
+    white-space: nowrap;
+}
+
+
+.ie-preview-table tbody tr:hover {
+
+    background: #f8fafc;
+}
+
+
+.ie-preview-table tbody tr:last-child td {
+
+    border-bottom: 0;
+}
+
+
+/* ==========================================================
+   STUDENT NAME
+========================================================== */
+
+.preview-student-name {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+
+    min-width: 150px;
+}
+
+
+.preview-student-name strong {
+
+    color: #0f172a;
+
+    font-size: 11px;
+
+    font-weight: 750;
+}
+
+
+.preview-student-name small {
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+/* ==========================================================
+   STATUS CHIP
+========================================================== */
+
+.preview-status-chip {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 5px 8px;
+
+    border-radius: 7px;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+
+.preview-status-chip.valid {
+
+    color: #047857;
+
+    background: #ecfdf5;
+}
+
+
+.preview-status-chip.error {
+
+    color: #b91c1c;
+
+    background: #fef2f2;
+}
+
+
+.preview-status-chip.warning {
+
+    color: #b45309;
+
+    background: #fffbeb;
+}
+
+
+/* ==========================================================
+   ISSUE TEXT
+========================================================== */
+
+.preview-issue {
+
+    max-width: 240px;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    white-space: normal;
+
+    line-height: 1.4;
+}
+
+
+.preview-issue.error {
+
+    color: #b91c1c;
+
+    font-weight: 600;
+}
+
+
+/* ==========================================================
+   PREVIEW FOOTER
+========================================================== */
+
+.ie-preview-footer {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 11px 16px;
+
+    border-top: 1px solid #eef2f7;
+
+    background: #ffffff;
+}
+
+
+.ie-preview-result {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    font-weight: 600;
+}
+
+
+.ie-preview-result i {
+
+    color: #0f766e;
+
+    font-size: 11px;
+}
+
+
+.ie-preview-count {
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    white-space: nowrap;
+}
+
+
+.ie-preview-count strong {
+
+    color: #475569;
+
+    font-weight: 800;
+}
+
+
+/* ==========================================================
+   HIDDEN
+========================================================== */
+
+.ie-import-preview.hidden {
+
+    display: none;
+}
+
+/* =========================================================
+   VALIDATION ERRORS
+========================================================= */
+
+.ie-validation-errors {
+    position: relative;
+
+    margin-top: 20px;
+
+    border: 1px solid #fecaca;
+    border-radius: 15px;
+
+    background: #ffffff;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 4px 15px rgba(127, 29, 29, 0.035);
+}
+
+.validation-errors-title {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 11px 13px;
+
+    border-bottom: 1px solid #fee2e2;
+
+    background: #fef2f2;
+
+    color: #991b1b;
+
+    font-size: 11px;
+}
+
+.validation-errors-title i {
+    color: #dc2626;
+}
+
+.validation-errors-title span {
+    color: #b91c1c;
+
+    font-size: 9px;
+}
+
+.validation-table-wrapper {
+    overflow-x: auto;
+    max-height: 280px;
+}
+
+.validation-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 550px;
+}
+
+.validation-table th {
+    padding: 9px 12px;
+
+    background: #f8fafc;
+
+    color: #64748b;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    text-align: left;
+
+    text-transform: uppercase;
+}
+
+.validation-table td {
+    padding: 9px 12px;
+
+    border-top: 1px solid #f1f5f9;
+
+    color: #334155;
+
+    font-size: 10px;
+}
+
+.validation-table td:first-child {
+    width: 60px;
+
+    color: #dc2626;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   VALIDATION SUCCESS
+========================================================= */
+
+.ie-validation-success {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #bbf7d0;
+    border-radius: 11px;
+
+    background: #f0fdf4;
+}
+
+.validation-success-icon {
+    width: 34px;
+    height: 34px;
+
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+    color: #ffffff;
+
+    font-size: 13px;
+}
+
+.ie-validation-success strong {
+    display: block;
+
+    color: #166534;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.ie-validation-success span {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #4d7c0f;
+
+    font-size: 9px;
+}
+
+.ie-validation-success small {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #65a30d;
+
+    font-size: 9px;
+}
+
+/* =========================================================
+   SERVER VALIDATION STATUS
+========================================================= */
+
+.validation-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 27px;
+
+    padding: 0 10px;
+
+    border-radius: 999px;
+
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.validation-status.validating {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.validation-status.valid {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.validation-status.invalid {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+
+/* =========================================================
+   ERROR ROW
+========================================================= */
+
+.validation-table td strong {
+    display: block;
+
+    color: #334155;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.error-marathi {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   MORE ERRORS
+========================================================= */
+
+.validation-more-errors {
+    margin: 10px;
+
+    padding: 9px 11px;
+
+    border-radius: 9px;
+
+    background: #fffbeb;
+
+    color: #92400e;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+/* =========================================================
+   FINAL IMPORT
+========================================================= */
+
+.ie-final-import {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-top: 14px;
+}
+
+.btn-import-final {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    height: 43px;
+
+    padding: 0 19px;
+
+    border: 0;
+    border-radius: 11px;
+
+    background: linear-gradient(135deg,
+            #14b8a6,
+            #0f766e);
+
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 20px rgba(20, 184, 166, .22);
+
+    transition: .2s ease;
+}
+
+.btn-import-final:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 24px rgba(20, 184, 166, .28);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.btn-import-final span {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.btn-import-final span small {
+    margin-top: 2px;
+
+    font-size: 8px;
+
+    opacity: .8;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .ie-import-card {
+        padding: 20px;
+        border-radius: 18px;
+    }
+
+    .ie-import-header {
+        align-items: flex-start;
+    }
+
+    .ie-import-status {
+        font-size: 10px;
+    }
+
+    .ie-template-strip {
+        flex-wrap: wrap;
+    }
+
+    .ie-template-main {
+        min-width: 220px;
+    }
+
+    .ie-template-rules {
+        flex-wrap: wrap;
+    }
+
+    .btn-template-download {
+        width: 100%;
+    }
+
+    .ie-validation-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .ie-preview-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 12px;
+    }
+
+
+    .ie-preview-status {
+
+        align-self: flex-start;
+    }
+
+
+    .ie-preview-meta {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .ie-preview-meta-item:nth-child(2) {
+
+        border-right: 0;
+    }
+
+
+    .ie-preview-meta-item:nth-child(-n+2) {
+
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+
+    .ie-preview-table-wrapper {
+
+        max-height: 380px;
+    }
+
+}
+
+/* =========================================================
    MOBILE
-========================================== */
+========================================================= */
 
-@media(max-width:576px){
+@media (max-width: 480px) {
 
-    .success-icon{
-        width:70px;
-        height:70px;
-        font-size:34px;
+    .ie-import-card {
+        margin-top: 16px;
+
+        padding: 15px;
+
+        border-radius: 16px;
     }
 
-    .success-box h3,
-    .loading-box h3{
-        font-size:21px;
+    .ie-import-header {
+        display: block;
     }
 
-    .loader{
-        width:60px;
-        height:60px;
+    .ie-import-title-area {
+        align-items: flex-start;
     }
 
-    .btn-success-ok{
-        height:46px;
+    .ie-import-title-icon {
+        width: 42px;
+        height: 42px;
+
+        font-size: 17px;
     }
+
+    .ie-import-header h2 {
+        font-size: 20px;
+    }
+
+    .ie-import-header p {
+        font-size: 11px;
+    }
+
+    .ie-import-status {
+        margin-top: 12px;
+    }
+
+
+    /* STEPS */
+
+    .ie-import-steps {
+        overflow-x: auto;
+
+        padding: 10px;
+
+        gap: 8px;
+    }
+
+    .ie-import-step {
+        min-width: 95px;
+        flex: 0 0 auto;
+    }
+
+    .step-line {
+        width: 15px;
+
+        margin: 0;
+    }
+
+
+    /* TEMPLATE */
+
+    .ie-template-strip {
+        display: block;
+
+        padding: 12px;
+    }
+
+    .ie-template-main {
+        margin-bottom: 10px;
+    }
+
+    .ie-template-rules {
+        margin-bottom: 10px;
+    }
+
+    .template-rule {
+        font-size: 8px;
+    }
+
+    .btn-template-download {
+        width: 100%;
+    }
+
+
+    /* UPLOAD */
+
+    .ie-upload-box {
+        min-height: 165px;
+    }
+
+    .upload-icon {
+        width: 48px;
+        height: 48px;
+
+        font-size: 20px;
+    }
+
+    .ie-upload-content h3 {
+        font-size: 13px;
+    }
+
+    .ie-upload-content p {
+        font-size: 10px;
+    }
+
+
+    /* FILE */
+
+    .ie-file-preview {
+        align-items: flex-start;
+    }
+
+    .ie-file-status {
+        font-size: 9px;
+    }
+
+
+    /* BUTTON */
+
+    .ie-import-actions {
+        justify-content: stretch;
+    }
+
+    .btn-check-validation {
+        width: 100%;
+    }
+
+
+    /* VALIDATION */
+
+    .ie-validation-panel {
+        padding: 12px;
+    }
+
+    .ie-validation-header {
+        display: block;
+    }
+
+    .validation-status {
+        display: inline-flex;
+
+        margin-top: 7px;
+    }
+
+    .ie-validation-summary {
+        grid-template-columns: 1fr 1fr;
+
+        gap: 7px;
+    }
+
+    .ie-import-preview {
+
+        border-radius: 15px;
+    }
+
+
+    .ie-preview-header {
+
+        padding: 15px;
+    }
+
+
+    .ie-preview-icon {
+
+        width: 38px;
+
+        height: 38px;
+
+        border-radius: 10px;
+
+        font-size: 14px;
+    }
+
+
+    .ie-preview-title-area h3 {
+
+        font-size: 13px;
+    }
+
+
+    .ie-preview-title-area p {
+
+        font-size: 9px;
+    }
+
+
+    .ie-preview-meta-item {
+
+        padding: 10px 12px;
+    }
+
+
+    .ie-preview-meta-item strong {
+
+        font-size: 12px;
+    }
+
+
+    .ie-preview-footer {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 7px;
+
+        padding: 10px 12px;
+    }
+
+    .validation-stat {
+        min-height: 55px;
+    }
+
+    .validation-stat strong {
+        font-size: 14px;
+    }
+
+    .validation-stat span {
+        font-size: 8px;
+    }
+
+    .ie-final-import {
+        justify-content: stretch;
+    }
+
+    .btn-import-final {
+        width: 100%;
+    }
+
+}
+
+/* =========================================================
+   IMPORT / EXPORT MODALS
+   Single clean modal system
+========================================================= */
+
+
+/* =========================================================
+   MODAL OVERLAY
+========================================================= */
+
+.ie-modal {
+
+    /* Hidden by default.
+       Existing JavaScript changes this to "flex"
+       when the modal needs to open. */
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 99999;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    padding: 24px;
+
+    background: rgba(15, 23, 42, 0.48);
+
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+
+}
+
+
+/* =========================================================
+   COMMON MODAL CARD
+========================================================= */
+
+.ie-modal-dialog {
+
+    position: relative;
+
+    width: min(100%, 480px);
+
+    max-height: calc(100vh - 48px);
+
+    overflow-y: auto;
+
+    padding: 28px;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 28px 70px rgba(15, 23, 42, 0.20),
+        0 8px 25px rgba(15, 23, 42, 0.08);
+
+    text-align: center;
+
+    animation:
+        ieModalEnter 0.20s ease-out;
+
+}
+
+
+/* =========================================================
+   MODAL OPEN ANIMATION
+========================================================= */
+
+@keyframes ieModalEnter {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(10px) scale(0.985);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0) scale(1);
+
+    }
+
+}
+
+
+/* =========================================================
+   COMMON TITLE
+========================================================= */
+
+.ie-modal-title {
+
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 21px;
+
+    line-height: 1.3;
+
+    font-weight: 800;
+
+    letter-spacing: -0.25px;
+
+}
+
+
+/* =========================================================
+   COMMON DESCRIPTION
+========================================================= */
+
+.ie-modal-description {
+
+    margin: 8px auto 0;
+
+    max-width: 390px;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+
+    font-weight: 500;
+
+}
+
+
+.ie-modal-description span,
+.ie-modal-description small {
+
+    display: block;
+
+    margin-top: 4px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+    line-height: 1.5;
+
+}
+
+
+/* =========================================================
+   MODAL EYEBROW
+========================================================= */
+
+.ie-modal-eyebrow {
+
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #0f766e;
+
+    font-size: 9px;
+
+    line-height: 1.3;
+
+    font-weight: 900;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.09em;
+
+}
+
+
+/* =========================================================
+   CONFIRMATION DIALOG
+========================================================= */
+
+.ie-confirm-dialog {
+
+    width: min(100%, 500px);
+
+}
+
+
+/* =========================================================
+   CONFIRMATION ICON
+========================================================= */
+
+.ie-confirm-icon {
+
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 13px;
+
+    border-radius: 16px;
+
+    background: #ecfeff;
+
+    color: #0f766e;
+
+    font-size: 23px;
+
+    box-shadow:
+        0 0 0 6px rgba(20, 184, 166, 0.08);
+
+}
+
+
+/* =========================================================
+   FINAL VERIFICATION WARNING
+========================================================= */
+
+.ie-confirm-warning {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-top: 17px;
+
+    padding: 12px;
+
+    border: 1px solid #fde68a;
+
+    border-radius: 12px;
+
+    background: #fffbeb;
+
+    text-align: left;
+
+}
+
+
+/* Warning icon */
+
+.ie-confirm-warning-icon {
+
+    width: 31px;
+    height: 31px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 9px;
+
+    background: #fef3c7;
+
+    color: #d97706;
+
+    font-size: 13px;
+
+}
+
+
+/* Warning content */
+
+.ie-confirm-warning-content {
+
+    min-width: 0;
+
+}
+
+
+.ie-confirm-warning-content strong {
+
+    display: block;
+
+    color: #92400e;
+
+    font-size: 10.5px;
+
+    line-height: 1.4;
+
+    font-weight: 800;
+
+}
+
+
+.ie-confirm-warning-content p {
+
+    margin: 4px 0 0;
+
+    color: #78350f;
+
+    font-size: 9.5px;
+
+    line-height: 1.5;
+
+}
+
+
+.ie-confirm-warning-content small {
+
+    display: block;
+
+    margin-top: 3px;
+
+    color: #a16207;
+
+    font-size: 8.5px;
+
+    line-height: 1.5;
+
+}
+
+
+/* =========================================================
+   CONFIRMATION INFORMATION POINTS
+========================================================= */
+
+.ie-confirm-points {
+
+    display: grid;
+
+    gap: 7px;
+
+    margin-top: 13px;
+
+    padding: 12px 0;
+
+    border-top: 1px solid #eef2f7;
+
+    border-bottom: 1px solid #eef2f7;
+
+    text-align: left;
+
+}
+
+
+.ie-confirm-point {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 7px;
+
+    color: #475569;
+
+    font-size: 9.5px;
+
+    line-height: 1.45;
+
+}
+
+
+.ie-confirm-point i {
+
+    flex-shrink: 0;
+
+    margin-top: 2px;
+
+    color: #16a34a;
+
+    font-size: 9px;
+
+}
+
+
+/* =========================================================
+   CONFIRMATION ACTIONS
+========================================================= */
+
+.ie-confirm-actions {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(105px, 1fr) minmax(170px, 1.4fr);
+
+    gap: 9px;
+
+    margin-top: 16px;
+
+}
+
+
+/* =========================================================
+   COMMON MODAL BUTTON
+========================================================= */
+
+.ie-modal-button {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    min-height: 43px;
+
+    padding: 0 14px;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+
+    font-size: 10.5px;
+
+    line-height: 1.2;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+
+}
+
+
+/* =========================================================
+   CANCEL BUTTON
+========================================================= */
+
+.ie-button-cancel {
+
+    background: #f1f5f9;
+
+    color: #475569;
+
+}
+
+
+.ie-button-cancel:hover {
+
+    background: #e2e8f0;
+
+}
+
+
+.ie-button-cancel i {
+
+    font-size: 10px;
+
+}
+
+
+.ie-button-cancel span {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 2px;
+
+}
+
+
+.ie-button-cancel small {
+
+    color: #94a3b8;
+
+    font-size: 7.5px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   IMPORT BUTTON
+========================================================= */
+
+.ie-button-import {
+
+    background:
+        linear-gradient(135deg,
+            #14b8a6 0%,
+            #0f766e 100%);
+
+    color: #ffffff;
+
+    box-shadow:
+        0 7px 17px rgba(20, 184, 166, 0.20);
+
+}
+
+
+.ie-button-import:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 22px rgba(20, 184, 166, 0.26);
+
+}
+
+
+.ie-button-import i {
+
+    flex-shrink: 0;
+
+    font-size: 11px;
+
+}
+
+
+.ie-button-import span {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 2px;
+
+}
+
+
+.ie-button-import small {
+
+    color: rgba(255, 255, 255, 0.78);
+
+    font-size: 7.5px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   SUCCESS DIALOG
+========================================================= */
+
+.ie-success-dialog {
+
+    width: min(100%, 410px);
+
+    padding: 30px 28px;
+
+}
+
+
+/* =========================================================
+   SUCCESS ICON
+========================================================= */
+
+.ie-success-icon {
+
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 15px;
+
+    border-radius: 50%;
+
+    background: #dcfce7;
+
+    color: #16a34a;
+
+    font-size: 28px;
+
+    box-shadow:
+        0 0 0 7px rgba(34, 197, 94, 0.08);
+
+    animation:
+        ieSuccessPop 0.35s ease-out;
+
+}
+
+
+@keyframes ieSuccessPop {
+
+    0% {
+
+        opacity: 0;
+
+        transform: scale(0.7);
+
+    }
+
+    70% {
+
+        transform: scale(1.05);
+
+    }
+
+    100% {
+
+        opacity: 1;
+
+        transform: scale(1);
+
+    }
+
+}
+
+
+/* =========================================================
+   SUCCESS BUTTON
+========================================================= */
+
+.ie-button-success {
+
+    width: auto;
+
+    min-width: 112px;
+
+    height: 40px;
+
+    min-height: 40px;
+
+    margin: 18px auto 0;
+
+    padding: 0 20px;
+
+    background:
+        linear-gradient(135deg,
+            #14b8a6,
+            #0f766e);
+
+    color: #ffffff;
+
+    box-shadow:
+        0 7px 16px rgba(15, 118, 110, 0.18);
+
+}
+
+
+.ie-button-success:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 9px 20px rgba(15, 118, 110, 0.23);
+
+}
+
+
+/* =========================================================
+   LOADING DIALOG
+========================================================= */
+
+.ie-loading-dialog {
+
+    width: min(100%, 390px);
+
+    padding: 31px 28px;
+
+}
+
+
+/* =========================================================
+   LOADING SPINNER
+========================================================= */
+
+.ie-loading-spinner {
+
+    width: 48px;
+    height: 48px;
+
+    margin: 0 auto 17px;
+
+    border: 4px solid #e2e8f0;
+
+    border-top-color: #14b8a6;
+
+    border-right-color: #0f766e;
+
+    border-radius: 50%;
+
+    animation:
+        ieLoadingSpin 0.8s linear infinite;
+
+}
+
+
+@keyframes ieLoadingSpin {
+
+    to {
+
+        transform: rotate(360deg);
+
+    }
+
+}
+
+
+/* =========================================================
+   LOADING NOTE
+========================================================= */
+
+.ie-loading-note {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    margin-top: 15px;
+
+    padding: 7px 10px;
+
+    border: 1px solid #dbeafe;
+
+    border-radius: 8px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    font-size: 9px;
+
+    line-height: 1.3;
+
+    font-weight: 700;
+
+}
+
+
+.ie-loading-note i {
+
+    font-size: 9px;
+
+}
+
+
+/* =========================================================
+   MODAL RESPONSIVE — TABLET
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .ie-modal {
+
+        padding: 20px;
+
+    }
+
+
+    .ie-modal-dialog {
+
+        max-height: calc(100vh - 40px);
+
+    }
+
+}
+
+
+/* =========================================================
+   MODAL RESPONSIVE — MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .ie-modal {
+
+        padding: 14px;
+
+    }
+
+
+    .ie-modal-dialog {
+
+        width: 100%;
+
+        max-height: calc(100vh - 28px);
+
+        padding: 22px 18px;
+
+        border-radius: 17px;
+
+    }
+
+
+    .ie-confirm-dialog,
+    .ie-success-dialog,
+    .ie-loading-dialog {
+
+        width: 100%;
+
+    }
+
+
+    .ie-confirm-icon {
+
+        width: 52px;
+        height: 52px;
+
+        margin-bottom: 11px;
+
+        border-radius: 14px;
+
+        font-size: 21px;
+
+    }
+
+
+    .ie-modal-eyebrow {
+
+        font-size: 8px;
+
+        margin-bottom: 5px;
+
+    }
+
+
+    .ie-modal-title {
+
+        font-size: 18px;
+
+    }
+
+
+    .ie-modal-description {
+
+        font-size: 11px;
+
+        line-height: 1.55;
+
+    }
+
+
+    .ie-modal-description span,
+    .ie-modal-description small {
+
+        font-size: 9px;
+
+    }
+
+
+    .ie-confirm-warning {
+
+        gap: 8px;
+
+        padding: 10px;
+
+        margin-top: 14px;
+
+    }
+
+
+    .ie-confirm-warning-icon {
+
+        width: 28px;
+        height: 28px;
+
+        border-radius: 8px;
+
+        font-size: 11px;
+
+    }
+
+
+    .ie-confirm-warning-content strong {
+
+        font-size: 9.5px;
+
+    }
+
+
+    .ie-confirm-warning-content p {
+
+        font-size: 8.5px;
+
+    }
+
+
+    .ie-confirm-warning-content small {
+
+        font-size: 8px;
+
+    }
+
+
+    .ie-confirm-points {
+
+        gap: 6px;
+
+        margin-top: 11px;
+
+        padding: 10px 0;
+
+    }
+
+
+    .ie-confirm-point {
+
+        font-size: 8.5px;
+
+    }
+
+
+    .ie-confirm-actions {
+
+        grid-template-columns: 1fr 1.35fr;
+
+        gap: 7px;
+
+        margin-top: 13px;
+
+    }
+
+
+    .ie-modal-button {
+
+        min-height: 40px;
+
+        padding: 0 10px;
+
+        border-radius: 9px;
+
+        font-size: 9.5px;
+
+    }
+
+
+    .ie-button-cancel small,
+    .ie-button-import small {
+
+        font-size: 7px;
+
+    }
+
+
+    .ie-success-dialog,
+    .ie-loading-dialog {
+
+        padding: 25px 18px;
+
+    }
+
+
+    .ie-success-icon {
+
+        width: 52px;
+        height: 52px;
+
+        margin-bottom: 13px;
+
+        font-size: 25px;
+
+    }
+
+
+    .ie-button-success {
+
+        min-width: 105px;
+
+        height: 38px;
+
+        min-height: 38px;
+
+        margin-top: 16px;
+
+        padding: 0 17px;
+
+    }
+
+
+    .ie-loading-spinner {
+
+        width: 43px;
+        height: 43px;
+
+        margin-bottom: 15px;
+
+    }
+
+
+    .ie-loading-note {
+
+        font-size: 8.5px;
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   EXPORT CARD
+========================================================== */
+
+.ie-export-card {
+    position: relative;
+
+    margin-top: 24px;
+    padding: 24px;
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+
+    box-shadow:
+        0 14px 35px rgba(15, 23, 42, 0.055);
+}
+
+
+/* Decorative circle */
+
+.ie-export-card::after {
+    content: "";
+
+    position: absolute;
+
+    top: -100px;
+    right: -90px;
+
+    width: 230px;
+    height: 230px;
+
+    border-radius: 50%;
+
+    background: rgba(20, 184, 166, 0.055);
+
+    pointer-events: none;
+}
+
+
+/* ==========================================================
+   EXPORT HEADER
+========================================================== */
+
+.ie-export-header {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding-bottom: 20px;
+
+    border-bottom: 1px solid #eef2f7;
+}
+
+
+.ie-export-title-area {
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    min-width: 0;
+}
+
+
+.ie-export-title-icon {
+    width: 48px;
+    height: 48px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background: #ecfdf5;
+
+    border: 1px solid #ccfbf1;
+
+    color: #0f766e;
+
+    font-size: 17px;
+}
+
+
+.ie-export-title-area .ie-section-label {
+
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #0f766e;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.55px;
+
+    text-transform: uppercase;
+}
+
+
+.ie-export-title-area h2 {
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 22.5px;
+
+    line-height: 1.25;
+
+    font-weight: 850;
+}
+
+
+.ie-export-title-area p {
+    margin: 5px 0 0;
+
+    color: #64748b;
+
+    font-size: 10.5px;
+
+    line-height: 1.45;
+}
+
+
+.ie-export-marathi {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+/* ==========================================================
+   EXPORT FORMAT
+========================================================== */
+
+.ie-export-format {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-width: 115px;
+
+    padding: 9px 11px;
+
+    border: 1px solid #dbeafe;
+
+    border-radius: 11px;
+
+    background: #f8fbff;
+}
+
+
+.ie-export-format-icon {
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #ecfdf5;
+
+    color: #0f766e;
+
+    font-size: 13px;
+}
+
+
+.ie-export-format span {
+    display: block;
+
+    color: #94a3b8;
+
+    font-size: 8.5px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: .35px;
+}
+
+
+.ie-export-format strong {
+    display: block;
+
+    margin-top: 1px;
+
+    color: #0f172a;
+
+    font-size: 12px;
+
+    font-weight: 850;
+}
+
+
+/* ==========================================================
+   FILTER CARD
+========================================================== */
+
+.ie-export-filter-card {
+    position: relative;
+    z-index: 2;
+
+    margin-top: 18px;
+
+    padding: 16px;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 16px;
+
+    background: #f8fafc;
+}
+
+
+/* ==========================================================
+   FILTER HEADER
+========================================================== */
+
+.ie-export-filter-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 13px;
+}
+
+
+.ie-filter-eyebrow {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #0f766e;
+
+    font-size: 9.5px;
+
+    font-weight: 850;
+
+    letter-spacing: .5px;
+
+    text-transform: uppercase;
+}
+
+
+.ie-export-filter-header h3 {
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+.ie-filter-status {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 5px 8px;
+
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+.ie-filter-status i {
+    color: #0f766e;
+
+    font-size: 9px;
+}
+
+
+/* ==========================================================
+   FILTER GRID
+========================================================== */
+
+.ie-export-filter-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+
+/* ==========================================================
+   FIELD
+========================================================== */
+
+.ie-export-field {
+    min-width: 0;
+}
+
+
+.ie-export-field label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #475569;
+
+    font-size: 10.3px;
+
+    font-weight: 800;
+}
+
+
+.ie-select-wrap {
+    position: relative;
+}
+
+
+.ie-select-wrap>i {
+    position: absolute;
+
+    left: 11px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    z-index: 2;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+    pointer-events: none;
+}
+
+
+.ie-select {
+    width: 100%;
+    height: 40px;
+
+    padding:
+        0 30px 0 31px;
+
+    appearance: none;
+
+    border: 1px solid #dbe3ec;
+
+    border-radius: 10px;
+
+    outline: none;
+
+    background:
+        #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;
+
+    color: #0f172a;
+
+    font-size: 10.5px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+
+.ie-select:hover {
+    border-color: #cbd5e1;
+}
+
+
+.ie-select:focus {
+    border-color: #14b8a6;
+
+    box-shadow:
+        0 0 0 3px rgba(20, 184, 166, .10);
+}
+
+
+/* ==========================================================
+   BOTTOM FILTER BAR
+========================================================== */
+
+.ie-export-bottom {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-top: 14px;
+
+    padding-top: 13px;
+
+    border-top: 1px solid #e5eaf0;
+}
+
+
+/* ==========================================================
+   SELECTION SUMMARY
+========================================================== */
+
+.ie-export-selection {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    min-width: 0;
+}
+
+
+.ie-export-selection-icon {
+    width: 32px;
+    height: 32px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 7px;
+
+    background: #ecfdf5;
+
+    color: #0f766e;
+
+    font-size: 11px;
+}
+
+
+.ie-export-selection strong {
+    display: block;
+
+    color: #475569;
+
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+
+.ie-export-selection span:last-child {
+    display: block;
+
+    max-width: 430px;
+
+    overflow: hidden;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================================
+   ACTIONS
+========================================================== */
+
+.ie-export-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    flex-shrink: 0;
+}
+
+
+/* Clear */
+
+.btn-export-clear {
+    height: 38px;
+
+    padding: 0 12px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    border: 1px solid #dbe3ec;
+
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    font-size: 10.3px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition: .18s ease;
+}
+
+
+.btn-export-clear:hover {
+    background: #f8fafc;
+
+    border-color: #cbd5e1;
+
+    color: #334155;
+}
+
+
+/* Main Export */
+
+.btn-export-main {
+    height: 38px;
+
+    padding: 0 14px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    background: linear-gradient(135deg,
+            #0f766e,
+            #14b8a6);
+
+    color: #ffffff;
+
+    font-size: 10.3px;
+
+    font-weight: 850;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    box-shadow:
+        0 7px 17px rgba(15, 118, 110, .18);
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        opacity .18s ease;
+}
+
+
+.btn-export-main:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 20px rgba(15, 118, 110, .22);
+}
+
+
+.btn-export-main:active {
+    transform: translateY(0);
+}
+
+
+.btn-export-main:disabled,
+.btn-export-clear:disabled {
+    opacity: .55;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+/* ==========================================================
+   SECURITY NOTE
+========================================================== */
+
+.ie-export-security-note {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    margin-top: 12px;
+
+    padding: 9px 11px;
+
+    border: 1px solid #dbeafe;
+
+    border-radius: 10px;
+
+    background: #f8fbff;
+}
+
+
+.ie-export-security-icon {
+    width: 32px;
+    height: 32px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 7px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    font-size: 10px;
+}
+
+
+.ie-export-security-note strong {
+    display: block;
+
+    color: #334155;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.ie-export-security-note span {
+    display: block;
+
+    margin-top: 1px;
+
+    color: #94a3b8;
+
+    font-size: 8.5px;
+
+    line-height: 1.35;
+}
+
+
+/* ==========================================================
+   TABLET
+========================================================== */
+
+@media (max-width: 900px) {
+
+    .ie-export-filter-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media (max-width: 576px) {
+
+    .ie-export-card {
+        margin-top: 16px;
+
+        padding: 15px;
+
+        border-radius: 17px;
+    }
+
+
+    .ie-export-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 12px;
+
+        padding-bottom: 15px;
+    }
+
+
+    .ie-export-title-icon {
+        width: 40px;
+        height: 40px;
+
+        border-radius: 11px;
+
+        font-size: 15px;
+    }
+
+
+    .ie-export-title-area h2 {
+        font-size: 17px;
+    }
+
+
+    .ie-export-title-area p {
+        font-size: 9px;
+    }
+
+
+    .ie-export-format {
+        align-self: stretch;
+
+        width: fit-content;
+    }
+
+
+    .ie-export-filter-card {
+        margin-top: 14px;
+
+        padding: 12px;
+
+        border-radius: 13px;
+    }
+
+
+    .ie-export-filter-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 7px;
+    }
+
+
+    .ie-export-filter-grid {
+        grid-template-columns: 1fr;
+
+        gap: 9px;
+    }
+
+
+    .ie-select {
+        height: 42px;
+
+        font-size: 10px;
+    }
+
+
+    .ie-export-bottom {
+        align-items: stretch;
+
+        flex-direction: column;
+
+        gap: 11px;
+    }
+
+
+    .ie-export-selection span:last-child {
+        max-width: 260px;
+    }
+
+
+    .ie-export-actions {
+        width: 100%;
+    }
+
+
+    .btn-export-clear {
+        flex: 0 0 auto;
+    }
+
+
+    .btn-export-main {
+        flex: 1;
+
+        height: 40px;
+    }
+
+
+    .ie-export-security-note {
+        align-items: flex-start;
+
+        margin-top: 10px;
+    }
+
+}
+
+
+/* ==========================================================
+   VERY SMALL MOBILE
+========================================================== */
+
+@media (max-width: 380px) {
+
+    .ie-export-actions {
+        flex-direction: column;
+    }
+
+
+    .btn-export-clear,
+    .btn-export-main {
+        width: 100%;
+    }
+
 }

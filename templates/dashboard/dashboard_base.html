@@ -2,41 +2,110 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- CSRF TOKEN -->
+    <!-- =========================================================
+         BASIC DOCUMENT META
+    ========================================================== -->
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <meta name="theme-color" content="#0EA5A4">
+
+    <meta name="color-scheme" content="light">
+
+    <!-- =========================================================
+         CSRF
+    ========================================================== -->
+
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Dashboard | SchoolSphere</title>
+    <!-- =========================================================
+         PAGE TITLE
+    ========================================================== -->
+
+    <title>
+        {% block title %}
+        Dashboard | {{ global_settings.system_name or "SPL ShalaSarthi" }}
+        {% endblock %}
+    </title>
+
+    <!-- =========================================================
+         FAVICON
+    ========================================================== -->
+
+    {% if global_settings.favicon %}
+
+    <link rel="icon" type="image/png"
+        href="{{ url_for('static', filename=global_settings.favicon) }}?v={{ global_settings.updated_at.timestamp() if global_settings.updated_at else 1 }}">
+
+    {% endif %}
+
+    <!-- =========================================================
+         FONT PRECONNECT
+    ========================================================== -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- =========================================================
+         PRIMARY ERP FONT
+    ========================================================== -->
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- =========================================================
+         FONT AWESOME
+    ========================================================== -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- =========================================================
+         GLOBAL DASHBOARD CSS
+    ========================================================== -->
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
-    <!-- favicorn -->
-    {% if global_settings.favicon %}
-    <link rel="icon" type="image/png"
-        href="{{ url_for('static', filename=global_settings.favicon) }}?v={{ global_settings.updated_at.timestamp() if global_settings.updated_at else 1 }}">
-    {% endif %}
+    <!-- =========================================================
+         PAGE-SPECIFIC HEAD
+    ========================================================== -->
 
+    {% block head %}{% endblock %}
 
 </head>
 
 <body>
 
-    <!-- MOBILE TOP -->
+    <!-- =========================================================
+     MOBILE TOP BAR
+========================================================== -->
+
     <div class="mobile-top">
 
-        <div class="logo">
+        <div class="mobile-brand">
 
-            {{ global_settings.system_name or "SchoolSphere" }}
+            {% if global_settings.system_logo %}
+
+            <img src="{{ url_for('static', filename=global_settings.system_logo) }}"
+                alt="{{ global_settings.system_name or 'School ERP' }}" class="mobile-brand-logo">
+
+            {% endif %}
+
+            <div class="mobile-brand-text">
+                {{ global_settings.system_name or "SPL ShalaSarthi" }}
+            </div>
 
         </div>
 
-        <div class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
-
-            ☰
-
-        </div>
+        <button type="button" class="mobile-menu-toggle" id="mobileSidebarToggle" onclick="toggleSidebar()"
+            aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+            <i class="fa-solid fa-bars"></i>
+        </button>
 
     </div>
 
@@ -90,7 +159,11 @@
             <li>
                 <a href="{{ url_for('superadmin_dashboard') }}"
                     class="menu-link {{ 'active' if active_page=='dashboard' }}">
-                    <span class="icon">🏠</span>
+
+                    <span class="icon">
+                        <i class="fa-solid fa-house"></i>
+                    </span>
+
                     <span>
                         Dashboard
                         <small>System Overview</small>
@@ -104,7 +177,9 @@
             <!-- SCHOOL MANAGEMENT -->
             <li>
                 <a href="/superadmin/schools" class="menu-link {{ 'active' if active_page=='schools' }}">
-                    <span class="icon">🏫</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-school"></i>
+                    </span>
                     <span>
                         Schools
                         <small>Registered Schools</small>
@@ -115,7 +190,9 @@
             <!-- STUDENTS -->
             <li>
                 <a href="/superadmin/all-students" class="menu-link {{ 'active' if active_page=='all-students' }}">
-                    <span class="icon">👨‍🎓</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </span>
                     <span>
                         Students
                         <small>All Student Records</small>
@@ -126,7 +203,9 @@
             <!-- USERS -->
             <li>
                 <a href="/superadmin/users" class="menu-link {{ 'active' if active_page=='users' }}">
-                    <span class="icon">👥</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-users"></i>
+                    </span>
                     <span>
                         Users
                         <small>Clerk Accounts</small>
@@ -140,7 +219,9 @@
             <!-- TC RECORDS -->
             <li>
                 <a href="/superadmin/tc-management" class="menu-link {{ 'active' if active_page=='tc-management' }}">
-                    <span class="icon">📄</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </span>
                     <span>
                         TC Records
                         <small>Transfer Certificates</small>
@@ -152,14 +233,16 @@
             <li>
                 <a href="/superadmin/bonafide-management"
                     class="menu-link {{ 'active' if active_page=='bonafide-management' }}">
-                    <span class="icon">🏅</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-award"></i>
+                    </span>
                     <span>
                         Bonafide Records
                         <small>Bonafide Certificates</small>
                     </span>
                 </a>
             </li>
- 
+
             <!-- ================= BUSINESS ================= -->
             <li class="menu-section">Business</li>
 
@@ -167,7 +250,9 @@
             <li>
                 <a href="/superadmin/leads" class="menu-link {{ 'active' if active_page=='leads' }}">
 
-                    <span class="icon">📞</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-headset"></i>
+                    </span>
 
                     <span>
                         Leads
@@ -188,7 +273,7 @@
             <li>
                 <a href="/superadmin/subscriptions" class="menu-link {{ 'active' if active_page=='subscriptions' }}">
 
-                    <span class="icon">💳</span>
+                    <span class="icon"><i class="fas fa-credit-card"></i></span>
 
                     <span>
                         Subscriptions
@@ -203,7 +288,7 @@
             <li>
                 <a href="/superadmin/plans" class="menu-link {{ 'active' if active_page=='plans' }}">
 
-                    <span class="icon">💎</span>
+                    <span class="icon"><i class="fas fa-gem"></i></span>
 
                     <span>
                         Plans & Pricing
@@ -218,7 +303,7 @@
             <li>
                 <a href="/superadmin/renewals" class="menu-link {{ 'active' if active_page=='renewals' }}">
 
-                    <span class="icon">🔔</span>
+                    <span class="icon"><i class="fas fa-sync-alt"></i></span>
 
                     <span>
                         Renewal Center
@@ -233,7 +318,7 @@
             <li>
                 <a href="/superadmin/payments" class="menu-link {{ 'active' if active_page=='payments' }}">
 
-                    <span class="icon">💰</span>
+                    <span class="icon"><i class="fas fa-receipt"></i></span>
 
                     <span>
                         Payments
@@ -249,7 +334,7 @@
             <!-- REPORTS -->
             <li>
                 <a href="/superadmin/reports" class="menu-link {{ 'active' if active_page=='reports' }}">
-                    <span class="icon">📊</span>
+                    <span class="icon"><i class="fas fa-chart-bar"></i></span>
                     <span>
                         Reports
                         <small>Analytics & Revenue</small>
@@ -263,7 +348,7 @@
             <!-- SYSTEM SETTINGS -->
             <li>
                 <a href="/superadmin/settings" class="menu-link {{ 'active' if active_page=='settings' }}">
-                    <span class="icon">⚙️</span>
+                    <span class="icon"><i class="fas fa-cog"></i></span>
                     <span>
                         System Settings
                         <small>Global Configuration</small>
@@ -286,14 +371,22 @@
 
             <li class="menu-section">Main</li>
 
+            <!-- ===================================================== -->
             <!-- DASHBOARD -->
+            <!-- ===================================================== -->
+
             <li>
                 <a href="{{ url_for('clerk_dashboard') }}" class="menu-link {{ 'active' if active_page=='dashboard' }}">
-                    <span class="icon">🏠</span>
+
+                    <span class="icon">
+                        <i class="fa-solid fa-house"></i>
+                    </span>
+
                     <span>
                         Dashboard
                         <small>डॅशबोर्ड</small>
                     </span>
+
                 </a>
             </li>
 
@@ -306,7 +399,11 @@
             <!-- ADD STUDENT -->
             <li>
                 <a href="{{ url_for('add_student') }}" class="menu-link {{ 'active' if active_page=='add_student' }}">
-                    <span class="icon">➕</span>
+
+                    <span class="icon">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </span>
+
                     <span>
                         Add Student
                         <small>विद्यार्थी नोंदणी</small>
@@ -317,7 +414,9 @@
             <!-- STUDENT RECORDS -->
             <li>
                 <a href="{{ url_for('clerk_students') }}" class="menu-link {{ 'active' if active_page=='students' }}">
-                    <span class="icon">👨‍🎓</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-users"></i>
+                    </span>
                     <span>
                         Student Records
                         <small>विद्यार्थ्यांची यादी</small>
@@ -335,7 +434,9 @@
             {% if feature_modules.tc %}
             <li>
                 <a href="{{ url_for('clerk_tc_page') }}" class="menu-link {{ 'active' if active_page=='tc' }}">
-                    <span class="icon">📄</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </span>
                     <span>
                         Transfer Certificate
                         <small>टीसी व्यवस्थापन</small>
@@ -349,7 +450,9 @@
             <li>
                 <a href="{{ url_for('clerk_bonafide_page') }}"
                     class="menu-link {{ 'active' if active_page=='bonafide' }}">
-                    <span class="icon">🏅</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-certificate"></i>
+                    </span>
                     <span>
                         Bonafide Certificate
                         <small>बोनाफाईड व्यवस्थापन</small>
@@ -363,7 +466,9 @@
             <li>
                 <a href="{{ url_for('import_export_page') }}"
                     class="menu-link {{ 'active' if active_page=='import_export' }}">
-                    <span class="icon">📂</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </span>
                     <span>
                         Import / Export
                         <small>डेटा आयात / निर्यात</small>
@@ -383,7 +488,9 @@
             <li>
                 <a href="{{ url_for('attendance_dashboard') }}"
                     class="menu-link {{ 'active' if active_page=='attendance' }}">
-                    <span class="icon">📊</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </span>
                     <span>
                         Attendance
                         <small>हजेरी व्यवस्थापन</small>
@@ -396,7 +503,7 @@
             {% if feature_modules.results %}
             <li>
                 <a href="{{ url_for('results_dashboard') }}" class="menu-link {{ 'active' if active_page=='marks' }}">
-                    <span class="icon">📝</span>
+                    <span class="icon"><i class="fas fa-poll"></i></span>
                     <span>
                         Marks & Results
                         <small>गुणपत्रिका</small>
@@ -410,7 +517,7 @@
             <li>
                 <a href="{{ url_for('teachers_dashboard') }}"
                     class="menu-link {{ 'active' if active_page=='teachers' }}">
-                    <span class="icon">👨‍🏫</span>
+                    <span class="icon"><i class="fas fa-chalkboard-teacher"></i></span>
                     <span>
                         Teachers
                         <small>शिक्षक व्यवस्थापन</small>
@@ -423,7 +530,7 @@
             {% if feature_modules.fees %}
             <li>
                 <a href="{{ url_for('fee_dashboard') }}" class="menu-link {{ 'active' if active_page=='fees' }}">
-                    <span class="icon">💰</span>
+                    <span class="icon"><i class="fas fa-coins"></i></span>
                     <span>
                         Fee Management
                         <small>फी व्यवस्थापन</small>
@@ -437,7 +544,7 @@
             <li>
                 <a href="{{ url_for('timetable_dashboard') }}"
                     class="menu-link {{ 'active' if active_page=='timetable' }}">
-                    <span class="icon">📅</span>
+                    <span class="icon"><i class="fas fa-calendar-alt"></i></span>
                     <span>
                         Timetable
                         <small>वेळापत्रक</small>
@@ -451,7 +558,7 @@
             <li>
                 <a href="{{ url_for('notice_board_dashboard') }}"
                     class="menu-link {{ 'active' if active_page=='notice-board' }}">
-                    <span class="icon">📢</span>
+                    <span class="icon"><i class="fas fa-bullhorn"></i></span>
                     <span>
                         Notice Board
                         <small>सूचना फलक</small>
@@ -470,13 +577,34 @@
             <li>
                 <a href="{{ url_for('subscription_history') }}"
                     class="menu-link {{ 'active' if active_page=='subscription_history' }}">
-                    <span class="icon">📜</span>
+                    <span class="icon">
+                        <i class="fa-solid fa-history"></i>
+                    </span>
                     <span>
                         Subscription History
                         <small>पेमेंट इतिहास</small>
                     </span>
                 </a>
             </li>
+            <!-- REPORTS -->
+            <li>
+
+                <a href="{{ url_for('clerk_reports') }}" class="menu-link
+                    {{ 'active' if active_page == 'reports' }}">
+
+                    <span class="icon">
+                        <i class="fa-solid fa-chart-column"></i>
+                    </span>
+
+                    <span>
+                        Reports
+                        <small>अहवाल / रिपोर्ट्स</small>
+                    </span>
+
+                </a>
+
+            </li>
+
 
             {% endif %}
 
@@ -485,177 +613,867 @@
 
         <div class="divider"></div>
 
-        <!-- BOTTOM -->
+        <!-- ===================================================== -->
+        <!-- SIDEBAR BOTTOM -->
+        <!-- ===================================================== -->
+
         <div class="sidebar-bottom">
 
+            <!-- ================================================= -->
+            <!-- SUPER ADMIN BOTTOM -->
+            <!-- Keep User Card + Logout only for Super Admin -->
+            <!-- ================================================= -->
+
+            {% if role == "admin" %}
+
             <div class="user-card">
+
                 <div class="avatar">
                     {{ school_name[0] if school_name else "S" }}
                 </div>
-                <div>
-                    <p>{{ school_name }}</p>
+
+                <div class="user-card-info">
+
+                    <p>
+                        {{ school_name or "Super Admin" }}
+                    </p>
+
                     <span class="status">
-                        {% if role == "admin" %}
                         Super Admin
-                        {% else %}
-                        School Active
-                        {% endif %}
                     </span>
+
                 </div>
+
             </div>
 
-            <!-- LOGOUT FOR CLERK  -->
-            {% if role == "clerk" %}
-            <form method="POST" action="/logout">
+
+            <!-- ADMIN LOGOUT -->
+
+            <form method="POST" action="/logout" class="logout-form">
+
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="role" value="clerk">
 
-                <button type="submit" class="logout-btn" onclick="this.disabled=true; this.form.submit();">
-                    Logout
-                </button>
-            </form>
-            {% endif %}
-
-
-            <!-- LOGOUT FOR ADMIN  -->
-            {% if role == "admin" %}
-            <form method="POST" action="/logout">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="role" value="admin">
 
                 <button type="submit" class="logout-btn" onclick="this.disabled=true; this.form.submit();">
-                    Logout
+
+                    <i class="fa-solid fa-right-from-bracket"></i>
+
+                    <span>Logout</span>
+
                 </button>
+
             </form>
+
+            {% endif %}
+
+
+            <!-- ================================================= -->
+            <!-- CLERK BOTTOM -->
+            <!-- Help & Guide only -->
+            <!-- ================================================= -->
+
+            {% if role == "clerk" %}
+
+            <button type="button" class="sidebar-help-btn" id="openErpHelpBtn" aria-haspopup="dialog"
+                aria-controls="erpHelpModal">
+
+                <span class="sidebar-help-icon">
+                    <i class="fa-solid fa-circle-question"></i>
+                </span>
+
+                <span class="sidebar-help-content">
+
+                    <strong>Help & Guide</strong>
+
+                    <small>
+                        ERP User Guide
+                    </small>
+
+                </span>
+
+                <i class="fa-solid fa-chevron-right sidebar-help-arrow"></i>
+
+            </button>
+
             {% endif %}
 
         </div>
-
-    </div>
-
+</div>
 
 
 
-    <!-- MAIN -->
-    <div class="main">
+        <!-- MAIN -->
+        <div class="main">
 
-        <!-- =========================================================
+            <!-- =========================================================
      GLOBAL FLASH MESSAGES
 ========================================================= -->
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
 
-        {% if messages %}
+            {% if messages %}
 
-        <div class="flash-wrapper" id="globalFlashWrapper" aria-live="polite" aria-atomic="true">
+            <div class="flash-wrapper" id="globalFlashWrapper" aria-live="polite" aria-atomic="true">
 
-            {% for category, message in messages %}
+                {% for category, message in messages %}
 
-            <div class="flash-message flash-{{ category }}" role="alert" data-auto-dismiss="true">
+                <div class="flash-message flash-{{ category }}" role="alert" data-auto-dismiss="true">
 
-                <!-- MESSAGE ICON -->
+                    <!-- MESSAGE ICON -->
 
-                <div class="flash-icon" aria-hidden="true">
-
-                    {% if category == "success" %}
-
-                    <i class="fa-solid fa-circle-check"></i>
-
-                    {% elif category == "danger" or category == "error" %}
-
-                    <i class="fa-solid fa-circle-exclamation"></i>
-
-                    {% elif category == "warning" %}
-
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-
-                    {% elif category == "info" %}
-
-                    <i class="fa-solid fa-circle-info"></i>
-
-                    {% else %}
-
-                    <i class="fa-solid fa-bell"></i>
-
-                    {% endif %}
-
-                </div>
-
-
-                <!-- MESSAGE CONTENT -->
-
-                <div class="flash-content">
-
-                    <div class="flash-title">
+                    <div class="flash-icon" aria-hidden="true">
 
                         {% if category == "success" %}
 
-                        Success
+                        <i class="fa-solid fa-circle-check"></i>
 
                         {% elif category == "danger" or category == "error" %}
 
-                        Error
+                        <i class="fa-solid fa-circle-exclamation"></i>
 
                         {% elif category == "warning" %}
 
-                        Warning
+                        <i class="fa-solid fa-triangle-exclamation"></i>
 
                         {% elif category == "info" %}
 
-                        Information
+                        <i class="fa-solid fa-circle-info"></i>
 
                         {% else %}
 
-                        Notification
+                        <i class="fa-solid fa-bell"></i>
 
                         {% endif %}
 
                     </div>
 
-                    <div class="flash-text">
-                        {{ message }}
+
+                    <!-- MESSAGE CONTENT -->
+
+                    <div class="flash-content">
+
+                        <div class="flash-title">
+
+                            {% if category == "success" %}
+
+                            Success
+
+                            {% elif category == "danger" or category == "error" %}
+
+                            Error
+
+                            {% elif category == "warning" %}
+
+                            Warning
+
+                            {% elif category == "info" %}
+
+                            Information
+
+                            {% else %}
+
+                            Notification
+
+                            {% endif %}
+
+                        </div>
+
+                        <div class="flash-text">
+                            {{ message }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- CLOSE BUTTON -->
+
+                    <button type="button" class="flash-close" aria-label="Close notification" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+
+                    <!-- AUTO DISMISS PROGRESS -->
+
+                    <div class="flash-progress"></div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% endif %}
+
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+
+        </div>
+
+        <!-- =========================================================
+     CLERK ERP HELP & GUIDE MODAL
+========================================================= -->
+
+        {% if role == "clerk" %}
+
+        <div class="erp-help-overlay" id="erpHelpModal" aria-hidden="true">
+
+            <div class="erp-help-modal" role="dialog" aria-modal="true" aria-labelledby="erpHelpTitle">
+
+                <!-- =================================================
+             MODAL HEADER
+        ================================================== -->
+
+                <div class="erp-help-header">
+
+                    <div class="erp-help-title-wrap">
+
+                        <div class="erp-help-main-icon">
+                            <i class="fa-solid fa-circle-question"></i>
+                        </div>
+
+                        <div>
+
+                            <span class="erp-help-eyebrow">
+                                SPL SHALASARTHI
+                            </span>
+
+                            <h2 id="erpHelpTitle">
+                                ERP Help & Guide
+                            </h2>
+
+                            <p>
+                                Complete guide for school staff
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <button type="button" class="erp-help-close" id="closeErpHelpBtn" aria-label="Close help guide">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                </div>
+
+
+                <!-- =================================================
+             QUICK INTRO
+        ================================================== -->
+
+                <div class="erp-help-intro">
+
+                    <div class="erp-help-intro-icon">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Welcome to SPL ShalaSarthi
+                        </strong>
+
+                        <p>
+                            Use this guide to understand the main modules,
+                            common actions, and safe data-entry practices
+                            available to your school.
+                        </p>
+
                     </div>
 
                 </div>
 
 
-                <!-- CLOSE BUTTON -->
+                <!-- =================================================
+             GUIDE CONTENT
+        ================================================== -->
 
-                <button type="button" class="flash-close" aria-label="Close notification" title="Close">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <div class="erp-help-body">
 
 
-                <!-- AUTO DISMISS PROGRESS -->
+                    <!-- =============================================
+                 01 DASHBOARD
+            ============================================== -->
 
-                <div class="flash-progress"></div>
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            01
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-house"></i>
+                                Dashboard
+                            </h3>
+
+                            <p>
+                                Your dashboard provides a quick overview
+                                of your school's ERP activities and
+                                important information.
+                            </p>
+
+                            <ul>
+                                <li>Review important school information.</li>
+                                <li>Check available ERP modules.</li>
+                                <li>Use the sidebar to navigate between modules.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =============================================
+                 02 STUDENTS
+            ============================================== -->
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            02
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-user-graduate"></i>
+                                Student Management
+                            </h3>
+
+                            <p>
+                                Manage student records and maintain
+                                accurate student information.
+                            </p>
+
+                            <ul>
+                                <li>
+                                    <strong>Add Student</strong> –
+                                    register a new student.
+                                </li>
+
+                                <li>
+                                    <strong>Student Records</strong> –
+                                    view and manage existing records.
+                                </li>
+
+                                <li>
+                                    Verify student information before saving.
+                                </li>
+
+                                <li>
+                                    Avoid duplicate student records.
+                                </li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =============================================
+                 03 CERTIFICATES
+            ============================================== -->
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            03
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-file-lines"></i>
+                                Certificates
+                            </h3>
+
+                            <p>
+                                Generate and manage official student
+                                certificates available to your school.
+                            </p>
+
+                            <ul>
+
+                                {% if feature_modules.tc %}
+                                <li>
+                                    <strong>Transfer Certificate</strong> –
+                                    create and manage TC records.
+                                </li>
+                                {% endif %}
+
+                                {% if feature_modules.bonafide %}
+                                <li>
+                                    <strong>Bonafide Certificate</strong> –
+                                    create and manage bonafide records.
+                                </li>
+                                {% endif %}
+
+                                <li>
+                                    Carefully verify student details
+                                    before generating a certificate.
+                                </li>
+
+                                <li>
+                                    Review certificate information before
+                                    printing or downloading.
+                                </li>
+
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =============================================
+                 04 IMPORT EXPORT
+            ============================================== -->
+
+                    {% if feature_modules.import_export %}
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            04
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-file-excel"></i>
+                                Import / Export
+                            </h3>
+
+                            <p>
+                                Use Excel files to efficiently manage
+                                large amounts of student data.
+                            </p>
+
+                            <ul>
+
+                                <li>
+                                    Download the latest ERP Excel template.
+                                </li>
+
+                                <li>
+                                    Enter data carefully in the provided
+                                    columns.
+                                </li>
+
+                                <li>
+                                    Marathi, Hindi, English and other
+                                    Unicode text can be entered where supported.
+                                </li>
+
+                                <li>
+                                    Do not rename required column headers.
+                                </li>
+
+                                <li>
+                                    Check the import preview and validation
+                                    results before completing the import.
+                                </li>
+
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+                    {% endif %}
+
+
+                    <!-- =============================================
+                 05 ATTENDANCE
+            ============================================== -->
+
+                    {% if feature_modules.attendance %}
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            05
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-calendar-check"></i>
+                                Attendance
+                            </h3>
+
+                            <p>
+                                Manage student attendance records
+                                according to your school's academic workflow.
+                            </p>
+
+                            <ul>
+                                <li>Open the Attendance module.</li>
+                                <li>Select the required class/date.</li>
+                                <li>Enter attendance accurately.</li>
+                                <li>Review entries before saving.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+                    {% endif %}
+
+
+                    <!-- =============================================
+                 06 MARKS & RESULTS
+            ============================================== -->
+
+                    {% if feature_modules.results %}
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            06
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-chart-column"></i>
+                                Marks & Results
+                            </h3>
+
+                            <p>
+                                Enter, manage and review student academic
+                                results where this module is enabled.
+                            </p>
+
+                            <ul>
+                                <li>Select the appropriate academic context.</li>
+                                <li>Enter marks carefully.</li>
+                                <li>Review totals and results before saving.</li>
+                                <li>Verify student details before finalizing.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+                    {% endif %}
+
+
+                    <!-- =============================================
+                 07 TEACHERS
+            ============================================== -->
+
+                    {% if feature_modules.teachers %}
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            07
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-chalkboard-teacher"></i>
+                                Teacher Management
+                            </h3>
+
+                            <p>
+                                Manage teacher information available
+                                to your school.
+                            </p>
+
+                            <ul>
+                                <li>Maintain accurate teacher records.</li>
+                                <li>Verify contact and profile information.</li>
+                                <li>Keep records updated when changes occur.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+                    {% endif %}
+
+
+                    <!-- =============================================
+                 08 FEES
+            ============================================== -->
+
+                    {% if feature_modules.fees %}
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            08
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-coins"></i>
+                                Fee Management
+                            </h3>
+
+                            <p>
+                                Manage school fee-related operations
+                                available in your ERP.
+                            </p>
+
+                            <ul>
+                                <li>Verify student information before transactions.</li>
+                                <li>Review fee details carefully.</li>
+                                <li>Keep payment-related information accurate.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+                    {% endif %}
+
+
+                    <!-- =============================================
+                 09 TIMETABLE
+            ============================================== -->
+
+                    {% if feature_modules.timetable %}
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            09
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-calendar-days"></i>
+                                Timetable
+                            </h3>
+
+                            <p>
+                                Manage timetable information according
+                                to the modules enabled for your school.
+                            </p>
+
+                            <ul>
+                                <li>Review timetable entries carefully.</li>
+                                <li>Check classes and schedules before publishing.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+                    {% endif %}
+
+
+                    <!-- =============================================
+                 10 NOTICE BOARD
+            ============================================== -->
+
+                    {% if feature_modules.notice_board %}
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            10
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-bullhorn"></i>
+                                Notice Board
+                            </h3>
+
+                            <p>
+                                Manage school notices and announcements
+                                available through the ERP.
+                            </p>
+
+                            <ul>
+                                <li>Enter clear and accurate notice information.</li>
+                                <li>Review the notice before publishing.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+                    {% endif %}
+
+
+                    <!-- =============================================
+                 11 REPORTS
+            ============================================== -->
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            11
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-chart-pie"></i>
+                                Reports
+                            </h3>
+
+                            <p>
+                                Use Reports to review available school
+                                data and generate required reports.
+                            </p>
+
+                            <ul>
+                                <li>Select the required report.</li>
+                                <li>Apply the required filters.</li>
+                                <li>Review the data before exporting or printing.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =============================================
+                 12 SUBSCRIPTION
+            ============================================== -->
+
+                    <section class="erp-guide-section">
+
+                        <div class="erp-guide-number">
+                            12
+                        </div>
+
+                        <div class="erp-guide-content">
+
+                            <h3>
+                                <i class="fa-solid fa-credit-card"></i>
+                                Subscription & Account
+                            </h3>
+
+                            <p>
+                                Review your school's subscription-related
+                                information and payment history.
+                            </p>
+
+                            <ul>
+                                <li>Check subscription status when required.</li>
+                                <li>Review available payment history.</li>
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =============================================
+                 IMPORTANT DATA SAFETY
+            ============================================== -->
+
+                    <div class="erp-help-safety">
+
+                        <div class="erp-help-safety-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Important Data Safety
+                            </strong>
+
+                            <ul>
+
+                                <li>
+                                    Always verify data before saving.
+                                </li>
+
+                                <li>
+                                    Do not share your ERP password or OTP.
+                                </li>
+
+                                <li>
+                                    Do not upload files containing unrelated
+                                    or unauthorized information.
+                                </li>
+
+                                <li>
+                                    Avoid creating duplicate student records.
+                                </li>
+
+                                <li>
+                                    Log out when using a shared computer.
+                                </li>
+
+                            </ul>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =============================================
+                 FINAL TIP
+            ============================================== -->
+
+                    <div class="erp-help-footer-note">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <span>
+                            If a module is not visible in your sidebar,
+                            it may not be enabled for your school.
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+             MODAL FOOTER
+        ================================================== -->
+
+                <div class="erp-help-modal-footer">
+
+                    <span>
+                        <i class="fa-solid fa-book-open"></i>
+                        SPL ShalaSarthi User Guide
+                    </span>
+
+                    <button type="button" class="erp-help-done-btn" id="erpHelpDoneBtn">
+                        Got it
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+
+                </div>
 
             </div>
-
-            {% endfor %}
 
         </div>
 
         {% endif %}
 
-        {% endwith %}
+        <!-- ================= GLOBAL CSRF TOKEN ================= -->
+        <script>
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content') || '';
+        </script>
 
-        {% block content %}{% endblock %}
+        <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer>
+        </script>
 
-    </div>
-
-    <!-- ================= GLOBAL CSRF TOKEN ================= -->
-    <script>
-
-        // GLOBAL CSRF TOKEN
-        const csrfToken = document
-            .querySelector('meta[name="csrf-token"]')
-            .getAttribute('content');
-
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+        {% block scripts %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>{% endblock %}
 
 </body>
 

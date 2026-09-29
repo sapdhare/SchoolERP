@@ -1,0 +1,2495 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports/clerk_reports.css') }}">
+
+<div class="cr-page">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <section class="cr-header">
+
+        <div class="cr-header-left">
+
+            <div class="cr-header-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+
+            <div>
+
+                <span class="cr-eyebrow">
+                    SCHOOL REPORTING
+                </span>
+
+                <h1>
+                    School Reports
+                </h1>
+
+                <p>
+                    Analyse student, admission and certificate activity
+                    using flexible date and academic filters.
+                </p>
+
+                <span class="cr-header-marathi">
+                    शाळेचा अचूक अहवाल व डेटा विश्लेषण
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="cr-header-actions">
+
+            <a href="{{ url_for(
+                    'clerk_reports_export',
+                    report='all',
+                    date_from=date_from,
+                    date_to=date_to,
+                    year=selected_year,
+                    month=selected_month,
+                    class_name=selected_class,
+                    section=selected_section
+                ) }}" class="cr-btn cr-btn-primary" id="downloadAllBtn">
+
+                <i class="fa-solid fa-file-excel"></i>
+
+                <span>
+                    Download Full Report
+                </span>
+
+            </a>
+
+            <button type="button" class="cr-btn cr-btn-secondary" onclick="printCurrentReport()">
+
+                <i class="fa-solid fa-print"></i>
+
+                <span>
+                    Print / PDF
+                </span>
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FILTER PANEL
+    ====================================================== -->
+
+    <section class="cr-filter-card">
+
+        <div class="cr-filter-header">
+
+            <div>
+
+                <span class="cr-section-eyebrow">
+                    REPORT FILTERS
+                </span>
+
+                <h2>
+                    Choose reporting period
+                </h2>
+
+                <p>
+                    Select a date range or use year, month, class and
+                    section filters.
+                </p>
+
+            </div>
+
+            <div class="cr-filter-status">
+
+                <span class="cr-live-dot"></span>
+
+                Live school data
+
+            </div>
+
+        </div>
+
+
+        <form method="GET" action="{{ url_for('clerk_reports') }}" id="reportFilterForm" class="cr-filter-form">
+
+            <!-- DATE FROM -->
+
+            <div class="cr-field">
+
+                <label for="dateFrom">
+                    Date From
+                </label>
+
+                <div class="cr-input-wrap">
+
+                    <i class="fa-regular fa-calendar"></i>
+
+                    <input type="date" id="dateFrom" name="date_from" value="{{ date_from or '' }}">
+
+                </div>
+
+            </div>
+
+
+            <!-- DATE TO -->
+
+            <div class="cr-field">
+
+                <label for="dateTo">
+                    Date To
+                </label>
+
+                <div class="cr-input-wrap">
+
+                    <i class="fa-regular fa-calendar-check"></i>
+
+                    <input type="date" id="dateTo" name="date_to" value="{{ date_to or '' }}">
+
+                </div>
+
+            </div>
+
+
+            <!-- YEAR -->
+
+            <div class="cr-field">
+
+                <label for="reportYear">
+                    Year
+                </label>
+
+                <div class="cr-input-wrap">
+
+                    <i class="fa-regular fa-calendar-days"></i>
+
+                    <select id="reportYear" name="year">
+
+                        <option value="">
+                            All Years
+                        </option>
+
+                        {% for year in years %}
+
+                        <option value="{{ year }}" {% if selected_year==year|string %} selected {% endif %}>
+                            {{ year }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- MONTH -->
+
+            <div class="cr-field">
+
+                <label for="reportMonth">
+                    Month
+                </label>
+
+                <div class="cr-input-wrap">
+
+                    <i class="fa-regular fa-calendar"></i>
+
+                    <select id="reportMonth" name="month">
+
+                        <option value="">
+                            All Months
+                        </option>
+
+                        {% for month in months %}
+
+                        <option value="{{ month.value }}" {% if selected_month==month.value|string %} selected {% endif
+                            %}>
+                            {{ month.label }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- CLASS -->
+
+            <div class="cr-field">
+
+                <label for="reportClass">
+                    Class
+                </label>
+
+                <div class="cr-input-wrap">
+
+                    <i class="fa-solid fa-graduation-cap"></i>
+
+                    <select id="reportClass" name="class">
+
+                        <option value="">
+                            All Classes
+                        </option>
+
+                        {% for cls in classes %}
+
+                        <option value="{{ cls }}" {% if selected_class==cls %} selected {% endif %}>
+                            {{ cls }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- SECTION -->
+
+            <div class="cr-field">
+
+                <label for="reportSection">
+                    Section
+                </label>
+
+                <div class="cr-input-wrap">
+
+                    <i class="fa-solid fa-layer-group"></i>
+
+                    <select id="reportSection" name="section">
+
+                        <option value="">
+                            All Sections
+                        </option>
+
+                        {% for section in sections %}
+
+                        <option value="{{ section }}" {% if selected_section==section %} selected {% endif %}>
+                            {{ section }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="cr-filter-actions">
+
+                <button type="submit" class="cr-btn cr-btn-apply" id="applyFilterBtn">
+
+                    <i class="fa-solid fa-filter"></i>
+
+                    Apply Filters
+
+                </button>
+
+                <a href="{{ url_for('clerk_reports') }}" class="cr-btn cr-btn-reset" id="resetFilterBtn">
+
+                    <i class="fa-solid fa-rotate-left"></i>
+
+                    Reset
+
+                </a>
+
+            </div>
+
+        </form>
+
+
+        <div class="cr-active-filter">
+
+            <i class="fa-solid fa-circle-info"></i>
+
+            <span>
+                {{ filter_description }}
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         KPI CARDS
+    ====================================================== -->
+
+    <section class="cr-kpi-grid">
+
+        <!-- STUDENTS -->
+
+        <div class="cr-kpi cr-kpi-blue">
+
+            <div class="cr-kpi-content">
+
+                <span>
+                    Active Students
+                </span>
+
+                <strong class="cr-counter" data-value="{{ summary.active_students or 0 }}">
+                    0
+                </strong>
+
+                <small>
+                    Matching current filters
+                </small>
+
+            </div>
+
+            <div class="cr-kpi-icon">
+                <i class="fa-solid fa-user-graduate"></i>
+            </div>
+
+        </div>
+
+
+        <!-- ADMISSIONS -->
+
+        <div class="cr-kpi cr-kpi-teal">
+
+            <div class="cr-kpi-content">
+
+                <span>
+                    Admissions
+                </span>
+
+                <strong class="cr-counter" data-value="{{ summary.admissions or 0 }}">
+                    0
+                </strong>
+
+                <small>
+                    Student records created
+                </small>
+
+            </div>
+
+            <div class="cr-kpi-icon">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+
+        </div>
+
+
+        <!-- TC -->
+
+        <div class="cr-kpi cr-kpi-orange">
+
+            <div class="cr-kpi-content">
+
+                <span>
+                    TC Issued
+                </span>
+
+                <strong class="cr-counter" data-value="{{ summary.tc_count or 0 }}">
+                    0
+                </strong>
+
+                <small>
+                    Transfer certificates
+                </small>
+
+            </div>
+
+            <div class="cr-kpi-icon">
+                <i class="fa-solid fa-file-arrow-right"></i>
+            </div>
+
+        </div>
+
+
+        <!-- BONAFIDE -->
+
+        <div class="cr-kpi cr-kpi-purple">
+
+            <div class="cr-kpi-content">
+
+                <span>
+                    Bonafide Issued
+                </span>
+
+                <strong class="cr-counter" data-value="{{ summary.bonafide_count or 0 }}">
+                    0
+                </strong>
+
+                <small>
+                    Certificates issued
+                </small>
+
+            </div>
+
+            <div class="cr-kpi-icon">
+                <i class="fa-solid fa-certificate"></i>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         REPORT TABS
+    ====================================================== -->
+
+    <section class="cr-report-card">
+
+        <div class="cr-tabs-header">
+
+            <div>
+
+                <span class="cr-section-eyebrow">
+                    REPORT CENTRE
+                </span>
+
+                <h2>
+                    Detailed Reports
+                </h2>
+
+            </div>
+
+            <div class="cr-record-meta">
+
+                <i class="fa-solid fa-database"></i>
+
+                <span>
+                    {{ total_report_records or 0 }}
+                </span>
+
+                matching records
+
+            </div>
+
+        </div>
+
+
+        <!-- TABS -->
+
+        <div class="cr-tabs" role="tablist">
+
+            <button type="button" class="cr-tab active" data-tab="overview" role="tab" aria-selected="true">
+
+                <i class="fa-solid fa-chart-pie"></i>
+
+                Overview
+
+            </button>
+
+
+            <button type="button" class="cr-tab" data-tab="students" role="tab" aria-selected="false">
+
+                <i class="fa-solid fa-users"></i>
+
+                Students
+
+            </button>
+
+
+            <button type="button" class="cr-tab" data-tab="admissions" role="tab" aria-selected="false">
+
+                <i class="fa-solid fa-user-plus"></i>
+
+                Admissions
+
+            </button>
+
+
+            <button type="button" class="cr-tab" data-tab="tc" role="tab" aria-selected="false">
+
+                <i class="fa-solid fa-file-arrow-right"></i>
+
+                Transfer Certificates
+
+            </button>
+
+
+            <button type="button" class="cr-tab" data-tab="bonafide" role="tab" aria-selected="false">
+
+                <i class="fa-solid fa-certificate"></i>
+
+                Bonafide
+
+            </button>
+
+
+            <button type="button" class="cr-tab" data-tab="quality" role="tab" aria-selected="false">
+
+                <i class="fa-solid fa-shield-check"></i>
+
+                Data Quality
+
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             OVERVIEW TAB
+        ================================================== -->
+
+        <div class="cr-tab-panel active" id="tab-overview" role="tabpanel">
+
+            <div class="cr-overview-grid">
+
+
+                <!-- ADMISSION TREND -->
+
+                <div class="cr-chart-card cr-chart-large">
+
+                    <div class="cr-chart-header">
+
+                        <div>
+
+                            <span class="cr-chart-label">
+                                ADMISSIONS
+                            </span>
+
+                            <h3>
+                                Admission Trend
+                            </h3>
+
+                            <p>
+                                Student records created over the selected period.
+                            </p>
+
+                        </div>
+
+                        <span class="cr-chart-badge blue">
+                            {{ summary.admissions or 0 }} Total
+                        </span>
+
+                    </div>
+
+                    <div class="cr-chart-box">
+
+                        <canvas id="admissionChart"></canvas>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CERTIFICATE ACTIVITY -->
+
+                <div class="cr-chart-card">
+
+                    <div class="cr-chart-header">
+
+                        <div>
+
+                            <span class="cr-chart-label">
+                                CERTIFICATES
+                            </span>
+
+                            <h3>
+                                Certificate Activity
+                            </h3>
+
+                            <p>
+                                TC and Bonafide activity.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="cr-chart-box cr-chart-small">
+
+                        <canvas id="certificateChart"></canvas>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CLASS DISTRIBUTION -->
+
+                <div class="cr-chart-card">
+
+                    <div class="cr-chart-header">
+
+                        <div>
+
+                            <span class="cr-chart-label">
+                                STUDENTS
+                            </span>
+
+                            <h3>
+                                Class Distribution
+                            </h3>
+
+                            <p>
+                                Active students by class.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="cr-chart-box cr-chart-small">
+
+                        <canvas id="classChart"></canvas>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MONTHLY SUMMARY -->
+
+                <div class="cr-summary-card">
+
+                    <div class="cr-summary-heading">
+
+                        <div>
+
+                            <span class="cr-chart-label">
+                                PERIOD SUMMARY
+                            </span>
+
+                            <h3>
+                                Report Snapshot
+                            </h3>
+
+                        </div>
+
+                        <i class="fa-solid fa-chart-simple"></i>
+
+                    </div>
+
+
+                    <div class="cr-summary-list">
+
+                        <div class="cr-summary-row">
+
+                            <span>
+                                Active Students
+                            </span>
+
+                            <strong>
+                                {{ summary.active_students or 0 }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="cr-summary-row">
+
+                            <span>
+                                Admissions
+                            </span>
+
+                            <strong>
+                                {{ summary.admissions or 0 }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="cr-summary-row">
+
+                            <span>
+                                TC Issued
+                            </span>
+
+                            <strong>
+                                {{ summary.tc_count or 0 }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="cr-summary-row">
+
+                            <span>
+                                Bonafide Issued
+                            </span>
+
+                            <strong>
+                                {{ summary.bonafide_count or 0 }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="cr-summary-row">
+
+                            <span>
+                                Data Issues
+                            </span>
+
+                            <strong class="danger-value">
+                                {{ summary.quality_issues or 0 }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             STUDENTS TAB
+        ================================================== -->
+
+        <div class="cr-tab-panel" id="tab-students" role="tabpanel">
+
+            <div class="cr-table-header">
+
+                <div>
+
+                    <h3>
+                        Student Records
+                    </h3>
+
+                    <p>
+                        Active student records matching the selected filters.
+                    </p>
+
+                </div>
+
+                <a href="{{ url_for(
+                        'clerk_reports_export',
+                        report='students',
+                        date_from=date_from,
+                        date_to=date_to,
+                        year=selected_year,
+                        month=selected_month,
+                        class_name=selected_class,
+                        section=selected_section
+                    ) }}" class="cr-mini-download">
+
+                    <i class="fa-solid fa-file-excel"></i>
+
+                    Excel
+
+                </a>
+
+            </div>
+
+
+            <div class="cr-local-search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input type="search" class="table-search" data-target="studentsTable"
+                    placeholder="Search student, register no, class, section...">
+
+            </div>
+
+
+            <div class="cr-table-wrap">
+
+                <table class="cr-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Register No</th>
+
+                            <th>Student</th>
+
+                            <th>Class</th>
+
+                            <th>Section</th>
+
+                            <th>Admission No</th>
+
+                            <th>Admission Date</th>
+
+                            <th>Mobile</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="studentsTable">
+
+                        {% for row in student_rows %}
+
+                        <tr>
+
+                            <td>
+                                {{ row.school_register_no or '—' }}
+                            </td>
+
+                            <td>
+
+                                <div class="cr-person-cell">
+
+                                    <span class="cr-avatar">
+                                        {{ (row.name or '?')[:1]|upper }}
+                                    </span>
+
+                                    <div>
+
+                                        <strong>
+                                            {{ row.name or '—' }}
+                                        </strong>
+
+                                        <small>
+                                            {{ row.father_name or '' }}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                {{ row.class_name or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.section or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.admission_no or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.admission_date_display or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.primary_mobile or '—' }}
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="7" class="cr-empty-cell">
+
+                                <i class="fa-solid fa-users"></i>
+
+                                <strong>
+                                    No student records found
+                                </strong>
+
+                                <span>
+                                    Try changing your filters.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ADMISSIONS TAB
+        ================================================== -->
+
+        <div class="cr-tab-panel" id="tab-admissions" role="tabpanel">
+
+            <div class="cr-table-header">
+
+                <div>
+
+                    <h3>
+                        Admission Report
+                    </h3>
+
+                    <p>
+                        Student admissions created during the selected period.
+                    </p>
+
+                </div>
+
+                <a href="{{ url_for(
+                        'clerk_reports_export',
+                        report='admissions',
+                        date_from=date_from,
+                        date_to=date_to,
+                        year=selected_year,
+                        month=selected_month,
+                        class_name=selected_class,
+                        section=selected_section
+                    ) }}" class="cr-mini-download">
+
+                    <i class="fa-solid fa-file-excel"></i>
+
+                    Excel
+
+                </a>
+
+            </div>
+
+
+            <div class="cr-local-search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input type="search" class="table-search" data-target="admissionsTable"
+                    placeholder="Search admission, student, class...">
+
+            </div>
+
+
+            <div class="cr-table-wrap">
+
+                <table class="cr-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Date</th>
+
+                            <th>Student</th>
+
+                            <th>Register No</th>
+
+                            <th>Admission No</th>
+
+                            <th>Class</th>
+
+                            <th>Section</th>
+
+                            <th>Mobile</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="admissionsTable">
+
+                        {% for row in admission_rows %}
+
+                        <tr>
+
+                            <td>
+                                {{ row.admission_date_display or '—' }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ row.name or '—' }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ row.school_register_no or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.admission_no or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.class_name or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.section or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.primary_mobile or '—' }}
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="7" class="cr-empty-cell">
+
+                                <i class="fa-solid fa-user-plus"></i>
+
+                                <strong>
+                                    No admissions found
+                                </strong>
+
+                                <span>
+                                    Try another reporting period.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TC TAB
+        ================================================== -->
+
+        <div class="cr-tab-panel" id="tab-tc" role="tabpanel">
+
+            <div class="cr-table-header">
+
+                <div>
+
+                    <h3>
+                        Transfer Certificate Report
+                    </h3>
+
+                    <p>
+                        Transfer certificates issued for active school records.
+                    </p>
+
+                </div>
+
+                <a href="{{ url_for(
+                        'clerk_reports_export',
+                        report='tc',
+                        date_from=date_from,
+                        date_to=date_to,
+                        year=selected_year,
+                        month=selected_month,
+                        class_name=selected_class,
+                        section=selected_section
+                    ) }}" class="cr-mini-download">
+
+                    <i class="fa-solid fa-file-excel"></i>
+
+                    Excel
+
+                </a>
+
+            </div>
+
+
+            <div class="cr-local-search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input type="search" class="table-search" data-target="tcTable"
+                    placeholder="Search TC number, student, class...">
+
+            </div>
+
+
+            <div class="cr-table-wrap">
+
+                <table class="cr-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>TC Date</th>
+
+                            <th>TC Number</th>
+
+                            <th>Student</th>
+
+                            <th>Register No</th>
+
+                            <th>Class</th>
+
+                            <th>Section</th>
+
+                            <th>Admission No</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tcTable">
+
+                        {% for row in tc_rows %}
+
+                        <tr>
+
+                            <td>
+                                {{ row.tc_date_display or '—' }}
+                            </td>
+
+                            <td>
+
+                                <span class="cr-document-number">
+                                    {{ row.tc_number or '—' }}
+                                </span>
+
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ row.name or '—' }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ row.school_register_no or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.class_name or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.section or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.admission_no or '—' }}
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="7" class="cr-empty-cell">
+
+                                <i class="fa-solid fa-file-arrow-right"></i>
+
+                                <strong>
+                                    No TC records found
+                                </strong>
+
+                                <span>
+                                    No transfer certificates match the selected filters.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             BONAFIDE TAB
+        ================================================== -->
+
+        <div class="cr-tab-panel" id="tab-bonafide" role="tabpanel">
+
+            <div class="cr-table-header">
+
+                <div>
+
+                    <h3>
+                        Bonafide Certificate Report
+                    </h3>
+
+                    <p>
+                        Bonafide certificates issued during the selected period.
+                    </p>
+
+                </div>
+
+                <a href="{{ url_for(
+                        'clerk_reports_export',
+                        report='bonafide',
+                        date_from=date_from,
+                        date_to=date_to,
+                        year=selected_year,
+                        month=selected_month,
+                        class_name=selected_class,
+                        section=selected_section
+                    ) }}" class="cr-mini-download">
+
+                    <i class="fa-solid fa-file-excel"></i>
+
+                    Excel
+
+                </a>
+
+            </div>
+
+
+            <div class="cr-local-search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input type="search" class="table-search" data-target="bonafideTable"
+                    placeholder="Search student, class, section...">
+
+            </div>
+
+
+            <div class="cr-table-wrap">
+
+                <table class="cr-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Issued Date</th>
+
+                            <th>Student</th>
+
+                            <th>Register No</th>
+
+                            <th>Admission No</th>
+
+                            <th>Class</th>
+
+                            <th>Section</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="bonafideTable">
+
+                        {% for row in bonafide_rows %}
+
+                        <tr>
+
+                            <td>
+                                {{ row.bonafide_date_display or '—' }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ row.name or '—' }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ row.school_register_no or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.admission_no or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.class_name or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.section or '—' }}
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="6" class="cr-empty-cell">
+
+                                <i class="fa-solid fa-certificate"></i>
+
+                                <strong>
+                                    No Bonafide records found
+                                </strong>
+
+                                <span>
+                                    No certificates match the selected filters.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             DATA QUALITY TAB
+        ================================================== -->
+
+        <div class="cr-tab-panel" id="tab-quality" role="tabpanel">
+
+            <div class="cr-quality-top">
+
+                <div>
+
+                    <span class="cr-chart-label">
+                        DATA QUALITY
+                    </span>
+
+                    <h3>
+                        Student Data Completeness
+                    </h3>
+
+                    <p>
+                        Required student fields that are currently complete.
+                    </p>
+
+                </div>
+
+                <div class="cr-quality-score">
+
+                    <strong>
+                        {{ quality.completion_percent or 100 }}%
+                    </strong>
+
+                    <span>
+                        Complete
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="cr-progress">
+
+                <div class="cr-progress-bar" style="width: {{ quality.completion_percent or 100 }}%;"></div>
+
+            </div>
+
+
+            <div class="cr-quality-grid">
+
+                <div class="cr-quality-stat">
+
+                    <span>
+                        Students Checked
+                    </span>
+
+                    <strong>
+                        {{ quality.students_checked or 0 }}
+                    </strong>
+
+                </div>
+
+
+                <div class="cr-quality-stat">
+
+                    <span>
+                        Records With Issues
+                    </span>
+
+                    <strong class="danger-value">
+                        {{ quality.records_with_issues or 0 }}
+                    </strong>
+
+                </div>
+
+
+                <div class="cr-quality-stat">
+
+                    <span>
+                        Missing Fields
+                    </span>
+
+                    <strong>
+                        {{ quality.missing_fields or 0 }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="cr-table-header cr-quality-table-header">
+
+                <div>
+
+                    <h3>
+                        Records Requiring Attention
+                    </h3>
+
+                    <p>
+                        Students with one or more required fields missing.
+                    </p>
+
+                </div>
+
+                <a href="{{ url_for(
+                        'clerk_reports_export',
+                        report='quality',
+                        date_from=date_from,
+                        date_to=date_to,
+                        year=selected_year,
+                        month=selected_month,
+                        class_name=selected_class,
+                        section=selected_section
+                    ) }}" class="cr-mini-download">
+
+                    <i class="fa-solid fa-file-excel"></i>
+
+                    Excel
+
+                </a>
+
+            </div>
+
+
+            <div class="cr-table-wrap">
+
+                <table class="cr-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Student</th>
+
+                            <th>Register No</th>
+
+                            <th>Class</th>
+
+                            <th>Section</th>
+
+                            <th>Missing Information</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in quality_rows %}
+
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    {{ row.name or '—' }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ row.school_register_no or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.class_name or '—' }}
+                            </td>
+
+                            <td>
+                                {{ row.section or '—' }}
+                            </td>
+
+                            <td>
+
+                                <div class="cr-missing-tags">
+
+                                    {% for field in row.missing_fields %}
+
+                                    <span>
+                                        {{ field }}
+                                    </span>
+
+                                    {% endfor %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="5" class="cr-empty-cell cr-success-empty">
+
+                                <i class="fa-solid fa-circle-check"></i>
+
+                                <strong>
+                                    No data quality issues found
+                                </strong>
+
+                                <span>
+                                    The selected student records are complete.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         DOWNLOAD FOOTER
+    ====================================================== -->
+
+    <section class="cr-download-card">
+
+        <div class="cr-download-icon">
+
+            <i class="fa-solid fa-file-export"></i>
+
+        </div>
+
+        <div class="cr-download-content">
+
+            <strong>
+                Need the complete report?
+            </strong>
+
+            <span>
+                Download an Excel workbook containing summary,
+                students, admissions, TC, Bonafide and data-quality sheets.
+            </span>
+
+        </div>
+
+        <a href="{{ url_for(
+                'clerk_reports_export',
+                report='all',
+                date_from=date_from,
+                date_to=date_to,
+                year=selected_year,
+                month=selected_month,
+                class_name=selected_class,
+                section=selected_section
+            ) }}" class="cr-btn cr-btn-download">
+
+            <i class="fa-solid fa-download"></i>
+
+            Download Full Excel
+
+        </a>
+
+    </section>
+
+</div>
+
+
+<!-- =========================================================
+     CHART DATA
+========================================================= -->
+
+<script id="clerkReportData" type="application/json">
+{
+    "admission_labels": {{ admission_chart_labels|tojson }},
+    "admission_values": {{ admission_chart_values|tojson }},
+
+    "certificate_labels": [
+        "Transfer Certificate",
+        "Bonafide"
+    ],
+
+    "certificate_values": [
+        {{ summary.tc_count or 0 }},
+        {{ summary.bonafide_count or 0 }}
+    ],
+
+    "class_labels": {{ class_chart_labels|tojson }},
+    "class_values": {{ class_chart_values|tojson }}
+}
+</script>
+
+
+<!-- =========================================================
+     REPORT JAVASCRIPT
+========================================================= -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        "use strict";
+
+
+        /* =====================================================
+           DATA
+        ====================================================== */
+
+        const dataElement =
+            document.getElementById("clerkReportData");
+
+        let reportData = {};
+
+        if (dataElement) {
+
+            try {
+
+                reportData =
+                    JSON.parse(
+                        dataElement.textContent
+                    );
+
+            } catch (error) {
+
+                console.error(
+                    "Report chart data could not be parsed:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           COUNTER ANIMATION
+        ====================================================== */
+
+        function animateCounter(element) {
+
+            const target =
+                Number(
+                    element.dataset.value || 0
+                );
+
+            const duration = 850;
+
+            const startTime =
+                performance.now();
+
+            function updateCounter(now) {
+
+                const progress =
+                    Math.min(
+                        (now - startTime) / duration,
+                        1
+                    );
+
+                const eased =
+                    1 - Math.pow(
+                        1 - progress,
+                        3
+                    );
+
+                const current =
+                    Math.round(
+                        target * eased
+                    );
+
+                element.textContent =
+                    current.toLocaleString("en-IN");
+
+                if (progress < 1) {
+
+                    requestAnimationFrame(
+                        updateCounter
+                    );
+
+                }
+
+            }
+
+            requestAnimationFrame(
+                updateCounter
+            );
+
+        }
+
+
+        document
+            .querySelectorAll(".cr-counter")
+            .forEach(animateCounter);
+
+
+        /* =====================================================
+           TAB SYSTEM
+        ====================================================== */
+
+        const tabs =
+            document.querySelectorAll(".cr-tab");
+
+        const panels =
+            document.querySelectorAll(".cr-tab-panel");
+
+
+        function activateTab(tabName) {
+
+            tabs.forEach(function (tab) {
+
+                const isActive =
+                    tab.dataset.tab === tabName;
+
+                tab.classList.toggle(
+                    "active",
+                    isActive
+                );
+
+                tab.setAttribute(
+                    "aria-selected",
+                    isActive ? "true" : "false"
+                );
+
+            });
+
+
+            panels.forEach(function (panel) {
+
+                panel.classList.toggle(
+                    "active",
+                    panel.id === `tab-${tabName}`
+                );
+
+            });
+
+
+            if (window.history && window.history.replaceState) {
+
+                const url =
+                    new URL(window.location.href);
+
+                url.searchParams.set(
+                    "tab",
+                    tabName
+                );
+
+                window.history.replaceState(
+                    {},
+                    "",
+                    url
+                );
+
+            }
+
+
+            setTimeout(function () {
+
+                if (
+                    tabName === "overview" &&
+                    window.reportCharts
+                ) {
+
+                    window.reportCharts.forEach(
+                        function (chart) {
+
+                            if (chart) {
+                                chart.resize();
+                            }
+
+                        }
+                    );
+
+                }
+
+            }, 80);
+
+        }
+
+
+        tabs.forEach(function (tab) {
+
+            tab.addEventListener(
+                "click",
+                function () {
+
+                    activateTab(
+                        this.dataset.tab
+                    );
+
+                }
+            );
+
+        });
+
+
+        const initialTab =
+            new URLSearchParams(
+                window.location.search
+            ).get("tab");
+
+        const validTabs = [
+            "overview",
+            "students",
+            "admissions",
+            "tc",
+            "bonafide",
+            "quality"
+        ];
+
+        if (
+            initialTab &&
+            validTabs.includes(initialTab)
+        ) {
+
+            activateTab(initialTab);
+
+        }
+
+
+        /* =====================================================
+           CHART HELPERS
+        ====================================================== */
+
+        const chartText =
+            "#64748b";
+
+        const gridColor =
+            "rgba(148,163,184,0.15)";
+
+
+        window.reportCharts = [];
+
+
+        function createChart(
+            canvasId,
+            config
+        ) {
+
+            const canvas =
+                document.getElementById(canvasId);
+
+            if (!canvas || typeof Chart === "undefined") {
+                return null;
+            }
+
+            const chart =
+                new Chart(
+                    canvas,
+                    config
+                );
+
+            window.reportCharts.push(
+                chart
+            );
+
+            return chart;
+
+        }
+
+
+        /* =====================================================
+           ADMISSION LINE CHART
+        ====================================================== */
+
+        createChart(
+            "admissionChart",
+            {
+
+                type: "line",
+
+                data: {
+
+                    labels:
+                        reportData.admission_labels || [],
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Admissions",
+
+                            data:
+                                reportData.admission_values || [],
+
+                            borderColor:
+                                "#0f766e",
+
+                            backgroundColor:
+                                "rgba(20,184,166,0.12)",
+
+                            fill: true,
+
+                            tension: 0.38,
+
+                            borderWidth: 2.5,
+
+                            pointRadius: 3,
+
+                            pointHoverRadius: 6,
+
+                            pointBackgroundColor:
+                                "#ffffff",
+
+                            pointBorderWidth: 2
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    animation: {
+
+                        duration: 900,
+
+                        easing: "easeOutQuart"
+
+                    },
+
+                    interaction: {
+
+                        intersect: false,
+
+                        mode: "index"
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+
+                            backgroundColor:
+                                "#0f172a",
+
+                            padding: 10,
+
+                            titleFont: {
+                                size: 11,
+                                weight: "700"
+                            },
+
+                            bodyFont: {
+                                size: 10
+                            },
+
+                            displayColors: false
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            ticks: {
+                                color: chartText,
+                                font: {
+                                    size: 9
+                                }
+                            },
+
+                            grid: {
+                                display: false
+                            }
+
+                        },
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                color: chartText,
+
+                                precision: 0,
+
+                                font: {
+                                    size: 9
+                                }
+
+                            },
+
+                            grid: {
+                                color: gridColor
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           CERTIFICATE BAR CHART
+        ====================================================== */
+
+        createChart(
+            "certificateChart",
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels:
+                        reportData.certificate_labels || [],
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Certificates",
+
+                            data:
+                                reportData.certificate_values || [],
+
+                            backgroundColor: [
+                                "#f59e0b",
+                                "#8b5cf6"
+                            ],
+
+                            borderRadius: 8,
+
+                            maxBarThickness: 42
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    animation: {
+
+                        duration: 850,
+
+                        easing: "easeOutQuart"
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+
+                            backgroundColor:
+                                "#0f172a",
+
+                            padding: 10,
+
+                            displayColors: false
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            ticks: {
+
+                                color: chartText,
+
+                                font: {
+                                    size: 8
+                                },
+
+                                maxRotation: 0
+
+                            },
+
+                            grid: {
+                                display: false
+                            }
+
+                        },
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                color: chartText,
+
+                                precision: 0,
+
+                                font: {
+                                    size: 9
+                                }
+
+                            },
+
+                            grid: {
+                                color: gridColor
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           CLASS DISTRIBUTION
+        ====================================================== */
+
+        createChart(
+            "classChart",
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels:
+                        reportData.class_labels || [],
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Students",
+
+                            data:
+                                reportData.class_values || [],
+
+                            backgroundColor:
+                                "#2563eb",
+
+                            borderRadius: 7,
+
+                            maxBarThickness: 30
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    animation: {
+
+                        duration: 850,
+
+                        easing: "easeOutQuart"
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+
+                            backgroundColor:
+                                "#0f172a",
+
+                            padding: 10,
+
+                            displayColors: false
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            ticks: {
+
+                                color: chartText,
+
+                                font: {
+                                    size: 8
+                                },
+
+                                maxRotation: 45,
+
+                                minRotation: 0
+
+                            },
+
+                            grid: {
+                                display: false
+                            }
+
+                        },
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                color: chartText,
+
+                                precision: 0,
+
+                                font: {
+                                    size: 9
+                                }
+
+                            },
+
+                            grid: {
+                                color: gridColor
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           TABLE SEARCH
+        ====================================================== */
+
+        document
+            .querySelectorAll(".table-search")
+            .forEach(function (input) {
+
+                input.addEventListener(
+                    "input",
+                    function () {
+
+                        const targetId =
+                            this.dataset.target;
+
+                        const tbody =
+                            document.getElementById(
+                                targetId
+                            );
+
+                        if (!tbody) {
+                            return;
+                        }
+
+                        const query =
+                            this.value
+                                .trim()
+                                .toLowerCase();
+
+                        tbody
+                            .querySelectorAll("tr")
+                            .forEach(function (row) {
+
+                                const text =
+                                    row.textContent
+                                        .toLowerCase();
+
+                                row.style.display =
+                                    !query ||
+                                        text.includes(query)
+                                        ? ""
+                                        : "none";
+
+                            });
+
+                    }
+                );
+
+            });
+
+
+        /* =====================================================
+           FILTER VALIDATION
+        ====================================================== */
+
+        const filterForm =
+            document.getElementById(
+                "reportFilterForm"
+            );
+
+        if (filterForm) {
+
+            filterForm.addEventListener(
+                "submit",
+                function (event) {
+
+                    const from =
+                        document.getElementById(
+                            "dateFrom"
+                        )?.value;
+
+                    const to =
+                        document.getElementById(
+                            "dateTo"
+                        )?.value;
+
+                    if (
+                        from &&
+                        to &&
+                        from > to
+                    ) {
+
+                        event.preventDefault();
+
+                        alert(
+                            "Date From cannot be later than Date To."
+                        );
+
+                        return;
+
+                    }
+
+
+                    const button =
+                        document.getElementById(
+                            "applyFilterBtn"
+                        );
+
+                    if (button) {
+
+                        button.disabled = true;
+
+                        button.innerHTML =
+                            `
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        Loading Report...
+                        `;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           DOWNLOAD BUTTON LOADING
+        ====================================================== */
+
+        document
+            .querySelectorAll(
+                ".cr-mini-download, #downloadAllBtn"
+            )
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        const original =
+                            this.innerHTML;
+
+                        this.dataset.original =
+                            original;
+
+                        this.innerHTML =
+                            `
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        Preparing...
+                        `;
+
+                        this.style.pointerEvents =
+                            "none";
+
+                        setTimeout(
+                            function () {
+
+                                button.innerHTML =
+                                    original;
+
+                                button.style.pointerEvents =
+                                    "";
+
+                            },
+                            3500
+                        );
+
+                    }
+                );
+
+            });
+
+
+        /* =====================================================
+           PRINT
+        ====================================================== */
+
+        window.printCurrentReport =
+            function () {
+
+                document.body.classList.add(
+                    "cr-printing"
+                );
+
+                setTimeout(
+                    function () {
+
+                        window.print();
+
+                        document.body.classList.remove(
+                            "cr-printing"
+                        );
+
+                    },
+                    100
+                );
+
+            };
+
+
+    });
+
+</script>
+
+{% endblock %}

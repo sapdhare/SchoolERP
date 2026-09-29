@@ -10,9 +10,44 @@ function toggleSidebar() {
     const overlay =
         document.getElementById("sidebarOverlay");
 
-    sidebar.classList.toggle("active");
+    const toggle =
+        document.getElementById("mobileSidebarToggle");
 
-    overlay.classList.toggle("active");
+    if (!sidebar || !overlay) {
+        return;
+    }
+
+    const isOpen =
+        sidebar.classList.toggle("active");
+
+    overlay.classList.toggle(
+        "active",
+        isOpen
+    );
+
+    document.body.classList.toggle(
+        "sidebar-open",
+        isOpen
+    );
+
+    if (toggle) {
+
+        toggle.setAttribute(
+            "aria-expanded",
+            String(isOpen)
+        );
+
+        toggle.setAttribute(
+            "aria-label",
+            isOpen
+                ? "Close navigation"
+                : "Open navigation"
+        );
+
+        toggle.innerHTML = isOpen
+            ? '<i class="fa-solid fa-xmark"></i>'
+            : '<i class="fa-solid fa-bars"></i>';
+    }
 }
 
 
@@ -22,46 +57,113 @@ function toggleSidebar() {
 
 function closeSidebar() {
 
-    document.getElementById(
-        "sidebar"
-    ).classList.remove("active");
+    const sidebar =
+        document.getElementById("sidebar");
 
-    document.getElementById(
-        "sidebarOverlay"
-    ).classList.remove("active");
+    const overlay =
+        document.getElementById("sidebarOverlay");
+
+    const toggle =
+        document.getElementById("mobileSidebarToggle");
+
+    if (sidebar) {
+        sidebar.classList.remove("active");
+    }
+
+    if (overlay) {
+        overlay.classList.remove("active");
+    }
+
+    document.body.classList.remove(
+        "sidebar-open"
+    );
+
+    if (toggle) {
+
+        toggle.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        toggle.setAttribute(
+            "aria-label",
+            "Open navigation"
+        );
+
+        toggle.innerHTML =
+            '<i class="fa-solid fa-bars"></i>';
+    }
 }
 
 
+
 /* =========================================
-   AUTO CLOSE MOBILE SIDEBAR
+   MOBILE MENU LINK CLICK
 ========================================= */
 
-document.querySelectorAll(".menu-link")
-.forEach(link => {
+document.addEventListener(
+    "click",
+    function (event) {
 
-    link.addEventListener("click", () => {
+        const link =
+            event.target.closest(
+                ".menu-link"
+            );
+
+        if (!link) {
+            return;
+        }
 
         if (window.innerWidth <= 768) {
 
             closeSidebar();
         }
-    });
+    }
+);
 
-});
+/* =========================================
+   ESCAPE KEY
+========================================= */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Escape") {
+
+            closeSidebar();
+        }
+    }
+);
 
 
 /* =========================================
-   CLOSE SIDEBAR ON RESIZE
+   RESIZE
 ========================================= */
 
-window.addEventListener("resize", () => {
+let sidebarResizeTimer;
 
-    if (window.innerWidth > 768) {
+window.addEventListener(
+    "resize",
+    function () {
 
-        closeSidebar();
+        clearTimeout(
+            sidebarResizeTimer
+        );
+
+        sidebarResizeTimer =
+            setTimeout(function () {
+
+                if (
+                    window.innerWidth > 768
+                ) {
+
+                    closeSidebar();
+                }
+
+            }, 100);
     }
-});
-
+);
 
 /* =========================================
    FUTURE NAVIGATION
@@ -372,5 +474,159 @@ document.addEventListener("DOMContentLoaded", function () {
         );
 
     });
+
+});
+
+
+
+/* =========================================================
+   CLERK ERP HELP & GUIDE MODAL
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const helpModal =
+        document.getElementById("erpHelpModal");
+
+    const openHelpBtn =
+        document.getElementById("openErpHelpBtn");
+
+    const closeHelpBtn =
+        document.getElementById("closeErpHelpBtn");
+
+    const doneHelpBtn =
+        document.getElementById("erpHelpDoneBtn");
+
+
+    /* -----------------------------------------------------
+       OPEN
+    ----------------------------------------------------- */
+
+    function openErpHelp() {
+
+        if (!helpModal) {
+            return;
+        }
+
+        helpModal.classList.add("open");
+
+        helpModal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+        document.body.classList.add(
+            "erp-help-open"
+        );
+    }
+
+
+    /* -----------------------------------------------------
+       CLOSE
+    ----------------------------------------------------- */
+
+    function closeErpHelp() {
+
+        if (!helpModal) {
+            return;
+        }
+
+        helpModal.classList.remove("open");
+
+        helpModal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        document.body.classList.remove(
+            "erp-help-open"
+        );
+    }
+
+
+    /* -----------------------------------------------------
+       OPEN BUTTON
+    ----------------------------------------------------- */
+
+    if (openHelpBtn) {
+
+        openHelpBtn.addEventListener(
+            "click",
+            openErpHelp
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       CLOSE BUTTON
+    ----------------------------------------------------- */
+
+    if (closeHelpBtn) {
+
+        closeHelpBtn.addEventListener(
+            "click",
+            closeErpHelp
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       DONE BUTTON
+    ----------------------------------------------------- */
+
+    if (doneHelpBtn) {
+
+        doneHelpBtn.addEventListener(
+            "click",
+            closeErpHelp
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       CLICK OUTSIDE MODAL
+    ----------------------------------------------------- */
+
+    if (helpModal) {
+
+        helpModal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === helpModal
+                ) {
+                    closeErpHelp();
+                }
+
+            }
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       ESCAPE
+    ----------------------------------------------------- */
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Escape" &&
+                helpModal &&
+                helpModal.classList.contains("open")
+            ) {
+
+                closeErpHelp();
+
+            }
+
+        }
+    );
 
 });

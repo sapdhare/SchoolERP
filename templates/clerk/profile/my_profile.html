@@ -1,0 +1,1181 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block title %}
+My Profile | SPL ShalaSarthi
+{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- Page Specific Stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clerk-profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="clerk-profile-page">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <section class="profile-page-header">
+
+        <div class="profile-page-header-left">
+
+            <div class="profile-breadcrumb">
+
+                <a href="{{ url_for('clerk_dashboard') }}">
+                    Dashboard
+                </a>
+
+                <i class="fa-solid fa-chevron-right"></i>
+
+                <span>
+                    My Profile
+                </span>
+
+            </div>
+
+            <div class="profile-page-title-row">
+
+                <div class="profile-page-title-icon">
+
+                    <i class="fa-regular fa-user"></i>
+
+                </div>
+
+                <div>
+
+                    <h1>
+                        My Profile
+                    </h1>
+
+                    <p>
+                        Manage your account information and security settings.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <a href="{{ url_for('clerk_dashboard') }}" class="profile-back-btn">
+
+            <i class="fa-solid fa-arrow-left"></i>
+
+            <span>
+                Back to Dashboard
+            </span>
+
+        </a>
+
+    </section>
+
+
+    <!-- =====================================================
+         PROFILE HERO
+    ====================================================== -->
+
+    <section class="profile-hero-card">
+
+        <div class="profile-hero-main">
+
+            <div class="profile-hero-avatar">
+
+                {% if user_profile.name %}
+
+                {{ user_profile.name[0]|upper }}
+
+                {% else %}
+
+                U
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="profile-hero-content">
+
+                <div class="profile-hero-name-row">
+
+                    <h2>
+                        {{ user_profile.name or "Clerk User" }}
+                    </h2>
+
+                    <span class="profile-active-badge">
+
+                        <span></span>
+
+                        {{ user_profile.status or "Active" }}
+
+                    </span>
+
+                </div>
+
+
+                <p class="profile-hero-role">
+
+                    <i class="fa-solid fa-user-shield"></i>
+
+                    Clerk Account
+
+                    <span>•</span>
+
+                    {{ user_profile.school_name or "School" }}
+
+                </p>
+
+
+                <p class="profile-hero-email">
+
+                    <i class="fa-regular fa-envelope"></i>
+
+                    {{ user_profile.email or "Email not available" }}
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="profile-hero-meta">
+
+            <div class="profile-meta-item">
+
+                <span>
+                    Employee Code
+                </span>
+
+                <strong>
+                    {{ user_profile.employee_code or "Not Set" }}
+                </strong>
+
+            </div>
+
+
+            <div class="profile-meta-item">
+
+                <span>
+                    Account
+                </span>
+
+                <strong>
+                    {% if user_profile.is_deleted %}
+                    Inactive
+                    {% else %}
+                    Active
+                    {% endif %}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MAIN GRID
+    ====================================================== -->
+
+    <div class="profile-main-grid">
+
+
+        <!-- =================================================
+             LEFT COLUMN
+        ================================================== -->
+
+        <div class="profile-main-column">
+
+
+            <!-- =============================================
+                 PERSONAL INFORMATION
+            ============================================== -->
+
+            <section class="profile-card">
+
+                <div class="profile-card-header">
+
+                    <div>
+
+                        <span class="profile-section-kicker">
+                            ACCOUNT
+                        </span>
+
+                        <h2>
+                            Personal Information
+                        </h2>
+
+                        <p>
+                            Update the personal information associated
+                            with your clerk account.
+                        </p>
+
+                    </div>
+
+                    <div class="profile-card-header-icon">
+
+                        <i class="fa-regular fa-id-card"></i>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-security-note">
+
+                    <div class="profile-security-note-icon">
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Protected account information
+                        </strong>
+
+                        <p>
+                            Email, role, school and system-controlled
+                            account information cannot be changed here.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form id="profileUpdateForm" novalidate>
+
+                    <div class="profile-form-grid">
+
+
+                        <!-- NAME -->
+
+                        <div class="profile-field">
+
+                            <label for="profile_name">
+
+                                Full Name
+
+                                <span>*</span>
+
+                            </label>
+
+                            <div class="profile-input-wrapper">
+
+                                <i class="fa-regular fa-user"></i>
+
+                                <input id="profile_name" name="name" type="text" maxlength="150" autocomplete="name"
+                                    value="{{ user_profile.name or '' }}" placeholder="Enter your full name" required>
+
+                            </div>
+
+                            <small class="profile-field-hint">
+                                Maximum 150 characters.
+                            </small>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="profile-field">
+
+                            <label for="profile_email">
+                                Registered Email
+                            </label>
+
+                            <div class="profile-input-wrapper readonly">
+
+                                <i class="fa-regular fa-envelope"></i>
+
+                                <input id="profile_email" type="email" value="{{ user_profile.email or '' }}" readonly
+                                    tabindex="-1">
+
+                                <span class="profile-readonly-icon">
+
+                                    <i class="fa-solid fa-lock"></i>
+
+                                </span>
+
+                            </div>
+
+                            <small class="profile-field-hint">
+                                Contact the administrator to change your registered email.
+                            </small>
+
+                        </div>
+
+
+                        <!-- PHONE -->
+
+                        <div class="profile-field">
+
+                            <label for="profile_phone">
+                                Phone Number
+                            </label>
+
+                            <div class="profile-input-wrapper">
+
+                                <i class="fa-solid fa-phone"></i>
+
+                                <input id="profile_phone" name="phone" type="tel" maxlength="10" inputmode="numeric"
+                                    autocomplete="tel" value="{{ user_profile.phone or '' }}"
+                                    placeholder="10 digit mobile number">
+
+                            </div>
+
+                            <small class="profile-field-hint">
+                                Enter a valid 10-digit mobile number.
+                            </small>
+
+                        </div>
+
+
+                        <!-- DESIGNATION -->
+
+                        <div class="profile-field">
+
+                            <label for="profile_designation">
+                                Designation
+                            </label>
+
+                            <div class="profile-input-wrapper">
+
+                                <i class="fa-solid fa-briefcase"></i>
+
+                                <input id="profile_designation" name="designation" type="text" maxlength="100"
+                                    autocomplete="organization-title" value="{{ user_profile.designation or '' }}"
+                                    placeholder="e.g. Clerk">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="profile-field profile-field-full">
+
+                            <label for="profile_address">
+                                Address
+                            </label>
+
+                            <div class="profile-input-wrapper textarea-wrapper">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <textarea id="profile_address" name="address" maxlength="500"
+                                    autocomplete="street-address"
+                                    placeholder="Enter your address">{{ user_profile.address or '' }}</textarea>
+
+                            </div>
+
+                            <div class="profile-character-row">
+
+                                <small>
+                                    Maximum 500 characters.
+                                </small>
+
+                                <small id="addressCounter">
+                                    0 / 500
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FORM ACTIONS -->
+
+                    <div class="profile-form-footer">
+
+                        <div class="profile-save-status" id="profileSaveStatus">
+
+                            <i class="fa-solid fa-circle-check"></i>
+
+                            <span>
+                                Your changes are saved securely.
+                            </span>
+
+                        </div>
+
+
+                        <button type="submit" class="profile-primary-btn" id="profileSaveBtn">
+
+                            <i class="fa-solid fa-check"></i>
+
+                            <span>
+                                Save Changes
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+                <div class="profile-page-message" id="profilePageMessage" role="alert" aria-live="polite">
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 ACCOUNT INFORMATION
+            ================================================== -->
+
+            <section class="profile-card">
+
+                <div class="profile-card-header">
+
+                    <div>
+
+                        <span class="profile-section-kicker">
+                            SYSTEM
+                        </span>
+
+                        <h2>
+                            Account Information
+                        </h2>
+
+                        <p>
+                            System-managed details associated with your account.
+                        </p>
+
+                    </div>
+
+                    <div class="profile-card-header-icon purple">
+
+                        <i class="fa-solid fa-database"></i>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-account-grid">
+
+
+                    <div class="profile-account-item">
+
+                        <span>
+                            Employee Code
+                        </span>
+
+                        <strong>
+                            {{ user_profile.employee_code or "Not Set" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-account-item">
+
+                        <span>
+                            Account Role
+                        </span>
+
+                        <strong>
+                            {{ user_profile.role|title if user_profile.role else "Clerk" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-account-item">
+
+                        <span>
+                            Gender
+                        </span>
+
+                        <strong>
+                            {{ user_profile.gender or "Not Set" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-account-item">
+
+                        <span>
+                            Email Verification
+                        </span>
+
+                        <strong class="{% if user_profile.is_email_verified %}success{% endif %}">
+
+                            {% if user_profile.is_email_verified %}
+
+                            <i class="fa-solid fa-circle-check"></i>
+                            Verified
+
+                            {% else %}
+
+                            Not Verified
+
+                            {% endif %}
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-account-item">
+
+                        <span>
+                            School Code
+                        </span>
+
+                        <strong>
+                            {{ user_profile.school_code or "Not Available" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-account-item">
+
+                        <span>
+                            UDISE Number
+                        </span>
+
+                        <strong>
+                            {{ user_profile.udise_no or "Not Available" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-account-item">
+
+                        <span>
+                            Last Login
+                        </span>
+
+                        <strong>
+                            {{ user_profile.last_login_display or "Not Available" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-account-item">
+
+                        <span>
+                            Password Updated
+                        </span>
+
+                        <strong>
+                            {{ user_profile.last_password_change_display or "Not Available" }}
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- =================================================
+             RIGHT COLUMN
+        ================================================== -->
+
+        <aside class="profile-side-column">
+
+
+            <!-- =============================================
+                 SCHOOL CARD
+            ============================================== -->
+
+            <section class="profile-side-card">
+
+                <div class="profile-side-card-icon teal">
+
+                    <i class="fa-solid fa-school"></i>
+
+                </div>
+
+                <span class="profile-side-kicker">
+                    SCHOOL ACCOUNT
+                </span>
+
+                <h3>
+                    {{ user_profile.school_name or "School" }}
+                </h3>
+
+                <p>
+                    Your clerk account is securely linked
+                    to this school.
+                </p>
+
+
+                <div class="profile-school-info">
+
+                    <div>
+
+                        <span>
+                            School Code
+                        </span>
+
+                        <strong>
+                            {{ user_profile.school_code or "—" }}
+                        </strong>
+
+                    </div>
+
+                    <div>
+
+                        <span>
+                            UDISE
+                        </span>
+
+                        <strong>
+                            {{ user_profile.udise_no or "—" }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 SECURITY CARD
+            ============================================== -->
+
+            <section class="profile-side-card security-card">
+
+                <div class="profile-side-card-icon orange">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                </div>
+
+                <span class="profile-side-kicker">
+                    SECURITY
+                </span>
+
+                <h3>
+                    Reset Password
+                </h3>
+
+                <p>
+                    Verify your registered email using
+                    a one-time password before creating
+                    a new password.
+                </p>
+
+
+                <div class="security-flow">
+
+                    <div class="security-flow-item active">
+
+                        <span>
+                            1
+                        </span>
+
+                        <div>
+                            <strong>
+                                Request OTP
+                            </strong>
+
+                            <small>
+                                Send verification code
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="security-flow-line"></div>
+
+
+                    <div class="security-flow-item">
+
+                        <span>
+                            2
+                        </span>
+
+                        <div>
+                            <strong>
+                                Verify
+                            </strong>
+
+                            <small>
+                                Confirm your identity
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="security-flow-line"></div>
+
+
+                    <div class="security-flow-item">
+
+                        <span>
+                            3
+                        </span>
+
+                        <div>
+                            <strong>
+                                New Password
+                            </strong>
+
+                            <small>
+                                Secure your account
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="profile-security-btn" id="openPasswordResetBtn">
+
+                    <i class="fa-solid fa-key"></i>
+
+                    Reset Password
+
+                </button>
+
+            </section>
+
+
+            <!-- =============================================
+                 SECURITY TIPS
+            ============================================== -->
+
+            <section class="profile-side-card profile-tips-card">
+
+                <div class="profile-side-card-icon blue">
+
+                    <i class="fa-solid fa-circle-info"></i>
+
+                </div>
+
+                <span class="profile-side-kicker">
+                    SECURITY TIPS
+                </span>
+
+                <ul>
+
+                    <li>
+                        Never share your OTP with anyone.
+                    </li>
+
+                    <li>
+                        Use a unique password for your ERP account.
+                    </li>
+
+                    <li>
+                        Always logout when using a shared computer.
+                    </li>
+
+                </ul>
+
+            </section>
+
+        </aside>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PASSWORD RESET DRAWER / MODAL
+========================================================== -->
+
+<div class="password-reset-overlay" id="passwordResetOverlay" aria-hidden="true">
+
+    <div class="password-reset-modal" role="dialog" aria-modal="true" aria-labelledby="passwordResetTitle">
+
+        <!-- HEADER -->
+
+        <div class="password-reset-header">
+
+            <div>
+
+                <span class="profile-section-kicker">
+                    ACCOUNT SECURITY
+                </span>
+
+                <h2 id="passwordResetTitle">
+                    Reset Password
+                </h2>
+
+                <p>
+                    Verify your identity before changing your password.
+                </p>
+
+            </div>
+
+
+            <button type="button" class="password-reset-close" id="closePasswordResetBtn"
+                aria-label="Close password reset">
+
+                <i class="fa-solid fa-xmark"></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- PROGRESS -->
+
+        <div class="password-reset-progress">
+
+            <div class="password-progress-item active" id="passwordProgress1">
+
+                <span>1</span>
+
+                <small>
+                    OTP
+                </small>
+
+            </div>
+
+
+            <div class="password-progress-line" id="passwordProgressLine1"></div>
+
+
+            <div class="password-progress-item" id="passwordProgress2">
+
+                <span>2</span>
+
+                <small>
+                    Verify
+                </small>
+
+            </div>
+
+
+            <div class="password-progress-line" id="passwordProgressLine2"></div>
+
+
+            <div class="password-progress-item" id="passwordProgress3">
+
+                <span>3</span>
+
+                <small>
+                    Password
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================
+             STEP 1
+        ================================================= -->
+
+        <div class="password-reset-step active" id="passwordStep1">
+
+            <div class="password-step-icon">
+
+                <i class="fa-regular fa-envelope"></i>
+
+            </div>
+
+            <h3>
+                Verify your email
+            </h3>
+
+            <p>
+                We'll send a 6-digit verification code
+                to your registered email address.
+            </p>
+
+
+            <div class="password-email-card">
+
+                <span>
+                    Registered Email
+                </span>
+
+                <strong>
+                    {{ user_profile.email or "Email unavailable" }}
+                </strong>
+
+                <i class="fa-solid fa-lock"></i>
+
+            </div>
+
+
+            <button type="button" class="password-action-btn" id="sendOtpBtn">
+
+                <i class="fa-regular fa-paper-plane"></i>
+
+                <span>
+                    Send OTP
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <!-- ================================================
+             STEP 2
+        ================================================= -->
+
+        <div class="password-reset-step" id="passwordStep2">
+
+            <div class="password-step-icon">
+
+                <i class="fa-solid fa-shield-halved"></i>
+
+            </div>
+
+            <h3>
+                Enter verification code
+            </h3>
+
+            <p>
+                Enter the 6-digit OTP sent to your
+                registered email.
+            </p>
+
+
+            <div class="otp-input-wrapper">
+
+                <input id="profileOtp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                    placeholder="000000" aria-label="6 digit OTP">
+
+            </div>
+
+
+            <div class="otp-help-row">
+
+                <span id="otpTimer">
+                    OTP valid for 05:00
+                </span>
+
+                <button type="button" id="resendOtpBtn" disabled>
+                    Resend OTP
+                </button>
+
+            </div>
+
+
+            <button type="button" class="password-action-btn" id="verifyOtpBtn">
+
+                <i class="fa-solid fa-check"></i>
+
+                <span>
+                    Verify OTP
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <!-- ================================================
+             STEP 3
+        ================================================= -->
+
+        <div class="password-reset-step" id="passwordStep3">
+
+            <div class="password-step-icon success">
+
+                <i class="fa-solid fa-lock"></i>
+
+            </div>
+
+            <h3>
+                Create a new password
+            </h3>
+
+            <p>
+                Use a strong password that you do not use
+                anywhere else.
+            </p>
+
+
+            <div class="password-field">
+
+                <label for="newPassword">
+                    New Password
+                </label>
+
+                <div class="password-input-wrapper">
+
+                    <input id="newPassword" type="password" autocomplete="new-password" maxlength="128"
+                        placeholder="Enter new password">
+
+                    <button type="button" class="password-visibility-btn" data-target="newPassword"
+                        aria-label="Show password">
+
+                        <i class="fa-regular fa-eye"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="password-field">
+
+                <label for="confirmPassword">
+                    Confirm Password
+                </label>
+
+                <div class="password-input-wrapper">
+
+                    <input id="confirmPassword" type="password" autocomplete="new-password" maxlength="128"
+                        placeholder="Repeat new password">
+
+                    <button type="button" class="password-visibility-btn" data-target="confirmPassword"
+                        aria-label="Show password">
+
+                        <i class="fa-regular fa-eye"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- PASSWORD STRENGTH -->
+
+            <div class="password-strength">
+
+                <div class="password-strength-top">
+
+                    <span>
+                        Password strength
+                    </span>
+
+                    <strong id="passwordStrengthText">
+                        Enter password
+                    </strong>
+
+                </div>
+
+                <div class="password-strength-bar">
+
+                    <span id="passwordStrengthBar"></span>
+
+                </div>
+
+            </div>
+
+
+            <!-- REQUIREMENTS -->
+
+            <div class="password-requirements">
+
+                <div id="reqLength">
+
+                    <i class="fa-solid fa-circle"></i>
+
+                    8–128 characters
+
+                </div>
+
+                <div id="reqUpper">
+
+                    <i class="fa-solid fa-circle"></i>
+
+                    One uppercase letter
+
+                </div>
+
+                <div id="reqLower">
+
+                    <i class="fa-solid fa-circle"></i>
+
+                    One lowercase letter
+
+                </div>
+
+                <div id="reqNumber">
+
+                    <i class="fa-solid fa-circle"></i>
+
+                    One number
+
+                </div>
+
+                <div id="reqSpecial">
+
+                    <i class="fa-solid fa-circle"></i>
+
+                    One special character
+
+                </div>
+
+            </div>
+
+
+            <button type="button" class="password-action-btn" id="updatePasswordBtn">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <span>
+                    Update Password
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <!-- SUCCESS -->
+
+        <div class="password-reset-success" id="passwordResetSuccess">
+
+            <div class="password-success-icon">
+
+                <i class="fa-solid fa-check"></i>
+
+            </div>
+
+            <h3>
+                Password Updated
+            </h3>
+
+            <p>
+                Your password has been changed successfully.
+            </p>
+
+            <button type="button" class="password-action-btn" id="closeSuccessBtn">
+                Continue
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================================
+     PROFILE PAGE JAVASCRIPT
+========================================================== -->
+
+    <script>
+        window.PROFILE_CSRF_TOKEN = "{{ csrf_token() }}";
+    </script>
+
+    <script src="{{ url_for('static', filename='js/clerk-profile.js') }}">
+    </script>
+
+    {% endblock %}
