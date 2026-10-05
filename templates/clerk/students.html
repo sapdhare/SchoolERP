@@ -4,638 +4,3416 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
 
+<div class="student-view-page">
 
+    <!-- =========================================================
+     SPL STUDENT LIST — PAGE HEADER
+     Backend-safe:
+     - add_student endpoint unchanged
+     - no backend-sensitive IDs changed
+========================================================= -->
 
-<!-- ================= STUDENTS HEADER ================= -->
+    <section class="spl-student-list-header" aria-labelledby="splStudentListPageTitle">
 
-<div class="students-header">
+        <div class="spl-student-list-header-main">
 
-    <div class="students-header-left">
+            <div class="spl-student-list-eyebrow">
+                <span class="spl-student-list-eyebrow-icon" aria-hidden="true">
+                    🎓
+                </span>
+                <span>STUDENT MANAGEMENT</span>
+            </div>
 
-        <span class="students-page-badge">
-            🎓 Student Records
-        </span>
+            <h1 id="splStudentListPageTitle" class="spl-student-list-title">
+                Students
+            </h1>
 
-        <h1>
-            Students List
-        </h1>
+            <p class="spl-student-list-description">
+                View, search and manage student records.
+                <span>विद्यार्थी नोंदी पाहा, शोधा आणि व्यवस्थापित करा</span>
+            </p>
 
-        <p class="students-desc">
-            View, search and manage all student records in your school.
-            <br>
-            <span>विद्यार्थी नोंदी पाहा, शोधा आणि व्यवस्थापित करा</span>
-        </p>
-
-    </div>
-
-    <div class="students-header-right">
-
-        <a href="{{ url_for('add_student') }}"
-           class="btn-add">
-            <span>+</span>
-            Add Student
-        </a>
-
-    </div>
-
-</div>
-
-
-<!-- ================= SEARCH + FILTER ================= -->
-
-<form method="GET"
-      action="{{ url_for('clerk_students') }}"
-      class="students-filter">
-
-    <div class="filter-top">
-
-        <div class="filter-title">
-            <span class="filter-badge">🔎 Smart Search</span>
-            <h3>Search & Filter</h3>
-            <p>विद्यार्थी नाव, प्रवेश क्रमांक, मोबाईल किंवा रजिस्टर नंबरने शोधा</p>
         </div>
 
-        {% if search or class_filter %}
-        <a href="{{ url_for('clerk_students') }}"
-           class="filter-clear-top">
-            Clear Filters
-        </a>
-        {% endif %}
 
-    </div>
+        <div class="spl-student-list-header-actions">
 
-    <div class="filter-controls">
+            <a href="{{ url_for('add_student') }}" class="spl-student-list-add-btn" aria-label="Add a new student">
 
-        <div class="filter-group search-wide">
-            <label>Search Student <span>विद्यार्थी शोधा</span></label>
+                <span class="spl-student-list-add-icon" aria-hidden="true">
+                    +
+                </span>
 
-            <input type="text"
-                   name="search"
-                   value="{{ search or '' }}"
-                   placeholder="Name, admission no, mobile, register no">
-        </div>
+                <span>Add Student</span>
 
-        <div class="filter-group">
-            <label>Class <span>इयत्ता</span></label>
-
-            <select name="class">
-                <option value="">All Classes</option>
-
-                {% for c in range(1, 11) %}
-                    <option value="{{ c }}"
-                    {% if class_filter == c|string %}
-                    selected
-                    {% endif %}>
-                        Class {{ c }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="filter-buttons">
-
-            <button type="submit"
-                    class="btn-search">
-                Search
-            </button>
-
-            <a href="{{ url_for('clerk_students') }}"
-               class="btn-filter-reset">
-                Reset
             </a>
 
         </div>
 
-    </div>
-
-</form>
+    </section>
 
 
-<!-- ================= STUDENTS TABLE ================= -->
-<div class="students-table-section">
+    <!-- =========================================================
+     SPL STUDENT LIST — SERVER-SIDE SEARCH & FILTER
+========================================================= -->
 
-    <!-- TITLE -->
-    <div class="table-header">
-        <h3>Student Records</h3>
-        <span>विद्यार्थी नोंदी</span>
-    </div>
+    <section class="spl-student-list-filter-card" aria-labelledby="splStudentFilterTitle">
 
-    <!-- TABLE -->
-    <div class="table-wrapper">
+        <div class="spl-student-list-filter-head">
 
-        <table class="students-table">
+            <div class="spl-student-list-filter-heading">
 
-            <thead>
-                <tr>
-                    <th>Register No</th>
-                    <th>Name</th>
-                    <th>Class</th>
-                    <th>Admission No</th>
-                    <th>Student ID</th>
-                    <th>Mobile</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+                <div class="spl-student-list-section-label">
+                    <span aria-hidden="true">⌕</span>
+                    Find Students
+                </div>
 
-        
-            <tbody>
+                <h2 id="splStudentFilterTitle">
+                    Search & Filter
+                </h2>
 
-            {% if students %}
+                <p>
+                    Search by student identity and narrow results by class,
+                    section or admission year.
+                </p>
 
-                {% for student in students %}
+            </div>
 
-                {% set dob_formatted = student.dob.strftime('%d-%m-%Y') if student.dob and student.dob.__class__.__name__ != 'str' else (student.dob or '') %}
 
-                <tr>
+            {% if search or class_filter or section_filter or admission_year_filter %}
 
-                    <td>{{ student.school_register_no or "-" }}</td>
+            <a href="{{ url_for('clerk_students') }}" class="spl-student-list-clear-btn"
+                aria-label="Clear all student filters">
 
-                    <td>
-                        <strong>{{ student.name or "-" }}</strong>
-                    </td>
+                <span aria-hidden="true">×</span>
+                Clear filters
 
-                    <td>
-                        {{ student.class or "-" }}
-                        {{ student.section or "" }}
-                    </td>
-
-                    <td>{{ student.admission_no or "-" }}</td>
-
-                    <td>{{ student.student_uid or "-" }}</td>
-
-                    <td>{{ student.primary_mobile or "-" }}</td>
-
-                    <td>
-                        <span class="status active">Active</span>
-                    </td>
-
-                    <td class="actions-cell">
-
-                        <button
-                            type="button"
-                            class="btn-action view"
-                            data-register="{{ student.school_register_no or '' }}"
-                            data-name="{{ student.name or '' }}"
-                            data-class="{{ student.class or '' }} {{ student.section or '' }}"
-                            data-admission="{{ student.admission_no or '' }}"
-                            data-mobile="{{ student.primary_mobile or '' }}"
-                            data-father="{{ student.father_name or '' }}"
-                            data-mother="{{ student.mother_name or '' }}"
-                            data-uid="{{ student.student_uid or '' }}"
-                            data-apaar="{{ student.apaar_id or '' }}"
-                            data-aadhaar="{{ student.aadhaar or '' }}"
-                            data-dob="{{ dob_formatted or '' }}"
-                            data-progress="{{ student.progress or '' }}"
-                            data-conduct="{{ student.conduct or '' }}"
-                            onclick="openModal(this)">
-                            👁 View
-                        </button>
-
-                        <a href="{{ url_for('edit_student', id=student.id) }}"
-                        class="btn-action edit">
-                            ✏ Edit
-                        </a>
-
-                        {% if feature_modules.tc %}
-
-                            <a href="{{ url_for('tc_form', id=student.id) }}"
-                            class="btn-action tc">
-                                📄 TC
-                            </a>
-
-                        {% else %}
-
-                            <span class="btn-action locked">
-                                🔒 TC
-                            </span>
-
-                        {% endif %}
-
-                        {% if feature_modules.bonafide %}
-
-                            <button
-                                type="button"
-                                class="btn-action bonafide"
-                                data-id="{{ student.id }}"
-                                data-name="{{ student.name or '' }}"
-                                data-register="{{ student.school_register_no or '' }}"
-                                data-admission="{{ student.admission_no or '' }}"
-                                data-uid="{{ student.student_uid or '' }}"
-                                data-apaar="{{ student.apaar_id or '' }}"
-                                onclick="openBonafideModal(this)">
-                                🏅 Bonafide
-                            </button>
-
-                            {% else %}
-
-                            <span class="btn-action locked">
-                                🔒 Bonafide
-                            </span>
-
-                            {% endif %}
-
-                    </td>
-
-                </tr>
-
-                {% endfor %}
-
-            {% else %}
-
-                <tr>
-                    <td colspan="8">
-                        <div class="empty-student-state">
-                            <div>📭</div>
-                            <h3>No students found</h3>
-                            <p>No student records match your search.</p>
-                        </div>
-                    </td>
-                </tr>
+            </a>
 
             {% endif %}
 
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-<!-- ================= PAGINATION ================= -->
-
-{% if total_records > 0 %}
-
-<div class="student-pagination">
-
-    <div class="pagination-info">
-        Showing page {{ page }} of {{ total_pages }}
-        • {{ total_records }} records
-    </div>
-
-    <div class="pagination-actions">
-
-        {% if page > 1 %}
-        <a href="{{ url_for('clerk_students', search=search, class=class_filter, page=page-1) }}">
-            ← Previous
-        </a>
-        {% endif %}
-
-        <span>
-            {{ page }}
-        </span>
-
-        {% if page < total_pages %}
-        <a href="{{ url_for('clerk_students', search=search, class=class_filter, page=page+1) }}">
-            Next →
-        </a>
-        {% endif %}
-
-    </div>
-
-</div>
-
-{% endif %}
-
-<!-- ================= PREMIUM VIEW STUDENT MODAL ================= -->
-
-<div class="student-modal" id="studentModal">
-
-    <div class="student-modal-box">
-
-        <div class="student-modal-header">
-
-            <div class="student-modal-title">
-                <div class="student-modal-avatar" id="mAvatar">S</div>
-
-                <div>
-                    <h3 id="mNameTitle">Student Details</h3>
-                    <p id="mAdmissionTitle">Admission Record</p>
-                </div>
-            </div>
-
-            <button type="button"
-                    class="student-modal-close"
-                    onclick="closeModal()">
-                ×
-            </button>
-
         </div>
 
-        <div class="student-modal-body">
 
-            <div class="detail-group">
-                <span>Register No</span>
-                <strong id="mRegister"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Full Name</span>
-                <strong id="mName"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Class</span>
-                <strong id="mClass"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Admission No</span>
-                <strong id="mAdmission"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Mobile</span>
-                <strong id="mMobile"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Date of Birth</span>
-                <strong id="mDob"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Father Name</span>
-                <strong id="mFather"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Mother Name</span>
-                <strong id="mMother"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Student ID</span>
-                <strong id="mStudentUid"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>APAAR ID</span>
-                <strong id="mApaar"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Aadhaar</span>
-                <strong id="mAadhaar"></strong>
-            </div>
-
-            <div class="detail-group">
-                <span>Progress</span>
-                <strong id="mProgress"></strong>
-            </div>
-
-            <div class="detail-group full">
-                <span>Conduct</span>
-                <strong id="mConduct"></strong>
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
+        <form method="GET" action="{{ url_for('clerk_students') }}" id="splStudentListFilterForm"
+            class="spl-student-list-filter-form" autocomplete="off">
 
 
+            <!-- =================================================
+             SEARCH
+        ================================================= -->
 
-<!-- BONAFIDE MODAL -->
+            <div class="spl-student-list-filter-field spl-student-list-search-field">
 
-<div id="bonafideModal" class="bonafide-modal"> 
+                <label for="splStudentSearchInput">
+                    Search student
+                    <span>विद्यार्थी शोधा</span>
+                </label>
 
-    <div class="bonafide-modal-content">
+                <div class="spl-student-list-input-wrap">
 
-        <!-- HEADER -->
+                    <span class="spl-student-list-input-icon" aria-hidden="true">
+                        ⌕
+                    </span>
 
-        <div class="bonafide-modal-header">
+                    <input type="search" id="splStudentSearchInput" name="search" value="{{ search or '' }}"
+                        maxlength="80" placeholder="Name, admission no, mobile, register no..." autocomplete="off"
+                        spellcheck="false" enterkeyhint="search">
 
-            <div>
-                <h2>📜 Generate Bonafide Certificate</h2>
-
-                <p class="bonafide-subtitle">
-                    Create bonafide certificate for selected student
-                    <br>
-                    विद्यार्थ्याचे बोनाफाईड प्रमाणपत्र तयार करा
-                </p>
-            </div>
-
-            <button type="button"
-                    onclick="closeBonafideModal()">
-                ×
-            </button>
-
-        </div>
-
-        <!-- NOTE -->
-
-        <div class="bonafide-note">
-
-            <div class="note-icon">
-                ℹ️
-            </div>
-
-            <div>
-
-                <strong>
-                    Verify Student Information Before Generating
-                </strong>
-
-                <p>
-                    Please verify all student details carefully before generating the certificate.
-                    If any information is incorrect, click the <b>Edit</b> button from Student List and update the student record first.
-                </p>
-
-                <p class="marathi-note">
-                    कृपया प्रमाणपत्र तयार करण्यापूर्वी विद्यार्थ्याची माहिती तपासा.
-                    माहिती चुकीची असल्यास प्रथम Student List मधील Edit बटण वापरून माहिती दुरुस्त करा.
-                </p>
-
-            </div>
-
-        </div>
-
-        <form method="POST"
-            action="{{ url_for('save_bonafide') }}"
-            id="bonafideForm">
-
-            <input type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}">
-
-            <input type="hidden"
-                name="student_id"
-                id="modalStudentId">
-
-            <!-- STUDENT INFO -->
-
-            <div class="bonafide-section-title">
-                Student Information
-            </div>
-
-            <div class="bonafide-modal-grid">
-
-                <div class="form-group">
-                    <label>Register No</label>
-                    <input type="text" id="modalRegister" disabled>
                 </div>
 
-                <div class="form-group">
-                    <label>Student Name</label>
-                    <input type="text" id="modalStudentName" disabled>
-                </div>
-
-                <div class="form-group">
-                    <label>Admission No</label>
-                    <input type="text" id="modalAdmission" disabled>
-                </div>
-
-                <div class="form-group">
-                    <label>Student ID</label>
-                    <input type="text" id="modalStudentUid" disabled>
-                </div>
-
-                <div class="form-group">
-                    <label>APAAR ID</label>
-                    <input type="text" id="modalApaar" disabled>
-                </div>
+                <small>
+                    Name, admission no, register no, student ID, mobile,
+                    Aadhaar or APAAR
+                </small>
 
             </div>
 
-            <!-- CERTIFICATE INFO -->
 
-            <div class="bonafide-section-title">
-                Certificate Information
+            <!-- =================================================
+             CLASS
+        ================================================= -->
+
+            <div class="spl-student-list-filter-field">
+
+                <label for="splStudentClassFilter">
+                    Class
+                    <span>इयत्ता</span>
+                </label>
+
+                <select id="splStudentClassFilter" name="class">
+
+                    <option value="">
+                        All Classes
+                    </option>
+
+                    {% for c in class_options %}
+
+                    <option value="{{ c }}" {% if class_filter==c|string %} selected {% endif %}>
+                        {{ c }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
             </div>
 
-            <div class="bonafide-modal-grid">
 
-                <div class="form-group">
-                    <label>Certificate Date</label>
+            <!-- =================================================
+             SECTION
+        ================================================= -->
 
-                    <input type="date"
-                        name="date"
-                        required>
-                </div>
+            <div class="spl-student-list-filter-field">
 
-                <div class="form-group full">
-                    <label>Purpose</label>
+                <label for="splStudentSectionFilter">
+                    Section
+                    <span>तुकडी</span>
+                </label>
 
-                    <input type="text"
-                        name="purpose"
-                        maxlength="255"
-                        placeholder="Scholarship / Passport / Government Form / Bank / Education"
-                        required>
-                </div>
+                <select id="splStudentSectionFilter" name="section">
+
+                    <option value="">
+                        All Sections
+                    </option>
+
+                    {% for section in section_options %}
+
+                    <option value="{{ section }}" {% if section_filter==section|string %} selected {% endif %}>
+                        {{ section }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
 
             </div>
 
-            <div class="modal-actions">
 
-                <button type="button"
-                        class="btn-cancel"
-                        onclick="closeBonafideModal()">
+            <!-- =================================================
+             ADMISSION YEAR
+        ================================================= -->
 
-                    Cancel
+            <div class="spl-student-list-filter-field">
+
+                <label for="splStudentAdmissionYear">
+                    Admission Year
+                    <span>प्रवेश वर्ष</span>
+                </label>
+
+                <select id="splStudentAdmissionYear" name="admission_year">
+
+                    <option value="">
+                        All Years
+                    </option>
+
+                    {% for year in admission_year_options %}
+
+                    <option value="{{ year }}" {% if admission_year_filter==year|string %} selected {% endif %}>
+                        {{ year }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- =================================================
+             ACTIONS
+        ================================================= -->
+
+            <div class="spl-student-list-filter-actions">
+
+                <button type="submit" class="spl-student-list-search-btn" id="splStudentListSearchBtn">
+
+                    <span aria-hidden="true">⌕</span>
+                    Search
 
                 </button>
 
-                <button type="submit"
-                        id="bonafideSubmitBtn"
-                        class="btn-generate">
 
-                    Generate Certificate
+                {% if search or class_filter or section_filter or admission_year_filter %}
 
-                </button>
+                <a href="{{ url_for('clerk_students') }}" class="spl-student-list-reset-btn">
+
+                    Reset
+
+                </a>
+
+                {% endif %}
 
             </div>
 
         </form>
 
+
+        <!-- =================================================
+         ACTIVE FILTER SUMMARY
+    ================================================= -->
+
+        {% if search or class_filter or section_filter or admission_year_filter %}
+
+        <div class="spl-student-list-active-filters" aria-label="Active student filters">
+
+            <span class="spl-student-list-active-label">
+                Active filters:
+            </span>
+
+            {% if search %}
+            <span class="spl-student-list-filter-chip">
+                Search: {{ search }}
+            </span>
+            {% endif %}
+
+            {% if class_filter %}
+            <span class="spl-student-list-filter-chip">
+                Class: {{ class_filter }}
+            </span>
+            {% endif %}
+
+            {% if section_filter %}
+            <span class="spl-student-list-filter-chip">
+                Section: {{ section_filter }}
+            </span>
+            {% endif %}
+
+            {% if admission_year_filter %}
+            <span class="spl-student-list-filter-chip">
+                Year: {{ admission_year_filter }}
+            </span>
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =========================================================
+     SPL STUDENT LIST
+     STUDENT RECORDS
+========================================================= -->
+
+    <section class="spl-student-records-section" aria-labelledby="splStudentRecordsTitle">
+
+
+        <!-- =====================================================
+         RECORDS HEADER
+    ===================================================== -->
+
+        <div class="spl-student-records-header">
+
+            <div class="spl-student-records-heading">
+
+                <div class="spl-student-records-label">
+                    <span aria-hidden="true">▦</span>
+                    Student Directory
+                </div>
+
+                <h2 id="splStudentRecordsTitle">
+                    Student Records
+                </h2>
+
+                <p>
+                    {{ total_records }}
+                    {% if total_records == 1 %}
+                    student
+                    {% else %}
+                    students
+                    {% endif %}
+                    found
+                </p>
+
+            </div>
+
+
+            <div class="spl-student-records-count">
+
+                <strong>
+                    {{ total_records }}
+                </strong>
+
+                <span>
+                    Total Records
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+         DESKTOP / TABLET TABLE
+         Hidden at <= 768px
+    ===================================================== -->
+
+        <div class="spl-student-desktop-table">
+
+            <div class="spl-student-table-scroll">
+
+                <table class="spl-student-records-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="spl-col-register">
+                                Register No
+                            </th>
+
+                            <th class="spl-col-student">
+                                Student
+                            </th>
+
+                            <th class="spl-col-class">
+                                Class
+                            </th>
+
+                            <th class="spl-col-admission">
+                                Admission No
+                            </th>
+
+                            <th class="spl-col-mobile">
+                                Mobile
+                            </th>
+
+                            <th class="spl-col-status">
+                                Status
+                            </th>
+
+                            <th class="spl-col-actions">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% if students %}
+
+                        {% for student in students %}
+
+                        {% set dob_formatted =
+                        student.dob.strftime('%d-%m-%Y')
+                        if student.dob and
+                        student.dob.__class__.__name__ != 'str'
+                        else (student.dob or '')
+                        %}
+
+
+                        <tr class="spl-student-record-row">
+
+
+                            <!-- =========================
+                                     REGISTER
+                                ========================== -->
+
+                            <td class="spl-student-register-cell">
+
+                                {% if student.school_register_no %}
+
+                                <span class="spl-student-register-number">
+                                    {{ student.school_register_no }}
+                                </span>
+
+                                {% else %}
+
+                                <span class="spl-student-empty-value">
+                                    —
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- =========================
+                                     STUDENT
+                                ========================== -->
+
+                            <td class="spl-student-identity-cell">
+
+                                <div class="spl-student-identity">
+
+                                    <div class="spl-student-avatar" aria-hidden="true">
+
+                                        {{ (student.name or 'S')[:1]|upper }}
+
+                                    </div>
+
+
+                                    <div class="spl-student-identity-text">
+
+                                        <strong>
+                                            {{ student.name or "Unnamed Student" }}
+                                        </strong>
+
+                                        <span>
+                                            {% if student.student_uid %}
+                                            ID: {{ student.student_uid }}
+                                            {% else %}
+                                            Student record
+                                            {% endif %}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- =========================
+                                     CLASS / SECTION
+                                ========================== -->
+
+                            <td class="spl-student-class-cell">
+
+                                <span class="spl-student-class-value">
+                                    {{ student.class or "—" }}
+                                </span>
+
+                                {% if student.section %}
+
+                                <span class="spl-student-section-value">
+                                    Section {{ student.section }}
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- =========================
+                                     ADMISSION
+                                ========================== -->
+
+                            <td class="spl-student-admission-cell">
+
+                                {% if student.admission_no %}
+
+                                <span>
+                                    {{ student.admission_no }}
+                                </span>
+
+                                {% else %}
+
+                                <span class="spl-student-empty-value">
+                                    —
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- =========================
+                                     MOBILE
+                                ========================== -->
+
+                            <td class="spl-student-mobile-cell">
+
+                                {% if student.primary_mobile %}
+
+                                <a href="tel:{{ student.primary_mobile }}" class="spl-student-mobile-link">
+
+                                    {{ student.primary_mobile }}
+
+                                </a>
+
+                                {% else %}
+
+                                <span class="spl-student-empty-value">
+                                    —
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- =========================
+                                     STATUS
+                                ========================== -->
+
+                            <td class="spl-student-status-cell">
+
+                                <span class="spl-student-status-badge">
+
+                                    <span class="spl-student-status-dot" aria-hidden="true">
+                                    </span>
+
+                                    Active
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =========================
+                                     ACTIONS
+                                ========================== -->
+
+                            <td class="spl-student-actions-cell">
+
+                                <div class="spl-student-actions">
+
+
+                                    <!-- VIEW -->
+                                    <button type="button" class="spl-student-action-btn spl-student-action-view"
+                                        data-student-id="{{ student.id }}"
+                                        data-register="{{ student.school_register_no or '' }}"
+                                        data-name="{{ student.name or '' }}" data-class="{{ student.class or '' }}"
+                                        data-section="{{ student.section or '' }}"
+                                        data-admission="{{ student.admission_no or '' }}"
+                                        data-uid="{{ student.student_uid or '' }}"
+                                        data-apaar="{{ student.apaar_id or '' }}"
+                                        data-aadhaar="{{ student.aadhaar or '' }}"
+                                        data-dob="{{ student.dob.strftime('%d-%m-%Y') if student.dob and student.dob.__class__.__name__ != 'str' else (student.dob or '') }}"
+                                        data-admission-date="{{ student.admission_date.strftime('%d-%m-%Y') if student.admission_date and student.admission_date.__class__.__name__ != 'str' else (student.admission_date or '') }}"
+                                        data-birth-place="{{ student.birth_place or '' }}"
+                                        data-nationality="{{ student.nationality or '' }}"
+                                        data-mother-tongue="{{ student.mother_tongue or '' }}"
+                                        data-religion="{{ student.religion or '' }}"
+                                        data-caste="{{ student.caste or '' }}" data-city="{{ student.city or '' }}"
+                                        data-taluka="{{ student.taluka or '' }}"
+                                        data-district="{{ student.district or '' }}"
+                                        data-state="{{ student.state or '' }}"
+                                        data-father="{{ student.father_name or '' }}"
+                                        data-mother="{{ student.mother_name or '' }}"
+                                        data-mobile="{{ student.primary_mobile or '' }}"
+                                        data-alternate-mobile="{{ student.alternate_mobile or '' }}"
+                                        data-email="{{ student.email or '' }}"
+                                        data-occupation="{{ student.occupation or '' }}"
+                                        data-income="{{ student.income or '' }}"
+                                        data-guardian="{{ student.guardian_name or '' }}"
+                                        data-guardian-mobile="{{ student.guardian_mobile or '' }}"
+                                        data-previous-school="{{ student.previous_school or '' }}"
+                                        data-last-exam="{{ student.last_exam or '' }}"
+                                        data-result="{{ student.result_status or '' }}"
+                                        data-progress="{{ student.progress or '' }}"
+                                        data-conduct="{{ student.conduct or '' }}" onclick="splOpenStudentView(this)"
+                                        aria-label="View {{ student.name or 'student' }}">
+                                        <span aria-hidden="true">◉</span>
+                                        View
+                                    </button>
+
+
+                                    <!-- EDIT -->
+
+                                    <a href="{{ url_for('edit_student', id=student.id) }}"
+                                        class="spl-student-action-btn spl-student-action-edit"
+                                        aria-label="Edit {{ student.name or 'student' }}">
+
+                                        <span aria-hidden="true">✎</span>
+                                        Edit
+
+                                    </a>
+
+
+                                    <!-- TC -->
+
+                                    {% if feature_modules.tc %}
+
+                                    <a href="{{ url_for('tc_form', id=student.id) }}"
+                                        class="spl-student-action-btn spl-student-action-tc"
+                                        aria-label="Generate transfer certificate for {{ student.name or 'student' }}">
+
+                                        <span aria-hidden="true">▤</span>
+                                        TC
+
+                                    </a>
+
+                                    {% else %}
+
+                                    <span class="spl-student-action-btn spl-student-action-locked"
+                                        title="Transfer Certificate module is not enabled">
+
+                                        <span aria-hidden="true">🔒</span>
+                                        TC
+
+                                    </span>
+
+                                    {% endif %}
+
+
+                                    <!-- BONAFIDE -->
+
+                                    {% if feature_modules.bonafide %}
+
+                                    <button type="button" class="spl-student-action-btn spl-student-action-bonafide"
+                                        data-id="{{ student.id }}" data-name="{{ student.name or '' }}"
+                                        data-register="{{ student.school_register_no or '' }}"
+                                        data-admission="{{ student.admission_no or '' }}"
+                                        data-uid="{{ student.student_uid or '' }}"
+                                        data-apaar="{{ student.apaar_id or '' }}" onclick="splOpenBonafideModal(this)"
+                                        aria-label="Generate bonafide certificate for {{ student.name or 'student' }}">
+
+                                        <span aria-hidden="true">✦</span>
+                                        Bonafide
+
+                                    </button>
+
+                                    {% else %}
+
+                                    <span class="spl-student-action-btn spl-student-action-locked"
+                                        title="Bonafide module is not enabled">
+
+                                        <span aria-hidden="true">🔒</span>
+                                        Bonafide
+
+                                    </span>
+
+                                    {% endif %}
+
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                        {% else %}
+
+
+                        <!-- =========================
+                             EMPTY STATE
+                        ========================== -->
+
+                        <tr>
+
+                            <td colspan="7">
+
+                                <div class="spl-student-empty-state">
+
+                                    <div class="spl-student-empty-icon" aria-hidden="true">
+                                        ♙
+                                    </div>
+
+                                    <h3>
+                                        No students found
+                                    </h3>
+
+                                    <p>
+                                        No active student records match your
+                                        current search or filters.
+                                    </p>
+
+                                    {% if search or class_filter or section_filter or admission_year_filter %}
+
+                                    <a href="{{ url_for('clerk_students') }}" class="spl-student-empty-reset">
+
+                                        Clear filters
+
+                                    </a>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+         MOBILE STUDENT CARDS
+         Visible at <= 768px
+    ===================================================== -->
+
+        <div class="spl-student-mobile-list">
+
+            {% if students %}
+
+            {% for student in students %}
+
+            {% set dob_formatted =
+            student.dob.strftime('%d-%m-%Y')
+            if student.dob and
+            student.dob.__class__.__name__ != 'str'
+            else (student.dob or '')
+            %}
+
+
+            <article class="spl-student-mobile-card">
+
+
+                <!-- MOBILE CARD HEADER -->
+
+                <div class="spl-student-mobile-card-head">
+
+                    <div class="spl-student-mobile-identity">
+
+                        <div class="spl-student-mobile-avatar">
+                            {{ (student.name or 'S')[:1]|upper }}
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                {{ student.name or "Unnamed Student" }}
+                            </h3>
+
+                            <p>
+
+                                Class
+                                {{ student.class or "—" }}
+
+                                {% if student.section %}
+                                · Section {{ student.section }}
+                                {% endif %}
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="spl-student-status-badge">
+
+                        <span class="spl-student-status-dot" aria-hidden="true">
+                        </span>
+
+                        Active
+
+                    </span>
+
+                </div>
+
+
+                <!-- MOBILE DETAILS -->
+
+                <div class="spl-student-mobile-details">
+
+
+                    <div class="spl-student-mobile-detail">
+
+                        <span>
+                            Register No
+                        </span>
+
+                        <strong>
+                            {{ student.school_register_no or "—" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="spl-student-mobile-detail">
+
+                        <span>
+                            Admission No
+                        </span>
+
+                        <strong>
+                            {{ student.admission_no or "—" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="spl-student-mobile-detail">
+
+                        <span>
+                            Mobile
+                        </span>
+
+                        {% if student.primary_mobile %}
+
+                        <a href="tel:{{ student.primary_mobile }}" class="spl-student-mobile-phone">
+
+                            {{ student.primary_mobile }}
+
+                        </a>
+
+                        {% else %}
+
+                        <strong>—</strong>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    {% if student.student_uid %}
+
+                    <div class="spl-student-mobile-detail">
+
+                        <span>
+                            Student ID
+                        </span>
+
+                        <strong>
+                            {{ student.student_uid }}
+                        </strong>
+
+                    </div>
+
+                    {% endif %}
+
+
+                </div>
+
+
+                <!-- MOBILE ACTIONS -->
+
+                <div class="spl-student-mobile-actions">
+
+
+                    <button type="button" class="spl-student-mobile-btn spl-mobile-view"
+                        data-register="{{ student.school_register_no or '' }}" data-name="{{ student.name or '' }}"
+                        data-class="{{ student.class or '' }} {{ student.section or '' }}"
+                        data-admission="{{ student.admission_no or '' }}"
+                        data-mobile="{{ student.primary_mobile or '' }}" data-father="{{ student.father_name or '' }}"
+                        data-mother="{{ student.mother_name or '' }}" data-uid="{{ student.student_uid or '' }}"
+                        data-apaar="{{ student.apaar_id or '' }}" data-aadhaar="{{ student.aadhaar or '' }}"
+                        data-dob="{{ dob_formatted or '' }}" data-progress="{{ student.progress or '' }}"
+                        data-conduct="{{ student.conduct or '' }}" onclick="openModal(this)">
+
+                        View
+
+                    </button>
+
+
+                    <a href="{{ url_for('edit_student', id=student.id) }}"
+                        class="spl-student-mobile-btn spl-mobile-edit">
+
+                        Edit
+
+                    </a>
+
+
+                    {% if feature_modules.tc %}
+
+                    <a href="{{ url_for('tc_form', id=student.id) }}" class="spl-student-mobile-btn spl-mobile-tc">
+
+                        TC
+
+                    </a>
+
+                    {% endif %}
+
+
+                    {% if feature_modules.bonafide %}
+
+                    <button type="button" class="spl-student-mobile-btn spl-mobile-bonafide" data-id="{{ student.id }}"
+                        data-name="{{ student.name or '' }}" data-register="{{ student.school_register_no or '' }}"
+                        data-admission="{{ student.admission_no or '' }}" data-uid="{{ student.student_uid or '' }}"
+                        data-apaar="{{ student.apaar_id or '' }}" onclick="splOpenBonafideModal(this)">
+
+                        Bonafide
+
+                    </button>
+
+                    {% endif %}
+
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+
+            {% else %}
+
+
+            <div class="spl-student-mobile-empty">
+
+                <div class="spl-student-empty-icon">
+                    ♙
+                </div>
+
+                <h3>No students found</h3>
+
+                <p>
+                    No active student records match your current filters.
+                </p>
+
+                {% if search or class_filter or section_filter or admission_year_filter %}
+
+                <a href="{{ url_for('clerk_students') }}">
+                    Clear filters
+                </a>
+
+                {% endif %}
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =========================================================
+     SPL STUDENT LIST
+     PAGINATION
+========================================================= -->
+
+    {% if total_records > 0 %}
+
+    {% set first_record =
+    ((page - 1) * per_page) + 1
+    %}
+
+    {% set last_record =
+    [page * per_page, total_records]|min
+    %}
+
+
+    <nav class="spl-student-pagination" aria-label="Student records pagination">
+
+
+        <!-- PAGINATION INFO -->
+
+        <div class="spl-student-pagination-info">
+
+            Showing
+
+            <strong>
+                {{ first_record }}–{{ last_record }}
+            </strong>
+
+            of
+
+            <strong>
+                {{ total_records }}
+            </strong>
+
+            students
+
+        </div>
+
+
+        <!-- PAGINATION CONTROLS -->
+
+        {% if total_pages > 1 %}
+
+        <div class="spl-student-pagination-controls">
+
+
+            <!-- PREVIOUS -->
+
+            {% if page > 1 %}
+
+            <a href="{{ url_for(
+                            'clerk_students',
+                            search=search,
+                            class=class_filter,
+                            section=section_filter,
+                            admission_year=admission_year_filter,
+                            page=page-1
+                        ) }}" class="spl-student-page-btn spl-student-page-prev" aria-label="Previous page">
+
+                <span aria-hidden="true">‹</span>
+                <span class="spl-pagination-prev-text">
+                    Previous
+                </span>
+
+            </a>
+
+            {% else %}
+
+            <span class="spl-student-page-btn spl-student-page-disabled">
+
+                <span aria-hidden="true">‹</span>
+                <span class="spl-pagination-prev-text">
+                    Previous
+                </span>
+
+            </span>
+
+            {% endif %}
+
+
+            <!-- PAGE NUMBERS -->
+
+            {% set page_start = page - 2 %}
+
+            {% if page_start < 1 %} {% set page_start=1 %} {% endif %} {% set page_end=page + 2 %} {% if page_end>
+                total_pages %}
+                {% set page_end = total_pages %}
+                {% endif %}
+
+
+                {% if page_start > 1 %}
+
+                <a href="{{ url_for(
+                            'clerk_students',
+                            search=search,
+                            class=class_filter,
+                            section=section_filter,
+                            admission_year=admission_year_filter,
+                            page=1
+                        ) }}" class="spl-student-page-btn">
+
+                    1
+
+                </a>
+
+
+                {% if page_start > 2 %}
+
+                <span class="spl-student-page-dots">
+                    …
+                </span>
+
+                {% endif %}
+
+                {% endif %}
+
+
+                {% for page_number in range(page_start, page_end + 1) %}
+
+                {% if page_number == page %}
+
+                <span class="spl-student-page-btn spl-student-page-current" aria-current="page">
+
+                    {{ page_number }}
+
+                </span>
+
+                {% else %}
+
+                <a href="{{ url_for(
+                                'clerk_students',
+                                search=search,
+                                class=class_filter,
+                                section=section_filter,
+                                admission_year=admission_year_filter,
+                                page=page_number
+                            ) }}" class="spl-student-page-btn">
+
+                    {{ page_number }}
+
+                </a>
+
+                {% endif %}
+
+                {% endfor %}
+
+
+                {% if page_end < total_pages %} {% if page_end < total_pages - 1 %} <span class="spl-student-page-dots">
+                    …
+                    </span>
+
+                    {% endif %}
+
+
+                    <a href="{{ url_for(
+                            'clerk_students',
+                            search=search,
+                            class=class_filter,
+                            section=section_filter,
+                            admission_year=admission_year_filter,
+                            page=total_pages
+                        ) }}" class="spl-student-page-btn">
+
+                        {{ total_pages }}
+
+                    </a>
+
+                    {% endif %}
+
+
+                    <!-- NEXT -->
+
+                    {% if page < total_pages %} <a href="{{ url_for(
+                            'clerk_students',
+                            search=search,
+                            class=class_filter,
+                            section=section_filter,
+                            admission_year=admission_year_filter,
+                            page=page+1
+                        ) }}" class="spl-student-page-btn spl-student-page-next" aria-label="Next page">
+
+                        <span class="spl-pagination-next-text">
+                            Next
+                        </span>
+
+                        <span aria-hidden="true">›</span>
+
+                        </a>
+
+                        {% else %}
+
+                        <span class="spl-student-page-btn spl-student-page-disabled">
+
+                            <span class="spl-pagination-next-text">
+                                Next
+                            </span>
+
+                            <span aria-hidden="true">›</span>
+
+                        </span>
+
+                        {% endif %}
+
+
+        </div>
+
+        {% endif %}
+
+    </nav>
+
+    {% endif %}
+
+
 </div>
 
-<!-- MODAL JS -->
+<!-- =========================================================
+     SPL STUDENT VIEW MODAL
+     READ-ONLY STUDENT REVIEW
+========================================================= -->
 
+<div id="splStudentViewModal" class="spl-student-view-modal" aria-hidden="true" role="dialog" aria-modal="true"
+    aria-labelledby="splStudentViewName">
+
+
+    <div class="spl-student-view-overlay" data-spl-student-close="true">
+    </div>
+
+
+    <div class="spl-student-view-dialog" role="document">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================= -->
+
+        <header class="spl-student-view-header">
+
+
+            <div class="spl-student-view-profile">
+
+
+                <div class="spl-student-view-photo-wrap">
+
+                    <img id="splStudentViewPhoto" class="spl-student-view-photo" src="" alt="">
+
+                    <div id="splStudentViewAvatar" class="spl-student-view-avatar" aria-hidden="true">
+                        S
+                    </div>
+
+                </div>
+
+
+                <div class="spl-student-view-title">
+
+                    <div class="spl-student-view-eyebrow">
+                        Student Record
+                    </div>
+
+                    <h2 id="splStudentViewName">
+                        Student Name
+                    </h2>
+
+                    <p id="splStudentViewAdmission">
+                        Admission No
+                    </p>
+
+                    <div class="spl-student-view-meta">
+
+                        <span id="splStudentViewClass">
+                            Class —
+                        </span>
+
+                        <span class="spl-student-view-meta-separator">
+                            •
+                        </span>
+
+                        <span id="splStudentViewSection">
+                            Section —
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="spl-student-view-header-actions">
+
+                <span class="spl-student-view-active-badge">
+
+                    <span></span>
+
+                    Active
+
+                </span>
+
+
+                <button type="button" class="spl-student-view-close" onclick="splCloseStudentView()"
+                    aria-label="Close student details">
+                    ×
+                </button>
+
+            </div>
+
+
+        </header>
+
+
+        <!-- =================================================
+             BODY
+        ================================================= -->
+
+        <div class="spl-student-view-body">
+
+
+            <!-- =============================================
+                 QUICK SUMMARY
+            ============================================== -->
+
+            <section class="spl-student-view-section">
+
+
+                <div class="spl-student-view-section-head">
+
+                    <div class="spl-student-view-section-icon">
+                        ID
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Student Identity
+                        </h3>
+
+                        <p>
+                            Basic record identification
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="spl-student-view-grid">
+
+
+                    <div class="spl-student-detail">
+                        <span>Register No</span>
+                        <strong id="splViewRegister">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Admission No</span>
+                        <strong id="splViewAdmission">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Student ID</span>
+                        <strong id="splViewUid">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>APAAR ID</span>
+                        <strong id="splViewApaar">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail spl-student-detail-sensitive">
+                        <span>Aadhaar</span>
+                        <strong id="splViewAadhaar">—</strong>
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 ACADEMIC
+            ============================================== -->
+
+            <section class="spl-student-view-section">
+
+
+                <div class="spl-student-view-section-head">
+
+                    <div class="spl-student-view-section-icon">
+                        AC
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Academic Details
+                        </h3>
+
+                        <p>
+                            Current academic and admission information
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="spl-student-view-grid">
+
+
+                    <div class="spl-student-detail">
+                        <span>Class</span>
+                        <strong id="splViewClass">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Section</span>
+                        <strong id="splViewSection">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Admission Date</span>
+                        <strong id="splViewAdmissionDate">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Previous School</span>
+                        <strong id="splViewPreviousSchool">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Last Exam / Class</span>
+                        <strong id="splViewLastExam">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Result Status</span>
+                        <strong id="splViewResult">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Progress</span>
+                        <strong id="splViewProgress">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail spl-student-detail-wide">
+                        <span>Conduct</span>
+                        <strong id="splViewConduct">—</strong>
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 PERSONAL
+            ============================================== -->
+
+            <section class="spl-student-view-section">
+
+
+                <div class="spl-student-view-section-head">
+
+                    <div class="spl-student-view-section-icon">
+                        PD
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Personal Details
+                        </h3>
+
+                        <p>
+                            Personal information of the student
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="spl-student-view-grid">
+
+
+                    <div class="spl-student-detail">
+                        <span>Full Name</span>
+                        <strong id="splViewFullName">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Date of Birth</span>
+                        <strong id="splViewDob">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Birth Place</span>
+                        <strong id="splViewBirthPlace">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Nationality</span>
+                        <strong id="splViewNationality">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Mother Tongue</span>
+                        <strong id="splViewMotherTongue">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Religion</span>
+                        <strong id="splViewReligion">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Caste</span>
+                        <strong id="splViewCaste">—</strong>
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 PARENT / CONTACT
+            ============================================== -->
+
+            <section class="spl-student-view-section">
+
+
+                <div class="spl-student-view-section-head">
+
+                    <div class="spl-student-view-section-icon">
+                        PC
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Parent & Contact
+                        </h3>
+
+                        <p>
+                            Family and communication details
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="spl-student-view-grid">
+
+
+                    <div class="spl-student-detail">
+                        <span>Father Name</span>
+                        <strong id="splViewFather">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Mother Name</span>
+                        <strong id="splViewMother">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Primary Mobile</span>
+                        <strong id="splViewPrimaryMobile">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Alternate Mobile</span>
+                        <strong id="splViewAlternateMobile">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Email</span>
+                        <strong id="splViewEmail">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Occupation</span>
+                        <strong id="splViewOccupation">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Annual Income</span>
+                        <strong id="splViewIncome">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Guardian Name</span>
+                        <strong id="splViewGuardian">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Guardian Mobile</span>
+                        <strong id="splViewGuardianMobile">—</strong>
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 ADDRESS
+            ============================================== -->
+
+            <section class="spl-student-view-section">
+
+
+                <div class="spl-student-view-section-head">
+
+                    <div class="spl-student-view-section-icon">
+                        AD
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Address
+                        </h3>
+
+                        <p>
+                            Current residential location
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="spl-student-view-grid">
+
+
+                    <div class="spl-student-detail">
+                        <span>City</span>
+                        <strong id="splViewCity">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>Taluka</span>
+                        <strong id="splViewTaluka">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>District</span>
+                        <strong id="splViewDistrict">—</strong>
+                    </div>
+
+
+                    <div class="spl-student-detail">
+                        <span>State</span>
+                        <strong id="splViewState">—</strong>
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+        </div>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================= -->
+
+        <footer class="spl-student-view-footer">
+
+
+            <div class="spl-student-view-footer-note">
+
+                <span aria-hidden="true">
+                    ✓
+                </span>
+
+                Read-only student information
+
+            </div>
+
+
+            <div class="spl-student-view-footer-actions">
+
+
+                <button type="button" class="spl-student-view-close-btn" onclick="splCloseStudentView()">
+
+                    Close
+
+                </button>
+
+
+                <a id="splStudentViewEdit" href="#" class="spl-student-view-edit-btn">
+
+                    <span aria-hidden="true">✎</span>
+
+                    Edit Student
+
+                </a>
+
+
+            </div>
+
+
+        </footer>
+
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     SPL BONAFIDE CERTIFICATE MODAL
+========================================================= -->
+
+<div id="splBonafideModal" class="spl-bonafide-modal" aria-hidden="true" role="dialog" aria-modal="true"
+    aria-labelledby="splBonafideTitle">
+
+    <div class="spl-bonafide-overlay" data-spl-bonafide-close="true">
+    </div>
+
+
+    <div class="spl-bonafide-dialog">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================= -->
+
+        <header class="spl-bonafide-header">
+
+            <div class="spl-bonafide-heading">
+
+                <div class="spl-bonafide-heading-icon">
+                    📜
+                </div>
+
+                <div>
+
+                    <div class="spl-bonafide-eyebrow">
+                        CERTIFICATE MODULE
+                    </div>
+
+                    <h2 id="splBonafideTitle">
+                        Generate Bonafide Certificate
+                    </h2>
+
+                    <p>
+                        Create a bonafide certificate for the selected student.
+                        <br>
+                        विद्यार्थ्यासाठी बोनाफाईड प्रमाणपत्र तयार करा.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button type="button" class="spl-bonafide-close" onclick="splCloseBonafideModal()"
+                aria-label="Close bonafide modal">
+                ×
+            </button>
+
+        </header>
+
+
+        <!-- =================================================
+             VERIFICATION NOTE
+        ================================================= -->
+
+        <div class="spl-bonafide-note">
+
+            <div class="spl-bonafide-note-icon">
+                !
+            </div>
+
+            <div class="spl-bonafide-note-content">
+
+                <strong>
+                    Verify student information before generating
+                </strong>
+
+                <p>
+                    Confirm the student's name, admission number,
+                    register number and other details before issuing
+                    the certificate.
+                </p>
+
+                <p class="spl-bonafide-note-marathi">
+                    प्रमाणपत्र तयार करण्यापूर्वी विद्यार्थ्याचे नाव,
+                    प्रवेश क्रमांक, रजिस्टर क्रमांक व इतर माहिती
+                    काळजीपूर्वक तपासा.
+                </p>
+
+                <div class="spl-bonafide-note-warning">
+                    If any student information is incorrect, close this
+                    window and use <b>Edit Student</b> to correct the record first.
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FORM
+        ================================================= -->
+
+        <form method="POST" action="{{ url_for('save_bonafide') }}" id="splBonafideForm" novalidate>
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!--
+                IMPORTANT:
+                Backend continues to receive student_id.
+            -->
+
+            <input type="hidden" name="student_id" id="splBonafideStudentId">
+
+
+            <!-- =================================================
+                 SELECTED STUDENT
+            ================================================= -->
+
+            <section class="spl-bonafide-section">
+
+                <div class="spl-bonafide-section-header">
+
+                    <div class="spl-bonafide-section-icon">
+                        ST
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Selected Student
+                        </h3>
+
+                        <p>
+                            Verify the student record before issuing
+                            the certificate.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="spl-bonafide-student-card">
+
+                    <div class="spl-bonafide-student-avatar">
+                        S
+                    </div>
+
+
+                    <div class="spl-bonafide-student-main">
+
+                        <strong id="splBonafideStudentName">
+                            —
+                        </strong>
+
+                        <span id="splBonafideStudentClass">
+                            Class —
+                        </span>
+
+                    </div>
+
+
+                    <span class="spl-bonafide-verified-badge">
+                        <span></span>
+                        Active Student
+                    </span>
+
+                </div>
+
+
+                <div class="spl-bonafide-info-grid">
+
+                    <div class="spl-bonafide-info-item">
+
+                        <span>
+                            Register No
+                        </span>
+
+                        <strong id="splBonafideRegister">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="spl-bonafide-info-item">
+
+                        <span>
+                            Admission No
+                        </span>
+
+                        <strong id="splBonafideAdmission">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="spl-bonafide-info-item">
+
+                        <span>
+                            Student ID
+                        </span>
+
+                        <strong id="splBonafideUid">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="spl-bonafide-info-item">
+
+                        <span>
+                            APAAR ID
+                        </span>
+
+                        <strong id="splBonafideApaar">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 CERTIFICATE DETAILS
+            ================================================= -->
+
+            <section class="spl-bonafide-section">
+
+                <div class="spl-bonafide-section-header">
+
+                    <div class="spl-bonafide-section-icon certificate">
+                        CR
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Certificate Details
+                        </h3>
+
+                        <p>
+                            Enter the information required for this certificate.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="spl-bonafide-form-grid">
+
+
+                    <!-- DATE -->
+
+                    <div class="spl-bonafide-field">
+
+                        <label for="splBonafideDate">
+
+                            Certificate Date
+
+                            <span class="required">
+                                *
+                            </span>
+
+                        </label>
+
+                        <input type="date" name="date" id="splBonafideDate" required autocomplete="off">
+
+                        <small>
+                            The certificate date cannot be in the future.
+                        </small>
+
+                    </div>
+
+
+                    <!-- PURPOSE -->
+
+                    <div class="spl-bonafide-field spl-bonafide-field-full">
+
+                        <label for="splBonafidePurpose">
+
+                            Purpose
+
+                            <span class="required">
+                                *
+                            </span>
+
+                        </label>
+
+                        <input type="text" name="purpose" id="splBonafidePurpose" maxlength="255" required
+                            autocomplete="off"
+                            placeholder="e.g. Scholarship, Passport, Education, Bank, Government Form">
+
+                        <small>
+                            Enter the actual purpose for which the certificate
+                            is being issued.
+                        </small>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- QUICK PURPOSES -->
+
+                <div class="spl-bonafide-purpose-suggestions">
+
+                    <span>
+                        Common purposes:
+                    </span>
+
+                    <button type="button" data-purpose="Scholarship">
+                        Scholarship
+                    </button>
+
+                    <button type="button" data-purpose="Passport">
+                        Passport
+                    </button>
+
+                    <button type="button" data-purpose="Education">
+                        Education
+                    </button>
+
+                    <button type="button" data-purpose="Bank">
+                        Bank
+                    </button>
+
+                    <button type="button" data-purpose="Government Form">
+                        Government Form
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FINAL CHECK
+            ================================================= -->
+
+            <div class="spl-bonafide-final-check">
+
+                <span class="spl-bonafide-check-icon">
+                    ✓
+                </span>
+
+                <div>
+
+                    <strong>
+                        Final verification
+                    </strong>
+
+                    <p>
+                        I have verified the selected student's information
+                        and the certificate purpose before generating this
+                        certificate.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ACTIONS
+            ================================================= -->
+
+            <footer class="spl-bonafide-actions">
+
+                <button type="button" class="spl-bonafide-cancel" onclick="splCloseBonafideModal()">
+                    Cancel
+                </button>
+
+
+                <button type="submit" id="splBonafideSubmit" class="spl-bonafide-generate">
+
+                    <span>
+                        📜
+                    </span>
+
+                    Generate Certificate
+
+                </button>
+
+            </footer>
+
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- FILTER JS -->
 <script>
-function openModal(button){
+    (function () {
 
-    const val = (v) => {
-        return v && v.trim() !== "" ? v : "-";
-    };
+        "use strict";
 
-    const name = val(button.dataset.name);
-    const admission = val(button.dataset.admission);
+        const filterForm = document.getElementById(
+            "splStudentListFilterForm"
+        );
 
-    document.getElementById("studentModal").style.display = "flex";
+        const searchButton = document.getElementById(
+            "splStudentListSearchBtn"
+        );
 
-    document.getElementById("mAvatar").innerText =
-        name !== "-" ? name.charAt(0).toUpperCase() : "S";
+        if (!filterForm || !searchButton) {
+            return;
+        }
 
-    document.getElementById("mNameTitle").innerText = name;
-    document.getElementById("mAdmissionTitle").innerText = admission;
+        filterForm.addEventListener("submit", function () {
 
-    document.getElementById("mRegister").innerText = val(button.dataset.register);
-    document.getElementById("mName").innerText = name;
-    document.getElementById("mClass").innerText = val(button.dataset.class);
-    document.getElementById("mAdmission").innerText = admission;
-    document.getElementById("mMobile").innerText = val(button.dataset.mobile);
-    document.getElementById("mFather").innerText = val(button.dataset.father);
-    document.getElementById("mMother").innerText = val(button.dataset.mother);
-    document.getElementById("mStudentUid").innerText = val(button.dataset.uid);
-    document.getElementById("mApaar").innerText = val(button.dataset.apaar);
-    document.getElementById("mAadhaar").innerText = val(button.dataset.aadhaar);
-    document.getElementById("mDob").innerText = val(button.dataset.dob);
-    document.getElementById("mProgress").innerText = val(button.dataset.progress);
-    document.getElementById("mConduct").innerText = val(button.dataset.conduct);
+            if (filterForm.dataset.submitting === "true") {
+                return;
+            }
 
-    document.body.style.overflow = "hidden";
-}
+            filterForm.dataset.submitting = "true";
 
-function closeModal(){
-    document.getElementById("studentModal").style.display = "none";
-    document.body.style.overflow = "";
-}
+            searchButton.disabled = true;
 
-document.addEventListener("click", function(e){
-    const modal = document.getElementById("studentModal");
+            searchButton.innerHTML = `
+            <span aria-hidden="true">⌕</span>
+            Searching...
+        `;
 
-    if(e.target === modal){
-        closeModal();
-    }
-});
+        });
 
-document.addEventListener("keydown", function(e){
-    if(e.key === "Escape"){
-        closeModal();
-    }
-});
+    })();
 </script>
 
+
+<!-- STUDENT TABLE JS -->
+
 <script>
-function openBonafideModal(btn){
+    (function () {
 
-    const val = (v) => v && v.trim() !== "" ? v : "-";
+        "use strict";
 
-    document.getElementById("bonafideModal").style.display = "flex";
 
-    document.getElementById("modalStudentId").value = btn.dataset.id;
-    document.getElementById("modalStudentName").value = val(btn.dataset.name);
-    document.getElementById("modalRegister").value = val(btn.dataset.register);
-    document.getElementById("modalAdmission").value = val(btn.dataset.admission);
-    document.getElementById("modalStudentUid").value = val(btn.dataset.uid);
-    document.getElementById("modalApaar").value = val(btn.dataset.apaar);
+        /* =====================================================
+           STUDENT LIST FILTER FORM
+        ===================================================== */
 
-    document.body.style.overflow = "hidden";
-}
+        const splStudentFilterForm =
+            document.getElementById(
+                "splStudentListFilterForm"
+            );
 
-document.querySelector('#bonafideForm input[name="date"]').valueAsDate = new Date();
+        const splStudentSearchButton =
+            document.getElementById(
+                "splStudentListSearchBtn"
+            );
 
-function closeBonafideModal(){
-    document.getElementById("bonafideModal").style.display = "none";
-    document.body.style.overflow = "";
-}
 
-document.getElementById("bonafideForm").addEventListener("submit", function(){
-    const btn = document.getElementById("bonafideSubmitBtn");
-    btn.disabled = true;
-    btn.innerText = "Generating...";
-});
+        if (
+            !splStudentFilterForm ||
+            !splStudentSearchButton
+        ) {
+            return;
+        }
+
+
+        /* =====================================================
+           PREVENT DOUBLE SUBMISSION
+        ===================================================== */
+
+        splStudentFilterForm.addEventListener(
+            "submit",
+            function () {
+
+                if (
+                    splStudentFilterForm.dataset.submitting === "true"
+                ) {
+                    return;
+                }
+
+
+                splStudentFilterForm.dataset.submitting =
+                    "true";
+
+
+                splStudentSearchButton.disabled = true;
+
+
+                splStudentSearchButton.innerHTML = `
+                <span aria-hidden="true">⌕</span>
+                Searching...
+            `;
+
+            }
+        );
+
+
+    })();
+</script>
+
+<!-- VIEW MODAL JS  -->
+
+<script>
+    (function () {
+
+        "use strict";
+
+
+        /* =====================================================
+           ELEMENTS
+        ===================================================== */
+
+        const modal =
+            document.getElementById(
+                "splStudentViewModal"
+            );
+
+        const photo =
+            document.getElementById(
+                "splStudentViewPhoto"
+            );
+
+        const avatar =
+            document.getElementById(
+                "splStudentViewAvatar"
+            );
+
+
+        if (!modal) {
+            return;
+        }
+
+
+        /* =====================================================
+           SAFE VALUE
+        ===================================================== */
+
+        function splStudentValue(value) {
+
+            if (
+                value === undefined ||
+                value === null
+            ) {
+                return "—";
+            }
+
+
+            const cleaned =
+                String(value).trim();
+
+
+            return cleaned !== ""
+                ? cleaned
+                : "—";
+        }
+
+
+        /* =====================================================
+           SET TEXT
+        ===================================================== */
+
+        function splSetStudentText(
+            id,
+            value
+        ) {
+
+            const element =
+                document.getElementById(id);
+
+
+            if (!element) {
+                return;
+            }
+
+
+            element.textContent =
+                splStudentValue(value);
+        }
+
+
+        /* =====================================================
+           OPEN MODAL
+        ===================================================== */
+
+        window.splOpenStudentView =
+            function (button) {
+
+                if (!button) {
+                    return;
+                }
+
+
+                const data =
+                    button.dataset;
+
+
+                const name =
+                    splStudentValue(data.name);
+
+
+                /* =============================================
+                   HEADER
+                ============================================== */
+
+                splSetStudentText(
+                    "splStudentViewName",
+                    data.name
+                );
+
+
+                splSetStudentText(
+                    "splStudentViewAdmission",
+                    data.admission
+                );
+
+
+                splSetStudentText(
+                    "splStudentViewClass",
+                    data.class
+                        ? `Class ${data.class}`
+                        : "Class —"
+                );
+
+
+                splSetStudentText(
+                    "splStudentViewSection",
+                    data.section
+                        ? `Section ${data.section}`
+                        : "Section —"
+                );
+
+
+                /* =============================================
+                   AVATAR
+                ============================================== */
+
+                const firstLetter =
+                    name !== "—"
+                        ? name.charAt(0).toUpperCase()
+                        : "S";
+
+
+                avatar.textContent =
+                    firstLetter;
+
+
+                /* =============================================
+                   PROFILE PHOTO
+                ============================================== */
+
+                photo.classList.remove(
+                    "has-photo"
+                );
+
+                avatar.classList.remove(
+                    "hidden"
+                );
+
+                photo.removeAttribute("src");
+
+
+                if (data.studentId) {
+
+                    const photoUrl =
+                        `/clerk/student/${encodeURIComponent(
+                            data.studentId
+                        )}/photo`;
+
+
+                    photo.onload =
+                        function () {
+
+                            photo.classList.add(
+                                "has-photo"
+                            );
+
+                            avatar.classList.add(
+                                "hidden"
+                            );
+
+                        };
+
+
+                    photo.onerror =
+                        function () {
+
+                            photo.classList.remove(
+                                "has-photo"
+                            );
+
+                            avatar.classList.remove(
+                                "hidden"
+                            );
+
+                        };
+
+
+                    photo.src =
+                        photoUrl;
+                }
+
+
+                /* =============================================
+                   IDENTITY
+                ============================================== */
+
+                splSetStudentText(
+                    "splViewRegister",
+                    data.register
+                );
+
+
+                splSetStudentText(
+                    "splViewAdmission",
+                    data.admission
+                );
+
+
+                splSetStudentText(
+                    "splViewUid",
+                    data.uid
+                );
+
+
+                splSetStudentText(
+                    "splViewApaar",
+                    data.apaar
+                );
+
+
+                splSetStudentText(
+                    "splViewAadhaar",
+                    data.aadhaar
+                );
+
+
+                /* =============================================
+                   ACADEMIC
+                ============================================== */
+
+                splSetStudentText(
+                    "splViewClass",
+                    data.class
+                );
+
+
+                splSetStudentText(
+                    "splViewSection",
+                    data.section
+                );
+
+
+                splSetStudentText(
+                    "splViewAdmissionDate",
+                    data.admissionDate
+                );
+
+
+                splSetStudentText(
+                    "splViewPreviousSchool",
+                    data.previousSchool
+                );
+
+
+                splSetStudentText(
+                    "splViewLastExam",
+                    data.lastExam
+                );
+
+
+                splSetStudentText(
+                    "splViewResult",
+                    data.result
+                );
+
+
+                splSetStudentText(
+                    "splViewProgress",
+                    data.progress
+                );
+
+
+                splSetStudentText(
+                    "splViewConduct",
+                    data.conduct
+                );
+
+
+                /* =============================================
+                   PERSONAL
+                ============================================== */
+
+                splSetStudentText(
+                    "splViewFullName",
+                    data.name
+                );
+
+
+                splSetStudentText(
+                    "splViewDob",
+                    data.dob
+                );
+
+
+                splSetStudentText(
+                    "splViewBirthPlace",
+                    data.birthPlace
+                );
+
+
+                splSetStudentText(
+                    "splViewNationality",
+                    data.nationality
+                );
+
+
+                splSetStudentText(
+                    "splViewMotherTongue",
+                    data.motherTongue
+                );
+
+
+                splSetStudentText(
+                    "splViewReligion",
+                    data.religion
+                );
+
+
+                splSetStudentText(
+                    "splViewCaste",
+                    data.caste
+                );
+
+
+                /* =============================================
+                   PARENT / CONTACT
+                ============================================== */
+
+                splSetStudentText(
+                    "splViewFather",
+                    data.father
+                );
+
+
+                splSetStudentText(
+                    "splViewMother",
+                    data.mother
+                );
+
+
+                splSetStudentText(
+                    "splViewPrimaryMobile",
+                    data.mobile
+                );
+
+
+                splSetStudentText(
+                    "splViewAlternateMobile",
+                    data.alternateMobile
+                );
+
+
+                splSetStudentText(
+                    "splViewEmail",
+                    data.email
+                );
+
+
+                splSetStudentText(
+                    "splViewOccupation",
+                    data.occupation
+                );
+
+
+                splSetStudentText(
+                    "splViewIncome",
+                    data.income
+                );
+
+
+                splSetStudentText(
+                    "splViewGuardian",
+                    data.guardian
+                );
+
+
+                splSetStudentText(
+                    "splViewGuardianMobile",
+                    data.guardianMobile
+                );
+
+
+                /* =============================================
+                   ADDRESS
+                ============================================== */
+
+                splSetStudentText(
+                    "splViewCity",
+                    data.city
+                );
+
+
+                splSetStudentText(
+                    "splViewTaluka",
+                    data.taluka
+                );
+
+
+                splSetStudentText(
+                    "splViewDistrict",
+                    data.district
+                );
+
+
+                splSetStudentText(
+                    "splViewState",
+                    data.state
+                );
+
+
+                /* =============================================
+                   EDIT LINK
+                ============================================== */
+
+                const editButton =
+                    document.getElementById(
+                        "splStudentViewEdit"
+                    );
+
+
+                if (
+                    editButton &&
+                    data.studentId
+                ) {
+
+                    editButton.href =
+                        `/clerk/edit-student/${encodeURIComponent(
+                            data.studentId
+                        )}`;
+
+                } else if (editButton) {
+
+                    editButton.href = "#";
+
+                }
+
+
+                /* =============================================
+                   OPEN
+                ============================================== */
+
+                modal.classList.add(
+                    "is-open"
+                );
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+
+
+                document.body.style.overflow =
+                    "hidden";
+
+
+                /* Move focus to close button */
+
+                const closeButton =
+                    modal.querySelector(
+                        ".spl-student-view-close"
+                    );
+
+
+                if (closeButton) {
+
+                    setTimeout(
+                        function () {
+                            closeButton.focus();
+                        },
+                        50
+                    );
+
+                }
+
+            };
+
+
+        /* =====================================================
+           CLOSE MODAL
+        ===================================================== */
+
+        window.splCloseStudentView =
+            function () {
+
+                modal.classList.remove(
+                    "is-open"
+                );
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+
+                document.body.style.overflow =
+                    "";
+
+
+                /* Clear photo */
+
+                photo.onload = null;
+                photo.onerror = null;
+
+                photo.removeAttribute(
+                    "src"
+                );
+
+                photo.classList.remove(
+                    "has-photo"
+                );
+
+                avatar.classList.remove(
+                    "hidden"
+                );
+
+            };
+
+
+        /* =====================================================
+           CLICK OUTSIDE
+        ===================================================== */
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === modal ||
+                    event.target.hasAttribute(
+                        "data-spl-student-close"
+                    )
+                ) {
+
+                    splCloseStudentView();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           ESCAPE
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    splCloseStudentView();
+
+                }
+
+            }
+        );
+
+
+    })();
+</script>
+
+<!-- BONAFIDE MODAL JS -->
+
+<script>
+    (function () {
+
+        "use strict";
+
+
+        /* =====================================================
+           ELEMENTS
+        ===================================================== */
+
+        const modal =
+            document.getElementById(
+                "splBonafideModal"
+            );
+
+        const form =
+            document.getElementById(
+                "splBonafideForm"
+            );
+
+        const studentIdInput =
+            document.getElementById(
+                "splBonafideStudentId"
+            );
+
+        const studentName =
+            document.getElementById(
+                "splBonafideStudentName"
+            );
+
+        const studentClass =
+            document.getElementById(
+                "splBonafideStudentClass"
+            );
+
+        const register =
+            document.getElementById(
+                "splBonafideRegister"
+            );
+
+        const admission =
+            document.getElementById(
+                "splBonafideAdmission"
+            );
+
+        const studentUid =
+            document.getElementById(
+                "splBonafideUid"
+            );
+
+        const apaar =
+            document.getElementById(
+                "splBonafideApaar"
+            );
+
+        const certificateDate =
+            document.getElementById(
+                "splBonafideDate"
+            );
+
+        const purpose =
+            document.getElementById(
+                "splBonafidePurpose"
+            );
+
+        const submitButton =
+            document.getElementById(
+                "splBonafideSubmit"
+            );
+
+
+        if (!modal || !form) {
+            return;
+        }
+
+
+        /* =====================================================
+           SAFE VALUE
+        ===================================================== */
+
+        function safeValue(value) {
+
+            if (
+                value === undefined ||
+                value === null
+            ) {
+                return "—";
+            }
+
+
+            const cleaned =
+                String(value).trim();
+
+
+            return cleaned !== ""
+                ? cleaned
+                : "—";
+        }
+
+
+        /* =====================================================
+           TODAY - LOCAL DATE
+           Avoids UTC date problems.
+        ===================================================== */
+
+        function getLocalDateString() {
+
+            const now = new Date();
+
+            const year =
+                now.getFullYear();
+
+            const month =
+                String(
+                    now.getMonth() + 1
+                ).padStart(2, "0");
+
+            const day =
+                String(
+                    now.getDate()
+                ).padStart(2, "0");
+
+
+            return `${year}-${month}-${day}`;
+        }
+
+
+        /* =====================================================
+           INITIAL DATE
+        ===================================================== */
+
+        const today =
+            getLocalDateString();
+
+
+        if (certificateDate) {
+
+            certificateDate.value =
+                today;
+
+            certificateDate.max =
+                today;
+
+        }
+
+
+        /* =====================================================
+           OPEN BONAFIDE MODAL
+        ===================================================== */
+
+        window.splOpenBonafideModal =
+            function (button) {
+
+                if (!button) {
+                    return;
+                }
+
+
+                const data =
+                    button.dataset;
+
+
+                /* =============================================
+                   STUDENT ID
+                   This is only used as the backend identifier.
+                ============================================== */
+
+                studentIdInput.value =
+                    data.id || "";
+
+
+                /* =============================================
+                   STUDENT INFORMATION
+                ============================================== */
+
+                studentName.textContent =
+                    safeValue(
+                        data.name
+                    );
+
+
+                studentClass.textContent =
+                    data.class
+                        ? `Class ${data.class}${data.section ? " • Section " + data.section : ""}`
+                        : "Class —";
+
+
+                register.textContent =
+                    safeValue(
+                        data.register
+                    );
+
+
+                admission.textContent =
+                    safeValue(
+                        data.admission
+                    );
+
+
+                studentUid.textContent =
+                    safeValue(
+                        data.uid
+                    );
+
+
+                apaar.textContent =
+                    safeValue(
+                        data.apaar
+                    );
+
+
+                /* =============================================
+                   AVATAR
+                ============================================== */
+
+                const avatar =
+                    modal.querySelector(
+                        ".spl-bonafide-student-avatar"
+                    );
+
+
+                if (avatar) {
+
+                    const name =
+                        safeValue(
+                            data.name
+                        );
+
+
+                    avatar.textContent =
+                        name !== "—"
+                            ? name
+                                .charAt(0)
+                                .toUpperCase()
+                            : "S";
+                }
+
+
+                /* =============================================
+                   RESET CERTIFICATE FIELDS
+                ============================================== */
+
+                certificateDate.value =
+                    today;
+
+                certificateDate.max =
+                    today;
+
+
+                purpose.value =
+                    "";
+
+
+                purpose.classList.remove(
+                    "input-error"
+                );
+
+
+                /* =============================================
+                   RESET SUBMIT BUTTON
+                ============================================== */
+
+                submitButton.disabled =
+                    false;
+
+                submitButton.innerHTML =
+                    `
+                <span>📜</span>
+                Generate Certificate
+                `;
+
+
+                /* =============================================
+                   OPEN
+                ============================================== */
+
+                modal.classList.add(
+                    "is-open"
+                );
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+
+
+                document.body.style.overflow =
+                    "hidden";
+
+
+                /* =============================================
+                   FOCUS PURPOSE
+                ============================================== */
+
+                setTimeout(
+                    function () {
+
+                        if (purpose) {
+                            purpose.focus();
+                        }
+
+                    },
+                    100
+                );
+
+            };
+
+
+        /* =====================================================
+           CLOSE BONAFIDE MODAL
+        ===================================================== */
+
+        window.splCloseBonafideModal =
+            function () {
+
+                modal.classList.remove(
+                    "is-open"
+                );
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+
+                document.body.style.overflow =
+                    "";
+
+
+                studentIdInput.value =
+                    "";
+
+
+                purpose.value =
+                    "";
+
+
+                purpose.classList.remove(
+                    "input-error"
+                );
+
+            };
+
+
+        /* =====================================================
+           CLOSE ON OVERLAY
+        ===================================================== */
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === modal ||
+                    event.target.hasAttribute(
+                        "data-spl-bonafide-close"
+                    )
+                ) {
+
+                    splCloseBonafideModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           ESCAPE
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    splCloseBonafideModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           QUICK PURPOSE BUTTONS
+        ===================================================== */
+
+        const purposeButtons =
+            modal.querySelectorAll(
+                "[data-purpose]"
+            );
+
+
+        purposeButtons.forEach(
+            function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        purpose.value =
+                            button.dataset.purpose;
+
+
+                        purpose.classList.remove(
+                            "input-error"
+                        );
+
+
+                        purpose.focus();
+
+                    }
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           PURPOSE CLEANUP
+        ===================================================== */
+
+        purpose.addEventListener(
+            "input",
+            function () {
+
+                purpose.value =
+                    purpose.value
+                        .replace(/\s+/g, " ")
+                        .trimStart();
+
+
+                purpose.classList.remove(
+                    "input-error"
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           FORM VALIDATION
+        ===================================================== */
+
+        form.addEventListener(
+            "submit",
+            function (event) {
+
+                const studentId =
+                    String(
+                        studentIdInput.value || ""
+                    ).trim();
+
+
+                const date =
+                    String(
+                        certificateDate.value || ""
+                    ).trim();
+
+
+                const purposeValue =
+                    String(
+                        purpose.value || ""
+                    )
+                        .replace(/\s+/g, " ")
+                        .trim();
+
+
+                /* =========================================
+                   STUDENT
+                ========================================== */
+
+                if (
+                    !studentId ||
+                    !/^\d+$/.test(studentId)
+                ) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Unable to identify the selected student. Please close this window and try again."
+                    );
+
+                    return;
+                }
+
+
+                /* =========================================
+                   DATE
+                ========================================== */
+
+                if (!date) {
+
+                    event.preventDefault();
+
+                    certificateDate.classList.add(
+                        "input-error"
+                    );
+
+                    certificateDate.focus();
+
+                    alert(
+                        "Please select the certificate date."
+                    );
+
+                    return;
+                }
+
+
+                if (date > today) {
+
+                    event.preventDefault();
+
+                    certificateDate.classList.add(
+                        "input-error"
+                    );
+
+                    certificateDate.focus();
+
+                    alert(
+                        "Certificate date cannot be in the future."
+                    );
+
+                    return;
+                }
+
+
+                certificateDate.classList.remove(
+                    "input-error"
+                );
+
+
+                /* =========================================
+                   PURPOSE
+                ========================================== */
+
+                if (!purposeValue) {
+
+                    event.preventDefault();
+
+                    purpose.classList.add(
+                        "input-error"
+                    );
+
+                    purpose.focus();
+
+                    alert(
+                        "Please enter the certificate purpose."
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    purposeValue.length < 2 ||
+                    purposeValue.length > 255
+                ) {
+
+                    event.preventDefault();
+
+                    purpose.classList.add(
+                        "input-error"
+                    );
+
+                    purpose.focus();
+
+                    alert(
+                        "Purpose must contain between 2 and 255 characters."
+                    );
+
+                    return;
+                }
+
+
+                purpose.value =
+                    purposeValue;
+
+
+                /* =========================================
+                   CONFIRMATION
+                ========================================== */
+
+                const confirmed =
+                    window.confirm(
+                        `Generate bonafide certificate for ${safeValue(studentName.textContent)}?`
+                    );
+
+
+                if (!confirmed) {
+
+                    event.preventDefault();
+
+                    return;
+                }
+
+
+                /* =========================================
+                   PREVENT DOUBLE SUBMISSION
+                ========================================== */
+
+                submitButton.disabled =
+                    true;
+
+
+                submitButton.innerHTML =
+                    `
+                <span>⏳</span>
+                Generating...
+                `;
+
+            }
+        );
+
+
+    })();
 </script>
 {% endblock %}

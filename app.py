@@ -8,6 +8,11 @@ import smtplib
 import subprocess
 import math
 import io
+import base64
+
+from PIL import Image, ImageOps, UnidentifiedImageError
+
+from flask import Response
 import urllib.request
 import logging
 
@@ -322,7 +327,15 @@ def inject_lead_count():
 # =========================================================
 
 
-def send_email(to_email, subject, body, attachment_path=None, attachment_name=None):
+def send_email(
+    to_email,
+    subject,
+    body,
+    attachment_path=None,
+    attachment_name=None,
+    attachment_bytes=None,
+    attachment_filename=None,
+):
     """
     Central email sender for the ERP.
 
@@ -331,9 +344,14 @@ def send_email(to_email, subject, body, attachment_path=None, attachment_name=No
     - TLS on port 587
     - SSL on port 465
     - HTML email body
-    - PDF/file attachments
+    - File attachments from filesystem
+    - In-memory attachments using bytes
     - UTF-8 subjects/body
     - Database-based SMTP configuration
+
+    Backward compatible:
+    - attachment_path + attachment_name
+    - attachment_bytes + attachment_filename
     """
 
     conn = None
@@ -399,8 +417,8 @@ def send_email(to_email, subject, body, attachment_path=None, attachment_name=No
         smtp_email = (smtp[0] or "").strip()
 
         # IMPORTANT:
-        # Google App Password may be copied with spaces.
-        # Remove spaces before SMTP login.
+        # Google App Password may contain spaces when copied.
+        # Remove whitespace before SMTP authentication.
         smtp_password = str(smtp[1] or "").replace(" ", "").replace("\t", "").strip()
 
         smtp_server = (smtp[2] or "").strip()
@@ -438,7 +456,39 @@ def send_email(to_email, subject, body, attachment_path=None, attachment_name=No
             return False
 
         # =====================================================
-        # 5. CREATE EMAIL
+        # 5. RESOLVE ATTACHMENT FILENAME
+        # =====================================================
+        #
+        # Existing code may use:
+        #     attachment_name
+        #
+        # New code may use:
+        #     attachment_filename
+        #
+        # Support BOTH so existing modules do not break.
+
+        final_attachment_name = attachment_filename or attachment_name or "attachment"
+
+        # =====================================================
+        # 6. SANITIZE ATTACHMENT FILENAME
+        # =====================================================
+
+        safe_filename = (
+            str(final_attachment_name)
+            .replace('"', "")
+            .replace("\n", "")
+            .replace("\r", "")
+            .replace(";", "")
+            .replace("\\", "")
+            .replace("/", "")
+            .strip()
+        )
+
+        if not safe_filename:
+            safe_filename = "attachment"
+
+        # =====================================================
+        # 7. CREATE EMAIL
         # =====================================================
 
         message = MIMEMultipart()
@@ -448,16 +498,16 @@ def send_email(to_email, subject, body, attachment_path=None, attachment_name=No
         message["Subject"] = Header(subject, "utf-8")
 
         # =====================================================
-        # 6. HTML EMAIL BODY
+        # 8. HTML EMAIL BODY
         # =====================================================
 
         message.attach(MIMEText(body or "", "html", "utf-8"))
 
         # =====================================================
-        # 7. OPTIONAL ATTACHMENT
+        # 9. OPTIONAL FILESYSTEM ATTACHMENT
         # =====================================================
 
-        if attachment_path and attachment_name:
+        if attachment_path:
             if not os.path.isfile(attachment_path):
                 logger.error("EMAIL ERROR: Attachment not found: %s", attachment_path)
                 return False
@@ -466,20 +516,13 @@ def send_email(to_email, subject, body, attachment_path=None, attachment_name=No
             from email import encoders
 
             with open(attachment_path, "rb") as file:
-                part = MIMEBase("application", "octet-stream")
+                file_data = file.read()
 
-                part.set_payload(file.read())
+            part = MIMEBase("application", "octet-stream")
+
+            part.set_payload(file_data)
 
             encoders.encode_base64(part)
-
-            # Prevent header injection
-            safe_filename = (
-                str(attachment_name)
-                .replace('"', "")
-                .replace("\n", "")
-                .replace("\r", "")
-                .replace(";", "")
-            )
 
             part.add_header(
                 "Content-Disposition", f'attachment; filename="{safe_filename}"'
@@ -487,8 +530,47 @@ def send_email(to_email, subject, body, attachment_path=None, attachment_name=No
 
             message.attach(part)
 
+            logger.info("EMAIL ATTACHMENT: filesystem file attached: %s", safe_filename)
+
         # =====================================================
-        # 8. CONNECT TO SMTP SERVER
+        # 10. OPTIONAL IN-MEMORY ATTACHMENT
+        # =====================================================
+        #
+        # Used by TC / Bonafide PDF generation.
+        #
+        # PDF is generated in RAM and passed directly here.
+        # No temporary/static PDF file is required.
+
+        elif attachment_bytes is not None:
+            if isinstance(attachment_bytes, bytearray):
+                attachment_bytes = bytes(attachment_bytes)
+
+            if not isinstance(attachment_bytes, bytes):
+                logger.error("EMAIL ERROR: attachment_bytes must be bytes.")
+                return False
+
+            if not attachment_bytes:
+                logger.error("EMAIL ERROR: attachment_bytes is empty.")
+                return False
+
+            from email.mime.application import MIMEApplication
+
+            part = MIMEApplication(attachment_bytes, _subtype="pdf")
+
+            part.add_header(
+                "Content-Disposition", f'attachment; filename="{safe_filename}"'
+            )
+
+            message.attach(part)
+
+            logger.info(
+                "EMAIL ATTACHMENT: in-memory attachment attached: %s (%d bytes)",
+                safe_filename,
+                len(attachment_bytes),
+            )
+
+        # =====================================================
+        # 11. CONNECT TO SMTP SERVER
         # =====================================================
 
         logger.info("Connecting to SMTP server %s:%s", smtp_server, smtp_port)
@@ -511,11 +593,10 @@ def send_email(to_email, subject, body, attachment_path=None, attachment_name=No
 
             if smtp_tls in ("enabled", "true", "1", "yes", "on"):
                 server.starttls()
-
                 server.ehlo()
 
         # =====================================================
-        # 9. SMTP LOGIN
+        # 12. SMTP LOGIN
         # =====================================================
 
         logger.info("Authenticating SMTP sender: %s", smtp_email)
@@ -523,7 +604,7 @@ def send_email(to_email, subject, body, attachment_path=None, attachment_name=No
         server.login(smtp_email, smtp_password)
 
         # =====================================================
-        # 10. SEND EMAIL
+        # 13. SEND EMAIL
         # =====================================================
 
         server.sendmail(smtp_email, [to_email], message.as_bytes())
@@ -1456,6 +1537,9 @@ def get_latest_subscription(school_id):
 
         conn = get_connection()
 
+        if not conn:
+            return None
+
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute(
@@ -1466,19 +1550,38 @@ def get_latest_subscription(school_id):
                 s.school_id,
                 s.plan_id,
                 s.plan_name,
-                s.amount,
                 s.start_date,
                 s.end_date,
                 s.status,
+                s.amount,
+                s.created_at,
+
+                s.billing_cycle,
+                s.currency,
+                s.payment_status,
+
+                s.auto_renew,
+                s.renewed_at,
+                s.cancelled_at,
+                s.cancellation_reason,
+                s.last_payment_id,
+                s.next_billing_date,
 
                 p.plan_name AS current_plan_name,
+
+                p.monthly_price,
+                p.yearly_price,
+
                 p.student_limit,
                 p.tc_limit,
                 p.bonafide_limit,
                 p.staff_limit,
+
                 p.storage_limit,
                 p.support_type,
+
                 p.duration_months,
+                p.short_description,
 
                 p.enable_tc_management,
                 p.enable_bonafide_management,
@@ -1493,7 +1596,7 @@ def get_latest_subscription(school_id):
             FROM subscriptions s
 
             LEFT JOIN subscription_plans p
-                ON s.plan_id = p.id
+                ON p.id = s.plan_id
 
             WHERE s.school_id = %s
 
@@ -1506,9 +1609,7 @@ def get_latest_subscription(school_id):
 
         return cursor.fetchone()
 
-    except Exception as e:
-        print("❌ GET LATEST SUBSCRIPTION ERROR:", e)
-
+    except Exception:
         logger.exception("GET LATEST SUBSCRIPTION ERROR")
 
         return None
@@ -1792,14 +1893,24 @@ def apply_plan_features(cursor, school_id, plan_id):
     to the schools table using the EXISTING transaction.
 
     IMPORTANT:
-    This function does NOT create a new DB connection
-    and does NOT commit.
-
-    The calling route controls commit / rollback.
+    - Does NOT create a new DB connection.
+    - Does NOT commit.
+    - Does NOT rollback.
+    - The calling route controls commit / rollback.
+    - Works with dictionary=True cursors.
     """
 
     try:
-        if not school_id or not plan_id:
+        # =================================================
+        # VALIDATE INPUT
+        # =================================================
+
+        if not school_id:
+            logger.error("APPLY PLAN FEATURES FAILED | school_id missing")
+            return False
+
+        if not plan_id:
+            logger.error("APPLY PLAN FEATURES FAILED | plan_id missing")
             return False
 
         # =================================================
@@ -1809,6 +1920,7 @@ def apply_plan_features(cursor, school_id, plan_id):
         cursor.execute(
             """
             SELECT
+                id,
 
                 enable_tc_management,
                 enable_bonafide_management,
@@ -1834,8 +1946,81 @@ def apply_plan_features(cursor, school_id, plan_id):
 
         plan = cursor.fetchone()
 
+        # =================================================
+        # PLAN NOT FOUND
+        # =================================================
+
         if not plan:
-            print(f"❌ PLAN NOT FOUND | Plan={plan_id}")
+            logger.error("PLAN NOT FOUND | plan_id=%s", plan_id)
+
+            return False
+
+        # =================================================
+        # GET FEATURE VALUES
+        #
+        # IMPORTANT:
+        # cursor is dictionary=True
+        #
+        # Therefore:
+        #
+        # plan["enable_tc_management"]
+        #
+        # NOT:
+        #
+        # plan[0]
+        # =================================================
+
+        enable_tc_management = plan["enable_tc_management"]
+
+        enable_bonafide_management = plan["enable_bonafide_management"]
+
+        enable_import_export = plan["enable_import_export"]
+
+        enable_attendance = plan["enable_attendance"]
+
+        enable_fee_management = plan["enable_fee_management"]
+
+        enable_teacher_management = plan["enable_teacher_management"]
+
+        enable_results = plan["enable_results"]
+
+        enable_timetable = plan["enable_timetable"]
+
+        enable_notice_board = plan["enable_notice_board"]
+
+        # =================================================
+        # VERIFY SCHOOL EXISTS
+        #
+        # Do NOT rely on UPDATE rowcount here.
+        #
+        # MySQL can return rowcount = 0 when the school
+        # exists but all feature values are already the same.
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                school_id
+
+            FROM schools
+
+            WHERE school_id = %s
+
+            LIMIT 1
+
+            FOR UPDATE
+            """,
+            (school_id,),
+        )
+
+        school = cursor.fetchone()
+
+        # =================================================
+        # SCHOOL NOT FOUND
+        # =================================================
+
+        if not school:
+            logger.error("SCHOOL NOT FOUND | school_id=%s", school_id)
 
             return False
 
@@ -1848,44 +2033,91 @@ def apply_plan_features(cursor, school_id, plan_id):
             UPDATE schools
 
             SET
-
                 enable_tc_management = %s,
+
                 enable_bonafide_management = %s,
+
                 enable_import_export = %s,
+
                 enable_attendance = %s,
+
                 enable_fee_management = %s,
+
                 enable_teacher_management = %s,
+
                 enable_results = %s,
+
                 enable_timetable = %s,
+
                 enable_notice_board = %s
 
             WHERE school_id = %s
             """,
             (
-                plan[0],
-                plan[1],
-                plan[2],
-                plan[3],
-                plan[4],
-                plan[5],
-                plan[6],
-                plan[7],
-                plan[8],
+                enable_tc_management,
+                enable_bonafide_management,
+                enable_import_export,
+                enable_attendance,
+                enable_fee_management,
+                enable_teacher_management,
+                enable_results,
+                enable_timetable,
+                enable_notice_board,
                 school_id,
             ),
         )
 
-        if cursor.rowcount == 0:
-            print(f"❌ SCHOOL NOT FOUND | School={school_id}")
+        # =================================================
+        # LOG RESULT
+        # =================================================
 
-            return False
+        logger.info(
+            "PLAN FEATURES APPLIED | school_id=%s | plan_id=%s | rows_changed=%s",
+            school_id,
+            plan_id,
+            cursor.rowcount,
+        )
 
-        print(f"✅ PLAN FEATURES APPLIED | School={school_id} | Plan={plan_id}")
+        # =================================================
+        # DETAILED FEATURE LOG
+        # =================================================
+
+        logger.info(
+            "FEATURE STATUS | "
+            "school_id=%s | "
+            "TC=%s | "
+            "Bonafide=%s | "
+            "ImportExport=%s | "
+            "Attendance=%s | "
+            "Fees=%s | "
+            "Teacher=%s | "
+            "Results=%s | "
+            "Timetable=%s | "
+            "NoticeBoard=%s",
+            school_id,
+            enable_tc_management,
+            enable_bonafide_management,
+            enable_import_export,
+            enable_attendance,
+            enable_fee_management,
+            enable_teacher_management,
+            enable_results,
+            enable_timetable,
+            enable_notice_board,
+        )
+
+        # =================================================
+        # SUCCESS
+        # =================================================
 
         return True
 
-    except Exception as e:
-        print("❌ APPLY PLAN FEATURES ERROR:", e)
+    except Exception:
+        logger.exception(
+            "APPLY PLAN FEATURES ERROR | school_id=%s | plan_id=%s",
+            school_id,
+            plan_id,
+        )
 
         return False
 
@@ -2127,7 +2359,7 @@ def login():
     # GET FORM DATA
     # =====================================================
     email = (request.form.get("email") or "").strip().lower()
-    password = (request.form.get("password") or "").strip()
+    password = request.form.get("password") or ""
 
     # =====================================================
     # BASIC VALIDATION
@@ -2305,8 +2537,9 @@ def login():
 
         app.permanent_session_lifetime = timedelta(minutes=session_timeout)
 
-        session.permanent = True
         session.clear()
+
+        session.permanent = True
         # =================================================
         # CREATE NEW CLERK SESSION
         # These values are used across clerk dashboard routes
@@ -2316,6 +2549,7 @@ def login():
         session["clerk_email"] = user_email
         session["clerk_school_id"] = school_id
         session["clerk_role"] = "clerk"
+
         session.modified = True
 
         # =================================================
@@ -2337,15 +2571,10 @@ def login():
 
         return redirect(url_for("clerk_dashboard"))
 
-    except Exception as e:
-        # =================================================
-        # ERROR HANDLING
-        # =================================================
-        logger.exception("Login Error")
+    except Exception:
+        logger.exception("LOGIN ERROR")
 
-        print("LOGIN ERROR:", e)
-
-        flash(str(e), "danger")
+        flash("We could not complete your login right now. Please try again.", "danger")
 
         return redirect(url_for("login"))
 
@@ -2380,7 +2609,7 @@ def superadmin_login():
     # GET FORM DATA
     # =====================================================
     email = (request.form.get("email") or "").strip().lower()
-    password = (request.form.get("password") or "").strip()
+    password = request.form.get("password") or ""
 
     # =====================================================
     # BASIC VALIDATION
@@ -2530,8 +2759,9 @@ def superadmin_login():
 
         app.permanent_session_lifetime = timedelta(minutes=session_timeout)
 
-        session.permanent = True
         session.clear()
+        session.permanent = True
+
         # =================================================
         # CREATE NEW ADMIN SESSION
         # These values are used across superadmin routes
@@ -5993,7 +6223,8 @@ def superadmin_tc_management():
 
 # =========================================================
 # 🗑️ SUPER ADMIN — DELETE TC
-#    SOFT DELETE
+#    SOFT DELETE ONLY
+#    SUPER ADMIN ONLY
 # =========================================================
 
 
@@ -6004,97 +6235,115 @@ def delete_tc():
     conn = None
     cursor = None
 
+    # ---------------------------------------------------------
+    # SAFE REDIRECT
+    # ---------------------------------------------------------
+    def safe_redirect():
+        referrer = request.referrer
+
+        if referrer and referrer.startswith(request.host_url):
+            return redirect(referrer)
+
+        return redirect(url_for("superadmin_tc_management"))
+
     try:
-        # =================================================
-        # GET TC ID
-        # =================================================
+        # =====================================================
+        # 1. GET TC ID
+        # =====================================================
 
-        tc_id = (request.form.get("tc_id") or "").strip()
+        tc_id_raw = (request.form.get("tc_id") or "").strip()
 
-        if not tc_id:
-            flash("Invalid TC record.", "error")
-
-            return redirect(request.referrer or url_for("superadmin_tc_management"))
+        if not tc_id_raw:
+            flash("Invalid Transfer Certificate record.", "danger")
+            return safe_redirect()
 
         try:
-            tc_id = int(tc_id)
+            tc_id = int(tc_id_raw)
 
         except (ValueError, TypeError):
-            flash("Invalid TC record.", "error")
-
-            return redirect(request.referrer or url_for("superadmin_tc_management"))
+            flash("Invalid Transfer Certificate record.", "danger")
+            return safe_redirect()
 
         if tc_id <= 0:
-            flash("Invalid TC record.", "error")
+            flash("Invalid Transfer Certificate record.", "danger")
+            return safe_redirect()
 
-            return redirect(request.referrer or url_for("superadmin_tc_management"))
-
-        # =================================================
-        # DATABASE
-        # =================================================
+        # =====================================================
+        # 2. DATABASE CONNECTION
+        # =====================================================
 
         conn = get_connection()
 
+        if not conn:
+            flash("Database connection failed.", "danger")
+            return safe_redirect()
+
         cursor = conn.cursor(dictionary=True)
 
-        # =================================================
-        # FIND ACTIVE RECORD
-        # =================================================
+        # =====================================================
+        # 3. START TRANSACTION
+        #
+        # IMPORTANT:
+        # SELECT ... FOR UPDATE must execute inside
+        # an explicit transaction.
+        # =====================================================
+
+        conn.start_transaction()
+
+        # =====================================================
+        # 4. GET TC RECORD + LOCK ROW
+        # =====================================================
 
         cursor.execute(
             """
+                SELECT
+                    id,
+                    student_id,
+                    school_id,
+                    tc_number,
+                    is_deleted
 
-            SELECT
+                FROM tc
 
-                id,
+                WHERE id = %s
 
-                student_id,
+                LIMIT 1
 
-                school_id,
-
-                tc_number,
-
-                is_deleted
-
-            FROM tc
-
-            WHERE id = %s
-
-            LIMIT 1
-
-            FOR UPDATE
-
+                FOR UPDATE
             """,
             (tc_id,),
         )
 
         tc_record = cursor.fetchone()
 
-        # =================================================
-        # NOT FOUND
-        # =================================================
+        # =====================================================
+        # 5. TC NOT FOUND
+        # =====================================================
 
         if not tc_record:
             conn.rollback()
 
-            flash("Transfer Certificate record was not found.", "error")
+            flash("Transfer Certificate record was not found.", "danger")
 
-            return redirect(request.referrer or url_for("superadmin_tc_management"))
+            return safe_redirect()
 
-        # =================================================
-        # ALREADY DELETED
-        # =================================================
+        # =====================================================
+        # 6. ALREADY DELETED
+        # =====================================================
 
         if int(tc_record.get("is_deleted") or 0) == 1:
             conn.rollback()
 
-            flash("This TC record has already been deleted.", "warning")
+            flash("This Transfer Certificate has already been deleted.", "warning")
 
-            return redirect(request.referrer or url_for("superadmin_tc_management"))
+            return safe_redirect()
 
-        # =================================================
-        # ADMIN IDENTIFIER
-        # =================================================
+        # =====================================================
+        # 7. SUPER ADMIN IDENTIFIER
+        #
+        # admin_required already protects this route.
+        # We only store an identifier for audit purposes.
+        # =====================================================
 
         deleted_by = (
             session.get("username")
@@ -6105,86 +6354,90 @@ def delete_tc():
 
         deleted_by = str(deleted_by)[:100]
 
-        # =================================================
-        # SOFT DELETE
-        # =================================================
+        # =====================================================
+        # 8. SOFT DELETE
+        # =====================================================
 
         cursor.execute(
             """
+                UPDATE tc
 
-            UPDATE tc
+                SET
+                    is_deleted = 1,
+                    deleted_at = NOW(),
+                    deleted_by = %s
 
-            SET
-
-                is_deleted = 1,
-
-                deleted_at = NOW(),
-
-                deleted_by = %s
-
-            WHERE id = %s
-
-            AND is_deleted = 0
-
+                WHERE
+                    id = %s
+                    AND is_deleted = 0
             """,
-            (deleted_by, tc_id),
+            (
+                deleted_by,
+                tc_id,
+            ),
         )
 
-        # =================================================
-        # VERIFY UPDATE
-        # =================================================
+        # =====================================================
+        # 9. VERIFY UPDATE
+        # =====================================================
 
         if cursor.rowcount != 1:
             conn.rollback()
 
-            flash("TC deletion failed. Please try again.", "error")
+            flash(
+                "TC deletion failed. The record may already have been deleted.",
+                "danger",
+            )
 
-            return redirect(request.referrer or url_for("superadmin_tc_management"))
+            return safe_redirect()
 
-        # =================================================
-        # COMMIT
-        # =================================================
+        # =====================================================
+        # 10. COMMIT
+        # =====================================================
 
         conn.commit()
 
-        # =================================================
-        # SUCCESS
-        # =================================================
+        # =====================================================
+        # 11. SUCCESS
+        # =====================================================
 
-        flash("Transfer Certificate deleted successfully.", "success")
+        tc_number = tc_record.get("tc_number") or ""
 
-        return redirect(request.referrer or url_for("superadmin_tc_management"))
+        flash(f"Transfer Certificate {tc_number} deleted successfully.", "success")
 
-    # =====================================================
-    # ERROR
-    # =====================================================
+        return safe_redirect()
 
-    except Exception as e:
+    # =========================================================
+    # ERROR HANDLING
+    # =========================================================
+
+    except Exception:
         if conn:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
 
         logger.exception("SUPER ADMIN TC DELETE ERROR")
 
-        flash("Something went wrong while deleting the TC.", "error")
+        flash("Something went wrong while deleting the Transfer Certificate.", "danger")
 
-        return redirect(request.referrer or url_for("superadmin_tc_management"))
+        return safe_redirect()
 
-    # =====================================================
+    # =========================================================
     # CLEANUP
-    # =====================================================
+    # =========================================================
 
     finally:
         if cursor:
             try:
                 cursor.close()
-
             except Exception:
                 pass
 
         if conn:
             try:
                 conn.close()
-
             except Exception:
                 pass
 
@@ -6747,9 +7000,9 @@ def superadmin_bonafide_management():
 
 
 # =========================================================
-# 🗑️ DELETE BONAFIDE
-# SOFT DELETE
-# SUPER ADMIN ONLY
+# 🗑️ SUPER ADMIN — DELETE BONAFIDE
+#    SOFT DELETE ONLY
+#    SUPER ADMIN ONLY
 # =========================================================
 
 
@@ -6760,39 +7013,44 @@ def delete_bonafide():
     conn = None
     cursor = None
 
+    # ---------------------------------------------------------
+    # SAFE REDIRECT
+    # ---------------------------------------------------------
+    def safe_redirect():
+        referrer = request.referrer
+
+        if referrer and referrer.startswith(request.host_url):
+            return redirect(referrer)
+
+        return redirect(url_for("superadmin_bonafide_management"))
+
     try:
         # =====================================================
-        # GET BONAFIDE ID
+        # 1. GET BONAFIDE ID
         # =====================================================
 
-        bonafide_id = (request.form.get("bonafide_id") or "").strip()
+        bonafide_id_raw = (request.form.get("bonafide_id") or "").strip()
 
-        if not bonafide_id:
-            flash("Invalid Bonafide ID.", "danger")
+        if not bonafide_id_raw:
+            flash("Invalid Bonafide record.", "danger")
 
-            return redirect(
-                request.referrer or url_for("superadmin_bonafide_management")
-            )
+            return safe_redirect()
 
         try:
-            bonafide_id = int(bonafide_id)
+            bonafide_id = int(bonafide_id_raw)
 
         except (ValueError, TypeError):
-            flash("Invalid Bonafide ID.", "danger")
+            flash("Invalid Bonafide record.", "danger")
 
-            return redirect(
-                request.referrer or url_for("superadmin_bonafide_management")
-            )
+            return safe_redirect()
 
         if bonafide_id <= 0:
-            flash("Invalid Bonafide ID.", "danger")
+            flash("Invalid Bonafide record.", "danger")
 
-            return redirect(
-                request.referrer or url_for("superadmin_bonafide_management")
-            )
+            return safe_redirect()
 
         # =====================================================
-        # DATABASE
+        # 2. DATABASE CONNECTION
         # =====================================================
 
         conn = get_connection()
@@ -6800,40 +7058,32 @@ def delete_bonafide():
         if not conn:
             flash("Database connection failed.", "danger")
 
-            return redirect(
-                request.referrer or url_for("superadmin_bonafide_management")
-            )
+            return safe_redirect()
 
         cursor = conn.cursor(dictionary=True)
 
         # =====================================================
-        # START TRANSACTION
+        # 3. START TRANSACTION
         # =====================================================
 
         conn.start_transaction()
 
         # =====================================================
-        # GET ACTIVE RECORD
+        # 4. GET BONAFIDE RECORD + LOCK ROW
         # =====================================================
 
         cursor.execute(
             """
                 SELECT
-
                     id,
-
                     student_id,
-
                     school_id,
-
                     bonafide_number,
-
                     is_deleted
 
                 FROM bonafide
 
-                WHERE
-                    id = %s
+                WHERE id = %s
 
                 LIMIT 1
 
@@ -6845,33 +7095,29 @@ def delete_bonafide():
         bonafide = cursor.fetchone()
 
         # =====================================================
-        # NOT FOUND
+        # 5. NOT FOUND
         # =====================================================
 
         if not bonafide:
             conn.rollback()
 
-            flash("Bonafide record not found.", "danger")
+            flash("Bonafide record was not found.", "danger")
 
-            return redirect(
-                request.referrer or url_for("superadmin_bonafide_management")
-            )
+            return safe_redirect()
 
         # =====================================================
-        # ALREADY DELETED
+        # 6. ALREADY DELETED
         # =====================================================
 
         if int(bonafide.get("is_deleted") or 0) == 1:
             conn.rollback()
 
-            flash("Bonafide record is already deleted.", "warning")
+            flash("This Bonafide record has already been deleted.", "warning")
 
-            return redirect(
-                request.referrer or url_for("superadmin_bonafide_management")
-            )
+            return safe_redirect()
 
         # =====================================================
-        # ADMIN IDENTIFIER
+        # 7. SUPER ADMIN IDENTIFIER
         # =====================================================
 
         deleted_by = (
@@ -6884,7 +7130,7 @@ def delete_bonafide():
         deleted_by = str(deleted_by)[:100]
 
         # =====================================================
-        # SOFT DELETE
+        # 8. SOFT DELETE
         # =====================================================
 
         cursor.execute(
@@ -6892,84 +7138,81 @@ def delete_bonafide():
                 UPDATE bonafide
 
                 SET
-
                     is_deleted = 1,
-
                     deleted_at = NOW(),
-
                     deleted_by = %s
 
                 WHERE
-
                     id = %s
-
                     AND is_deleted = 0
             """,
-            (deleted_by, bonafide_id),
+            (
+                deleted_by,
+                bonafide_id,
+            ),
         )
 
         # =====================================================
-        # VERIFY UPDATE
+        # 9. VERIFY UPDATE
         # =====================================================
 
         if cursor.rowcount != 1:
             conn.rollback()
 
             flash(
-                "Bonafide deletion failed. The record may already be deleted.", "danger"
+                "Bonafide deletion failed. The record may already have been deleted.",
+                "danger",
             )
 
-            return redirect(
-                request.referrer or url_for("superadmin_bonafide_management")
-            )
+            return safe_redirect()
 
         # =====================================================
-        # COMMIT
+        # 10. COMMIT
         # =====================================================
 
         conn.commit()
 
         # =====================================================
-        # SUCCESS
+        # 11. SUCCESS
         # =====================================================
 
-        flash(
-            f"Bonafide {bonafide.get('bonafide_number') or ''} deleted successfully.",
-            "success",
-        )
+        bonafide_number = bonafide.get("bonafide_number") or ""
 
-        # =====================================================
-        # REDIRECT
-        # =====================================================
+        flash(f"Bonafide {bonafide_number} deleted successfully.", "success")
 
-        return redirect(request.referrer or url_for("superadmin_bonafide_management"))
+        return safe_redirect()
 
-    except Exception as e:
+    # =========================================================
+    # ERROR HANDLING
+    # =========================================================
+
+    except Exception:
         if conn:
             try:
                 conn.rollback()
-
             except Exception:
                 pass
 
-        logger.exception("SOFT DELETE BONAFIDE ERROR")
+        logger.exception("SUPER ADMIN BONAFIDE DELETE ERROR")
 
-        flash("Something went wrong while deleting Bonafide.", "danger")
+        flash("Something went wrong while deleting the Bonafide.", "danger")
 
-        return redirect(request.referrer or url_for("superadmin_bonafide_management"))
+        return safe_redirect()
+
+    # =========================================================
+    # CLEANUP
+    # =========================================================
 
     finally:
         if cursor:
             try:
                 cursor.close()
-
             except Exception:
                 pass
 
         if conn:
             try:
                 conn.close()
-
             except Exception:
                 pass
 
@@ -7413,7 +7656,7 @@ def add_user():
 
         phone = (request.form.get("phone") or "").strip()
 
-        password = (request.form.get("password") or "").strip()
+        password = request.form.get("password") or ""
 
         role = (request.form.get("role") or "").strip().lower()
 
@@ -9510,7 +9753,6 @@ def superadmin_edit_subscription():
 
         end_date_raw = (request.form.get("end_date") or "").strip()
 
-        # Optional admin note / reason
         change_reason = (request.form.get("change_reason") or "").strip()
 
         # =====================================================
@@ -9585,16 +9827,23 @@ def superadmin_edit_subscription():
 
             return redirect(url_for("superadmin_subscriptions"))
 
+        conn.start_transaction()
+
         cursor = conn.cursor(dictionary=True)
 
         # =====================================================
-        # GET CURRENT SUBSCRIPTION
+        # LOCK CURRENT SUBSCRIPTION
+        #
+        # IMPORTANT:
+        # Same subscription cannot be modified at the same
+        # time by payment finalization.
+        #
+        # Different schools/subscriptions remain concurrent.
         # =====================================================
 
         cursor.execute(
             """
             SELECT
-
                 id,
                 school_id,
                 plan_id,
@@ -9602,7 +9851,10 @@ def superadmin_edit_subscription():
                 start_date,
                 end_date,
                 amount,
-                status
+                status,
+                billing_cycle,
+                payment_status,
+                next_billing_date
 
             FROM subscriptions
 
@@ -9627,30 +9879,24 @@ def superadmin_edit_subscription():
         school_id = subscription["school_id"]
 
         old_plan_id = subscription["plan_id"]
-
         old_plan_name = subscription["plan_name"]
-
         old_amount = subscription["amount"]
-
         old_start_date = subscription["start_date"]
-
         old_end_date = subscription["end_date"]
+        old_billing_cycle = subscription["billing_cycle"] or "monthly"
+        old_payment_status = subscription["payment_status"]
 
         # =====================================================
         # GET SELECTED PLAN
         #
-        # IMPORTANT:
         # Never trust price/features from browser.
-        # Fetch everything from DB.
         # =====================================================
 
         cursor.execute(
             """
             SELECT
-
                 id,
                 plan_name,
-
                 monthly_price,
                 yearly_price,
 
@@ -9700,13 +9946,36 @@ def superadmin_edit_subscription():
 
         new_plan_name = plan["plan_name"]
 
-        new_amount = plan["monthly_price"] or 0
+        # =====================================================
+        # AMOUNT LOGIC
+        #
+        # If only dates are changed and plan remains same,
+        # preserve the existing agreed amount.
+        #
+        # If plan changes, calculate amount using the
+        # subscription's existing billing cycle.
+        # =====================================================
+
+        if old_plan_id == plan_id:
+            new_amount = (
+                old_amount
+                if old_amount is not None
+                else (
+                    plan["yearly_price"]
+                    if old_billing_cycle == "yearly"
+                    else plan["monthly_price"]
+                )
+            )
+
+        else:
+            if old_billing_cycle == "yearly":
+                new_amount = plan["yearly_price"] or 0
+
+            else:
+                new_amount = plan["monthly_price"] or 0
 
         # =====================================================
         # DOWNGRADE PROTECTION
-        #
-        # Do not allow a plan whose limits are below
-        # existing school usage.
         # =====================================================
 
         cursor.execute(
@@ -9717,7 +9986,7 @@ def superadmin_edit_subscription():
                     SELECT COUNT(*)
                     FROM students
                     WHERE school_id = %s
-                    AND is_deleted = 0
+                      AND is_deleted = 0
                 ) AS student_count,
 
                 (
@@ -9725,7 +9994,6 @@ def superadmin_edit_subscription():
                     FROM users
                     WHERE school_id = %s
                       AND role != 'admin'
-                       
                 ) AS staff_count,
 
                 (
@@ -9742,12 +10010,7 @@ def superadmin_edit_subscription():
                       AND is_deleted = 0
                 ) AS bonafide_count
             """,
-            (
-                school_id,
-                school_id,
-                school_id,
-                school_id,
-            ),
+            (school_id, school_id, school_id, school_id),
         )
 
         usage = cursor.fetchone()
@@ -9767,47 +10030,36 @@ def superadmin_edit_subscription():
         limit_errors = []
 
         student_limit = plan["student_limit"]
-
         staff_limit = plan["staff_limit"]
-
         tc_limit = plan["tc_limit"]
-
         bonafide_limit = plan["bonafide_limit"]
 
-        # Students
         if student_limit is not None and student_count > int(student_limit):
             limit_errors.append(
-                f"Students: {student_count} "
-                f"currently used, "
-                f"but {new_plan_name} allows "
-                f"only {student_limit}."
+                f"Students: {student_count} currently used, "
+                f"but {new_plan_name} allows only "
+                f"{student_limit}."
             )
 
-        # Staff
         if staff_limit is not None and staff_count > int(staff_limit):
             limit_errors.append(
-                f"Staff: {staff_count} "
-                f"currently used, "
-                f"but {new_plan_name} allows "
-                f"only {staff_limit}."
+                f"Staff: {staff_count} currently used, "
+                f"but {new_plan_name} allows only "
+                f"{staff_limit}."
             )
 
-        # TC
         if tc_limit is not None and tc_count > int(tc_limit):
             limit_errors.append(
-                f"TC: {tc_count} "
-                f"currently used, "
-                f"but {new_plan_name} allows "
-                f"only {tc_limit}."
+                f"TC: {tc_count} currently used, "
+                f"but {new_plan_name} allows only "
+                f"{tc_limit}."
             )
 
-        # Bonafide
         if bonafide_limit is not None and bonafide_count > int(bonafide_limit):
             limit_errors.append(
-                f"Bonafide: {bonafide_count} "
-                f"currently used, "
-                f"but {new_plan_name} allows "
-                f"only {bonafide_limit}."
+                f"Bonafide: {bonafide_count} currently used, "
+                f"but {new_plan_name} allows only "
+                f"{bonafide_limit}."
             )
 
         # =====================================================
@@ -9832,24 +10084,30 @@ def superadmin_edit_subscription():
         # =====================================================
         # EFFECTIVE STATUS
         #
-        # Never trust status from the browser.
+        # Server calculates status from the final end date.
         #
-        # end_date >= today -> active
-        # end_date < today  -> expired
+        # End today = active
+        # End before today = expired
         # =====================================================
 
         today = date.today()
 
-        if end_obj < today:
-            effective_status = "expired"
+        if end_obj >= today:
+            effective_status = "active"
 
         else:
-            effective_status = "active"
+            effective_status = "expired"
 
         # =====================================================
         # UPDATE SUBSCRIPTION
         #
-        # plan_name + amount come from DB plan.
+        # IMPORTANT:
+        #
+        # This is a MANUAL ADMIN OVERRIDE.
+        #
+        # We do NOT add duration here.
+        #
+        # Admin-entered start/end dates are authoritative.
         # =====================================================
 
         cursor.execute(
@@ -9857,20 +10115,20 @@ def superadmin_edit_subscription():
             UPDATE subscriptions
 
             SET
-
                 plan_id = %s,
-
                 plan_name = %s,
 
                 start_date = %s,
-
                 end_date = %s,
 
                 amount = %s,
 
-                status = %s
+                status = %s,
+
+                next_billing_date = %s
 
             WHERE id = %s
+              AND school_id = %s
             """,
             (
                 plan_id,
@@ -9879,80 +10137,56 @@ def superadmin_edit_subscription():
                 end_obj,
                 new_amount,
                 effective_status,
+                end_obj,
                 subscription_id,
+                school_id,
             ),
         )
 
-        # =========================================================
+        if cursor.rowcount != 1:
+            raise RuntimeError("Subscription update failed.")
+
+        # =====================================================
         # APPLY PLAN FEATURES
         #
-        # Only re-apply features when the subscription plan
-        # actually changes.
-        # =========================================================
+        # Only when the plan actually changes.
+        # =====================================================
 
         if old_plan_id != plan_id:
             feature_result = apply_plan_features(cursor, school_id, plan_id)
 
             if not feature_result:
-                conn.rollback()
-
-                flash(
-                    "Subscription was not changed because "
-                    "the plan features could not be applied.",
-                    "danger",
+                raise RuntimeError(
+                    "Subscription was changed in memory "
+                    "but plan features could not be applied."
                 )
-
-                return redirect(url_for("superadmin_subscriptions"))
 
         # =====================================================
         # OPTIONAL AUDIT LOG
         #
-        # Only use this block AFTER creating the table below.
+        # Keep your existing audit block here if/when the
+        # subscription_changes table is created.
         # =====================================================
 
-        # cursor.execute(
-        #     """
-        #     INSERT INTO subscription_changes
-        #     (
-        #         subscription_id,
-        #         school_id,
-        #         old_plan_id,
-        #         new_plan_id,
-        #         old_plan_name,
-        #         new_plan_name,
-        #         old_amount,
-        #         new_amount,
-        #         old_start_date,
-        #         new_start_date,
-        #         old_end_date,
-        #         new_end_date,
-        #         change_reason,
-        #         changed_at
-        #     )
-        #     VALUES
-        #     (
-        #         %s, %s, %s, %s,
-        #         %s, %s, %s, %s,
-        #         %s, %s, %s, %s,
-        #         %s, NOW()
-        #     )
-        #     """,
-        #     (
-        #         subscription_id,
-        #         school_id,
-        #         old_plan_id,
-        #         plan_id,
-        #         old_plan_name,
-        #         new_plan_name,
-        #         old_amount,
-        #         new_amount,
-        #         old_start_date,
-        #         start_obj,
-        #         old_end_date,
-        #         end_obj,
-        #         change_reason,
-        #     )
-        # )
+        # Example values available for audit:
+        #
+        # subscription_id
+        # school_id
+        # old_plan_id
+        # plan_id
+        # old_plan_name
+        # new_plan_name
+        # old_amount
+        # new_amount
+        # old_start_date
+        # start_obj
+        # old_end_date
+        # end_obj
+        # change_reason
+        #
+        # IMPORTANT:
+        # Do not change payment_status here because an admin
+        # date adjustment is not a payment.
 
         # =====================================================
         # COMMIT EVERYTHING
@@ -9968,12 +10202,17 @@ def superadmin_edit_subscription():
             flash(
                 f"Subscription updated successfully. "
                 f"{old_plan_name} → {new_plan_name}. "
-                f"All plan features and limits have been applied.",
+                f"Dates, billing information and plan "
+                f"features have been synchronized.",
                 "success",
             )
 
         else:
-            flash("Subscription updated successfully.", "success")
+            flash(
+                "Subscription dates updated successfully. "
+                "Expiry and next billing date are synchronized.",
+                "success",
+            )
 
         return redirect(url_for("superadmin_subscriptions"))
 
@@ -10355,9 +10594,8 @@ def superadmin_plans():
         if conn:
             conn.close()
 
-            # =========================================================
 
-
+# =========================================================
 # 💳 SUPER ADMIN - EDIT SUBSCRIPTION PLAN
 # =========================================================
 
@@ -10417,7 +10655,7 @@ def superadmin_edit_plan():
         # NUMERIC VALUES
         # =====================================================
 
-        def get_decimal(field_name, default=0):
+        def get_decimal(field_name):
 
             raw = (request.form.get(field_name) or "").strip()
 
@@ -10432,7 +10670,7 @@ def superadmin_edit_plan():
 
             return value
 
-        def get_integer(field_name, minimum=0):
+        def get_integer(field_name, minimum=0, maximum=None):
 
             raw = (request.form.get(field_name) or "").strip()
 
@@ -10444,6 +10682,9 @@ def superadmin_edit_plan():
 
             if value < minimum:
                 raise ValueError(f"{field_name} has an invalid value.")
+
+            if maximum is not None and value > maximum:
+                raise ValueError(f"{field_name} exceeds the allowed limit.")
 
             return value
 
@@ -10459,7 +10700,14 @@ def superadmin_edit_plan():
 
         bonafide_limit = get_integer("bonafide_limit")
 
-        duration_months = get_integer("duration_months", minimum=1)
+        # Duration is a PLAN definition.
+        #
+        # It controls future renewals.
+        #
+        # It must NOT rewrite already-paid subscription
+        # dates.
+
+        duration_months = get_integer("duration_months", minimum=1, maximum=120)
 
         # =====================================================
         # STATUS
@@ -10471,9 +10719,6 @@ def superadmin_edit_plan():
 
         # =====================================================
         # MODULES
-        #
-        # Checkbox checked  = Enabled
-        # Checkbox unchecked = Disabled
         # =====================================================
 
         module_fields = [
@@ -10507,10 +10752,72 @@ def superadmin_edit_plan():
 
         conn = get_connection()
 
-        # Transaction begins here.
+        if not conn:
+            flash("Database connection failed.", "error")
+
+            return redirect(url_for("superadmin_plans"))
+
         conn.start_transaction()
 
         cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # IMPORTANT CONCURRENCY ORDER
+        #
+        # When applying changes to existing subscriptions:
+        #
+        #     1. Lock affected subscriptions
+        #     2. Lock plan
+        #
+        # Payment finalization uses:
+        #
+        #     payment_log -> subscription -> plan
+        #
+        # This avoids reversing subscription/plan lock order.
+        # =====================================================
+
+        active_schools = []
+
+        if apply_to_existing:
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    school_id
+
+                FROM subscriptions
+
+                WHERE plan_id = %s
+
+                  AND LOWER(
+                      COALESCE(status, '')
+                  ) = 'active'
+
+                  AND (
+                      end_date IS NULL
+                      OR end_date >= CURDATE()
+                  )
+
+                ORDER BY
+                    id ASC
+
+                FOR UPDATE
+                """,
+                (plan_id,),
+            )
+
+            active_subscription_rows = cursor.fetchall()
+
+            # Unique school IDs.
+            seen_school_ids = set()
+
+            for row in active_subscription_rows:
+                school_id = row["school_id"]
+
+                if school_id not in seen_school_ids:
+                    seen_school_ids.add(school_id)
+
+                    active_schools.append({"school_id": school_id})
 
         # =====================================================
         # LOCK CURRENT PLAN
@@ -10519,13 +10826,11 @@ def superadmin_edit_plan():
         cursor.execute(
             """
             SELECT *
-
             FROM subscription_plans
-
             WHERE id = %s
-
+            LIMIT 1
             FOR UPDATE
-        """,
+            """,
             (plan_id,),
         )
 
@@ -10546,15 +10851,11 @@ def superadmin_edit_plan():
             """
             SELECT
                 id
-
             FROM subscription_plans
-
             WHERE LOWER(plan_name) = LOWER(%s)
-
-            AND id <> %s
-
+              AND id <> %s
             LIMIT 1
-        """,
+            """,
             (plan_name, plan_id),
         )
 
@@ -10580,19 +10881,14 @@ def superadmin_edit_plan():
                 plan_name = %s,
 
                 monthly_price = %s,
-
                 yearly_price = %s,
 
                 student_limit = %s,
-
                 tc_limit = %s,
-
                 bonafide_limit = %s,
-
                 staff_limit = %s,
 
                 support_type = %s,
-
                 storage_limit = %s,
 
                 duration_months = %s,
@@ -10600,26 +10896,17 @@ def superadmin_edit_plan():
                 is_active = %s,
 
                 enable_tc_management = %s,
-
                 enable_bonafide_management = %s,
-
                 enable_import_export = %s,
-
                 enable_attendance = %s,
-
                 enable_fee_management = %s,
-
                 enable_teacher_management = %s,
-
                 enable_results = %s,
-
                 enable_timetable = %s,
-
                 enable_notice_board = %s
 
             WHERE id = %s
-
-        """,
+            """,
             (
                 plan_name,
                 monthly_price,
@@ -10647,6 +10934,23 @@ def superadmin_edit_plan():
 
         # =====================================================
         # APPLY TO EXISTING ACTIVE SUBSCRIPTIONS
+        #
+        # IMPORTANT:
+        #
+        # Existing customers keep:
+        #
+        #     start_date
+        #     end_date
+        #     amount
+        #     billing_cycle
+        #     next_billing_date
+        #
+        # We ONLY synchronize:
+        #
+        #     plan_name
+        #     school module access
+        #
+        # Duration changes apply to FUTURE renewals.
         # =====================================================
 
         updated_subscriptions = 0
@@ -10654,39 +10958,7 @@ def superadmin_edit_plan():
 
         if apply_to_existing:
             # -------------------------------------------------
-            # GET ACTIVE SUBSCRIBERS OF THIS PLAN
-            # -------------------------------------------------
-
-            cursor.execute(
-                """
-                SELECT DISTINCT
-                    school_id
-
-                FROM subscriptions
-
-                WHERE plan_id = %s
-
-                AND LOWER(
-                    COALESCE(status, '')
-                ) = 'active'
-
-                AND (
-                    end_date IS NULL
-                    OR end_date >= CURDATE()
-                )
-
-                FOR UPDATE
-            """,
-                (plan_id,),
-            )
-
-            active_schools = cursor.fetchall()
-
-            # -------------------------------------------------
-            # UPDATE SUBSCRIPTION PLAN NAME
-            #
-            # Do NOT modify amount.
-            # Existing customers keep their agreed amount.
+            # UPDATE EXISTING SUBSCRIPTION PLAN NAME
             # -------------------------------------------------
 
             cursor.execute(
@@ -10698,15 +10970,15 @@ def superadmin_edit_plan():
 
                 WHERE plan_id = %s
 
-                AND LOWER(
-                    COALESCE(status, '')
-                ) = 'active'
+                  AND LOWER(
+                      COALESCE(status, '')
+                  ) = 'active'
 
-                AND (
-                    end_date IS NULL
-                    OR end_date >= CURDATE()
-                )
-            """,
+                  AND (
+                      end_date IS NULL
+                      OR end_date >= CURDATE()
+                  )
+                """,
                 (plan_name, plan_id),
             )
 
@@ -10726,26 +10998,17 @@ def superadmin_edit_plan():
                     SET
 
                         enable_tc_management = %s,
-
                         enable_bonafide_management = %s,
-
                         enable_import_export = %s,
-
                         enable_attendance = %s,
-
                         enable_fee_management = %s,
-
                         enable_teacher_management = %s,
-
                         enable_results = %s,
-
                         enable_timetable = %s,
-
                         enable_notice_board = %s
 
                     WHERE school_id = %s
-
-                """,
+                    """,
                     (
                         module_values["enable_tc_management"],
                         module_values["enable_bonafide_management"],
@@ -10777,9 +11040,12 @@ def superadmin_edit_plan():
             flash(
                 (
                     f"Plan '{plan_name}' updated successfully. "
-                    f"{updated_subscriptions} active subscription(s) "
-                    f"and {updated_schools} school feature configuration(s) "
-                    f"were synchronized."
+                    f"{updated_subscriptions} active "
+                    f"subscription(s) and "
+                    f"{updated_schools} school feature "
+                    f"configuration(s) were synchronized. "
+                    f"Existing subscription dates were "
+                    f"preserved."
                 ),
                 "success",
             )
@@ -10795,9 +11061,16 @@ def superadmin_edit_plan():
 
         return redirect(url_for("superadmin_plans"))
 
+    # =====================================================
+    # VALIDATION ERROR
+    # =====================================================
+
     except ValueError as e:
         if conn:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
 
         print("❌ PLAN VALIDATION ERROR:", e)
 
@@ -10805,9 +11078,18 @@ def superadmin_edit_plan():
 
         return redirect(url_for("superadmin_plans"))
 
+    # =====================================================
+    # GENERAL ERROR
+    # =====================================================
+
     except Exception as e:
         if conn:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception("SUPER ADMIN EDIT PLAN ERROR")
 
         print("❌ SUPER ADMIN EDIT PLAN ERROR:", e)
 
@@ -10815,16 +11097,25 @@ def superadmin_edit_plan():
 
         return redirect(url_for("superadmin_plans"))
 
+    # =====================================================
+    # CLEANUP
+    # =====================================================
+
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
-            # =========================================================
 
-
+# =========================================================
 # 💳 SUPER ADMIN - CREATE SUBSCRIPTION PLAN
 # =========================================================
 
@@ -16483,173 +16774,6 @@ def save_security_settings():
 
 
 # =========================================================
-# 💳 RENEW SUBSCRIPTION PAGE
-# =========================================================
-@app.route("/clerk/subscription/renew")
-@login_required
-def renew_subscription():
-
-    # =====================================================
-    # CLERK ACCESS CHECK
-    # =====================================================
-
-    if session.get("clerk_role") != "clerk":
-        abort(401)
-
-    school_id = session.get("clerk_school_id")
-
-    if not school_id:
-        flash("School session missing. Please login again.", "danger")
-        return redirect(url_for("login"))
-
-    conn = None
-    cursor = None
-
-    try:
-        # =================================================
-        # DATABASE
-        # =================================================
-
-        conn = get_connection()
-
-        if not conn:
-            flash("Unable to connect to the database. Please try again.", "danger")
-
-            return redirect(url_for("clerk_dashboard"))
-
-        cursor = conn.cursor(dictionary=True)
-
-        # =================================================
-        # CURRENT SUBSCRIPTION
-        # =================================================
-
-        subscription = get_latest_subscription(school_id)
-
-        if not subscription:
-            flash("No subscription record found for this school.", "warning")
-
-            return redirect(url_for("clerk_dashboard"))
-
-        # =================================================
-        # AVAILABLE PLANS
-        # =================================================
-
-        cursor.execute(
-            """
-            SELECT
-
-                id,
-                plan_name,
-
-                monthly_price,
-                yearly_price,
-
-                student_limit,
-                tc_limit,
-                bonafide_limit,
-                staff_limit,
-
-                storage_limit,
-                support_type,
-
-                enable_tc_management,
-                enable_bonafide_management,
-                enable_import_export,
-                enable_attendance,
-                enable_fee_management,
-                enable_teacher_management,
-                enable_results,
-                enable_timetable,
-                enable_notice_board
-
-            FROM subscription_plans
-
-            WHERE is_active = 1
-
-            AND plan_name IN (
-                'Starter',
-                'Essential',
-                'Professional'
-            )
-
-            ORDER BY monthly_price ASC
-            """
-        )
-
-        plans = cursor.fetchall()
-
-        # =================================================
-        # CURRENT PLAN FEATURE COUNT
-        # =================================================
-
-        feature_columns = [
-            "enable_tc_management",
-            "enable_bonafide_management",
-            "enable_import_export",
-            "enable_attendance",
-            "enable_fee_management",
-            "enable_teacher_management",
-            "enable_results",
-            "enable_timetable",
-            "enable_notice_board",
-        ]
-
-        current_feature_count = sum(
-            1
-            for column in feature_columns
-            if str(subscription.get(column) or "").lower() == "enabled"
-        )
-
-        # =================================================
-        # DAYS LEFT
-        # =================================================
-
-        days_left = -1
-
-        end_date = subscription.get("end_date")
-
-        if end_date:
-            if hasattr(end_date, "date"):
-                end_date = end_date.date()
-
-            days_left = (end_date - date.today()).days
-
-            if days_left < 0:
-                days_left = 0
-
-        # =================================================
-        # RENDER
-        # =================================================
-
-        return render_template(
-            "subscription/renew.html",
-            subscription=subscription,
-            plans=plans,
-            current_feature_count=current_feature_count,
-            days_left=days_left,
-            role="clerk",
-            active_page="subscription",
-        )
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-
-        logger.exception("RENEW SUBSCRIPTION PAGE ERROR")
-
-        flash("Unable to load subscription page. Please try again.", "danger")
-
-        return redirect(url_for("clerk_dashboard"))
-
-    finally:
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
-
-
-# =========================================================
 # 📄 SAVE CERTIFICATE SETTINGS
 # =========================================================
 @app.route("/superadmin/settings/certificate", methods=["POST"])
@@ -18104,9 +18228,215 @@ def save_branding_settings():
 
 
 # _________________________________________________________________________________________
+# RENEWALS PaGES fFOR CLERK
+
 
 # =========================================================
-# 💰 PAYMENT PAGE (PRODUCTION READY)
+# 💳 RENEW SUBSCRIPTION PAGE
+# =========================================================
+@app.route("/clerk/subscription/renew")
+@login_required
+def renew_subscription():
+
+    # =====================================================
+    # CLERK ACCESS CHECK
+    # =====================================================
+
+    if session.get("clerk_role") != "clerk":
+        abort(403)
+
+    school_id = session.get("clerk_school_id")
+
+    if not school_id:
+        flash("School session missing. Please login again.", "danger")
+        return redirect(url_for("login"))
+
+    conn = None
+    cursor = None
+
+    try:
+        # =================================================
+        # DATABASE
+        # =================================================
+
+        conn = get_connection()
+
+        if not conn:
+            flash("Unable to connect to the database. Please try again.", "danger")
+            return redirect(url_for("clerk_dashboard"))
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =================================================
+        # CURRENT SUBSCRIPTION
+        # =================================================
+
+        subscription = get_latest_subscription(school_id)
+
+        if not subscription:
+            flash("No subscription record found for this school.", "warning")
+            return redirect(url_for("clerk_dashboard"))
+
+        # =================================================
+        # AVAILABLE PLANS
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                plan_name,
+
+                monthly_price,
+                yearly_price,
+
+                student_limit,
+                tc_limit,
+                bonafide_limit,
+                staff_limit,
+
+                storage_limit,
+                support_type,
+                duration_months,
+
+                enable_tc_management,
+                enable_bonafide_management,
+                enable_import_export,
+                enable_attendance,
+                enable_fee_management,
+                enable_teacher_management,
+                enable_results,
+                enable_timetable,
+                enable_notice_board,
+
+                display_order,
+                is_featured,
+                short_description,
+                best_for
+
+            FROM subscription_plans
+
+            WHERE is_active = 1
+              AND is_public = 1
+
+            ORDER BY display_order ASC, id ASC
+            """
+        )
+
+        plans = cursor.fetchall()
+
+        # =================================================
+        # LATEST PAYMENT
+        # =================================================
+
+        latest_payment = None
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                school_id,
+                subscription_id,
+                plan_id,
+                amount,
+                payment_status,
+                payment_id,
+                order_id,
+                created_at,
+                transaction_type,
+                payment_gateway,
+                invoice_number
+            FROM payment_logs
+            WHERE school_id = %s
+            AND subscription_id = %s
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (school_id, subscription["id"]),
+        )
+
+        latest_payment = cursor.fetchone()
+
+        # =================================================
+        # CURRENT PLAN FEATURE COUNT
+        # =================================================
+
+        feature_columns = [
+            "enable_tc_management",
+            "enable_bonafide_management",
+            "enable_import_export",
+            "enable_attendance",
+            "enable_fee_management",
+            "enable_teacher_management",
+            "enable_results",
+            "enable_timetable",
+            "enable_notice_board",
+        ]
+
+        current_feature_count = sum(
+            1
+            for column in feature_columns
+            if str(subscription.get(column) or "").strip().lower() == "enabled"
+        )
+
+        # =================================================
+        # DAYS LEFT
+        # =================================================
+
+        days_left = -1
+
+        end_date = subscription.get("end_date")
+
+        if end_date:
+            if hasattr(end_date, "date"):
+                end_date = end_date.date()
+
+            days_left = (end_date - date.today()).days
+
+        # =================================================
+        # EXPIRY STATUS
+        # =================================================
+
+        subscription_status = str(subscription.get("status") or "").strip().lower()
+
+        is_expired = days_left < 0 or subscription_status == "expired"
+
+        # =================================================
+        # RENDER
+        # =================================================
+
+        return render_template(
+            "subscription/renew.html",
+            subscription=subscription,
+            plans=plans,
+            latest_payment=latest_payment,
+            current_feature_count=current_feature_count,
+            days_left=days_left,
+            is_expired=is_expired,
+            role="clerk",
+            active_page="subscription",
+        )
+
+    except Exception:
+        if conn:
+            conn.rollback()
+
+        logger.exception("RENEW SUBSCRIPTION PAGE ERROR")
+
+        flash("Unable to load subscription page. Please try again.", "danger")
+
+        return redirect(url_for("clerk_dashboard"))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# =========================================================
+# 💳 SUBSCRIPTION PAYMENT CHECKOUT
 # =========================================================
 
 
@@ -18118,70 +18448,101 @@ def subscription_payment():
     cursor = None
 
     try:
-        # =========================================
-        # CLERK VALIDATION
-        # =========================================
+        # =================================================
+        # CLERK ACCESS
+        # =================================================
 
         if session.get("clerk_role") != "clerk":
-            abort(401)
+            abort(403)
+
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            abort(404)
-        # =========================================
+            flash("Your school session has expired. Please login again.", "danger")
+
+            return redirect(url_for("login"))
+
+        # =================================================
         # FORM DATA
-        # =========================================
+        # =================================================
 
-        subscription_id = request.form.get("subscription_id", "").strip()
+        subscription_id_raw = request.form.get("subscription_id", "").strip()
 
-        plan_id = request.form.get("plan_id", "").strip()
+        plan_id_raw = request.form.get("plan_id", "").strip()
 
-        if not subscription_id:
-            return "Subscription missing ❌"
+        billing_cycle = request.form.get("billing_cycle", "monthly").strip().lower()
 
-        if not plan_id:
-            return "Plan missing ❌"
+        # =================================================
+        # BASIC VALIDATION
+        # =================================================
 
-        if not subscription_id.isdigit():
-            return "Invalid subscription ❌"
+        if not subscription_id_raw.isdigit():
+            flash("Invalid subscription request.", "danger")
 
-        if not plan_id.isdigit():
-            return "Invalid plan ❌"
+            return redirect(url_for("renew_subscription"))
 
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+        if not plan_id_raw.isdigit():
+            flash("Invalid subscription plan.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        if billing_cycle not in ("monthly", "yearly"):
+            flash("Invalid billing cycle selected.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        subscription_id = int(subscription_id_raw)
+        plan_id = int(plan_id_raw)
+
+        # =================================================
+        # DATABASE
+        # =================================================
 
         conn = get_connection()
 
         if not conn:
-            return "Database connection failed ❌"
+            flash(
+                "Unable to connect to the payment service. Please try again.", "danger"
+            )
 
-        cursor = conn.cursor()
+            return redirect(url_for("renew_subscription"))
 
-        # =========================================
-        # VERIFY SUBSCRIPTION BELONGS TO SCHOOL
-        # =========================================
+        cursor = conn.cursor(dictionary=True)
+
+        # =================================================
+        # VERIFY SUBSCRIPTION OWNERSHIP
+        # =================================================
 
         cursor.execute(
             """
             SELECT
-                id
+                id,
+                school_id,
+                plan_id,
+                plan_name,
+                status,
+                start_date,
+                end_date,
+                billing_cycle,
+                payment_status
             FROM subscriptions
             WHERE id = %s
-            AND school_id = %s
-        """,
-            (int(subscription_id), school_id),
+              AND school_id = %s
+            LIMIT 1
+            """,
+            (subscription_id, school_id),
         )
 
         subscription = cursor.fetchone()
 
         if not subscription:
-            return "Invalid subscription ❌"
+            flash("The subscription could not be verified.", "danger")
 
-        # =========================================
-        # GET ACTIVE PLAN
-        # =========================================
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # VERIFY PLAN
+        # =================================================
 
         cursor.execute(
             """
@@ -18190,70 +18551,195 @@ def subscription_payment():
                 plan_name,
                 monthly_price,
                 yearly_price,
-                duration_months
+                duration_months,
+                is_active,
+                is_public
             FROM subscription_plans
             WHERE id = %s
-            AND is_active = 1
-        """,
-            (int(plan_id),),
+              AND is_active = 1
+              AND is_public = 1
+            LIMIT 1
+            """,
+            (plan_id,),
         )
 
         plan = cursor.fetchone()
 
         if not plan:
-            return "Plan not found ❌"
+            flash("The selected plan is no longer available.", "warning")
 
-        # =========================================
-        # AMOUNT VALIDATION
-        # =========================================
+            return redirect(url_for("renew_subscription"))
 
-        if plan[2] is None or float(plan[2]) <= 0:
-            return "Invalid plan amount ❌"
+        # =================================================
+        # CALCULATE SERVER-SIDE PRICE
+        # =================================================
 
-        amount = float(plan[2])
+        from decimal import Decimal, ROUND_HALF_UP
 
-        # =========================================
-        # CREATE RAZORPAY CLIENT
-        # =========================================
+        monthly_price = Decimal(str(plan["monthly_price"] or "0"))
+
+        yearly_price = Decimal(str(plan["yearly_price"] or "0"))
+
+        if billing_cycle == "yearly":
+            amount_decimal = yearly_price
+
+            duration_months = 12
+
+        else:
+            amount_decimal = monthly_price
+
+            duration_months = 1
+
+        amount_decimal = amount_decimal.quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+
+        if amount_decimal <= 0:
+            flash(
+                "This plan requires a custom quote. Please contact support.", "warning"
+            )
+
+            return redirect(url_for("renew_subscription"))
+
+        amount_in_paise = int(amount_decimal * 100)
+
+        if amount_in_paise <= 0:
+            flash("Invalid payment amount.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # RAZORPAY CREDENTIALS
+        # =================================================
+
+        if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+            logger.error("RAZORPAY CREDENTIALS ARE NOT CONFIGURED")
+
+            flash(
+                "Online payment is temporarily unavailable. Please contact support.",
+                "danger",
+            )
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # RAZORPAY CLIENT
+        # =================================================
 
         client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-        amount_in_paise = int(amount * 100)
+        # =================================================
+        # UNIQUE RECEIPT
+        # =================================================
 
-        # =========================================
-        # CREATE ORDER
-        # =========================================
+        import uuid
+
+        receipt = f"SUB-{subscription_id}-{uuid.uuid4().hex[:12]}"
+
+        # =================================================
+        # CREATE RAZORPAY ORDER
+        # =================================================
 
         razorpay_order = client.order.create(
-            {"amount": amount_in_paise, "currency": "INR", "payment_capture": 1}
+            {
+                "amount": amount_in_paise,
+                "currency": "INR",
+                "receipt": receipt,
+                "payment_capture": 1,
+                "notes": {
+                    "school_id": str(school_id),
+                    "subscription_id": str(subscription_id),
+                    "plan_id": str(plan_id),
+                    "billing_cycle": billing_cycle,
+                },
+            }
         )
 
         if not razorpay_order:
-            return "Unable to create payment order ❌"
+            flash("Unable to create the payment order. Please try again.", "danger")
 
-        # =========================================
-        # LOAD PAYMENT PAGE
-        # =========================================
+            return redirect(url_for("renew_subscription"))
+
+        razorpay_order_id = razorpay_order.get("id")
+
+        if not razorpay_order_id:
+            logger.error("RAZORPAY ORDER CREATED WITHOUT ORDER ID")
+
+            flash("Unable to start payment. Please try again.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # SAVE PAYMENT ATTEMPT LOCALLY
+        # =================================================
+
+        cursor.execute(
+            """
+            INSERT INTO payment_logs
+            (
+                school_id,
+                subscription_id,
+                plan_id,
+                amount,
+                payment_status,
+                payment_id,
+                order_id,
+                transaction_type,
+                payment_gateway
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                NULL,
+                %s,
+                %s,
+                %s
+            )
+            """,
+            (
+                school_id,
+                subscription_id,
+                plan_id,
+                float(amount_decimal),
+                "created",
+                razorpay_order_id,
+                "Subscription Renewal",
+                "Razorpay",
+            ),
+        )
+
+        conn.commit()
+
+        # =================================================
+        # RENDER PAYMENT PAGE
+        # =================================================
 
         return render_template(
             "subscription/payment.html",
-            subscription_id=int(subscription_id),
-            plan_id=plan[0],
-            plan_name=plan[1],
-            amount=amount,
-            duration_months=plan[4],
-            razorpay_order_id=(razorpay_order["id"]),
-            razorpay_key=(RAZORPAY_KEY_ID),
+            subscription_id=subscription_id,
+            plan_id=plan["id"],
+            plan_name=plan["plan_name"],
+            amount=float(amount_decimal),
+            amount_paise=amount_in_paise,
+            billing_cycle=billing_cycle,
+            duration_months=duration_months,
+            razorpay_order_id=razorpay_order_id,
+            razorpay_key=RAZORPAY_KEY_ID,
         )
 
-    except Exception as e:
-        import traceback
+    except Exception:
+        if conn:
+            conn.rollback()
 
-        traceback.print_exc()
+        logger.exception("SUBSCRIPTION PAYMENT PAGE ERROR")
 
-        print("❌ PAYMENT PAGE ERROR:", repr(e))
+        flash("Unable to start the payment process. Please try again.", "danger")
 
-        return f"PAYMENT PAGE ERROR : {repr(e)}"
+        return redirect(url_for("renew_subscription"))
 
     finally:
         if cursor:
@@ -18264,8 +18750,10 @@ def subscription_payment():
 
 
 # =========================================================
-# ✅ PAYMENT SUCCESS (PRODUCTION READY)
+# 💳 SUBSCRIPTION PAYMENT SUCCESS / VERIFICATION
 # =========================================================
+
+
 @app.route("/clerk/subscription/payment-success", methods=["POST"])
 @login_required
 def payment_success():
@@ -18274,23 +18762,27 @@ def payment_success():
     cursor = None
 
     try:
-        # =========================================
+        # =================================================
         # SESSION VALIDATION
-        # =========================================
+        # =================================================
 
         if session.get("clerk_role") != "clerk":
-            abort(401)
+            abort(403)
+
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            abort(404)
-        # =========================================
+            flash("Your school session has expired. Please login again.", "danger")
+            return redirect(url_for("login"))
+
+        # =================================================
         # FORM DATA
-        # =========================================
+        # =================================================
 
-        plan_id = request.form.get("plan_id", "").strip()
+        plan_id_raw = request.form.get("plan_id", "").strip()
+        subscription_id_raw = request.form.get("subscription_id", "").strip()
 
-        subscription_id = request.form.get("subscription_id", "").strip()
+        billing_cycle = request.form.get("billing_cycle", "").strip().lower()
 
         razorpay_payment_id = request.form.get("razorpay_payment_id", "").strip()
 
@@ -18298,175 +18790,513 @@ def payment_success():
 
         razorpay_signature = request.form.get("razorpay_signature", "").strip()
 
-        # =========================================
-        # VALIDATION
-        # =========================================
+        # =================================================
+        # BASIC VALIDATION
+        # =================================================
 
-        if not plan_id:
-            return "Plan missing ❌"
+        if not plan_id_raw.isdigit():
+            flash("Invalid payment plan.", "danger")
+            return redirect(url_for("renew_subscription"))
 
-        if not subscription_id:
-            return "Subscription missing ❌"
+        if not subscription_id_raw.isdigit():
+            flash("Invalid subscription.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        if billing_cycle not in ("monthly", "yearly"):
+            flash("Invalid billing cycle.", "danger")
+            return redirect(url_for("renew_subscription"))
 
         if not razorpay_payment_id:
-            return "Payment ID missing ❌"
+            flash("Payment information is incomplete.", "danger")
+            return redirect(url_for("renew_subscription"))
 
         if not razorpay_order_id:
-            return "Order ID missing ❌"
+            flash("Payment order information is missing.", "danger")
+            return redirect(url_for("renew_subscription"))
 
         if not razorpay_signature:
-            return "Payment signature missing ❌"
+            flash("Payment verification information is missing.", "danger")
+            return redirect(url_for("renew_subscription"))
 
-        if not plan_id.isdigit():
-            return "Invalid plan ❌"
+        plan_id = int(plan_id_raw)
+        subscription_id = int(subscription_id_raw)
 
-        if not subscription_id.isdigit():
-            return "Invalid subscription ❌"
-
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+        # =================================================
+        # DATABASE
+        # =================================================
 
         conn = get_connection()
 
         if not conn:
-            return "Database connection failed ❌"
+            flash("Unable to verify the payment. Please try again.", "danger")
+            return redirect(url_for("renew_subscription"))
 
-        cursor = conn.cursor()
+        # Explicit transaction.
+        # FOR UPDATE locks remain active until commit/rollback.
+        conn.start_transaction()
 
-        # =========================================
-        # VERIFY SUBSCRIPTION OWNERSHIP
-        # =========================================
+        cursor = conn.cursor(dictionary=True)
+
+        # =================================================
+        # FIND LOCAL PAYMENT ORDER
+        # =================================================
 
         cursor.execute(
             """
-            SELECT id
+            SELECT
+                id,
+                school_id,
+                subscription_id,
+                plan_id,
+                amount,
+                payment_status,
+                payment_id,
+                order_id,
+                transaction_type,
+                payment_gateway
+            FROM payment_logs
+            WHERE order_id = %s
+              AND school_id = %s
+            LIMIT 1
+            FOR UPDATE
+            """,
+            (razorpay_order_id, school_id),
+        )
+
+        payment_log = cursor.fetchone()
+
+        if not payment_log:
+            logger.warning("UNKNOWN RAZORPAY ORDER: %s", razorpay_order_id)
+
+            conn.rollback()
+
+            flash("This payment order could not be verified.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # VERIFY LOCAL OWNERSHIP
+        # =================================================
+
+        if int(payment_log["school_id"]) != int(school_id):
+            logger.warning(
+                "PAYMENT SCHOOL MISMATCH. order=%s school=%s",
+                razorpay_order_id,
+                school_id,
+            )
+
+            conn.rollback()
+
+            flash("Payment verification failed.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        if int(payment_log["subscription_id"]) != subscription_id:
+            conn.rollback()
+
+            flash("Payment subscription mismatch.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        if int(payment_log["plan_id"]) != plan_id:
+            conn.rollback()
+
+            flash("Payment plan mismatch.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # PAYMENT ID CONSISTENCY
+        # =================================================
+
+        existing_payment_id = str(payment_log.get("payment_id") or "").strip()
+
+        if existing_payment_id and existing_payment_id != razorpay_payment_id:
+            logger.warning(
+                "PAYMENT ID MISMATCH. order=%s local_payment=%s received_payment=%s",
+                razorpay_order_id,
+                existing_payment_id,
+                razorpay_payment_id,
+            )
+
+            conn.rollback()
+
+            flash("Payment verification failed.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # IDEMPOTENCY
+        # =================================================
+
+        if payment_log["payment_status"] == "success":
+            conn.rollback()
+
+            return redirect(
+                url_for("subscription_success", payment_log_id=payment_log["id"])
+            )
+
+        # =================================================
+        # VERIFY SUBSCRIPTION OWNERSHIP
+        #
+        # IMPORTANT:
+        # This row lock serializes renewal operations for
+        # the same school/subscription.
+        #
+        # Different schools can still run concurrently.
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                school_id,
+                plan_id,
+                plan_name,
+                status,
+                start_date,
+                end_date,
+                billing_cycle,
+                payment_status
             FROM subscriptions
             WHERE id = %s
-            AND school_id = %s
-        """,
-            (int(subscription_id), school_id),
+              AND school_id = %s
+            LIMIT 1
+            FOR UPDATE
+            """,
+            (subscription_id, school_id),
         )
 
         subscription = cursor.fetchone()
 
         if not subscription:
-            return "Invalid subscription ❌"
+            conn.rollback()
 
-        # =========================================
-        # PREVENT DUPLICATE PAYMENT
-        # =========================================
+            flash("The subscription could not be verified.", "danger")
+            return redirect(url_for("renew_subscription"))
 
-        cursor.execute(
-            """
-            SELECT id
-            FROM payment_logs
-            WHERE order_id = %s
-        """,
-            (razorpay_order_id,),
-        )
-
-        existing_order = cursor.fetchone()
-
-        if existing_order:
-            return "Payment already processed ✅"
-
-        # =========================================
-        # VERIFY RAZORPAY SIGNATURE
-        # =========================================
-
-        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-
-        verify_data = {
-            "razorpay_order_id": razorpay_order_id,
-            "razorpay_payment_id": razorpay_payment_id,
-            "razorpay_signature": razorpay_signature,
-        }
-
-        try:
-            client.utility.verify_payment_signature(verify_data)
-
-        except Exception as verify_error:
-            cursor.execute(
-                """
-                INSERT INTO payment_logs
-                (
-                    school_id,
-                    subscription_id,
-                    plan_id,
-                    amount,
-
-                    payment_status,
-                    payment_id,
-                    order_id,
-
-                    transaction_type,
-                    payment_gateway
-
-                )
-                VALUES
-                (
-                    %s,%s,%s,%s,
-                    %s,%s,%s,
-                    %s,%s
-                )
-            """,
-                (
-                    school_id,
-                    subscription_id,
-                    plan_id,
-                    0,
-                    "failed",
-                    razorpay_payment_id,
-                    razorpay_order_id,
-                    "Subscription Renewal",
-                    "Razorpay",
-                ),
-            )
-
-            conn.commit()
-
-            return (
-                f"Payment verification failed ❌ "
-                # f"{verify_error}"
-            )
-
-        # =========================================
-        # GET ACTIVE PLAN
-        # =========================================
+        # =================================================
+        # GET PLAN FROM DATABASE
+        # =================================================
 
         cursor.execute(
             """
             SELECT
-
+                id,
                 plan_name,
                 monthly_price,
-                duration_months
-
+                yearly_price,
+                duration_months,
+                is_active,
+                is_public
             FROM subscription_plans
-
             WHERE id = %s
-            AND is_active = 1
-        """,
-            (int(plan_id),),
+              AND is_active = 1
+              AND is_public = 1
+            LIMIT 1
+            """,
+            (plan_id,),
         )
 
         plan = cursor.fetchone()
 
         if not plan:
-            return "Plan not found ❌"
+            conn.rollback()
 
-        if plan[2] is None:
-            return "Plan duration missing ❌"
+            flash("The selected subscription plan is no longer available.", "danger")
+            return redirect(url_for("renew_subscription"))
 
-        amount_paid = float(plan[1])
+        # =================================================
+        # SERVER-SIDE EXPECTED AMOUNT
+        # =================================================
 
-        if amount_paid <= 0:
-            return "Invalid plan amount ❌"
+        from decimal import Decimal
 
-        # =========================================
+        if billing_cycle == "yearly":
+            expected_amount = Decimal(str(plan["yearly_price"] or "0"))
+
+            duration_months = 12
+
+        else:
+            expected_amount = Decimal(str(plan["monthly_price"] or "0"))
+
+            duration_months = 1
+
+        expected_amount = expected_amount.quantize(Decimal("0.01"))
+
+        if expected_amount <= 0:
+            conn.rollback()
+
+            flash("Invalid subscription amount.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        expected_amount_paise = int(expected_amount * 100)
+
+        # =================================================
+        # VERIFY LOCAL PAYMENT AMOUNT
+        # =================================================
+
+        local_amount_paise = int(Decimal(str(payment_log["amount"] or "0")) * 100)
+
+        if local_amount_paise != expected_amount_paise:
+            logger.warning(
+                "LOCAL PAYMENT AMOUNT MISMATCH. order=%s expected=%s local=%s",
+                razorpay_order_id,
+                expected_amount_paise,
+                local_amount_paise,
+            )
+
+            conn.rollback()
+
+            flash("Payment amount verification failed.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # RAZORPAY CLIENT
+        # =================================================
+
+        if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+            logger.error("RAZORPAY CREDENTIALS ARE NOT CONFIGURED")
+
+            conn.rollback()
+
+            flash("Payment verification is temporarily unavailable.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
+        # =================================================
+        # VERIFY RAZORPAY SIGNATURE
+        # =================================================
+
+        try:
+            client.utility.verify_payment_signature(
+                {
+                    "razorpay_order_id": razorpay_order_id,
+                    "razorpay_payment_id": razorpay_payment_id,
+                    "razorpay_signature": razorpay_signature,
+                }
+            )
+
+        except Exception:
+            logger.exception(
+                "RAZORPAY SIGNATURE VERIFICATION FAILED: %s", razorpay_order_id
+            )
+
+            # IMPORTANT:
+            # Do NOT mark the payment as failed only because
+            # the callback signature failed.
+            #
+            # The payment may need reconciliation through
+            # Razorpay/webhook later.
+
+            conn.rollback()
+
+            flash(
+                "Payment verification failed. No subscription changes were made.",
+                "danger",
+            )
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # FETCH RAZORPAY ORDER FROM SERVER
+        # =================================================
+
+        try:
+            razorpay_order = client.order.fetch(razorpay_order_id)
+
+        except Exception:
+            logger.exception("RAZORPAY ORDER FETCH FAILED: %s", razorpay_order_id)
+
+            conn.rollback()
+
+            flash("Unable to verify the payment order.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # VERIFY ORDER DETAILS
+        # =================================================
+
+        order_amount = int(razorpay_order.get("amount", 0))
+
+        order_currency = str(razorpay_order.get("currency", "")).upper()
+
+        if order_amount != expected_amount_paise:
+            logger.warning(
+                "RAZORPAY ORDER AMOUNT MISMATCH. order=%s expected=%s actual=%s",
+                razorpay_order_id,
+                expected_amount_paise,
+                order_amount,
+            )
+
+            conn.rollback()
+
+            flash("Payment amount could not be verified.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        if order_currency != "INR":
+            logger.warning(
+                "RAZORPAY ORDER CURRENCY MISMATCH. order=%s currency=%s",
+                razorpay_order_id,
+                order_currency,
+            )
+
+            conn.rollback()
+
+            flash("Payment currency could not be verified.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # VERIFY ORDER NOTES
+        # =================================================
+
+        order_notes = razorpay_order.get("notes") or {}
+
+        if str(order_notes.get("school_id", "")) != str(school_id):
+            conn.rollback()
+
+            flash("Payment ownership verification failed.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        if str(order_notes.get("subscription_id", "")) != str(subscription_id):
+            conn.rollback()
+
+            flash("Payment subscription verification failed.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        if str(order_notes.get("plan_id", "")) != str(plan_id):
+            conn.rollback()
+
+            flash("Payment plan verification failed.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        if str(order_notes.get("billing_cycle", "")).lower() != billing_cycle:
+            conn.rollback()
+
+            flash("Payment billing cycle verification failed.", "danger")
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # FETCH PAYMENT FROM RAZORPAY
+        # =================================================
+
+        try:
+            razorpay_payment = client.payment.fetch(razorpay_payment_id)
+
+        except Exception:
+            logger.exception("RAZORPAY PAYMENT FETCH FAILED: %s", razorpay_payment_id)
+
+            conn.rollback()
+
+            flash("Unable to verify the payment status.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # VERIFY PAYMENT ↔ ORDER
+        # =================================================
+
+        fetched_order_id = str(razorpay_payment.get("order_id") or "")
+
+        if fetched_order_id != razorpay_order_id:
+            logger.warning(
+                "PAYMENT ORDER MISMATCH. payment=%s order=%s",
+                razorpay_payment_id,
+                razorpay_order_id,
+            )
+
+            conn.rollback()
+
+            flash("Payment order verification failed.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # VERIFY PAYMENT AMOUNT
+        # =================================================
+
+        payment_amount = int(razorpay_payment.get("amount", 0))
+
+        if payment_amount != expected_amount_paise:
+            logger.warning("PAYMENT AMOUNT MISMATCH. payment=%s", razorpay_payment_id)
+
+            conn.rollback()
+
+            flash("Paid amount could not be verified.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # VERIFY PAYMENT CURRENCY
+        # =================================================
+
+        payment_currency = str(razorpay_payment.get("currency", "")).upper()
+
+        if payment_currency != "INR":
+            conn.rollback()
+
+            flash("Payment currency could not be verified.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # VERIFY CAPTURED STATUS
+        # =================================================
+
+        payment_status = str(razorpay_payment.get("status", "")).lower()
+
+        captured_flag = bool(razorpay_payment.get("captured"))
+
+        if payment_status != "captured" and not captured_flag:
+            logger.warning(
+                "PAYMENT NOT CAPTURED. payment=%s status=%s",
+                razorpay_payment_id,
+                payment_status,
+            )
+
+            conn.rollback()
+
+            flash(
+                "Payment has not been captured yet. "
+                "Your subscription was not activated.",
+                "warning",
+            )
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # PREVENT SAME RAZORPAY PAYMENT BEING USED TWICE
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM payment_logs
+            WHERE payment_id = %s
+              AND payment_status = 'success'
+              AND id <> %s
+            LIMIT 1
+            """,
+            (razorpay_payment_id, payment_log["id"]),
+        )
+
+        duplicate_payment = cursor.fetchone()
+
+        if duplicate_payment:
+            logger.warning(
+                "RAZORPAY PAYMENT ALREADY PROCESSED. payment_id=%s existing_log=%s",
+                razorpay_payment_id,
+                duplicate_payment["id"],
+            )
+
+            conn.rollback()
+
+            flash("This payment has already been processed.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
         # GET SCHOOL DETAILS
-        # =========================================
+        # =================================================
 
         cursor.execute(
             """
@@ -18475,199 +19305,402 @@ def payment_success():
                 email
             FROM schools
             WHERE school_id = %s
-        """,
+            LIMIT 1
+            """,
             (school_id,),
         )
 
         school = cursor.fetchone()
 
         if not school:
-            return "School not found ❌"
+            conn.rollback()
 
-        school_name = school[0]
-        school_email = school[1]
+            flash("School information could not be verified.", "danger")
 
-        # =========================================
-        # UPDATE SUBSCRIPTION
-        # =========================================
+            return redirect(url_for("renew_subscription"))
 
-        cursor.execute(
-            """
-            UPDATE subscriptions
-            SET
+        school_name = school["name"]
+        school_email = school["email"]
 
-                plan_id = %s,
-                plan_name = %s,
-                amount = %s,
-
-                start_date = NOW(),
-
-                end_date = DATE_ADD(
-                    NOW(),
-                    INTERVAL %s MONTH
-                ),
-
-                status = 'active'
-
-            WHERE school_id = %s
-            AND id = %s
-        """,
-            (
-                int(plan_id),
-                plan[0],
-                amount_paid,
-                int(plan[2]),
-                school_id,
-                int(subscription_id),
-            ),
-        )
-
-        if cursor.rowcount == 0:
-            return "Subscription update failed ❌"
-
-        # =========================================
+        # =================================================
         # GENERATE INVOICE NUMBER
-        # =========================================
+        # =================================================
 
-        invoice_number = f"INV-{datetime.now().year}-{razorpay_payment_id[-8:]}"
+        import uuid
 
-        # =========================================
-        # PAYMENT LOG
-        # =========================================
+        from datetime import datetime
+
+        invoice_number = f"INV-{datetime.now().year}-{uuid.uuid4().hex[:10].upper()}"
+
+        # =========================================================
+        # FINAL SUBSCRIPTION PERIOD
+        #
+        # IMPORTANT:
+        #
+        # ACTIVE:
+        #     Keep the original start_date.
+        #     Extend existing end_date.
+        #
+        # EXPIRED:
+        #     Start from NOW().
+        #     End after the purchased duration.
+        #
+        # The calculation is performed AFTER the subscription
+        # row has been locked with FOR UPDATE.
+        #
+        # Therefore another successful renewal for the same
+        # subscription cannot calculate from an old expiry.
+        # =========================================================
+
+        current_end_date = subscription.get("end_date")
+
+        renewal_now = datetime.now()
+
+        is_currently_active = False
+
+        if current_end_date:
+            try:
+                if hasattr(current_end_date, "date"):
+                    expiry_date = current_end_date.date()
+                else:
+                    expiry_date = current_end_date
+
+                # Entire expiry date remains active.
+                is_currently_active = expiry_date >= renewal_now.date()
+
+            except Exception:
+                logger.exception(
+                    "SUBSCRIPTION EXPIRY DATE PARSE ERROR | "
+                    "school_id=%s | subscription_id=%s",
+                    school_id,
+                    subscription_id,
+                )
+
+                raise RuntimeError("Unable to determine subscription expiry.")
+
+        # Validate duration from the server-side business rule.
+        if duration_months not in (1, 12):
+            raise RuntimeError("Invalid subscription duration.")
+
+        # =========================================================
+        # ACTIVE SUBSCRIPTION
+        # =========================================================
+
+        if is_currently_active:
+            logger.info(
+                "ACTIVE SUBSCRIPTION RENEWAL | "
+                "school_id=%s | subscription_id=%s | "
+                "current_end=%s | duration=%s months",
+                school_id,
+                subscription_id,
+                current_end_date,
+                duration_months,
+            )
+
+            # IMPORTANT:
+            #
+            # start_date is NOT changed.
+            #
+            # Existing paid period remains intact.
+            #
+            # Example:
+            # old end = 2026-10-25
+            # renewal = 2026-10-21
+            # duration = 1 month
+            #
+            # new end = 2026-11-25
+
+            cursor.execute(
+                f"""
+                UPDATE subscriptions
+                SET
+                    plan_id = %s,
+                    plan_name = %s,
+                    amount = %s,
+
+                    end_date = DATE_ADD(
+                        %s,
+                        INTERVAL {duration_months} MONTH
+                    ),
+
+                    status = 'active',
+
+                    billing_cycle = %s,
+
+                    payment_status = 'paid',
+
+                    last_payment_id = %s,
+
+                    next_billing_date = DATE_ADD(
+                        %s,
+                        INTERVAL {duration_months} MONTH
+                    )
+
+                WHERE id = %s
+                  AND school_id = %s
+                """,
+                (
+                    plan_id,
+                    plan["plan_name"],
+                    float(expected_amount),
+                    current_end_date,
+                    billing_cycle,
+                    razorpay_payment_id,
+                    current_end_date,
+                    subscription_id,
+                    school_id,
+                ),
+            )
+
+        # =========================================================
+        # EXPIRED SUBSCRIPTION
+        # =========================================================
+
+        else:
+            logger.info(
+                "EXPIRED SUBSCRIPTION RENEWAL | "
+                "school_id=%s | subscription_id=%s | "
+                "old_end=%s | duration=%s months",
+                school_id,
+                subscription_id,
+                current_end_date,
+                duration_months,
+            )
+
+            cursor.execute(
+                f"""
+                UPDATE subscriptions
+                SET
+                    plan_id = %s,
+                    plan_name = %s,
+                    amount = %s,
+
+                    start_date = NOW(),
+
+                    end_date = DATE_ADD(
+                        NOW(),
+                        INTERVAL {duration_months} MONTH
+                    ),
+
+                    status = 'active',
+
+                    billing_cycle = %s,
+
+                    payment_status = 'paid',
+
+                    last_payment_id = %s,
+
+                    next_billing_date = DATE_ADD(
+                        NOW(),
+                        INTERVAL {duration_months} MONTH
+                    )
+
+                WHERE id = %s
+                  AND school_id = %s
+                """,
+                (
+                    plan_id,
+                    plan["plan_name"],
+                    float(expected_amount),
+                    billing_cycle,
+                    razorpay_payment_id,
+                    subscription_id,
+                    school_id,
+                ),
+            )
+
+        # =================================================
+        # VERIFY UPDATE
+        # =================================================
+
+        if cursor.rowcount != 1:
+            raise RuntimeError("Subscription update failed.")
+
+        # =================================================
+        # UPDATE PAYMENT LOG
+        # =================================================
 
         cursor.execute(
             """
-            INSERT INTO payment_logs
+            UPDATE payment_logs
+            SET
+                payment_status = %s,
+                payment_id = %s,
+                invoice_number = %s,
+                amount = %s,
+                billing_cycle = %s,
+                currency = %s
+
+            WHERE id = %s
+              AND school_id = %s
+              AND order_id = %s
+            """,
             (
-
-                school_id,
-                subscription_id,
-                plan_id,
-                amount,
-
-                payment_status,
-                payment_id,
-                order_id,
-                       
-                invoice_number,
-
-                transaction_type,
-                payment_gateway
-
-            )
-
-            VALUES
-            (
-                %s,%s,%s,%s,
-                %s,%s,%s,
-                %s,
-                %s,%s
-            )
-        """,
-            (
-                school_id,
-                subscription_id,
-                plan_id,
-                amount_paid,
                 "success",
                 razorpay_payment_id,
-                razorpay_order_id,
                 invoice_number,
-                "Subscription Renewal",
-                "Razorpay",
+                float(expected_amount),
+                billing_cycle,
+                "INR",
+                payment_log["id"],
+                school_id,
+                razorpay_order_id,
             ),
         )
 
-        # =========================================
-        # SAVE
-        # =========================================
+        if cursor.rowcount != 1:
+            raise RuntimeError("Payment record update failed.")
+
+        # =================================================
+        # APPLY PLAN FEATURES
+        # =================================================
+
+        try:
+            features_applied = apply_plan_features(cursor, school_id, plan_id)
+
+            if not features_applied:
+                raise RuntimeError(
+                    "Unable to apply plan features. "
+                    f"school_id={school_id}, "
+                    f"plan_id={plan_id}"
+                )
+
+        except Exception:
+            logger.exception(
+                "PLAN FEATURE APPLICATION FAILED. school_id=%s plan_id=%s",
+                school_id,
+                plan_id,
+            )
+
+            raise
+
+        # =================================================
+        # COMMIT TRANSACTION
+        # =================================================
 
         conn.commit()
 
-        # =========================================
-        # APPLY PLAN FEATURES
-        # =========================================
+        # =================================================
+        # PAYMENT RECEIPT EMAIL
+        # =================================================
 
-        apply_plan_features(school_id, int(plan_id))
+        if school_email:
+            try:
+                subject = "Payment Successful - SPL ShalaSarthi ERP"
 
-        # =========================================
-        # EMAIL RECEIPT
-        # =========================================
+                body = f"""
+                <div style="
+                    font-family:Arial,sans-serif;
+                    padding:20px;
+                    color:#1f2937;
+                ">
 
-        try:
-            subject = "Payment Successful - SPL ShalaSarthi ERP"
+                    <h2 style="color:#0f766e;">
+                        Payment Successful
+                    </h2>
 
-            body = f"""
-            <div style="font-family:Arial;padding:20px;">
+                    <p>
+                        Dear {school_name},
+                    </p>
 
-                <h2 style="color:#10b981;">
-                    Payment Successful
-                </h2>
+                    <p>
+                        Your subscription payment
+                        has been successfully verified.
+                    </p>
 
-                <p>Dear {school_name},</p>
+                    <hr>
 
-                <p>
-                    Your subscription payment
-                    was completed successfully.
-                </p>
+                    <p>
+                        <b>Plan:</b>
+                        {plan["plan_name"]}
+                    </p>
 
-                <hr>
+                    <p>
+                        <b>Billing Cycle:</b>
+                        {billing_cycle.title()}
+                    </p>
 
-                <p><b>Plan:</b> {plan[0]}</p>
+                    <p>
+                        <b>Amount Paid:</b>
+                        ₹{float(expected_amount):,.2f}
+                    </p>
 
-                <p><b>Amount Paid:</b>
-                Rs. {amount_paid}</p>
+                    <p>
+                        <b>Payment ID:</b>
+                        {razorpay_payment_id}
+                    </p>
 
-                <p><b>Payment ID:</b>
-                {razorpay_payment_id}</p>
+                    <p>
+                        <b>Order ID:</b>
+                        {razorpay_order_id}
+                    </p>
 
-                <p><b>Order ID:</b>
-                {razorpay_order_id}</p>
+                    <p>
+                        <b>Duration:</b>
+                        {duration_months} month(s)
+                    </p>
 
-                <p><b>Duration:</b>
-                {plan[2]} Month(s)</p>
+                    <p>
+                        <b>Invoice:</b>
+                        {invoice_number}
+                    </p>
 
-                <p><b>Status:</b> Success</p>
+                    <p>
+                        <b>Status:</b>
+                        Successful
+                    </p>
 
-                <hr>
+                    <hr>
 
-                <p>
-                    Thank you for renewing
-                    your SPL ShalaSarthi ERP subscription.
-                </p>
+                    <p>
+                        Thank you for renewing your
+                        SPL ShalaSarthi ERP subscription.
+                    </p>
 
-            </div>
-            """
+                </div>
+                """
 
-            send_email(school_email, subject, body)
+                send_email(school_email, subject, body)
 
-            print("✅ PAYMENT RECEIPT EMAIL SENT")
+            except Exception:
+                logger.exception("PAYMENT RECEIPT EMAIL ERROR")
 
-        except Exception as email_error:
-            print("❌ PAYMENT EMAIL ERROR:", email_error)
-
-        # =========================================
-        # REDIRECT
-        # =========================================
+        # =================================================
+        # REDIRECT TO SECURE SUCCESS PAGE
+        # =================================================
 
         return redirect(
-            url_for("subscription_success", plan=plan[0], amount=amount_paid)
+            url_for("subscription_success", payment_log_id=payment_log["id"])
         )
 
-    except Exception as e:
+    except Exception:
         if conn:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
 
-        print("❌ PAYMENT VERIFY ERROR:", e)
+        logger.exception("SUBSCRIPTION PAYMENT VERIFICATION ERROR")
 
-        return f"Payment verification failed ❌ {e}"
+        flash(
+            "Payment could not be completed safely. No subscription changes were made.",
+            "danger",
+        )
+
+        return redirect(url_for("renew_subscription"))
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # =========================================================
@@ -18692,9 +19725,6 @@ def subscription_history():
                 "You are not authorized to access subscription history.",
                 "danger",
             )
-
-            # Change this endpoint only if your actual
-            # clerk dashboard function has a different name.
             return redirect(url_for("clerk_dashboard"))
 
         # =====================================================
@@ -18705,10 +19735,9 @@ def subscription_history():
 
         if not school_id:
             flash(
-                "Your school session has expired. Please log in again to continue.",
+                "Your school session has expired. Please log in again.",
                 "warning",
             )
-
             return redirect(url_for("login"))
 
         # =====================================================
@@ -18722,8 +19751,48 @@ def subscription_history():
                 "School information could not be found. Please log in again.",
                 "danger",
             )
-
             return redirect(url_for("login"))
+
+        # =====================================================
+        # PAGINATION
+        # =====================================================
+
+        try:
+            page = int(request.args.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+
+        if page < 1:
+            page = 1
+
+        # Keep billing history compact and readable.
+        per_page = 10
+
+        # =====================================================
+        # STATUS FILTER
+        # =====================================================
+
+        status_filter = request.args.get("status", "all").strip().lower()
+
+        allowed_statuses = {
+            "all",
+            "success",
+            "pending",
+            "failed",
+        }
+
+        if status_filter not in allowed_statuses:
+            status_filter = "all"
+
+        # =====================================================
+        # SEARCH
+        # =====================================================
+
+        search_query = request.args.get("q", "").strip()
+
+        # Prevent unnecessarily large search strings.
+        if len(search_query) > 100:
+            search_query = search_query[:100]
 
         # =====================================================
         # DATABASE
@@ -18737,68 +19806,16 @@ def subscription_history():
                 "Please try again in a moment.",
                 "danger",
             )
-
             return redirect(url_for("clerk_dashboard"))
 
         cursor = conn.cursor(dictionary=True)
-
-        # =====================================================
-        # PAYMENT HISTORY
-        # =====================================================
-
-        cursor.execute(
-            """
-            SELECT
-
-                pl.id,
-
-                pl.invoice_number,
-
-                pl.amount,
-
-                pl.payment_status,
-
-                pl.payment_id,
-
-                pl.order_id,
-
-                pl.payment_gateway,
-
-                pl.transaction_type,
-
-                pl.created_at,
-
-                sp.plan_name
-
-            FROM payment_logs pl
-
-            LEFT JOIN subscription_plans sp
-                ON pl.plan_id = sp.id
-
-            WHERE pl.school_id = %s
-
-            ORDER BY
-                pl.created_at DESC,
-                pl.id DESC
-
-            """,
-            (school_id,),
-        )
-
-        history = cursor.fetchall()
 
         # =====================================================
         # SUMMARY STATISTICS
         #
         # IMPORTANT:
         #
-        # total_transactions = ALL transactions
-        #
-        # successful_transactions = ONLY successful payments
-        #
-        # total_paid = ONLY successful payment amount
-        #
-        # failed_pending = failed + pending transactions
+        # created + pending = pending/uncompleted billing records
         # =====================================================
 
         cursor.execute(
@@ -18825,7 +19842,7 @@ def subscription_history():
 
                 SUM(
                     CASE
-                        WHEN payment_status = 'pending'
+                        WHEN payment_status IN ('pending', 'created')
                         THEN 1
                         ELSE 0
                     END
@@ -18845,7 +19862,6 @@ def subscription_history():
             FROM payment_logs
 
             WHERE school_id = %s
-
             """,
             (school_id,),
         )
@@ -18853,7 +19869,7 @@ def subscription_history():
         summary = cursor.fetchone()
 
         # =====================================================
-        # SAFE DEFAULTS
+        # SAFE SUMMARY DEFAULTS
         # =====================================================
 
         if not summary:
@@ -18875,10 +19891,6 @@ def subscription_history():
 
         summary["total_paid"] = summary.get("total_paid") or 0
 
-        # =====================================================
-        # FAILED + PENDING
-        # =====================================================
-
         summary["failed_pending"] = (
             summary["failed_transactions"] + summary["pending_transactions"]
         )
@@ -18886,23 +19898,238 @@ def subscription_history():
         # =====================================================
         # LATEST SUCCESSFUL PAYMENT
         #
-        # Derived from existing history.
-        # No database structure change required.
+        # Do NOT derive this from paginated records.
         # =====================================================
 
-        latest_successful_payment = None
+        cursor.execute(
+            """
+            SELECT
 
-        for item in history:
-            if str(item.get("payment_status") or "").lower() == "success":
-                latest_successful_payment = item
+                pl.id,
+                pl.invoice_number,
+                pl.amount,
+                pl.payment_status,
+                pl.payment_id,
+                pl.order_id,
+                pl.payment_gateway,
+                pl.transaction_type,
+                pl.created_at,
 
-                break
+                sp.plan_name
+
+            FROM payment_logs pl
+
+            LEFT JOIN subscription_plans sp
+                ON pl.plan_id = sp.id
+
+            WHERE pl.school_id = %s
+              AND pl.payment_status = 'success'
+
+            ORDER BY
+                pl.created_at DESC,
+                pl.id DESC
+
+            LIMIT 1
+            """,
+            (school_id,),
+        )
+
+        latest_successful_payment = cursor.fetchone()
 
         # =====================================================
         # LAST TRANSACTION
         # =====================================================
 
-        latest_transaction = history[0] if history else None
+        cursor.execute(
+            """
+            SELECT
+
+                pl.id,
+                pl.invoice_number,
+                pl.amount,
+                pl.payment_status,
+                pl.payment_id,
+                pl.order_id,
+                pl.payment_gateway,
+                pl.transaction_type,
+                pl.created_at,
+
+                sp.plan_name
+
+            FROM payment_logs pl
+
+            LEFT JOIN subscription_plans sp
+                ON pl.plan_id = sp.id
+
+            WHERE pl.school_id = %s
+
+            ORDER BY
+                pl.created_at DESC,
+                pl.id DESC
+
+            LIMIT 1
+            """,
+            (school_id,),
+        )
+
+        latest_transaction = cursor.fetchone()
+
+        # =====================================================
+        # BUILD FILTER CONDITIONS
+        # =====================================================
+
+        where_conditions = ["pl.school_id = %s"]
+
+        filter_params = [school_id]
+
+        # -----------------------------------------------------
+        # STATUS
+        # -----------------------------------------------------
+
+        if status_filter == "success":
+            where_conditions.append("pl.payment_status = %s")
+
+            filter_params.append("success")
+
+        elif status_filter == "failed":
+            where_conditions.append("pl.payment_status = %s")
+
+            filter_params.append("failed")
+
+        elif status_filter == "pending":
+            # Razorpay/local payment attempts can be stored as
+            # either "created" or "pending".
+            where_conditions.append("pl.payment_status IN (%s, %s)")
+
+            filter_params.extend(
+                [
+                    "pending",
+                    "created",
+                ]
+            )
+
+        # -----------------------------------------------------
+        # SEARCH
+        # -----------------------------------------------------
+
+        if search_query:
+            search_pattern = f"%{search_query}%"
+
+            where_conditions.append(
+                """
+                (
+                    pl.invoice_number LIKE %s
+                    OR pl.payment_id LIKE %s
+                    OR pl.order_id LIKE %s
+                    OR pl.payment_gateway LIKE %s
+                    OR pl.transaction_type LIKE %s
+                    OR sp.plan_name LIKE %s
+                )
+                """
+            )
+
+            filter_params.extend(
+                [
+                    search_pattern,
+                    search_pattern,
+                    search_pattern,
+                    search_pattern,
+                    search_pattern,
+                    search_pattern,
+                ]
+            )
+
+        where_sql = " AND ".join(where_conditions)
+
+        # =====================================================
+        # TOTAL FILTERED RECORDS
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS total_records
+
+            FROM payment_logs pl
+
+            LEFT JOIN subscription_plans sp
+                ON pl.plan_id = sp.id
+
+            WHERE {where_sql}
+            """,
+            tuple(filter_params),
+        )
+
+        count_result = cursor.fetchone()
+
+        total_records = int(count_result.get("total_records") or 0)
+
+        # =====================================================
+        # PAGINATION CALCULATION
+        # =====================================================
+
+        total_pages = max(1, (total_records + per_page - 1) // per_page)
+
+        # Prevent invalid page numbers.
+        if page > total_pages:
+            page = total_pages
+
+        offset = (page - 1) * per_page
+
+        # =====================================================
+        # PAGINATED PAYMENT HISTORY
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+
+                pl.id,
+                pl.invoice_number,
+                pl.amount,
+                pl.payment_status,
+                pl.payment_id,
+                pl.order_id,
+                pl.payment_gateway,
+                pl.transaction_type,
+                pl.created_at,
+
+                sp.plan_name
+
+            FROM payment_logs pl
+
+            LEFT JOIN subscription_plans sp
+                ON pl.plan_id = sp.id
+
+            WHERE {where_sql}
+
+            ORDER BY
+                pl.created_at DESC,
+                pl.id DESC
+
+            LIMIT %s OFFSET %s
+            """,
+            tuple(filter_params)
+            + (
+                per_page,
+                offset,
+            ),
+        )
+
+        history = cursor.fetchall()
+
+        # =====================================================
+        # PAGINATION DISPLAY RANGE
+        # =====================================================
+
+        if total_records:
+            showing_from = offset + 1
+            showing_to = min(
+                offset + per_page,
+                total_records,
+            )
+        else:
+            showing_from = 0
+            showing_to = 0
 
         # =====================================================
         # PAGE META
@@ -18910,10 +20137,24 @@ def subscription_history():
 
         return render_template(
             "subscription/history.html",
+            # Table
             history=history,
+            # Summary
             summary=summary,
-            latest_successful_payment=(latest_successful_payment),
-            latest_transaction=(latest_transaction),
+            # Billing snapshot
+            latest_successful_payment=latest_successful_payment,
+            latest_transaction=latest_transaction,
+            # Pagination
+            page=page,
+            per_page=per_page,
+            total_pages=total_pages,
+            total_records=total_records,
+            showing_from=showing_from,
+            showing_to=showing_to,
+            # Filters
+            status_filter=status_filter,
+            search_query=search_query,
+            # Clerk context
             role="clerk",
             school_name=school.get("school_name", ""),
             school_udise=school.get("school_udise", ""),
@@ -18925,7 +20166,10 @@ def subscription_history():
     # =========================================================
 
     except Exception:
-        logger.exception("CLERK SUBSCRIPTION HISTORY ERROR")
+        logger.exception(
+            "CLERK SUBSCRIPTION HISTORY ERROR | school_id=%s",
+            session.get("clerk_school_id"),
+        )
 
         flash(
             "Subscription history could not be loaded right now. "
@@ -18943,20 +20187,18 @@ def subscription_history():
         if cursor:
             try:
                 cursor.close()
-
             except Exception:
                 logger.exception("SUBSCRIPTION HISTORY CURSOR CLOSE ERROR")
 
         if conn:
             try:
                 conn.close()
-
             except Exception:
                 logger.exception("SUBSCRIPTION HISTORY CONNECTION CLOSE ERROR")
 
 
 # =========================================================
-# 📄 VIEW INVOICE
+# 📄 VIEW SUBSCRIPTION INVOICE
 # =========================================================
 
 
@@ -18964,74 +20206,136 @@ def subscription_history():
 @login_required
 def view_invoice(payment_log_id):
 
-    if session.get("clerk_role") != "clerk":
-        return "Unauthorized ❌"
-        abort(401)
-    school_id = session.get("clerk_school_id")
-
-    if not school_id:
-        return "School session missing ❌"
-        abort(404)
     conn = None
     cursor = None
 
     try:
+        # =================================================
+        # ACCESS CONTROL
+        # =================================================
+
+        if session.get("clerk_role") != "clerk":
+            abort(403)
+
+        school_id = session.get("clerk_school_id")
+
+        if not school_id:
+            flash("Your school session has expired. Please login again.", "danger")
+
+            return redirect(url_for("login"))
+
+        # =================================================
+        # DATABASE
+        # =================================================
+
         conn = get_connection()
+
+        if not conn:
+            flash("Unable to load the invoice right now.", "danger")
+
+            return redirect(url_for("renew_subscription"))
 
         cursor = conn.cursor(dictionary=True)
 
-        # =========================================
-        # GET INVOICE DATA
-        # =========================================
+        # =================================================
+        # FETCH VERIFIED PAYMENT
+        # =================================================
 
         cursor.execute(
             """
-
             SELECT
 
                 pl.id,
                 pl.invoice_number,
                 pl.amount,
+                pl.tax_amount,
+                pl.currency,
                 pl.payment_status,
                 pl.payment_id,
                 pl.order_id,
                 pl.payment_gateway,
+                pl.transaction_type,
+                pl.billing_cycle,
                 pl.created_at,
 
+                sp.id AS plan_id,
                 sp.plan_name,
 
+                s.school_id,
                 s.name AS school_name,
                 s.email AS school_email,
                 s.address
 
             FROM payment_logs pl
 
-            LEFT JOIN subscription_plans sp
+            INNER JOIN subscription_plans sp
                 ON pl.plan_id = sp.id
 
-            LEFT JOIN schools s
+            INNER JOIN schools s
                 ON pl.school_id = s.school_id
 
             WHERE pl.id = %s
-            AND pl.school_id = %s
+              AND pl.school_id = %s
+              AND pl.payment_status = 'success'
 
             LIMIT 1
-
-        """,
+            """,
             (payment_log_id, school_id),
         )
 
         invoice = cursor.fetchone()
 
+        # =================================================
+        # NOT FOUND
+        # =================================================
+
         if not invoice:
-            return "Invoice not found ❌"
+            flash("The requested invoice could not be found.", "warning")
 
-        return render_template("subscription/invoice.html", invoice=invoice)
+            return redirect(url_for("renew_subscription"))
 
-    except Exception as e:
-        print("❌ INVOICE ERROR:", e)
+        # =================================================
+        # REQUIRED INVOICE DATA
+        # =================================================
 
-        return "Invoice loading failed ❌"
+        if not invoice.get("invoice_number"):
+            flash("This payment does not have a valid invoice number.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        if not invoice.get("payment_id"):
+            flash("Payment information is incomplete.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # NORMALIZE DEFAULTS
+        # =================================================
+
+        invoice["tax_amount"] = invoice.get("tax_amount") or 0
+
+        invoice["currency"] = invoice.get("currency") or "INR"
+
+        invoice["billing_cycle"] = invoice.get("billing_cycle") or "monthly"
+
+        # =================================================
+        # RENDER
+        # =================================================
+
+        return render_template(
+            "subscription/invoice.html", invoice=invoice, is_pdf=False
+        )
+
+    except Exception:
+        logger.exception(
+            "SUBSCRIPTION INVOICE VIEW ERROR | payment_log_id=%s | school_id=%s",
+            payment_log_id,
+            session.get("clerk_school_id"),
+        )
+
+        flash("Unable to load the invoice. Please try again.", "danger")
+
+        return redirect(url_for("renew_subscription"))
 
     finally:
         if cursor:
@@ -19042,7 +20346,8 @@ def view_invoice(payment_log_id):
 
 
 # =========================================================
-# 📄 DOWNLOAD INVOICE PDF
+# 📄 DOWNLOAD SUBSCRIPTION INVOICE PDF
+# A4 PORTRAIT — SAME DESIGN AS INVOICE PREVIEW
 # =========================================================
 
 
@@ -19050,89 +20355,275 @@ def view_invoice(payment_log_id):
 @login_required
 def download_invoice_pdf(payment_log_id):
 
-    if session.get("clerk_role") != "clerk":
-        return "Unauthorized ❌"
-        abort(401)
-    school_id = session.get("clerk_school_id")
-
     conn = None
     cursor = None
 
     try:
+        # =================================================
+        # ACCESS CONTROL
+        # =================================================
+
+        if session.get("clerk_role") != "clerk":
+            abort(403)
+
+        school_id = session.get("clerk_school_id")
+
+        if not school_id:
+            flash("Your school session has expired. Please login again.", "danger")
+
+            return redirect(url_for("login"))
+
+        # =================================================
+        # DATABASE CONNECTION
+        # =================================================
+
         conn = get_connection()
+
+        if not conn:
+            flash("Unable to access the invoice.", "danger")
+
+            return redirect(url_for("renew_subscription"))
 
         cursor = conn.cursor(dictionary=True)
 
+        # =================================================
+        # FETCH VERIFIED PAYMENT
+        # =================================================
+
         cursor.execute(
             """
-
             SELECT
 
                 pl.id,
                 pl.invoice_number,
                 pl.amount,
+                pl.tax_amount,
+                pl.currency,
+
                 pl.payment_status,
                 pl.payment_id,
                 pl.order_id,
+
                 pl.payment_gateway,
+                pl.transaction_type,
+                pl.billing_cycle,
                 pl.created_at,
 
+                pl.invoice_pdf,
+                pl.invoice_pdf_mime,
+
+                sp.id AS plan_id,
                 sp.plan_name,
 
+                s.school_id,
                 s.name AS school_name,
                 s.email AS school_email,
                 s.address
 
             FROM payment_logs pl
 
-            LEFT JOIN subscription_plans sp
+            INNER JOIN subscription_plans sp
                 ON pl.plan_id = sp.id
 
-            LEFT JOIN schools s
+            INNER JOIN schools s
                 ON pl.school_id = s.school_id
 
             WHERE pl.id = %s
-            AND pl.school_id = %s
+              AND pl.school_id = %s
+              AND pl.payment_status = 'success'
 
             LIMIT 1
-
-        """,
+            """,
             (payment_log_id, school_id),
         )
 
         invoice = cursor.fetchone()
 
-        if not invoice:
-            return "Invoice not found ❌"
+        # =================================================
+        # NOT FOUND
+        # =================================================
 
-        # =====================================
-        # RENDER HTML
-        # =====================================
+        if not invoice:
+            flash("Invoice not found.", "warning")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # REQUIRED VALIDATION
+        # =================================================
+
+        if not invoice.get("invoice_number"):
+            flash("Invoice number is missing.", "danger")
+
+            return redirect(url_for("view_invoice", payment_log_id=payment_log_id))
+
+        if not invoice.get("payment_id"):
+            flash("Payment information is incomplete.", "danger")
+
+            return redirect(url_for("view_invoice", payment_log_id=payment_log_id))
+
+        # =================================================
+        # NORMALIZE VALUES
+        # =================================================
+
+        invoice["tax_amount"] = invoice.get("tax_amount") or 0
+
+        invoice["currency"] = invoice.get("currency") or "INR"
+
+        invoice["billing_cycle"] = invoice.get("billing_cycle") or "monthly"
+
+        # =================================================
+        # IMPORTANT
+        #
+        # DO NOT USE THE STORED PDF WHILE TESTING
+        #
+        # Once the design is finalized, this can be
+        # changed back to returning invoice_pdf.
+        # =================================================
+
+        # -------------------------------------------------
+        # PRODUCTION VERSION:
+        #
+        # if invoice.get("invoice_pdf"):
+        #     response = make_response(
+        #         invoice["invoice_pdf"]
+        #     )
+        #
+        #     response.headers["Content-Type"] = (
+        #         invoice.get("invoice_pdf_mime")
+        #         or "application/pdf"
+        #     )
+        #
+        #     response.headers["Content-Disposition"] = (
+        #         f'attachment; '
+        #         f'filename="{invoice["invoice_number"]}.pdf"'
+        #     )
+        #
+        #     return response
+        #
+        # -------------------------------------------------
+
+        # =================================================
+        # LOAD CSS DIRECTLY FROM FILESYSTEM
+        #
+        # This is the important fix.
+        #
+        # wkhtmltopdf will receive the CSS inline instead
+        # of trying to load /static/css/... over HTTP.
+        # =================================================
+
+        css_path = os.path.join(
+            app.root_path, "static", "css", "subscription", "invoice.css"
+        )
+
+        if not os.path.exists(css_path):
+            raise FileNotFoundError(f"Invoice CSS file not found: {css_path}")
+
+        with open(css_path, "r", encoding="utf-8") as css_file:
+            invoice_css = css_file.read()
+
+        # =================================================
+        # RENDER INVOICE HTML
+        # =================================================
 
         rendered = render_template(
             "subscription/invoice.html", invoice=invoice, is_pdf=True
         )
 
-        # =====================================
+        # =================================================
+        # INJECT CSS INTO PDF HTML
+        #
+        # Remove the external stylesheet dependency and
+        # inject the complete CSS directly.
+        # =================================================
+
+        external_css = (
+            '<link rel="stylesheet" '
+            'href="' + url_for("static", filename="css/subscription/invoice.css") + '">'
+        )
+
+        inline_css = (
+            "<style>\n"
+            "/* =============================================\n"
+            "   PDF INLINE INVOICE CSS\n"
+            "   ============================================= */\n"
+            + invoice_css
+            + "\n</style>"
+        )
+
+        rendered = rendered.replace(external_css, inline_css)
+
+        # =================================================
+        # FALLBACK
+        #
+        # If the exact link string was not found for any
+        # reason, inject CSS before </head>.
+        # =================================================
+
+        if "<style>\n" not in rendered:
+            rendered = rendered.replace("</head>", inline_css + "\n</head>", 1)
+
+        # =================================================
         # PDF OPTIONS
-        # =====================================
+        # A4 PORTRAIT
+        # =================================================
+
         options = {
             "page-size": "A4",
+            "orientation": "Portrait",
             "encoding": "UTF-8",
-            "enable-local-file-access": "",
             "print-media-type": "",
-            "dpi": 300,
-            "image-quality": 100,
+            "enable-local-file-access": "",
             "margin-top": "0mm",
             "margin-right": "0mm",
             "margin-bottom": "0mm",
             "margin-left": "0mm",
+            "dpi": "96",
+            "zoom": "1",
             "disable-smart-shrinking": "",
+            "javascript-delay": "100",
+            "no-stop-slow-scripts": "",
         }
+
+        # =================================================
+        # GENERATE PDF
+        # =================================================
 
         pdf = pdfkit.from_string(
             rendered, False, configuration=pdf_config, options=options
         )
+
+        if not pdf:
+            raise RuntimeError("PDF generation returned empty data.")
+
+        # =================================================
+        # STORE NEW PDF IN DATABASE
+        # =================================================
+
+        cursor.execute(
+            """
+            UPDATE payment_logs
+
+            SET
+
+                invoice_pdf = %s,
+
+                invoice_pdf_mime = %s,
+
+                invoice_pdf_generated_at = NOW()
+
+            WHERE id = %s
+              AND school_id = %s
+              AND payment_status = 'success'
+            """,
+            (pdf, "application/pdf", payment_log_id, school_id),
+        )
+
+        conn.commit()
+
+        # =================================================
+        # DOWNLOAD RESPONSE
+        # =================================================
 
         response = make_response(pdf)
 
@@ -19142,12 +20633,29 @@ def download_invoice_pdf(payment_log_id):
             f'attachment; filename="{invoice["invoice_number"]}.pdf"'
         )
 
+        response.headers["Cache-Control"] = (
+            "no-store, no-cache, must-revalidate, max-age=0"
+        )
+
+        response.headers["Pragma"] = "no-cache"
+
+        response.headers["Expires"] = "0"
+
         return response
 
-    except Exception as e:
-        print("❌ INVOICE PDF ERROR:", e)
+    except Exception:
+        if conn:
+            conn.rollback()
 
-        return "PDF generation failed ❌"
+        logger.exception(
+            "SUBSCRIPTION INVOICE PDF ERROR | payment_log_id=%s | school_id=%s",
+            payment_log_id,
+            session.get("clerk_school_id"),
+        )
+
+        flash("Unable to generate the invoice PDF. Please try again.", "danger")
+
+        return redirect(url_for("view_invoice", payment_log_id=payment_log_id))
 
     finally:
         if cursor:
@@ -19157,45 +20665,215 @@ def download_invoice_pdf(payment_log_id):
             conn.close()
 
 
-# ==================================================
+# =========================================================
 # SUBSCRIPTION SUCCESS PAGE
-# ==================================================
+# =========================================================
 
 
 @app.route("/clerk/subscription/success")
 @login_required
 def subscription_success():
 
-    if session.get("clerk_role") != "clerk":
-        return "Unauthorized ❌"
-        abort(401)
+    conn = None
+    cursor = None
 
-    plan = request.args.get("plan", "Subscription")
+    try:
+        # =================================================
+        # ACCESS
+        # =================================================
 
-    amount = request.args.get("amount", "0")
+        if session.get("clerk_role") != "clerk":
+            abort(403)
 
-    return render_template("subscription/success.html", plan=plan, amount=amount)
+        school_id = session.get("clerk_school_id")
+
+        if not school_id:
+            flash("Your school session has expired. Please login again.", "danger")
+
+            return redirect(url_for("login"))
+
+        # =================================================
+        # PAYMENT LOG ID
+        # =================================================
+
+        payment_log_id_raw = request.args.get("payment_log_id", "").strip()
+
+        if not payment_log_id_raw.isdigit():
+            flash("Payment confirmation could not be loaded.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        payment_log_id = int(payment_log_id_raw)
+
+        # =================================================
+        # DATABASE
+        # =================================================
+
+        conn = get_connection()
+
+        if not conn:
+            flash("Unable to load payment confirmation.", "danger")
+
+            return redirect(url_for("renew_subscription"))
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =================================================
+        # GET SUCCESSFUL PAYMENT
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                pl.id,
+                pl.invoice_number,
+                pl.amount,
+                pl.payment_status,
+                pl.payment_id,
+                pl.order_id,
+                pl.payment_gateway,
+                pl.transaction_type,
+                pl.billing_cycle,
+                pl.created_at,
+
+                sp.plan_name,
+
+                s.name AS school_name,
+                s.email AS school_email
+
+            FROM payment_logs pl
+
+            INNER JOIN subscription_plans sp
+                ON pl.plan_id = sp.id
+
+            INNER JOIN schools s
+                ON pl.school_id = s.school_id
+
+            WHERE pl.id = %s
+              AND pl.school_id = %s
+              AND pl.payment_status = 'success'
+
+            LIMIT 1
+            """,
+            (payment_log_id, school_id),
+        )
+
+        payment = cursor.fetchone()
+
+        if not payment:
+            flash("Successful payment record could not be found.", "warning")
+
+            return redirect(url_for("renew_subscription"))
+
+        # =================================================
+        # SUCCESS PAGE
+        # =================================================
+
+        return render_template(
+            "subscription/success.html",
+            payment=payment,
+            plan=payment["plan_name"],
+            amount=payment["amount"],
+            invoice_number=payment["invoice_number"],
+            payment_id=payment["payment_id"],
+            order_id=payment["order_id"],
+        )
+
+    except Exception:
+        logger.exception("SUBSCRIPTION SUCCESS PAGE ERROR")
+
+        flash("Unable to load the payment confirmation.", "danger")
+
+        return redirect(url_for("renew_subscription"))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
 
 
-# ==================================================
-# PAYMENT FAILED PAGE
-# ==================================================
+# =========================================================
+# ❌ PAYMENT FAILED / CANCELLED PAGE
+# =========================================================
 
 
 @app.route("/clerk/subscription/payment-failed")
 @login_required
 def payment_failed():
 
+    # =====================================================
+    # ACCESS CONTROL
+    # =====================================================
+
     if session.get("clerk_role") != "clerk":
-        return "Unauthorized ❌"
-        abort(401)
-    return render_template("subscription/payment_failed.html")
+        abort(403)
+
+    # =====================================================
+    # SCHOOL SESSION
+    # =====================================================
+
+    school_id = session.get("clerk_school_id")
+
+    if not school_id:
+        flash("Your school session has expired. Please login again.", "danger")
+
+        return redirect(url_for("login"))
+
+    # =====================================================
+    # PAYMENT REASON
+    # =====================================================
+
+    reason = request.args.get("reason", "payment_failed").strip().lower()
+
+    # =====================================================
+    # ALLOWED REASONS
+    # =====================================================
+
+    allowed_reasons = {
+        "payment_failed": {
+            "title": "Payment Couldn’t Be Completed",
+            "label": "PAYMENT NOT COMPLETED",
+        },
+        "cancelled": {
+            "title": "Payment Cancelled",
+            "label": "PAYMENT CANCELLED",
+        },
+        "verification_failed": {
+            "title": "Payment Verification Issue",
+            "label": "PAYMENT VERIFICATION ISSUE",
+        },
+        "unknown": {
+            "title": "Payment Not Completed",
+            "label": "PAYMENT NOT COMPLETED",
+        },
+    }
+
+    # =====================================================
+    # FALLBACK
+    # =====================================================
+
+    if reason not in allowed_reasons:
+        reason = "unknown"
+
+    status_info = allowed_reasons[reason]
+
+    # =====================================================
+    # RENDER
+    # =====================================================
+
+    return render_template(
+        "subscription/payment_failed.html",
+        reason=reason,
+        status_title=status_info["title"],
+        status_label=status_info["label"],
+    )
 
 
 # ==========================================================
 # CLERK REPORTS
 # ==========================================================
-
 
 @app.route("/clerk/reports")
 @login_required
@@ -19205,20 +20883,25 @@ def clerk_reports():
     cursor = None
 
     try:
+
         # ==================================================
         # ACCESS CONTROL
         # ==================================================
 
         if session.get("clerk_role") != "clerk":
-            flash("You are not authorized to access school reports.", "danger")
-
+            flash(
+                "You are not authorized to access school reports.",
+                "danger"
+            )
             return redirect(url_for("clerk_dashboard"))
 
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            flash("Your school session has expired. Please log in again.", "warning")
-
+            flash(
+                "Your school session has expired. Please log in again.",
+                "warning"
+            )
             return redirect(url_for("login"))
 
         # ==================================================
@@ -19228,8 +20911,10 @@ def clerk_reports():
         school = get_school_details(school_id)
 
         if not school:
-            flash("School information could not be found.", "danger")
-
+            flash(
+                "School information could not be found.",
+                "danger"
+            )
             return redirect(url_for("login"))
 
         # ==================================================
@@ -19237,88 +20922,168 @@ def clerk_reports():
         # ==================================================
 
         date_from = request.args.get("date_from", "").strip()
-
         date_to = request.args.get("date_to", "").strip()
 
         selected_year = request.args.get("year", "").strip()
-
         selected_month = request.args.get("month", "").strip()
 
         selected_class = request.args.get("class", "").strip()
-
         selected_section = request.args.get("section", "").strip()
 
+        selected_tab = request.args.get("tab", "overview").strip().lower()
+
+        allowed_tabs = {
+            "overview",
+            "students",
+            "admissions",
+            "tc",
+            "bonafide",
+            "quality",
+        }
+
+        if selected_tab not in allowed_tabs:
+            selected_tab = "overview"
+
         # ==================================================
-        # VALIDATE DATES
+        # VALIDATE DATE RANGE
         # ==================================================
 
         parsed_from = None
         parsed_to = None
 
         if date_from:
+
             try:
-                parsed_from = datetime.strptime(date_from, "%Y-%m-%d").date()
+                parsed_from = datetime.strptime(
+                    date_from,
+                    "%Y-%m-%d"
+                ).date()
 
             except ValueError:
-                flash("Invalid Date From value.", "warning")
 
-                date_from = ""
+                flash(
+                    "Invalid Date From value.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("clerk_reports")
+                )
 
         if date_to:
+
             try:
-                parsed_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+                parsed_to = datetime.strptime(
+                    date_to,
+                    "%Y-%m-%d"
+                ).date()
 
             except ValueError:
-                flash("Invalid Date To value.", "warning")
 
-                date_to = ""
+                flash(
+                    "Invalid Date To value.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("clerk_reports")
+                )
 
         if parsed_from and parsed_to and parsed_from > parsed_to:
-            flash("Date From cannot be later than Date To.", "warning")
 
-            parsed_from = None
-            parsed_to = None
+            flash(
+                "Date From cannot be later than Date To.",
+                "warning"
+            )
 
-            date_from = ""
-            date_to = ""
+            return redirect(
+                url_for("clerk_reports")
+            )
 
         # ==================================================
         # VALIDATE YEAR
         # ==================================================
 
+        year_value = None
+
         if selected_year:
+
             try:
+
                 year_value = int(selected_year)
 
                 if not (1900 <= year_value <= 2100):
                     raise ValueError
 
-            except ValueError:
-                selected_year = ""
+            except (ValueError, TypeError):
+
+                flash(
+                    "Invalid report year.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("clerk_reports")
+                )
 
         # ==================================================
         # VALIDATE MONTH
         # ==================================================
 
+        month_value = None
+
         if selected_month:
+
             try:
+
                 month_value = int(selected_month)
 
                 if not (1 <= month_value <= 12):
                     raise ValueError
 
-            except ValueError:
-                selected_month = ""
+            except (ValueError, TypeError):
+
+                flash(
+                    "Invalid report month.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("clerk_reports")
+                )
+
+        # ==================================================
+        # DATE RANGE HAS PRIORITY
+        #
+        # If Date From OR Date To exists:
+        # ignore Year + Month.
+        # ==================================================
+
+        if parsed_from or parsed_to:
+
+            selected_year = ""
+            selected_month = ""
+
+            year_value = None
+            month_value = None
 
         # ==================================================
         # NORMALIZE TEXT FILTERS
         # ==================================================
 
         if len(selected_class) > 100:
-            selected_class = ""
+            flash(
+                "Invalid class filter.",
+                "warning"
+            )
+            return redirect(url_for("clerk_reports"))
 
         if len(selected_section) > 100:
-            selected_section = ""
+            flash(
+                "Invalid section filter.",
+                "warning"
+            )
+            return redirect(url_for("clerk_reports"))
 
         # ==================================================
         # DATABASE
@@ -19327,12 +21092,16 @@ def clerk_reports():
         conn = get_connection()
 
         if not conn:
+
             flash(
-                "Database connection is currently unavailable. Please try again.",
-                "danger",
+                "Database connection is currently unavailable. "
+                "Please try again.",
+                "danger"
             )
 
-            return redirect(url_for("clerk_dashboard"))
+            return redirect(
+                url_for("clerk_dashboard")
+            )
 
         cursor = conn.cursor(dictionary=True)
 
@@ -19378,13 +21147,16 @@ def clerk_reports():
               AND class IS NOT NULL
               AND TRIM(class) <> ''
 
-            ORDER BY
-                class_name
+            ORDER BY class_name
             """,
             (school_id,),
         )
 
-        classes = [row["class_name"] for row in cursor.fetchall() if row["class_name"]]
+        classes = [
+            row["class_name"]
+            for row in cursor.fetchall()
+            if row["class_name"]
+        ]
 
         # ==================================================
         # SECTION OPTIONS
@@ -19402,14 +21174,15 @@ def clerk_reports():
               AND section IS NOT NULL
               AND TRIM(section) <> ''
 
-            ORDER BY
-                section_name
+            ORDER BY section_name
             """,
             (school_id,),
         )
 
         sections = [
-            row["section_name"] for row in cursor.fetchall() if row["section_name"]
+            row["section_name"]
+            for row in cursor.fetchall()
+            if row["section_name"]
         ]
 
         months = [
@@ -19428,47 +21201,57 @@ def clerk_reports():
         ]
 
         # ==================================================
-        # STUDENT FILTER BUILDER
+        # COMMON CLASS / SECTION FILTER
+        #
+        # Used for:
+        # - Active Students
+        # - Data Quality
+        # - Admissions
+        # - TC
+        # - Bonafide
         # ==================================================
 
-        student_where = ["s.school_id = %s", "s.is_deleted = 0"]
+        student_base_where = [
+            "s.school_id = %s",
+            "s.is_deleted = 0",
+        ]
 
-        student_params = [school_id]
-
-        if parsed_from:
-            student_where.append("DATE(s.created_at) >= %s")
-
-            student_params.append(parsed_from)
-
-        if parsed_to:
-            student_where.append("DATE(s.created_at) <= %s")
-
-            student_params.append(parsed_to)
-
-        if selected_year:
-            student_where.append("YEAR(s.created_at) = %s")
-
-            student_params.append(int(selected_year))
-
-        if selected_month:
-            student_where.append("MONTH(s.created_at) = %s")
-
-            student_params.append(int(selected_month))
+        student_base_params = [
+            school_id
+        ]
 
         if selected_class:
-            student_where.append("TRIM(s.class) = %s")
 
-            student_params.append(selected_class)
+            student_base_where.append(
+                "TRIM(s.class) = %s"
+            )
+
+            student_base_params.append(
+                selected_class
+            )
 
         if selected_section:
-            student_where.append("TRIM(s.section) = %s")
 
-            student_params.append(selected_section)
+            student_base_where.append(
+                "TRIM(s.section) = %s"
+            )
 
-        student_where_sql = " AND ".join(student_where)
+            student_base_params.append(
+                selected_section
+            )
+
+        student_base_where_sql = " AND ".join(
+            student_base_where
+        )
 
         # ==================================================
         # ACTIVE STUDENTS
+        #
+        # IMPORTANT:
+        # Date / Year / Month DO NOT affect this count.
+        #
+        # Active Students means all active/non-deleted
+        # students, optionally filtered by Class/Section.
         # ==================================================
 
         cursor.execute(
@@ -19477,62 +21260,170 @@ def clerk_reports():
 
             FROM students s
 
-            WHERE {student_where_sql}
+            WHERE {student_base_where_sql}
             """,
-            tuple(student_params),
+            tuple(student_base_params),
         )
 
-        active_students = cursor.fetchone()["total"] or 0
+        active_students = (
+            cursor.fetchone()["total"] or 0
+        )
 
         # ==================================================
-        # ADMISSION COUNT
+        # ADMISSION FILTER
         #
-        # Admissions use student.created_at because this
-        # represents the record creation/admission activity
-        # already used by the existing dashboard.
+        # Admissions are records created during the
+        # selected reporting period.
         # ==================================================
 
-        admissions = active_students
+        admission_where = list(
+            student_base_where
+        )
+
+        admission_params = list(
+            student_base_params
+        )
+
+        if parsed_from:
+
+            admission_where.append(
+                "DATE(s.created_at) >= %s"
+            )
+
+            admission_params.append(
+                parsed_from
+            )
+
+        if parsed_to:
+
+            admission_where.append(
+                "DATE(s.created_at) <= %s"
+            )
+
+            admission_params.append(
+                parsed_to
+            )
+
+        if year_value is not None:
+
+            admission_where.append(
+                "YEAR(s.created_at) = %s"
+            )
+
+            admission_params.append(
+                year_value
+            )
+
+        if month_value is not None:
+
+            admission_where.append(
+                "MONTH(s.created_at) = %s"
+            )
+
+            admission_params.append(
+                month_value
+            )
+
+        admission_where_sql = " AND ".join(
+            admission_where
+        )
+
+        # ==================================================
+        # ADMISSIONS COUNT
+        # ==================================================
+
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS total
+
+            FROM students s
+
+            WHERE {admission_where_sql}
+            """,
+            tuple(admission_params),
+        )
+
+        admissions = (
+            cursor.fetchone()["total"] or 0
+        )
 
         # ==================================================
         # TC FILTER
         # ==================================================
 
-        tc_where = ["tc.school_id = %s", "tc.is_deleted = 0", "st.is_deleted = 0"]
+        tc_where = [
+            "tc.school_id = %s",
+            "tc.is_deleted = 0",
+            "st.is_deleted = 0",
+        ]
 
-        tc_params = [school_id]
+        tc_params = [
+            school_id
+        ]
 
         if parsed_from:
-            tc_where.append("DATE(tc.tc_date) >= %s")
 
-            tc_params.append(parsed_from)
+            tc_where.append(
+                "DATE(tc.tc_date) >= %s"
+            )
+
+            tc_params.append(
+                parsed_from
+            )
 
         if parsed_to:
-            tc_where.append("DATE(tc.tc_date) <= %s")
 
-            tc_params.append(parsed_to)
+            tc_where.append(
+                "DATE(tc.tc_date) <= %s"
+            )
 
-        if selected_year:
-            tc_where.append("YEAR(tc.tc_date) = %s")
+            tc_params.append(
+                parsed_to
+            )
 
-            tc_params.append(int(selected_year))
+        if year_value is not None:
 
-        if selected_month:
-            tc_where.append("MONTH(tc.tc_date) = %s")
+            tc_where.append(
+                "YEAR(tc.tc_date) = %s"
+            )
 
-            tc_params.append(int(selected_month))
+            tc_params.append(
+                year_value
+            )
+
+        if month_value is not None:
+
+            tc_where.append(
+                "MONTH(tc.tc_date) = %s"
+            )
+
+            tc_params.append(
+                month_value
+            )
 
         if selected_class:
-            tc_where.append("TRIM(st.class) = %s")
 
-            tc_params.append(selected_class)
+            tc_where.append(
+                "TRIM(st.class) = %s"
+            )
+
+            tc_params.append(
+                selected_class
+            )
 
         if selected_section:
-            tc_where.append("TRIM(st.section) = %s")
 
-            tc_params.append(selected_section)
+            tc_where.append(
+                "TRIM(st.section) = %s"
+            )
 
-        tc_where_sql = " AND ".join(tc_where)
+            tc_params.append(
+                selected_section
+            )
+
+        tc_where_sql = " AND ".join(
+            tc_where
+        )
 
         # ==================================================
         # TC COUNT
@@ -19553,47 +21444,87 @@ def clerk_reports():
             tuple(tc_params),
         )
 
-        tc_count = cursor.fetchone()["total"] or 0
+        tc_count = (
+            cursor.fetchone()["total"] or 0
+        )
 
         # ==================================================
         # BONAFIDE FILTER
         # ==================================================
 
-        bon_where = ["b.school_id = %s", "b.is_deleted = 0", "st.is_deleted = 0"]
+        bon_where = [
+            "b.school_id = %s",
+            "b.is_deleted = 0",
+            "st.is_deleted = 0",
+        ]
 
-        bon_params = [school_id]
+        bon_params = [
+            school_id
+        ]
 
         if parsed_from:
-            bon_where.append("DATE(b.date) >= %s")
 
-            bon_params.append(parsed_from)
+            bon_where.append(
+                "DATE(b.date) >= %s"
+            )
+
+            bon_params.append(
+                parsed_from
+            )
 
         if parsed_to:
-            bon_where.append("DATE(b.date) <= %s")
 
-            bon_params.append(parsed_to)
+            bon_where.append(
+                "DATE(b.date) <= %s"
+            )
 
-        if selected_year:
-            bon_where.append("YEAR(b.date) = %s")
+            bon_params.append(
+                parsed_to
+            )
 
-            bon_params.append(int(selected_year))
+        if year_value is not None:
 
-        if selected_month:
-            bon_where.append("MONTH(b.date) = %s")
+            bon_where.append(
+                "YEAR(b.date) = %s"
+            )
 
-            bon_params.append(int(selected_month))
+            bon_params.append(
+                year_value
+            )
+
+        if month_value is not None:
+
+            bon_where.append(
+                "MONTH(b.date) = %s"
+            )
+
+            bon_params.append(
+                month_value
+            )
 
         if selected_class:
-            bon_where.append("TRIM(st.class) = %s")
 
-            bon_params.append(selected_class)
+            bon_where.append(
+                "TRIM(st.class) = %s"
+            )
+
+            bon_params.append(
+                selected_class
+            )
 
         if selected_section:
-            bon_where.append("TRIM(st.section) = %s")
 
-            bon_params.append(selected_section)
+            bon_where.append(
+                "TRIM(st.section) = %s"
+            )
 
-        bon_where_sql = " AND ".join(bon_where)
+            bon_params.append(
+                selected_section
+            )
+
+        bon_where_sql = " AND ".join(
+            bon_where
+        )
 
         # ==================================================
         # BONAFIDE COUNT
@@ -19614,90 +21545,15 @@ def clerk_reports():
             tuple(bon_params),
         )
 
-        bonafide_count = cursor.fetchone()["total"] or 0
-
-        # ==================================================
-        # STUDENT TABLE
-        # ==================================================
-
-        cursor.execute(
-            f"""
-            SELECT
-                s.id,
-                s.school_register_no,
-                s.name,
-                s.father_name,
-                s.class AS class_name,
-                s.section,
-                s.admission_no,
-                s.admission_date,
-                s.primary_mobile
-
-            FROM students s
-
-            WHERE {student_where_sql}
-
-            ORDER BY
-                s.created_at DESC,
-                s.id DESC
-
-            LIMIT 500
-            """,
-            tuple(student_params),
+        bonafide_count = (
+            cursor.fetchone()["total"] or 0
         )
-
-        student_rows = cursor.fetchall()
-
-        for row in student_rows:
-            row["admission_date_display"] = (
-                row["admission_date"].strftime("%d %b %Y")
-                if row["admission_date"]
-                else None
-            )
-
-        # ==================================================
-        # ADMISSION TABLE
-        # ==================================================
-
-        cursor.execute(
-            f"""
-            SELECT
-                s.id,
-                s.name,
-                s.school_register_no,
-                s.admission_no,
-                s.class AS class_name,
-                s.section,
-                s.primary_mobile,
-                s.admission_date,
-                s.created_at
-
-            FROM students s
-
-            WHERE {student_where_sql}
-
-            ORDER BY
-                s.created_at DESC,
-                s.id DESC
-
-            LIMIT 500
-            """,
-            tuple(student_params),
-        )
-
-        admission_rows = cursor.fetchall()
-
-        for row in admission_rows:
-            admission_date_value = row["admission_date"] or row["created_at"]
-
-            row["admission_date_display"] = (
-                admission_date_value.strftime("%d %b %Y")
-                if admission_date_value
-                else None
-            )
 
         # ==================================================
         # TC TABLE
+        #
+        # Maximum 500 displayed in browser.
+        # Excel export remains unlimited.
         # ==================================================
 
         cursor.execute(
@@ -19734,14 +21590,23 @@ def clerk_reports():
         tc_rows = cursor.fetchall()
 
         for row in tc_rows:
-            tc_date_value = row["tc_date"] or row["created_at"]
+
+            tc_date_value = (
+                row["tc_date"]
+                or row["created_at"]
+            )
 
             row["tc_date_display"] = (
-                tc_date_value.strftime("%d %b %Y") if tc_date_value else None
+                tc_date_value.strftime("%d %b %Y")
+                if tc_date_value
+                else None
             )
 
         # ==================================================
         # BONAFIDE TABLE
+        #
+        # Maximum 500 displayed in browser.
+        # Excel export remains unlimited.
         # ==================================================
 
         cursor.execute(
@@ -19749,6 +21614,7 @@ def clerk_reports():
             SELECT
                 b.id,
                 b.date,
+
                 st.name,
                 st.school_register_no,
                 st.admission_no,
@@ -19775,19 +21641,121 @@ def clerk_reports():
         bonafide_rows = cursor.fetchall()
 
         for row in bonafide_rows:
+
             row["bonafide_date_display"] = (
-                row["date"].strftime("%d %b %Y") if row["date"] else None
+                row["date"].strftime("%d %b %Y")
+                if row["date"]
+                else None
+            )
+
+       
+
+        # ==================================================
+        # STUDENT TABLE
+        #
+        # Maximum 500 displayed in browser.
+        # Excel export remains unlimited.
+        # ==================================================
+
+        student_where_sql = student_base_where_sql
+        student_params = list(
+            student_base_params
+        )
+
+        cursor.execute(
+            f"""
+            SELECT
+                s.id,
+                s.school_register_no,
+                s.name,
+                s.father_name,
+                s.class AS class_name,
+                s.section,
+                s.admission_no,
+                s.admission_date,
+                s.primary_mobile
+
+            FROM students s
+
+            WHERE {student_where_sql}
+
+            ORDER BY
+                s.created_at DESC,
+                s.id DESC
+
+            LIMIT 500
+            """,
+            tuple(student_params),
+        )
+
+        student_rows = cursor.fetchall()
+
+        for row in student_rows:
+
+            row["admission_date_display"] = (
+                row["admission_date"].strftime(
+                    "%d %b %Y"
+                )
+                if row["admission_date"]
+                else None
+            )
+
+        # ==================================================
+        # ADMISSION TABLE
+        #
+        # Maximum 500 displayed in browser.
+        # Excel export remains unlimited.
+        # ==================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+                s.id,
+                s.name,
+                s.school_register_no,
+                s.admission_no,
+                s.class AS class_name,
+                s.section,
+                s.primary_mobile,
+                s.admission_date,
+                s.created_at
+
+            FROM students s
+
+            WHERE {admission_where_sql}
+
+            ORDER BY
+                s.created_at DESC,
+                s.id DESC
+
+            LIMIT 500
+            """,
+            tuple(admission_params),
+        )
+
+        admission_rows = cursor.fetchall()
+
+        for row in admission_rows:
+
+            admission_date_value = (
+                row["admission_date"]
+                or row["created_at"]
+            )
+
+            row["admission_date_display"] = (
+                admission_date_value.strftime(
+                    "%d %b %Y"
+                )
+                if admission_date_value
+                else None
             )
 
         # ==================================================
         # ADMISSION CHART
         #
-        # Last / selected period grouped monthly.
+        # Chart represents actual admissions,
+        # not total active students.
         # ==================================================
-
-        chart_student_where = list(student_where)
-
-        chart_student_params = list(student_params)
 
         cursor.execute(
             f"""
@@ -19805,7 +21773,7 @@ def clerk_reports():
 
             FROM students s
 
-            WHERE {student_where_sql}
+            WHERE {admission_where_sql}
 
             GROUP BY
                 YEAR(s.created_at),
@@ -19819,19 +21787,26 @@ def clerk_reports():
                 YEAR(s.created_at),
                 MONTH(s.created_at)
             """,
-            tuple(chart_student_params),
+            tuple(admission_params),
         )
 
         admission_chart_rows = cursor.fetchall()
 
-        admission_chart_labels = [row["month_label"] for row in admission_chart_rows]
+        admission_chart_labels = [
+            row["month_label"]
+            for row in admission_chart_rows
+        ]
 
         admission_chart_values = [
-            int(row["total"] or 0) for row in admission_chart_rows
+            int(row["total"] or 0)
+            for row in admission_chart_rows
         ]
 
         # ==================================================
         # CLASS DISTRIBUTION
+        #
+        # Based on all active students with
+        # Class/Section filters.
         # ==================================================
 
         cursor.execute(
@@ -19842,7 +21817,7 @@ def clerk_reports():
 
             FROM students s
 
-            WHERE {student_where_sql}
+            WHERE {student_base_where_sql}
 
             GROUP BY
                 TRIM(s.class)
@@ -19851,21 +21826,28 @@ def clerk_reports():
                 total DESC,
                 class_name ASC
             """,
-            tuple(student_params),
+            tuple(student_base_params),
         )
 
         class_rows = cursor.fetchall()
 
         class_chart_labels = [
-            row["class_name"] for row in class_rows if row["class_name"]
+            row["class_name"]
+            for row in class_rows
+            if row["class_name"]
         ]
 
         class_chart_values = [
-            int(row["total"] or 0) for row in class_rows if row["class_name"]
+            int(row["total"] or 0)
+            for row in class_rows
+            if row["class_name"]
         ]
 
         # ==================================================
         # DATA QUALITY
+        #
+        # Data quality is based on ALL active students.
+        # Date / Year / Month do NOT affect it.
         # ==================================================
 
         required_fields = [
@@ -19915,7 +21897,9 @@ def clerk_reports():
         quality_conditions = []
 
         for field_name, label in required_fields:
+
             if field_name in string_fields:
+
                 quality_conditions.append(
                     f"""
                     (
@@ -19926,13 +21910,16 @@ def clerk_reports():
                 )
 
             else:
+
                 quality_conditions.append(
                     f"""
                     s.{field_name} IS NULL
                     """
                 )
 
-        quality_where_sql = " OR ".join(quality_conditions)
+        quality_where_sql = " OR ".join(
+            quality_conditions
+        )
 
         # ==================================================
         # QUALITY RECORD COUNT
@@ -19944,16 +21931,18 @@ def clerk_reports():
 
             FROM students s
 
-            WHERE {student_where_sql}
+            WHERE {student_base_where_sql}
 
               AND (
                     {quality_where_sql}
-              )
+                  )
             """,
-            tuple(student_params),
+            tuple(student_base_params),
         )
 
-        records_with_issues = cursor.fetchone()["total"] or 0
+        records_with_issues = (
+            cursor.fetchone()["total"] or 0
+        )
 
         # ==================================================
         # MISSING FIELD COUNT
@@ -19962,7 +21951,9 @@ def clerk_reports():
         missing_sum_parts = []
 
         for field_name, label in required_fields:
+
             if field_name in string_fields:
+
                 condition = f"""
                     (
                         s.{field_name} IS NULL
@@ -19971,6 +21962,7 @@ def clerk_reports():
                 """
 
             else:
+
                 condition = f"""
                     s.{field_name} IS NULL
                 """
@@ -19985,7 +21977,9 @@ def clerk_reports():
                 """
             )
 
-        missing_sum_sql = " + ".join(missing_sum_parts)
+        missing_sum_sql = " + ".join(
+            missing_sum_parts
+        )
 
         cursor.execute(
             f"""
@@ -19999,21 +21993,28 @@ def clerk_reports():
 
             FROM students s
 
-            WHERE {student_where_sql}
+            WHERE {student_base_where_sql}
             """,
-            tuple(student_params),
+            tuple(student_base_params),
         )
 
-        missing_fields = cursor.fetchone()["total_missing"] or 0
+        missing_fields = (
+            cursor.fetchone()["total_missing"] or 0
+        )
 
         # ==================================================
         # QUALITY DETAILS
+        #
+        # Maximum 200 displayed in browser.
+        # Excel export remains unlimited.
         # ==================================================
 
         missing_case_parts = []
 
         for field_name, label in required_fields:
+
             if field_name in string_fields:
+
                 condition = f"""
                     (
                         s.{field_name} IS NULL
@@ -20022,6 +22023,7 @@ def clerk_reports():
                 """
 
             else:
+
                 condition = f"""
                     s.{field_name} IS NULL
                 """
@@ -20036,7 +22038,9 @@ def clerk_reports():
                 """
             )
 
-        missing_case_sql = ", ".join(missing_case_parts)
+        missing_case_sql = ", ".join(
+            missing_case_parts
+        )
 
         cursor.execute(
             f"""
@@ -20055,53 +22059,79 @@ def clerk_reports():
 
             FROM students s
 
-            WHERE {student_where_sql}
+            WHERE {student_base_where_sql}
 
               AND (
                     {quality_where_sql}
-              )
+                  )
 
             ORDER BY
                 s.id DESC
 
             LIMIT 200
             """,
-            tuple(student_params),
+            tuple(student_base_params),
         )
 
         quality_rows = cursor.fetchall()
 
         for row in quality_rows:
-            raw_missing = row.get("missing_fields") or ""
+
+            raw_missing = (
+                row.get("missing_fields")
+                or ""
+            )
 
             row["missing_fields"] = [
-                value.strip() for value in raw_missing.split(",") if value.strip()
+                value.strip()
+                for value in raw_missing.split(",")
+                if value.strip()
             ]
 
         # ==================================================
         # COMPLETENESS
         # ==================================================
 
-        total_required_slots = int(active_students) * len(required_fields)
+        total_required_slots = (
+            int(active_students)
+            * len(required_fields)
+        )
 
         if total_required_slots > 0:
+
             completion_percent = round(
-                ((total_required_slots - int(missing_fields)) / total_required_slots)
+                (
+                    (
+                        total_required_slots
+                        - int(missing_fields)
+                    )
+                    / total_required_slots
+                )
                 * 100,
                 1,
             )
 
         else:
+
             completion_percent = 100.0
 
-        completion_percent = max(0, min(100, completion_percent))
+        completion_percent = max(
+            0,
+            min(100, completion_percent)
+        )
 
         # ==================================================
         # REPORT TOTAL
+        #
+        # This is a combined count of the main
+        # report datasets. It is not a unique-student count.
         # ==================================================
 
         total_report_records = (
-            int(active_students) + int(tc_count) + int(bonafide_count)
+            int(active_students)
+            + int(admissions)
+            + int(tc_count)
+            + int(bonafide_count)
         )
 
         # ==================================================
@@ -20110,32 +22140,51 @@ def clerk_reports():
 
         filter_parts = []
 
-        if date_from:
-            filter_parts.append(f"From {date_from}")
+        if parsed_from:
 
-        if date_to:
-            filter_parts.append(f"to {date_to}")
+            filter_parts.append(
+                f"From {date_from}"
+            )
+
+        if parsed_to:
+
+            filter_parts.append(
+                f"to {date_to}"
+            )
 
         if selected_year:
-            filter_parts.append(f"Year {selected_year}")
+
+            filter_parts.append(
+                f"Year {selected_year}"
+            )
 
         if selected_month:
+
             month_name = next(
                 (
                     item["label"]
                     for item in months
-                    if str(item["value"]) == str(selected_month)
+                    if str(item["value"])
+                    == str(selected_month)
                 ),
                 selected_month,
             )
 
-            filter_parts.append(month_name)
+            filter_parts.append(
+                month_name
+            )
 
         if selected_class:
-            filter_parts.append(f"Class {selected_class}")
+
+            filter_parts.append(
+                f"Class {selected_class}"
+            )
 
         if selected_section:
-            filter_parts.append(f"Section {selected_section}")
+
+            filter_parts.append(
+                f"Section {selected_section}"
+            )
 
         filter_description = (
             " • ".join(filter_parts)
@@ -20148,17 +22197,33 @@ def clerk_reports():
         # ==================================================
 
         summary = {
-            "active_students": int(active_students),
-            "admissions": int(admissions),
-            "tc_count": int(tc_count),
-            "bonafide_count": int(bonafide_count),
-            "quality_issues": int(records_with_issues),
+            "active_students": int(
+                active_students
+            ),
+            "admissions": int(
+                admissions
+            ),
+            "tc_count": int(
+                tc_count
+            ),
+            "bonafide_count": int(
+                bonafide_count
+            ),
+            "quality_issues": int(
+                records_with_issues
+            ),
         }
 
         quality = {
-            "students_checked": int(active_students),
-            "records_with_issues": int(records_with_issues),
-            "missing_fields": int(missing_fields),
+            "students_checked": int(
+                active_students
+            ),
+            "records_with_issues": int(
+                records_with_issues
+            ),
+            "missing_fields": int(
+                missing_fields
+            ),
             "completion_percent": completion_percent,
         }
 
@@ -20168,64 +22233,102 @@ def clerk_reports():
 
         return render_template(
             "reports/clerk_reports.html",
+
             role="clerk",
             active_page="reports",
-            school_name=school.get("school_name", "School"),
+
+            school_name=school.get(
+                "school_name",
+                "School"
+            ),
+
             summary=summary,
             quality=quality,
+
             student_rows=student_rows,
             admission_rows=admission_rows,
             tc_rows=tc_rows,
             bonafide_rows=bonafide_rows,
             quality_rows=quality_rows,
-            admission_chart_labels=admission_chart_labels,
-            admission_chart_values=admission_chart_values,
-            class_chart_labels=class_chart_labels,
-            class_chart_values=class_chart_values,
-            total_report_records=total_report_records,
-            filter_description=filter_description,
+
+            admission_chart_labels=(
+                admission_chart_labels
+            ),
+            admission_chart_values=(
+                admission_chart_values
+            ),
+
+            class_chart_labels=(
+                class_chart_labels
+            ),
+            class_chart_values=(
+                class_chart_values
+            ),
+
+            total_report_records=(
+                total_report_records
+            ),
+
+            filter_description=(
+                filter_description
+            ),
+
             date_from=date_from,
             date_to=date_to,
+
             selected_year=selected_year,
             selected_month=selected_month,
+
             selected_class=selected_class,
             selected_section=selected_section,
+
+            selected_tab=selected_tab,
+
             years=years,
             months=months,
+
             classes=classes,
             sections=sections,
         )
 
     except Exception:
-        if "logger" in globals():
-            logger.exception("CLERK REPORTS PAGE ERROR")
 
+        if "logger" in globals():
+            logger.exception(
+                "CLERK REPORTS PAGE ERROR"
+            )
         else:
-            print("CLERK REPORTS PAGE ERROR")
+            print(
+                "CLERK REPORTS PAGE ERROR"
+            )
 
         flash(
-            "Reports could not be loaded right now. Please refresh the page and try again.",
-            "danger",
+            "Reports could not be loaded right now. "
+            "Please refresh the page and try again.",
+            "danger"
         )
 
-        return redirect(url_for("clerk_dashboard"))
+        return redirect(
+            url_for("clerk_dashboard")
+        )
 
     finally:
+
         if cursor:
+
             try:
                 cursor.close()
             except Exception:
                 pass
 
         if conn:
+
             try:
                 conn.close()
             except Exception:
                 pass
 
-            # ==========================================================
-
-
+# ==========================================================
 # CLERK REPORT EXPORT
 # ==========================================================
 
@@ -20276,75 +22379,182 @@ def clerk_reports_export():
         # FILTERS
         # ==================================================
 
-        date_from = request.args.get("date_from", "").strip()
+        date_from = request.args.get(
+            "date_from", ""
+        ).strip()
 
-        date_to = request.args.get("date_to", "").strip()
+        date_to = request.args.get(
+            "date_to", ""
+        ).strip()
 
-        year = request.args.get("year", "").strip()
+        year = request.args.get(
+            "year", ""
+        ).strip()
 
-        month = request.args.get("month", "").strip()
+        month = request.args.get(
+            "month", ""
+        ).strip()
 
-        class_name = request.args.get("class", "").strip()
+        class_name = request.args.get(
+            "class", ""
+        ).strip()
 
-        section = request.args.get("section", "").strip()
+        section = request.args.get(
+            "section", ""
+        ).strip()
 
         # ==================================================
-        # VALIDATE DATE
+        # VALIDATE DATE RANGE
         # ==================================================
 
         parsed_from = None
         parsed_to = None
 
         if date_from:
+
             try:
-                parsed_from = datetime.strptime(date_from, "%Y-%m-%d").date()
+
+                parsed_from = datetime.strptime(
+                    date_from,
+                    "%Y-%m-%d"
+                ).date()
 
             except ValueError:
-                date_from = ""
+
+                flash(
+                    "Invalid Date From value.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("clerk_reports")
+                )
 
         if date_to:
+
             try:
-                parsed_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+
+                parsed_to = datetime.strptime(
+                    date_to,
+                    "%Y-%m-%d"
+                ).date()
 
             except ValueError:
-                date_to = ""
 
-        if parsed_from and parsed_to and parsed_from > parsed_to:
-            flash("Invalid report date range.", "warning")
+                flash(
+                    "Invalid Date To value.",
+                    "warning"
+                )
 
-            return redirect(url_for("clerk_reports"))
+                return redirect(
+                    url_for("clerk_reports")
+                )
+
+        if parsed_from and parsed_to:
+
+            if parsed_from > parsed_to:
+
+                flash(
+                    "Date From cannot be later than Date To.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("clerk_reports")
+                )
 
         # ==================================================
-        # VALIDATE YEAR / MONTH
+        # VALIDATE YEAR
         # ==================================================
+
+        year_int = None
 
         if year:
+
             try:
+
                 year_int = int(year)
 
                 if not (1900 <= year_int <= 2100):
                     raise ValueError
 
-            except ValueError:
-                year = ""
+            except (ValueError, TypeError):
+
+                flash(
+                    "Invalid report year.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("clerk_reports")
+                )
+
+        # ==================================================
+        # VALIDATE MONTH
+        # ==================================================
+
+        month_int = None
 
         if month:
+
             try:
+
                 month_int = int(month)
 
                 if not (1 <= month_int <= 12):
                     raise ValueError
 
-            except ValueError:
-                month = ""
+            except (ValueError, TypeError):
+
+                flash(
+                    "Invalid report month.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for("clerk_reports")
+                )
 
         # ==================================================
-        # TEXT LIMITS
+        # DATE RANGE HAS PRIORITY
+        #
+        # If Date From OR Date To is selected,
+        # Year + Month are ignored.
         # ==================================================
 
-        class_name = class_name[:100]
+        if parsed_from or parsed_to:
 
-        section = section[:100]
+            year = ""
+            month = ""
+
+            year_int = None
+            month_int = None
+
+        # ==================================================
+        # TEXT FILTER VALIDATION
+        # ==================================================
+
+        if len(class_name) > 100:
+
+            flash(
+                "Invalid class filter.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("clerk_reports")
+            )
+
+        if len(section) > 100:
+
+            flash(
+                "Invalid section filter.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("clerk_reports")
+            )
 
         # ==================================================
         # DATABASE
@@ -20353,51 +22563,119 @@ def clerk_reports_export():
         conn = get_connection()
 
         if not conn:
-            flash("Database connection is currently unavailable.", "danger")
 
-            return redirect(url_for("clerk_reports"))
+            flash(
+                "Database connection is currently unavailable.",
+                "danger"
+            )
 
-        cursor = conn.cursor(dictionary=True)
+            return redirect(
+                url_for("clerk_reports")
+            )
+
+        cursor = conn.cursor(
+            dictionary=True
+        )
 
         # ==================================================
-        # COMMON STUDENT FILTER
+        # ACTIVE STUDENT FILTER
+        #
+        # IMPORTANT:
+        # Date / Year / Month DO NOT apply here.
+        #
+        # This must match the Active Students KPI.
         # ==================================================
 
-        student_where = ["s.school_id = %s", "s.is_deleted = 0"]
+        student_where = [
+            "s.school_id = %s",
+            "s.is_deleted = 0",
+        ]
 
-        student_params = [school_id]
-
-        if parsed_from:
-            student_where.append("DATE(s.created_at) >= %s")
-
-            student_params.append(parsed_from)
-
-        if parsed_to:
-            student_where.append("DATE(s.created_at) <= %s")
-
-            student_params.append(parsed_to)
-
-        if year:
-            student_where.append("YEAR(s.created_at) = %s")
-
-            student_params.append(int(year))
-
-        if month:
-            student_where.append("MONTH(s.created_at) = %s")
-
-            student_params.append(int(month))
+        student_params = [
+            school_id
+        ]
 
         if class_name:
-            student_where.append("TRIM(s.class) = %s")
 
-            student_params.append(class_name)
+            student_where.append(
+                "TRIM(s.class) = %s"
+            )
+
+            student_params.append(
+                class_name
+            )
 
         if section:
-            student_where.append("TRIM(s.section) = %s")
 
-            student_params.append(section)
+            student_where.append(
+                "TRIM(s.section) = %s"
+            )
 
-        student_where_sql = " AND ".join(student_where)
+            student_params.append(
+                section
+            )
+
+        student_where_sql = " AND ".join(
+            student_where
+        )
+
+        # ==================================================
+        # ADMISSION EXPORT FILTER
+        #
+        # Admissions are based on created_at.
+        # ==================================================
+
+        admission_where = list(
+            student_where
+        )
+
+        admission_params = list(
+            student_params
+        )
+
+        if parsed_from:
+
+            admission_where.append(
+                "DATE(s.created_at) >= %s"
+            )
+
+            admission_params.append(
+                parsed_from
+            )
+
+        if parsed_to:
+
+            admission_where.append(
+                "DATE(s.created_at) <= %s"
+            )
+
+            admission_params.append(
+                parsed_to
+            )
+
+        if year_int is not None:
+
+            admission_where.append(
+                "YEAR(s.created_at) = %s"
+            )
+
+            admission_params.append(
+                year_int
+            )
+
+        if month_int is not None:
+
+            admission_where.append(
+                "MONTH(s.created_at) = %s"
+            )
+
+            admission_params.append(
+                month_int
+            )
+
+        admission_where_sql = " AND ".join(
+            admission_where
+        )
 
         # ==================================================
         # EXCEL DATASETS
@@ -20506,13 +22784,13 @@ def clerk_reports_export():
 
                 FROM students s
 
-                WHERE {student_where_sql}
+                WHERE {admission_where_sql}
 
                 ORDER BY
                     s.created_at DESC,
                     s.id DESC
                 """,
-                tuple(student_params),
+                tuple(admission_params),
             )
 
             datasets["Admissions"] = cursor.fetchall()
@@ -23196,99 +25474,246 @@ def clerk_update_password():
 
 
 # =========================================================
-# 🎓 AUTO GENERATE ADMISSION NUMBER
-# (MYSQL SAFE + ATOMIC + PRODUCTION READY)
+# 🎓 GENERATE ADMISSION NUMBER
+# TRANSACTION-SAFE + SCHOOL-SCOPED
 # =========================================================
 
 
-def generate_admission_no(school_id):
+def generate_admission_no(cursor, school_id):
+    """
+    Generate the next admission number using the caller's
+    existing database transaction.
+
+    IMPORTANT:
+    The caller must COMMIT only after the student INSERT succeeds.
+    """
+
+    # -----------------------------------------------------
+    # GET SCHOOL CODE
+    # -----------------------------------------------------
+
+    school_code = get_school_code(school_id)
+
+    if not school_code:
+        raise ValueError("School admission code is not configured.")
+
+    # -----------------------------------------------------
+    # LOCK THIS SCHOOL'S SEQUENCE ROW
+    # -----------------------------------------------------
+
+    cursor.execute(
+        """
+        SELECT admission_last_number
+        FROM school_sequences
+        WHERE school_id = %s
+        FOR UPDATE
+        """,
+        (school_id,),
+    )
+
+    row = cursor.fetchone()
+
+    if not row:
+        raise ValueError("Admission sequence is not configured for this school.")
+
+    current_number = row[0] or 0
+
+    # -----------------------------------------------------
+    # NEXT NUMBER
+    # -----------------------------------------------------
+
+    next_number = current_number + 1
+
+    # -----------------------------------------------------
+    # UPDATE SEQUENCE
+    # DO NOT COMMIT HERE
+    # -----------------------------------------------------
+
+    cursor.execute(
+        """
+        UPDATE school_sequences
+        SET admission_last_number = %s
+        WHERE school_id = %s
+        """,
+        (next_number, school_id),
+    )
+
+    # -----------------------------------------------------
+    # FINAL ADMISSION NUMBER
+    # -----------------------------------------------------
+
+    admission_no = f"{school_code}-ADM-{str(next_number).zfill(4)}"
+
+    return admission_no
+
+
+# =========================================================
+# STUDENT PROFILE PHOTO PROCESSOR
+# =========================================================
+
+
+def process_student_photo(uploaded_file):
+
+    if not uploaded_file:
+        return None
+
+    # -----------------------------------------------------
+    # MAX ORIGINAL UPLOAD SIZE
+    # -----------------------------------------------------
+
+    MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2 MB
+
+    uploaded_file.stream.seek(0)
+
+    raw_data = uploaded_file.stream.read()
+
+    if not raw_data:
+        raise ValueError("The selected photo is empty.")
+
+    if len(raw_data) > MAX_UPLOAD_SIZE:
+        raise ValueError("Student photo must be 2 MB or smaller.")
+
+    # -----------------------------------------------------
+    # VALIDATE ACTUAL IMAGE CONTENT
+    # Do not trust extension/MIME from browser.
+    # -----------------------------------------------------
+
+    try:
+        image = Image.open(io.BytesIO(raw_data))
+
+        # Force actual image validation
+        image.verify()
+
+        # Re-open because verify() invalidates the image object
+        image = Image.open(io.BytesIO(raw_data))
+
+    except (UnidentifiedImageError, OSError):
+        raise ValueError("The selected file is not a valid image.")
+
+    # -----------------------------------------------------
+    # SAFE IMAGE TRANSFORMATION
+    # -----------------------------------------------------
+
+    try:
+        # Correct EXIF rotation
+        image = ImageOps.exif_transpose(image)
+
+        # -------------------------------------------------
+        # REMOVE TRANSPARENCY
+        # Store standard RGB WEBP.
+        # -------------------------------------------------
+
+        if image.mode in ("RGBA", "LA"):
+            background = Image.new("RGB", image.size, "white")
+
+            alpha = image.getchannel("A")
+
+            background.paste(image.convert("RGB"), mask=alpha)
+
+            image = background
+
+        else:
+            image = image.convert("RGB")
+
+        # -------------------------------------------------
+        # RESIZE
+        # -------------------------------------------------
+
+        MAX_WIDTH = 600
+        MAX_HEIGHT = 800
+
+        image.thumbnail((MAX_WIDTH, MAX_HEIGHT), Image.Resampling.LANCZOS)
+
+        # -------------------------------------------------
+        # CONVERT TO WEBP
+        # -------------------------------------------------
+
+        output = io.BytesIO()
+
+        image.save(output, format="WEBP", quality=82, method=6, optimize=True)
+
+        photo_data = output.getvalue()
+
+        # -------------------------------------------------
+        # FINAL DATABASE SIZE CHECK
+        # -------------------------------------------------
+
+        if len(photo_data) > 1 * 1024 * 1024:
+            raise ValueError("The processed student photo is too large.")
+
+        return photo_data
+
+    except Exception as exc:
+        if isinstance(exc, ValueError):
+            raise
+
+        raise ValueError("Unable to process the student photo.") from exc
+
+
+# =========================================================
+# STUDENT PROFILE PHOTO
+# SERVE PHOTO DIRECTLY FROM DATABASE
+# =========================================================
+
+
+@app.route("/clerk/student/<int:student_id>/photo")
+@login_required
+@subscription_required
+def clerk_student_photo(student_id):
+
+    school_id = session.get("clerk_school_id")
+
+    if not school_id:
+        return Response("Unauthorized", status=401)
 
     conn = None
     cursor = None
 
     try:
-        # =========================================
-        # GET SCHOOL CODE
-        # =========================================
-
-        school_code = get_school_code(school_id)
-
         conn = get_connection()
-
         cursor = conn.cursor()
 
-        # =========================================
-        # GET CURRENT NUMBER
-        # =========================================
-
         cursor.execute(
             """
+            SELECT
+                profile_photo_data,
+                profile_photo_mime_type
 
-            SELECT admission_last_number
+            FROM students
 
-            FROM school_sequences
+            WHERE
+                id = %s
+                AND school_id = %s
+                AND is_deleted = 0
 
-            WHERE school_id = %s
-
-        """,
-            (school_id,),
+            LIMIT 1
+            """,
+            (student_id, school_id),
         )
 
-        row = cursor.fetchone()
+        student = cursor.fetchone()
 
-        # =========================================
-        # VALIDATION
-        # =========================================
+        if not student:
+            return Response("Student not found", status=404)
 
-        if not row:
-            flash("School sequence not found.", "danger")
-            raise Exception("School sequence not found ❌")
+        photo_data = student[0]
+        mime_type = student[1]
 
-        current_number = row[0] or 0
+        if not photo_data:
+            return Response("No profile photo", status=404)
 
-        # =========================================
-        # NEXT NUMBER
-        # =========================================
-
-        next_number = current_number + 1
-
-        # =========================================
-        # UPDATE NEW NUMBER
-        # =========================================
-
-        cursor.execute(
-            """
-
-            UPDATE school_sequences
-
-            SET
-                admission_last_number = %s
-
-            WHERE school_id = %s
-
-        """,
-            (next_number, school_id),
+        return Response(
+            photo_data,
+            mimetype=mime_type or "image/webp",
+            headers={
+                "Cache-Control": "private, no-cache, must-revalidate",
+            },
         )
 
-        conn.commit()
+    except Exception:
+        logger.exception("STUDENT PHOTO LOAD ERROR")
 
-        # =========================================
-        # FINAL ADMISSION NUMBER
-        # =========================================
-
-        admission_no = f"{school_code}-ADM-{str(next_number).zfill(4)}"
-
-        print("✅ Generated Admission Number:", admission_no)
-
-        return admission_no
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-
-        print("ADMISSION NUMBER ERROR:", e)
-
-        raise
+        return Response("Unable to load photo", status=500)
 
     finally:
         if cursor:
@@ -23299,21 +25724,32 @@ def generate_admission_no(school_id):
 
 
 # =========================================================
-# ➕ ADD STUDENT
-# Safe student registration with validation, duplicate check,
-# optional unique fields and auto admission number.
+# ADD STUDENT
+# PRODUCTION VERSION
 # =========================================================
+
+
 @app.route("/clerk/add-student", methods=["GET", "POST"])
 @login_required
 @subscription_required
 def add_student():
 
     school_id = session.get("clerk_school_id")
+
     next_admission = "Auto Generated On Save"
 
+    # =====================================================
+    # SCHOOL VALIDATION
+    # =====================================================
+
     if not school_id:
-        flash("School not found.", "danger")
+        flash("School session could not be verified.", "danger")
+
         return redirect(url_for("login"))
+
+    # =====================================================
+    # POST
+    # =====================================================
 
     if request.method == "POST":
         conn = None
@@ -23323,60 +25759,120 @@ def add_student():
             conn = get_connection()
             cursor = conn.cursor()
 
-            # ================= SAFE FORM VALUE =================
+            # =================================================
+            # SAFE FORM HELPERS
+            # =================================================
+
             def form_value(field):
+
                 value = request.form.get(field)
+
                 return value.strip() if value else ""
 
             def optional_value(field):
-                value = form_value(field)
-                return value if value and value != "None" else None
 
-            # ================= GET DATA =================
+                value = form_value(field)
+
+                if not value or value == "None":
+                    return None
+
+                return value
+
+            # =================================================
+            # BASIC DATA
+            # =================================================
+
             school_register_no = form_value("school_register_no")
+
             name = form_value("name")
+
             father_name = form_value("father_name")
+
             mother_name = form_value("mother_name")
 
             student_uid = optional_value("student_uid")
+
             apaar_id = optional_value("apaar_id")
 
             aadhaar = form_value("aadhaar")
 
+            # =================================================
+            # PERSONAL
+            # =================================================
+
             dob = parse_date(request.form.get("dob"))
+
             birth_place = form_value("birth_place")
+
             nationality = form_value("nationality")
+
             mother_tongue = form_value("mother_tongue")
+
             religion = form_value("religion")
+
             caste = form_value("caste")
 
+            # =================================================
+            # ADDRESS
+            # =================================================
+
             city = form_value("city")
+
             taluka = form_value("taluka")
+
             district = form_value("district")
+
             state = form_value("state")
 
+            # =================================================
+            # ADMISSION
+            # =================================================
+
             admission_date = parse_date(request.form.get("admission_date"))
+
             student_class = form_value("class")
+
             section = form_value("section")
+
             previous_school = optional_value("previous_school")
 
+            # =================================================
+            # ACADEMIC
+            # =================================================
+
             last_exam = optional_value("last_exam")
+
             result_status = optional_value("result_status")
+
             progress = optional_value("progress")
+
             conduct = optional_value("conduct")
 
+            # =================================================
+            # PARENT / CONTACT
+            # =================================================
+
             primary_mobile = form_value("primary_mobile")
+
             alternate_mobile = optional_value("alternate_mobile")
+
             email = optional_value("email")
+
             occupation = optional_value("occupation")
+
             income = optional_value("income")
+
             guardian_name = optional_value("guardian_name")
+
             guardian_mobile = optional_value("guardian_mobile")
 
             if email:
                 email = email.lower()
 
-            # ================= REQUIRED VALIDATION =================
+            # =================================================
+            # REQUIRED VALIDATION
+            # =================================================
+
             required_fields = {
                 "School Register No": school_register_no,
                 "Student Name": name,
@@ -23400,158 +25896,332 @@ def add_student():
             for label, value in required_fields.items():
                 if not value:
                     flash(f"{label} is required.", "danger")
-                    return redirect(url_for("clerk_dashboard"))
 
-            # ================= FORMAT VALIDATION =================
+                    return redirect(url_for("add_student"))
+
+            # =================================================
+            # DATE VALIDATION
+            # =================================================
+
+            from datetime import date, datetime
+
+            today = date.today()
+
+            # Normalize datetime -> date
+            if isinstance(dob, datetime):
+                dob = dob.date()
+
+            if isinstance(admission_date, datetime):
+                admission_date = admission_date.date()
+
+            if dob > today:
+                flash("Date of birth cannot be in the future.", "danger")
+                return redirect(url_for("add_student"))
+
+            if admission_date > today:
+                flash("Admission date cannot be in the future.", "danger")
+                return redirect(url_for("add_student"))
+
+            # =================================================
+            # FORMAT VALIDATION
+            # =================================================
+
             if not is_valid_aadhaar(aadhaar):
-                flash("Invalid Aadhaar number.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                flash(
+                    "Invalid Aadhaar number. Enter a valid 12-digit Aadhaar number.",
+                    "danger",
+                )
+
+                return redirect(url_for("add_student"))
 
             if not is_valid_phone(primary_mobile):
                 flash("Invalid primary mobile number.", "danger")
-                return redirect(url_for("clerk_dashboard"))
 
-            if alternate_mobile and not is_valid_phone(alternate_mobile):
-                flash("Invalid alternate mobile number.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                return redirect(url_for("add_student"))
 
-            if guardian_mobile and not is_valid_phone(guardian_mobile):
-                flash("Invalid guardian mobile number.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+            if alternate_mobile:
+                if not is_valid_phone(alternate_mobile):
+                    flash("Invalid alternate mobile number.", "danger")
 
-            if email and not is_valid_email(email):
-                flash("Invalid email.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                    return redirect(url_for("add_student"))
 
-            # ================= LENGTH VALIDATION =================
-            if len(school_register_no) > 50:
-                flash("School register number too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+            if guardian_mobile:
+                if not is_valid_phone(guardian_mobile):
+                    flash("Invalid guardian mobile number.", "danger")
 
-            if len(name) > 200:
-                flash("Student name too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                    return redirect(url_for("add_student"))
 
-            if len(father_name) > 200:
-                flash("Father name too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+            if email:
+                if not is_valid_email(email):
+                    flash("Invalid email address.", "danger")
 
-            if len(mother_name) > 200:
-                flash("Mother name too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                    return redirect(url_for("add_student"))
 
-            if student_uid and len(student_uid) > 50:
-                flash("Student UID too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+            # =================================================
+            # CLASS / SECTION VALIDATION
+            # =================================================
 
-            if apaar_id and len(apaar_id) > 50:
-                flash("APAAR ID too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+            if student_class not in {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}:
+                flash("Invalid class selected.", "danger")
+                return redirect(
+                    url_for(
+                        "add_student"
+                        # edit_student for edit route
+                    )
+                )
 
-            if email and len(email) > 255:
-                flash("Email too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+            if section not in {"A", "B", "C", "D", "E", "F"}:
+                flash("Invalid section selected.", "danger")
+                return redirect(
+                    url_for(
+                        "add_student"
+                        # edit_student for edit route
+                    )
+                )
 
-            # ================= DUPLICATE CHECK =================
+            # =================================================
+            # INCOME VALIDATION
+            # =================================================
+
+            if income is not None:
+                try:
+                    income = income.strip()
+
+                    if not income:
+                        income = None
+                    else:
+                        income_value = int(income)
+
+                        if income_value < 0:
+                            raise ValueError
+
+                        income = income_value
+
+                except (ValueError, TypeError):
+                    flash(
+                        "Annual income must be a valid non-negative number.", "danger"
+                    )
+
+                    return redirect(url_for("add_student"))
+
+            # =================================================
+            # LENGTH VALIDATION
+            # =================================================
+
+            length_checks = {
+                "School register number": (school_register_no, 50),
+                "Student name": (name, 200),
+                "Father name": (father_name, 200),
+                "Mother name": (mother_name, 200),
+                "Student UID": (student_uid, 50),
+                "APAAR ID": (apaar_id, 50),
+                "Email": (email, 255),
+                "Birth Place": (birth_place, 100),
+                "Nationality": (nationality, 50),
+                "Mother Tongue": (mother_tongue, 50),
+                "Religion": (religion, 50),
+                "Caste": (caste, 50),
+                "City": (city, 100),
+                "Taluka": (taluka, 100),
+                "District": (district, 100),
+                "State": (state, 100),
+                "Class": (student_class, 50),
+                "Section": (section, 10),
+                "Previous School": (previous_school, 200),
+                "Last Exam": (last_exam, 100),
+                "Result": (result_status, 50),
+                "Progress": (progress, 100),
+                "Conduct": (conduct, 1000),
+                "Occupation": (occupation, 100),
+                "Guardian Name": (guardian_name, 100),
+            }
+
+            for label, values in length_checks.items():
+                value, maximum = values
+
+                if value and len(value) > maximum:
+                    flash(f"{label} is too long.", "danger")
+
+                    return redirect(url_for("add_student"))
+
+            # =================================================
+            # DUPLICATE CHECK
+            # =================================================
+
             cursor.execute(
                 """
                 SELECT id
+
                 FROM students
-                WHERE school_id = %s
-                AND (
-                    school_register_no = %s
-                    OR aadhaar = %s
-                    OR (
-                        student_uid = %s
-                        AND %s IS NOT NULL
-                        AND %s != ''
+
+                WHERE
+                    school_id = %s
+                    AND is_deleted = 0
+
+                    AND (
+                        school_register_no = %s
+
+                        OR aadhaar = %s
+
+                        OR (
+                            student_uid = %s
+                            AND student_uid IS NOT NULL
+                            AND student_uid != ''
+                        )
+
+                        OR (
+                            apaar_id = %s
+                            AND apaar_id IS NOT NULL
+                            AND apaar_id != ''
+                        )
                     )
-                    OR (
-                        apaar_id = %s
-                        AND %s IS NOT NULL
-                        AND %s != ''
-                    )
-                )
+
                 LIMIT 1
-            """,
+                """,
                 (
                     school_id,
                     school_register_no,
                     aadhaar,
                     student_uid,
-                    student_uid,
-                    student_uid,
-                    apaar_id,
-                    apaar_id,
                     apaar_id,
                 ),
             )
 
             if cursor.fetchone():
                 flash(
-                    "Student with same Register No, Aadhaar, Student UID or APAAR ID already exists.",
+                    "A student with the same Register No, Aadhaar, Student UID or APAAR ID already exists.",
                     "danger",
                 )
-                return redirect(url_for("clerk_dashboard"))
 
-            # ================= CHECK STUDENT LIMIT =================
+                return redirect(url_for("add_student"))
+
+            # =================================================
+            # SUBSCRIPTION LIMIT
+            # =================================================
 
             limit_check = check_subscription_limit(cursor, school_id, "students")
 
             if not limit_check["allowed"]:
-                return limit_check["message"] + " Please upgrade your plan ❌"
+                flash(limit_check.get("message", "Student limit reached."), "warning")
 
-            # ================= GENERATE ADMISSION NO =================
+                return redirect(url_for("add_student"))
 
-            admission_no = generate_admission_no(school_id)
+            # =================================================
+            # PROCESS PHOTO
+            # =================================================
 
-            # ================= INSERT STUDENT =================
+            photo_data = None
+
+            uploaded_photo = request.files.get("photo")
+
+            if uploaded_photo:
+                photo_data = process_student_photo(uploaded_photo)
+
+            # =================================================
+            # GENERATE ADMISSION NUMBER
+            # =================================================
+
+            admission_no = generate_admission_no(cursor, school_id)
+
+            # =================================================
+            # INSERT STUDENT
+            # =================================================
 
             cursor.execute(
                 """
                 INSERT INTO students (
+
                     school_id,
+
                     school_register_no,
+
                     name,
+
                     father_name,
+
                     mother_name,
+
                     student_uid,
+
                     aadhaar,
+
                     apaar_id,
+
                     dob,
+
                     birth_place,
+
                     nationality,
+
                     mother_tongue,
+
                     religion,
+
                     caste,
+
                     city,
+
                     taluka,
+
                     district,
+
                     state,
+
                     admission_no,
+
                     admission_date,
+
                     class,
+
                     section,
+
                     previous_school,
+
                     last_exam,
+
                     result_status,
+
                     progress,
+
                     conduct,
+
                     primary_mobile,
+
                     alternate_mobile,
+
                     email,
+
                     occupation,
+
                     income,
+
                     guardian_name,
-                    guardian_mobile
+
+                    guardian_mobile,
+
+                    profile_photo_data,
+
+                    profile_photo_mime_type,
+
+                    profile_photo_size,
+
+                    profile_photo_updated_at
+
                 )
+
                 VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s
+
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, NOW()
+
                 )
-            """,
+                """,
                 (
                     school_id,
                     school_register_no,
@@ -23587,23 +26257,59 @@ def add_student():
                     income,
                     guardian_name,
                     guardian_mobile,
+                    photo_data,
+                    "image/webp" if photo_data else None,
+                    len(photo_data) if photo_data else None,
                 ),
             )
 
+            # =================================================
+            # COMMIT
+            # =================================================
+
             conn.commit()
 
-            print("✅ Student Saved:", admission_no)
+            logger.info(
+                "Student created successfully. school_id=%s admission_no=%s",
+                school_id,
+                admission_no,
+            )
+
+            flash(
+                f"Student '{name}' added successfully. Admission No: {admission_no}",
+                "success",
+            )
 
             return redirect(url_for("clerk_students"))
+
+        # =====================================================
+        # PHOTO VALIDATION ERROR
+        # =====================================================
+
+        except ValueError as e:
+            if conn:
+                conn.rollback()
+
+            flash(str(e), "danger")
+
+            return redirect(url_for("add_student"))
+
+        # =====================================================
+        # DATABASE ERROR
+        # =====================================================
 
         except Exception as e:
             if conn:
                 conn.rollback()
 
-            logger.exception("STUDENT PAGE ERROR")
+            logger.exception("ADD STUDENT ERROR")
 
-            flash("Unable to add student.", "danger")
-            return redirect(url_for("clerk_dashboard"))
+            flash(
+                "Unable to save the student right now. Please verify the information and try again.",
+                "danger",
+            )
+
+            return redirect(url_for("add_student"))
 
         finally:
             if cursor:
@@ -23612,21 +26318,37 @@ def add_student():
             if conn:
                 conn.close()
 
-    school = get_school_details(school_id)
+    # =====================================================
+    # GET
+    # =====================================================
 
-    return render_template(
-        "clerk/add_student.html",
-        next_admission=next_admission,
-        role="clerk",
-        school_name=school["school_name"],
-        school_udise=school["school_udise"],
-        active_page="add_student",
-    )
+    try:
+        school = get_school_details(school_id)
+
+        return render_template(
+            "clerk/add_student.html",
+            next_admission=next_admission,
+            role="clerk",
+            school_name=school["school_name"],
+            school_udise=school["school_udise"],
+            active_page="add_student",
+        )
+
+    except Exception:
+        logger.exception("ADD STUDENT PAGE LOAD ERROR")
+
+        flash("Unable to load the Add Student page.", "danger")
+
+        return redirect(url_for("clerk_dashboard"))
 
 
 # =========================================================
-# ✏️ EDIT STUDENT (CLERK + ADMIN SAFE)
+# ✏️ EDIT STUDENT
+# CLERK ONLY
+# SCHOOL-SCOPED + PHOTO UPDATE + VALIDATION
 # =========================================================
+
+
 @app.route("/clerk/edit-student/<int:id>", methods=["GET", "POST"])
 @login_required
 @subscription_required
@@ -23636,74 +26358,77 @@ def edit_student(id):
     cursor = None
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
+        # =====================================================
+        # 1. VERIFY CLERK SESSION
+        # =====================================================
 
-        # =========================================
-        # CHECK WHO IS ACCESSING
-        # Clerk is preferred if both sessions exist
-        # =========================================
-
-        is_clerk_request = (
+        if not (
             session.get("clerk_logged_in") is True
             and session.get("clerk_role") == "clerk"
-            and session.get("clerk_school_id")
-        )
-
-        is_admin_request = (
-            session.get("admin_logged_in") is True
-            and session.get("admin_role") == "admin"
-        )
-
-        if not is_clerk_request and not is_admin_request:
+        ):
             flash("Unauthorized access.", "danger")
+
             return redirect(url_for("login"))
 
-        # =========================================
-        # FETCH STUDENT SAFELY
-        # Clerk can access only own school student
-        # Admin can access any student
-        # =========================================
+        school_id = session.get("clerk_school_id")
 
-        if is_clerk_request:
-            school_id = session.get("clerk_school_id")
+        if not school_id:
+            flash("School session could not be verified.", "danger")
 
-            row = get_student_for_school(
-                cursor,
-                id,
-                school_id,
-            )
+            return redirect(url_for("login"))
 
-        else:
-            cursor.execute(
-                """
-                SELECT *
-                FROM students
-                WHERE id = %s
+        # =====================================================
+        # 2. OPEN DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        cursor = conn.cursor()
+
+        # =====================================================
+        # 3. FETCH STUDENT
+        #
+        # IMPORTANT:
+        # id + school_id + is_deleted
+        #
+        # This is the main cross-school protection.
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT *
+            FROM students
+            WHERE
+                id = %s
+                AND school_id = %s
                 AND is_deleted = 0
-                LIMIT 1
-                """,
-                (id,),
-            )
+            LIMIT 1
+            """,
+            (id, school_id),
+        )
 
-            row = cursor.fetchone()
+        row = cursor.fetchone()
 
         if not row:
-            flash("Student Not Found.", "danger")
-            return redirect(url_for("clerk_dashboard"))
+            flash(
+                "Student not found or you do not have permission to edit this student.",
+                "danger",
+            )
+
+            return redirect(url_for("clerk_students"))
 
         columns = [column[0] for column in cursor.description]
 
         student = dict(zip(columns, row))
 
-        student_school_id = student["school_id"]
-
-        # =========================================
-        # UPDATE STUDENT
-        # =========================================
+        # =====================================================
+        # 4. POST
+        # =====================================================
 
         if request.method == "POST":
-            # ================= SAFE FORM HELPERS =================
+            # =================================================
+            # SAFE FORM HELPERS
+            # =================================================
 
             def form_value(field):
 
@@ -23715,65 +26440,136 @@ def edit_student(id):
 
                 value = form_value(field)
 
-                if value in ["", "None", "none", "NULL", "null"]:
+                if value.lower() in {"", "none", "null"}:
                     return None
 
                 return value
 
             def required_date(field):
+                """
+                Parse form date and normalize it to datetime.date.
+
+                This is important because parse_date() currently returns
+                datetime.datetime while MySQL DATE fields and date.today()
+                use datetime.date.
+                """
 
                 value = request.form.get(field)
 
-                return parse_date(value) if value else None
+                if not value:
+                    return None
 
-            # ================= GET DATA =================
+                parsed = parse_date(value)
+
+                if not parsed:
+                    return None
+
+                from datetime import datetime, date
+
+                if isinstance(parsed, datetime):
+                    return parsed.date()
+
+                if isinstance(parsed, date):
+                    return parsed
+
+                return None
+
+            # =================================================
+            # READ EDITABLE FIELDS
+            # =================================================
 
             school_register_no = form_value("school_register_no")
+
             name = form_value("name")
+
             father_name = form_value("father_name")
+
             mother_name = form_value("mother_name")
 
             student_uid = optional_value("student_uid")
-            apaar_id = optional_value("apaar_id")
 
             aadhaar = form_value("aadhaar")
 
+            apaar_id = optional_value("apaar_id")
+
+            # =================================================
+            # PERSONAL
+            # =================================================
+
             dob = required_date("dob")
+
             birth_place = form_value("birth_place")
+
             nationality = form_value("nationality")
+
             mother_tongue = form_value("mother_tongue")
+
             religion = form_value("religion")
+
             caste = form_value("caste")
 
+            # =================================================
+            # ADDRESS
+            # =================================================
+
             city = form_value("city")
+
             taluka = form_value("taluka")
+
             district = form_value("district")
+
             state = form_value("state")
 
+            # =================================================
+            # ADMISSION
+            #
+            # admission_no IS NEVER READ FROM FORM
+            # =================================================
+
             admission_date = required_date("admission_date")
+
             student_class = form_value("class")
+
             section = form_value("section")
+
             previous_school = optional_value("previous_school")
 
+            # =================================================
+            # ACADEMIC
+            # =================================================
+
             last_exam = optional_value("last_exam")
+
             result_status = optional_value("result_status")
+
             progress = optional_value("progress")
+
             conduct = optional_value("conduct")
 
+            # =================================================
+            # PARENT / CONTACT
+            # =================================================
+
             primary_mobile = form_value("primary_mobile")
+
             alternate_mobile = optional_value("alternate_mobile")
+
             email = optional_value("email")
+
             occupation = optional_value("occupation")
+
             income = optional_value("income")
+
             guardian_name = optional_value("guardian_name")
+
             guardian_mobile = optional_value("guardian_mobile")
 
             if email:
                 email = email.lower()
 
-            # =========================================
-            # REQUIRED FIELD VALIDATION
-            # =========================================
+            # =================================================
+            # REQUIRED VALIDATION
+            # =================================================
 
             required_fields = {
                 "School Register No": school_register_no,
@@ -23797,170 +26593,272 @@ def edit_student(id):
                 "Primary Mobile": primary_mobile,
             }
 
-            for field_name, field_value in required_fields.items():
-                if not field_value:
-                    return f"{field_name} is required ❌"
+            for label, value in required_fields.items():
+                if not value:
+                    flash(f"{label} is required.", "danger")
 
-            # =========================================
-            # FORMAT VALIDATION
-            # =========================================
+                    return redirect(url_for("edit_student", id=id))
+
+            # =================================================
+            # DATE VALIDATION
+            # =================================================
+
+            from datetime import date
+
+            today = date.today()
+
+            if dob > today:
+                flash("Date of birth cannot be in the future.", "danger")
+
+                return redirect(url_for("edit_student", id=id))
+
+            if admission_date > today:
+                flash("Admission date cannot be in the future.", "danger")
+
+                return redirect(url_for("edit_student", id=id))
+
+            # =================================================
+            # CLASS / SECTION VALIDATION
+            # =================================================
+
+            ALLOWED_CLASSES = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}
+
+            ALLOWED_SECTIONS = {"A", "B", "C", "D", "E", "F"}
+
+            if student_class not in ALLOWED_CLASSES:
+                flash("Invalid class selected.", "danger")
+                return redirect(url_for("edit_student", id=id))
+
+            if section not in ALLOWED_SECTIONS:
+                flash("Invalid section selected.", "danger")
+                return redirect(url_for("edit_student", id=id))
+
+            # =================================================
+            # ACADEMIC ENUM VALIDATION
+            # =================================================
+
+            ALLOWED_RESULT_STATUS = {"", "Pass", "Fail"}
+
+            ALLOWED_PROGRESS = {
+                "",
+                "Excellent (85%+)",
+                "Good (60–85%)",
+                "Average (40–60%)",
+                "Needs Improvement",
+            }
+
+            if result_status not in ALLOWED_RESULT_STATUS:
+                flash("Invalid result status.", "danger")
+                return redirect(url_for("edit_student", id=id))
+
+            if progress not in ALLOWED_PROGRESS:
+                flash("Invalid academic progress value.", "danger")
+                return redirect(url_for("edit_student", id=id))
+            # =================================================
+            # PHONE VALIDATION
+            # =================================================
 
             if not is_valid_phone(primary_mobile):
-                return "Invalid primary mobile number ❌"
+                flash("Invalid primary mobile number.", "danger")
+
+                return redirect(url_for("edit_student", id=id))
 
             if alternate_mobile and not is_valid_phone(alternate_mobile):
-                return "Invalid alternate mobile number ❌"
+                flash("Invalid alternate mobile number.", "danger")
+
+                return redirect(url_for("edit_student", id=id))
 
             if guardian_mobile and not is_valid_phone(guardian_mobile):
-                return "Invalid guardian mobile number ❌"
+                flash("Invalid guardian mobile number.", "danger")
+
+                return redirect(url_for("edit_student", id=id))
+
+            # =================================================
+            # EMAIL
+            # =================================================
 
             if email and not is_valid_email(email):
-                return "Invalid email ❌"
+                flash("Invalid email address.", "danger")
+
+                return redirect(url_for("edit_student", id=id))
+
+            # =================================================
+            # AADHAAR
+            # =================================================
 
             if not is_valid_aadhaar(aadhaar):
-                return "Invalid Aadhaar number ❌"
+                flash(
+                    "Invalid Aadhaar number. Enter a valid 12-digit Aadhaar number.",
+                    "danger",
+                )
 
-            # =========================================
+                return redirect(url_for("edit_student", id=id))
+
+            # =================================================
+            # INCOME VALIDATION
+            # =================================================
+
+            if income is not None:
+                try:
+                    income = income.strip()
+
+                    if not income:
+                        income = None
+                    else:
+                        income_value = int(income)
+
+                        if income_value < 0:
+                            raise ValueError
+
+                        income = income_value
+
+                except (ValueError, TypeError):
+                    flash(
+                        "Annual income must be a valid non-negative number.", "danger"
+                    )
+
+                    return redirect(url_for("add_student"))
+
+            # =================================================
             # LENGTH VALIDATION
-            # =========================================
+            # =================================================
 
-            if len(school_register_no) > 50:
-                return "School register number too long ❌"
+            length_checks = {
+                "School Register No": (school_register_no, 50),
+                "Student Name": (name, 200),
+                "Father Name": (father_name, 200),
+                "Mother Name": (mother_name, 200),
+                "Student UID": (student_uid, 50),
+                "APAAR ID": (apaar_id, 50),
+                "Birth Place": (birth_place, 100),
+                "Nationality": (nationality, 50),
+                "Mother Tongue": (mother_tongue, 50),
+                "Religion": (religion, 50),
+                "Caste": (caste, 50),
+                "City": (city, 100),
+                "Taluka": (taluka, 100),
+                "District": (district, 100),
+                "State": (state, 100),
+                "Class": (student_class, 50),
+                "Section": (section, 10),
+                "Previous School": (previous_school, 200),
+                "Last Exam": (last_exam, 100),
+                "Result": (result_status, 50),
+                "Progress": (progress, 100),
+                "Conduct": (conduct, 1000),
+                "Email": (email, 255),
+                "Occupation": (occupation, 100),
+                "Guardian Name": (guardian_name, 100),
+            }
 
-            if len(name) > 200:
-                return "Student name too long ❌"
+            for label, values in length_checks.items():
+                value, maximum = values
 
-            if len(father_name) > 200:
-                return "Father name too long ❌"
+                if value and len(value) > maximum:
+                    flash(f"{label} is too long.", "danger")
 
-            if len(mother_name) > 200:
-                return "Mother name too long ❌"
+                    return redirect(url_for("edit_student", id=id))
 
-            if student_uid and len(student_uid) > 50:
-                return "Student UID too long ❌"
-
-            if apaar_id and len(apaar_id) > 50:
-                return "APAAR ID too long ❌"
-
-            if len(birth_place) > 100:
-                return "Birth place too long ❌"
-
-            if len(nationality) > 50:
-                return "Nationality too long ❌"
-
-            if len(mother_tongue) > 50:
-                return "Mother tongue too long ❌"
-
-            if len(religion) > 50:
-                return "Religion too long ❌"
-
-            if len(caste) > 50:
-                return "Caste too long ❌"
-
-            if len(city) > 100:
-                return "City name too long ❌"
-
-            if len(taluka) > 100:
-                return "Taluka name too long ❌"
-
-            if len(district) > 100:
-                return "District name too long ❌"
-
-            if len(state) > 100:
-                return "State name too long ❌"
-
-            if len(student_class) > 50:
-                return "Class too long ❌"
-
-            if len(section) > 10:
-                return "Section too long ❌"
-
-            if previous_school and len(previous_school) > 200:
-                return "Previous school name too long ❌"
-
-            if last_exam and len(last_exam) > 100:
-                return "Last exam too long ❌"
-
-            if result_status and len(result_status) > 50:
-                return "Result status too long ❌"
-
-            if progress and len(progress) > 100:
-                return "Progress too long ❌"
-
-            if conduct and len(conduct) > 100:
-                return "Conduct too long ❌"
-
-            if email and len(email) > 255:
-                return "Email too long ❌"
-
-            if occupation and len(occupation) > 100:
-                return "Occupation too long ❌"
-
-            if income and len(income) > 50:
-                return "Income too long ❌"
-
-            if guardian_name and len(guardian_name) > 100:
-                return "Guardian name too long ❌"
-
-            # =========================================
-            # DUPLICATE CHECK
-            # Aadhaar = Mandatory Unique
-            # Register No = School-wise Unique
-            # Student UID = Optional Unique
-            # APAAR ID = Optional Unique
-            # =========================================
+            # =================================================
+            # LOCK CURRENT STUDENT FOR UPDATE
+            # =================================================
 
             cursor.execute(
                 """
                 SELECT id
                 FROM students
-                WHERE school_id = %s
-                AND id != %s
-                AND (
-                    school_register_no = %s
-                    OR aadhaar = %s
-                    OR (
-                        student_uid = %s
-                        AND %s IS NOT NULL
-                        AND %s != ''
-                    )
-                    OR (
-                        apaar_id = %s
-                        AND %s IS NOT NULL
-                        AND %s != ''
-                    )
-                )
+                WHERE
+                    id = %s
+                    AND school_id = %s
+                    AND is_deleted = 0
                 LIMIT 1
-            """,
-                (
-                    student_school_id,
-                    id,
-                    school_register_no,
-                    aadhaar,
-                    student_uid,
-                    student_uid,
-                    student_uid,
-                    apaar_id,
-                    apaar_id,
-                    apaar_id,
-                ),
+                FOR UPDATE
+                """,
+                (id, school_id),
             )
 
-            existing_student = cursor.fetchone()
+            locked_student = cursor.fetchone()
 
-            if existing_student:
+            if not locked_student:
+                conn.rollback()
+
                 flash(
-                    "Student with same Register No, Aadhaar, Student UID or APAAR ID already exists.",
+                    "The student record is no longer available for editing.", "danger"
+                )
+
+                return redirect(url_for("clerk_students"))
+
+            # =================================================
+            # DUPLICATE CHECK
+            #
+            # ONLY INSIDE CURRENT SCHOOL
+            # AND EXCLUDE CURRENT STUDENT
+            # =================================================
+
+            cursor.execute(
+                """
+                SELECT id
+                FROM students
+                WHERE
+                    school_id = %s
+                    AND id != %s
+                    AND is_deleted = 0
+                    AND (
+                        school_register_no = %s
+
+                        OR aadhaar = %s
+
+                        OR (
+                            student_uid IS NOT NULL
+                            AND student_uid != ''
+                            AND student_uid = %s
+                        )
+
+                        OR (
+                            apaar_id IS NOT NULL
+                            AND apaar_id != ''
+                            AND apaar_id = %s
+                        )
+                    )
+                LIMIT 1
+                """,
+                (school_id, id, school_register_no, aadhaar, student_uid, apaar_id),
+            )
+
+            duplicate = cursor.fetchone()
+
+            if duplicate:
+                flash(
+                    "Another active student in this school already uses the same Register No, Aadhaar, Student UID or APAAR ID.",
                     "danger",
                 )
-                return redirect(url_for("clerk_dashboard"))
 
-            # =========================================
-            # UPDATE QUERY
-            # Admission number is not updated here
-            # =========================================
+                return redirect(url_for("edit_student", id=id))
 
-            if is_clerk_request:
+            # =================================================
+            # PHOTO
+            #
+            # No new photo = keep existing photo
+            # =================================================
+
+            uploaded_photo = request.files.get("photo")
+
+            photo_data = None
+
+            if uploaded_photo and uploaded_photo.filename:
+                photo_data = process_student_photo(uploaded_photo)
+
+            # =================================================
+            # UPDATE
+            #
+            # NEVER update:
+            # id
+            # school_id
+            # admission_no
+            # created_at
+            # =================================================
+
+            if photo_data:
                 cursor.execute(
                     """
                     UPDATE students
@@ -23996,10 +26894,16 @@ def edit_student(id):
                         occupation = %s,
                         income = %s,
                         guardian_name = %s,
-                        guardian_mobile = %s
-                    WHERE id = %s
-                    AND school_id = %s
-                """,
+                        guardian_mobile = %s,
+                        profile_photo_data = %s,
+                        profile_photo_mime_type = %s,
+                        profile_photo_size = %s,
+                        profile_photo_updated_at = NOW()
+                    WHERE
+                        id = %s
+                        AND school_id = %s
+                        AND is_deleted = 0
+                    """,
                     (
                         school_register_no,
                         name,
@@ -24033,6 +26937,9 @@ def edit_student(id):
                         income,
                         guardian_name,
                         guardian_mobile,
+                        photo_data,
+                        "image/webp",
+                        len(photo_data),
                         id,
                         school_id,
                     ),
@@ -24075,9 +26982,11 @@ def edit_student(id):
                         income = %s,
                         guardian_name = %s,
                         guardian_mobile = %s
-                    WHERE id = %s
-                    AND is_deleted = 0
-                """,
+                    WHERE
+                        id = %s
+                        AND school_id = %s
+                        AND is_deleted = 0
+                    """,
                     (
                         school_register_no,
                         name,
@@ -24112,44 +27021,107 @@ def edit_student(id):
                         guardian_name,
                         guardian_mobile,
                         id,
+                        school_id,
                     ),
                 )
 
+            # =================================================
+            # VERIFY STUDENT STILL EXISTS
+            # =================================================
+
+            cursor.execute(
+                """
+                SELECT id
+                FROM students
+                WHERE
+                    id = %s
+                    AND school_id = %s
+                    AND is_deleted = 0
+                LIMIT 1
+                """,
+                (id, school_id),
+            )
+
+            updated_student = cursor.fetchone()
+
+            if not updated_student:
+                conn.rollback()
+
+                flash(
+                    "The student record could not be updated because it is no longer available.",
+                    "danger",
+                )
+
+                return redirect(url_for("clerk_students"))
+
+            # =================================================
+            # COMMIT
+            # =================================================
+
             conn.commit()
 
-            print("Student Updated in DB")
+            logger.info(
+                "Student updated successfully. student_id=%s school_id=%s",
+                id,
+                school_id,
+            )
 
-            if is_clerk_request:
-                return redirect(url_for("clerk_dashboard"))
+            # =================================================
+            # SUCCESS
+            # =================================================
 
-            return redirect(url_for("superadmin_all_students"))
+            flash(f"Student '{name}' updated successfully.", "success")
 
-        # =========================================
-        # GET SCHOOL DETAILS FOR PAGE HEADER
-        # =========================================
+            return redirect(url_for("clerk_students"))
 
-        school = get_school_details(student_school_id)
+        # =====================================================
+        # GET PAGE
+        # =====================================================
+
+        school = get_school_details(school_id)
 
         if not school:
-            flash("School not found.", "danger")
+            flash("School details could not be loaded.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
+
+        # Don't send BLOB photo data into HTML.
+        student.pop("profile_photo_data", None)
+
+        student.pop("profile_photo_size", None)
 
         return render_template(
             "clerk/edit_student.html",
             student=student,
-            role="clerk" if is_clerk_request else "admin",
+            role="clerk",
             school_name=school["school_name"],
             school_udise=school["school_udise"],
             active_page="students",
         )
 
-    except Exception as e:
+    except ValueError as e:
         if conn:
             conn.rollback()
 
-        logger.exception("EDIT STUDENT ERROR")
-        flash("Unable to edit student.", "danger")
-        return redirect(url_for("clerk_dashboard"))
+        logger.warning("EDIT STUDENT VALIDATION ERROR: %s", e)
+
+        flash(str(e), "danger")
+
+        return redirect(url_for("edit_student", id=id))
+
+    except Exception:
+        if conn:
+            conn.rollback()
+
+        logger.exception(
+            "EDIT STUDENT ERROR. student_id=%s school_id=%s",
+            id,
+            session.get("clerk_school_id"),
+        )
+
+        flash("Unable to update the student right now. Please try again.", "danger")
+
+        return redirect(url_for("clerk_students"))
 
     finally:
         if cursor:
@@ -24162,9 +27134,11 @@ def edit_student(id):
 # =========================================================
 # 📋 VIEW STUDENTS LIST PAGE
 # PURPOSE:
-# Show only active students for logged-in clerk school
-# Backend search + class filter + pagination
+# Active students for logged-in Clerk's school only
+# Server-side search + class + section + admission year
+# Secure school isolation
 # Soft-delete aware
+# Paginated
 # =========================================================
 
 
@@ -24189,26 +27163,45 @@ def clerk_students():
             return redirect(url_for("clerk_dashboard"))
 
         # =====================================================
-        # FILTERS
+        # REQUEST FILTERS
         # =====================================================
 
         search = (request.args.get("search") or "").strip()
         class_filter = (request.args.get("class") or "").strip()
+        section_filter = (request.args.get("section") or "").strip()
+        admission_year_filter = (request.args.get("admission_year") or "").strip()
+
+        # =====================================================
+        # INPUT LIMITS
+        # =====================================================
+
+        search = search[:80]
+
+        class_filter = class_filter[:50]
+
+        section_filter = section_filter[:50]
+
+        admission_year_filter = admission_year_filter[:4]
 
         # =====================================================
         # PAGINATION
         # =====================================================
 
-        page = request.args.get("page", 1, type=int)
+        page = request.args.get("page", default=1, type=int)
 
-        if not page or page < 1:
+        if page < 1:
             page = 1
 
+        # Prevent unreasonable offset values.
+        page = min(page, 100000)
+
+        # Keep the student list compact.
         per_page = 10
+
         offset = (page - 1) * per_page
 
         # =====================================================
-        # DATABASE
+        # DATABASE CONNECTION
         # =====================================================
 
         conn = get_connection()
@@ -24221,36 +27214,139 @@ def clerk_students():
         cursor = conn.cursor(dictionary=True)
 
         # =====================================================
-        # ACTIVE STUDENTS ONLY
+        # FILTER OPTIONS
+        #
+        # Only values actually used by active students of this
+        # authenticated school are exposed to the UI.
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT DISTINCT
+                `class`,
+                section,
+                YEAR(admission_date) AS admission_year
+            FROM students
+            WHERE school_id = %s
+              AND is_deleted = 0
+            """,
+            (school_id,),
+        )
+
+        filter_rows = cursor.fetchall()
+
+        # =====================================================
+        # CLASS OPTIONS
+        # =====================================================
+
+        class_options = sorted(
+            {
+                str(row["class"]).strip()
+                for row in filter_rows
+                if row.get("class") is not None and str(row["class"]).strip()
+            },
+            key=lambda value: (
+                (0, int(value)) if value.isdigit() else (1, value.lower())
+            ),
+        )
+
+        # =====================================================
+        # SECTION OPTIONS
+        # =====================================================
+
+        section_options = sorted(
+            {
+                str(row["section"]).strip()
+                for row in filter_rows
+                if row.get("section") is not None and str(row["section"]).strip()
+            },
+            key=lambda value: value.lower(),
+        )
+
+        # =====================================================
+        # ADMISSION YEAR OPTIONS
+        # =====================================================
+
+        admission_year_options = sorted(
+            {
+                int(row["admission_year"])
+                for row in filter_rows
+                if row.get("admission_year") is not None
+            },
+            reverse=True,
+        )
+
+        # =====================================================
+        # VALIDATE CLASS FILTER
+        # =====================================================
+
+        if class_filter and class_filter not in class_options:
+            class_filter = ""
+
+        # =====================================================
+        # VALIDATE SECTION FILTER
+        # =====================================================
+
+        if section_filter and section_filter not in section_options:
+            section_filter = ""
+
+        # =====================================================
+        # VALIDATE ADMISSION YEAR
+        # =====================================================
+
+        if admission_year_filter:
+            if (
+                not admission_year_filter.isdigit()
+                or len(admission_year_filter) != 4
+                or int(admission_year_filter) not in admission_year_options
+            ):
+                admission_year_filter = ""
+
+        # =====================================================
+        # BASE WHERE CLAUSE
+        #
+        # SECURITY:
+        # school_id comes ONLY from the authenticated session.
         # =====================================================
 
         where_query = """
             FROM students
             WHERE school_id = %s
-            AND is_deleted = 0
+              AND is_deleted = 0
         """
 
         params = [school_id]
 
         # =====================================================
-        # SEARCH
+        # SERVER-SIDE SEARCH
+        #
+        # Escape %, _, and \ so users cannot accidentally turn
+        # them into SQL LIKE wildcards.
         # =====================================================
 
         if search:
+            safe_search = (
+                search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            )
+
+            like_search = f"%{safe_search}%"
+
             where_query += """
                 AND (
-                    name LIKE %s
-                    OR admission_no LIKE %s
-                    OR school_register_no LIKE %s
-                    OR student_uid LIKE %s
-                    OR primary_mobile LIKE %s
+                    name LIKE %s ESCAPE '\\\\'
+                    OR admission_no LIKE %s ESCAPE '\\\\'
+                    OR school_register_no LIKE %s ESCAPE '\\\\'
+                    OR student_uid LIKE %s ESCAPE '\\\\'
+                    OR primary_mobile LIKE %s ESCAPE '\\\\'
+                    OR aadhaar LIKE %s ESCAPE '\\\\'
+                    OR apaar_id LIKE %s ESCAPE '\\\\'
                 )
             """
 
-            like_search = f"%{search}%"
-
             params.extend(
                 [
+                    like_search,
+                    like_search,
                     like_search,
                     like_search,
                     like_search,
@@ -24265,10 +27361,44 @@ def clerk_students():
 
         if class_filter:
             where_query += """
-                AND class = %s
+                AND `class` = %s
             """
 
             params.append(class_filter)
+
+        # =====================================================
+        # SECTION FILTER
+        # =====================================================
+
+        if section_filter:
+            where_query += """
+                AND section = %s
+            """
+
+            params.append(section_filter)
+
+        # =====================================================
+        # ADMISSION YEAR FILTER
+        #
+        # Date range is preferable to:
+        #
+        # YEAR(admission_date) = %s
+        #
+        # because the column itself remains usable by a future
+        # admission_date index.
+        # =====================================================
+
+        if admission_year_filter:
+            admission_year = int(admission_year_filter)
+
+            where_query += """
+                AND admission_date >= %s
+                AND admission_date < %s
+            """
+
+            params.append(f"{admission_year}-01-01")
+
+            params.append(f"{admission_year + 1}-01-01")
 
         # =====================================================
         # TOTAL COUNT
@@ -24276,37 +27406,97 @@ def clerk_students():
 
         cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
 
-        total_records = cursor.fetchone()["total"] or 0
+        count_row = cursor.fetchone()
+
+        total_records = (
+            count_row["total"] if count_row and count_row["total"] is not None else 0
+        )
+
+        # =====================================================
+        # TOTAL PAGES
+        # =====================================================
 
         total_pages = max(1, (total_records + per_page - 1) // per_page)
 
+        # =====================================================
+        # FIX INVALID PAGE
+        # =====================================================
+
         if page > total_pages:
             page = total_pages
+
             offset = (page - 1) * per_page
 
         # =====================================================
         # STUDENT DATA
+        #
+        # Only fields required by the list and existing View
+        # modal are selected.
         # =====================================================
 
         query = (
             """
             SELECT
                 id,
+
+                /* =========================
+                IDENTITY
+                ========================= */
+
                 school_register_no,
                 name,
-                father_name,
-                mother_name,
-                class,
-                section,
                 admission_no,
                 student_uid,
                 apaar_id,
                 aadhaar,
-                dob,
-                primary_mobile,
+
+                /* =========================
+                ACADEMIC
+                ========================= */
+
+                `class`,
+                section,
+                admission_date,
+                previous_school,
+                last_exam,
+                result_status,
                 progress,
                 conduct,
-                created_at
+
+                /* =========================
+                PERSONAL
+                ========================= */
+
+                dob,
+                birth_place,
+                nationality,
+                mother_tongue,
+                religion,
+                caste,
+
+                /* =========================
+                ADDRESS
+                ========================= */
+
+                city,
+                taluka,
+                district,
+                state,
+
+                /* =========================
+                PARENT / CONTACT
+                ========================= */
+
+                father_name,
+                mother_name,
+                primary_mobile,
+                alternate_mobile,
+                email,
+                occupation,
+                income,
+                guardian_name,
+                guardian_mobile
+
             """
             + where_query
             + """
@@ -24339,6 +27529,11 @@ def clerk_students():
             students=students,
             search=search,
             class_filter=class_filter,
+            section_filter=section_filter,
+            admission_year_filter=admission_year_filter,
+            class_options=class_options,
+            section_options=section_options,
+            admission_year_options=admission_year_options,
             page=page,
             per_page=per_page,
             total_pages=total_pages,
@@ -24364,18 +27559,22 @@ def clerk_students():
 
 
 # =========================================================
-# 📄 AUTO GENERATE TC NUMBER - SCHOOL SETTINGS BASED
-# PURPOSE:
-# Generate TC number using same DB transaction
-# Prevents duplicate TC numbers during multiple users
+# TC NUMBER GENERATOR
+#
+# IMPORTANT:
+# - Must use the SAME DB CONNECTION / CURSOR as tc_form()
+# - school_sequences row is locked using FOR UPDATE
+# - Sequence update is committed together with TC insert
+# - If TC insert fails, transaction rollback also rolls back
+#   the sequence update
 # =========================================================
 
 
 def generate_tc_number(cursor, school_id):
 
-    # =====================================
-    # GET SCHOOL CERTIFICATE SETTINGS
-    # =====================================
+    # -----------------------------------------------------
+    # SCHOOL TC SETTINGS
+    # -----------------------------------------------------
 
     cursor.execute(
         """
@@ -24386,32 +27585,28 @@ def generate_tc_number(cursor, school_id):
         FROM schools
         WHERE school_id = %s
         LIMIT 1
-    """,
+        """,
         (school_id,),
     )
 
     school = cursor.fetchone()
 
     if not school:
-        flash("School not found.", "danger")
-        raise Exception("School not found ")
+        raise ValueError("School not found.")
 
-    school_code = school[0]
-    tc_prefix = school[1] or "TC"
-    auto_numbering = school[2] or "Enabled"
+    school_code = (school[0] or "").strip()
+    tc_prefix = (school[1] or "TC").strip()
+    auto_numbering = (school[2] or "Enabled").strip()
 
-    # =====================================
-    # IF AUTO NUMBERING DISABLED
-    # =====================================
+    if not school_code:
+        raise ValueError("School TC code is not configured.")
 
     if auto_numbering != "Enabled":
-        flash("Auto numbering disabled for this school.", "danger")
-        raise Exception("Auto numbering disabled for this school  ")
+        raise ValueError("Automatic TC numbering is disabled for this school.")
 
-    # =====================================
+    # -----------------------------------------------------
     # LOCK SCHOOL SEQUENCE
-    # IMPORTANT: Requires same transaction
-    # =====================================
+    # -----------------------------------------------------
 
     cursor.execute(
         """
@@ -24419,34 +27614,38 @@ def generate_tc_number(cursor, school_id):
         FROM school_sequences
         WHERE school_id = %s
         FOR UPDATE
-    """,
+        """,
         (school_id,),
     )
 
-    row = cursor.fetchone()
+    sequence_row = cursor.fetchone()
 
-    if not row:
-        flash("School sequence not found.", "danger")
-        raise Exception("School sequence not found ")
+    if not sequence_row:
+        raise ValueError("TC sequence is not configured for this school.")
 
-    next_number = (row[0] or 0) + 1
+    current_number = sequence_row[0] or 0
 
-    # =====================================
+    next_number = current_number + 1
+
+    # -----------------------------------------------------
     # UPDATE SEQUENCE
-    # =====================================
+    # -----------------------------------------------------
 
     cursor.execute(
         """
         UPDATE school_sequences
         SET tc_last_number = %s
         WHERE school_id = %s
-    """,
+        """,
         (next_number, school_id),
     )
 
-    # =====================================
-    # FINAL TC NUMBER
-    # =====================================
+    if cursor.rowcount != 1:
+        raise RuntimeError("Unable to update TC sequence.")
+
+    # -----------------------------------------------------
+    # FINAL NUMBER
+    # -----------------------------------------------------
 
     tc_number = f"{school_code}-{tc_prefix}-{str(next_number).zfill(4)}"
 
@@ -24454,10 +27653,44 @@ def generate_tc_number(cursor, school_id):
 
 
 # =========================================================
-# 📄 TC FORM
-# PURPOSE:
-# Clerk can generate TC only for own school student
-# TC number + TC insert happen in one transaction
+# 🔐 TC PUBLIC SHARE TOKEN GENERATOR
+# =========================================================
+def generate_tc_public_token(cursor):
+    """
+    Generates a cryptographically secure 64-character
+    hexadecimal public token for TC sharing.
+
+    32 random bytes = 64 hexadecimal characters.
+    """
+    while True:
+        token = secrets.token_hex(32)
+
+        cursor.execute(
+            """
+            SELECT 1
+            FROM tc
+            WHERE public_share_token = %s
+            LIMIT 1
+            """,
+            (token,),
+        )
+
+        if not cursor.fetchone():
+            return token
+
+
+# =========================================================
+# 📄 GENERATE TRANSFER CERTIFICATE
+#
+# SECURITY:
+# - Clerk only
+# - Student must belong to Clerk's school
+# - Student must be active
+# - One ACTIVE TC per student
+# - Deleted TC can be replaced
+# - Student row locked during creation
+# - TC sequence row locked during number generation
+# - Database unique constraint is final protection
 # =========================================================
 
 
@@ -24471,53 +27704,251 @@ def tc_form(id):
     cursor = None
 
     try:
-        # =========================================
-        # CLERK SESSION CHECK
-        # =========================================
+        # =====================================================
+        # 1. CLERK SESSION
+        # =====================================================
 
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            flash("School session expired.", "danger")
-            return redirect(url_for("clerk_dashboard"))
+            flash("Your school session has expired. Please log in again.", "warning")
+
+            return redirect(url_for("login"))
 
         if session.get("clerk_role") != "clerk":
-            flash("Unauthorized.", "danger")
+            flash("You are not authorized to generate Transfer Certificates.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
 
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+        # =====================================================
+        # 2. DATABASE
+        # =====================================================
 
         conn = get_connection()
+
+        if not conn:
+            flash("Unable to connect to the database. Please try again.", "danger")
+
+            return redirect(url_for("clerk_students"))
+
         cursor = conn.cursor()
 
-        # =========================================
-        # FETCH STUDENT ONLY FROM CLERK SCHOOL
-        # Prevents clerk accessing other school student
-        # =========================================
+        # =====================================================
+        # 3. FETCH ACTIVE STUDENT FROM SAME SCHOOL
+        #
+        # IMPORTANT:
+        # Never trust school_id from the browser.
+        # It always comes from the Clerk session.
+        # =====================================================
 
-        row = get_student_for_school(
-            cursor,
-            id,
-            school_id,
+        cursor.execute(
+            """
+            SELECT
+                id,
+                school_id,
+                name,
+                father_name,
+                mother_name,
+                class,
+                admission_no,
+                dob,
+                aadhaar,
+                birth_place,
+                nationality,
+                mother_tongue,
+                religion,
+                caste,
+                city,
+                taluka,
+                district,
+                state,
+                admission_date,
+                section,
+                previous_school,
+                last_exam,
+                result_status,
+                progress,
+                conduct,
+                primary_mobile,
+                email,
+                school_register_no,
+                student_uid,
+                apaar_id
+
+            FROM students
+
+            WHERE id = %s
+              AND school_id = %s
+              AND is_deleted = 0
+
+            LIMIT 1
+            """,
+            (id, school_id),
         )
 
+        row = cursor.fetchone()
+
         if not row:
-            flash("Student Not Found.", "danger")
-            return redirect(url_for("clerk_dashboard"))
+            flash(
+                "Student not found or the student does not belong to your school.",
+                "danger",
+            )
+
+            return redirect(url_for("clerk_students"))
 
         columns = [column[0] for column in cursor.description]
+
         student = dict(zip(columns, row))
 
-        # =========================================
-        # POST: CREATE TC
-        # =========================================
+        # =====================================================
+        # 4. CHECK ACTIVE TC
+        #
+        # GET:
+        # Prevent opening a duplicate TC form.
+        #
+        # POST:
+        # Checked again after student row lock.
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                tc_number
+            FROM tc
+
+            WHERE student_id = %s
+              AND school_id = %s
+              AND is_deleted = 0
+
+            ORDER BY id DESC
+
+            LIMIT 1
+            """,
+            (id, school_id),
+        )
+
+        existing_tc = cursor.fetchone()
+
+        if existing_tc:
+            flash(
+                f"This student already has an active Transfer Certificate "
+                f"({existing_tc[1]}).",
+                "info",
+            )
+
+            return redirect(url_for("view_tc", tc_id=existing_tc[0]))
+
+        # =====================================================
+        # 5. POST
+        # =====================================================
 
         if request.method == "POST":
-            # =========================================
-            # GET FORM DATA
-            # =========================================
+            # -------------------------------------------------
+            # RESET THE READ TRANSACTION
+            #
+            # The student lookup and active-TC lookup above
+            # already started a MySQL transaction because
+            # autocommit is disabled.
+            #
+            # We rollback that read-only transaction before
+            # starting the actual TC creation transaction.
+            # -------------------------------------------------
+
+            conn.rollback()
+
+            # -------------------------------------------------
+            # START THE ACTUAL TC CREATION TRANSACTION
+            # -------------------------------------------------
+
+            conn.start_transaction()
+
+            # -------------------------------------------------
+            # LOCK STUDENT ROW
+            #
+            # This prevents two simultaneous requests for the
+            # same student from both passing the duplicate check.
+            # -------------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    school_id,
+                    name,
+                    father_name,
+                    mother_name,
+                    class,
+                    admission_no,
+                    dob,
+                    aadhaar,
+                    admission_date,
+                    school_register_no,
+                    student_uid,
+                    apaar_id
+
+                FROM students
+
+                WHERE id = %s
+                  AND school_id = %s
+                  AND is_deleted = 0
+
+                LIMIT 1
+
+                FOR UPDATE
+                """,
+                (id, school_id),
+            )
+
+            locked_student_row = cursor.fetchone()
+
+            if not locked_student_row:
+                conn.rollback()
+
+                flash("Student is no longer available.", "danger")
+
+                return redirect(url_for("clerk_students"))
+
+            # -------------------------------------------------
+            # CHECK ACTIVE TC AGAIN
+            # This check MUST happen after the student lock.
+            # -------------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    tc_number
+
+                FROM tc
+
+                WHERE student_id = %s
+                  AND school_id = %s
+                  AND is_deleted = 0
+
+                ORDER BY id DESC
+
+                LIMIT 1
+                """,
+                (id, school_id),
+            )
+
+            existing_tc = cursor.fetchone()
+
+            if existing_tc:
+                conn.rollback()
+
+                flash(
+                    f"An active Transfer Certificate already exists "
+                    f"({existing_tc[1]}).",
+                    "info",
+                )
+
+                return redirect(url_for("view_tc", tc_id=existing_tc[0]))
+
+            # -------------------------------------------------
+            # FORM DATA
+            # -------------------------------------------------
 
             tc_date_raw = (request.form.get("tc_date") or "").strip()
 
@@ -24527,36 +27958,66 @@ def tc_form(id):
 
             remark = (request.form.get("remark") or "").strip()
 
-            # =========================================
-            # PARSE DATES
-            # =========================================
+            # -------------------------------------------------
+            # BASIC VALIDATION
+            # -------------------------------------------------
 
-            tc_date = parse_date(tc_date_raw)
-            leaving_date = parse_date(leaving_date_raw)
+            if not tc_date_raw:
+                conn.rollback()
 
-            # =========================================
-            # VALIDATION
-            # =========================================
+                flash("TC Date is required.", "danger")
 
-            if not tc_date or not leaving_date:
-                flash("TC Date / Leaving Date invalid.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                return redirect(url_for("tc_form", id=id))
+
+            if not leaving_date_raw:
+                conn.rollback()
+
+                flash("Leaving Date is required.", "danger")
+
+                return redirect(url_for("tc_form", id=id))
 
             if not leaving_reason:
-                flash("Leaving reason required.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                conn.rollback()
+
+                flash("Reason for leaving is required.", "danger")
+
+                return redirect(url_for("tc_form", id=id))
 
             if len(leaving_reason) > 255:
-                flash("Leaving reason too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                conn.rollback()
 
-            if remark and len(remark) > 500:
-                flash("Remark too long.", "danger")
-                return redirect(url_for("clerk_dashboard"))
+                flash("Reason for leaving cannot exceed 255 characters.", "danger")
 
-            # =========================================
-            # CONVERT DATETIME TO DATE FOR DB
-            # =========================================
+                return redirect(url_for("tc_form", id=id))
+
+            if len(remark) > 500:
+                conn.rollback()
+
+                flash("Remark cannot exceed 500 characters.", "danger")
+
+                return redirect(url_for("tc_form", id=id))
+
+            # -------------------------------------------------
+            # PARSE DATES
+            # -------------------------------------------------
+
+            tc_date = parse_date(tc_date_raw)
+
+            leaving_date = parse_date(leaving_date_raw)
+
+            if not tc_date:
+                conn.rollback()
+
+                flash("Invalid TC Date.", "danger")
+
+                return redirect(url_for("tc_form", id=id))
+
+            if not leaving_date:
+                conn.rollback()
+
+                flash("Invalid Leaving Date.", "danger")
+
+                return redirect(url_for("tc_form", id=id))
 
             tc_date_value = tc_date.date() if hasattr(tc_date, "date") else tc_date
 
@@ -24564,10 +28025,31 @@ def tc_form(id):
                 leaving_date.date() if hasattr(leaving_date, "date") else leaving_date
             )
 
-            # =========================================
-            # LEAVING DATE CHECK
-            # Leaving date cannot be before admission date
-            # =========================================
+            # -------------------------------------------------
+            # TODAY
+            # -------------------------------------------------
+
+            from datetime import date
+
+            today = date.today()
+
+            if tc_date_value > today:
+                conn.rollback()
+
+                flash("TC Date cannot be in the future.", "danger")
+
+                return redirect(url_for("tc_form", id=id))
+
+            if leaving_date_value > today:
+                conn.rollback()
+
+                flash("Leaving Date cannot be in the future.", "danger")
+
+                return redirect(url_for("tc_form", id=id))
+
+            # -------------------------------------------------
+            # ADMISSION DATE VALIDATION
+            # -------------------------------------------------
 
             admission_date = student.get("admission_date")
 
@@ -24579,121 +28061,277 @@ def tc_form(id):
                 )
 
                 if leaving_date_value < admission_date_value:
-                    flash("Leaving date cannot be before admission date.", "danger")
-                    return redirect(url_for("clerk_dashboard"))
+                    conn.rollback()
 
-            # =========================================
-            # EXISTING TC CHECK
-            # Prevents duplicate TC for same student
-            # =========================================
+                    flash(
+                        "Leaving Date cannot be before the student's Admission Date.",
+                        "danger",
+                    )
 
-            cursor.execute(
-                """
-                SELECT id
-                FROM tc
-                WHERE student_id = %s
-                AND school_id = %s
-                LIMIT 1
-            """,
-                (id, school_id),
-            )
+                    return redirect(url_for("tc_form", id=id))
 
-            existing_tc = cursor.fetchone()
+                if tc_date_value < admission_date_value:
+                    conn.rollback()
 
-            if existing_tc:
-                return redirect(url_for("view_tc", tc_id=existing_tc[0]))
+                    flash(
+                        "TC Date cannot be before the student's Admission Date.",
+                        "danger",
+                    )
 
-            # =========================================
-            # CHECK TC SUBSCRIPTION LIMIT
-            # =========================================
+                    return redirect(url_for("tc_form", id=id))
+
+            # -------------------------------------------------
+            # TC DATE MUST NOT BE BEFORE LEAVING DATE
+            # -------------------------------------------------
+
+            if tc_date_value < leaving_date_value:
+                conn.rollback()
+
+                flash("TC Date cannot be before Leaving Date.", "danger")
+
+                return redirect(url_for("tc_form", id=id))
+
+            # =================================================
+            # 6. SUBSCRIPTION LIMIT
+            # =================================================
 
             limit_check = check_subscription_limit(cursor, school_id, "tc")
 
             if not limit_check["allowed"]:
-                return limit_check["message"] + " Please upgrade your plan ❌"
+                conn.rollback()
 
-            # =========================================
-            # GENERATE TC NUMBER
-            # Same cursor + same transaction
-            # =========================================
+                flash(
+                    limit_check.get("message", "Transfer Certificate limit reached."),
+                    "warning",
+                )
+
+                return redirect(url_for("tc_form", id=id))
+
+            # =================================================
+            # 7. GENERATE TC NUMBER
+            #
+            # Same transaction.
+            # =================================================
 
             tc_number = generate_tc_number(cursor, school_id)
 
-            # =========================================
-            # INSERT TC
-            # =========================================
+            # =================================================
+            #  GENERATE SECURE PUBLIC SHARE TOKEN
+            # =================================================
+
+            public_share_token = generate_tc_public_token(cursor)
+
+            # =================================================
+            # 8. CREATED BY
+            # =================================================
+
+            created_by = (
+                session.get("clerk_username")
+                or session.get("clerk_email")
+                or session.get("clerk_id")
+                or "clerk"
+            )
+
+            created_by = str(created_by)[:100]
+
+            # =================================================
+            # 9. INSERT TC
+            # =================================================
 
             cursor.execute(
                 """
-                INSERT INTO tc (
+                INSERT INTO tc
+                (
                     school_id,
                     student_id,
                     tc_number,
+                    public_share_token,
                     tc_date,
                     leaving_date,
                     leaving_reason,
-                    remark
+                    remark,
+                    created_by
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """,
+                VALUES
+                (
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                )
+                """,
                 (
                     school_id,
                     id,
                     tc_number,
+                    public_share_token,
                     tc_date_value,
                     leaving_date_value,
                     leaving_reason,
                     remark if remark else None,
+                    created_by,
                 ),
             )
+            if cursor.rowcount != 1:
+                raise RuntimeError("TC record was not created.")
 
             new_tc_id = cursor.lastrowid
 
-            # =========================================
-            # COMMIT BOTH:
-            # sequence update + TC insert
-            # =========================================
+            # =================================================
+            # 10. COMMIT
+            #
+            # Sequence update + TC insert commit together.
+            # =================================================
 
             conn.commit()
 
+            # =================================================
+            # 11. SUCCESS
+            # =================================================
+
+            flash(
+                f"Transfer Certificate {tc_number} generated successfully.", "success"
+            )
+
             return redirect(url_for("view_tc", tc_id=new_tc_id))
 
-        # =========================================
-        # GET: SHOW TC FORM
-        # =========================================
+        # =====================================================
+        # 12. GET SCHOOL
+        # =====================================================
 
         school = get_school_details(school_id)
 
         if not school:
-            flash("School not found.", "danger")
+            flash("School information could not be found.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
+
+        # =====================================================
+        # 13. FORMAT DISPLAY VALUES
+        # =====================================================
+
+        admission_date = student.get("admission_date")
+
+        admission_date_iso = ""
+
+        if admission_date:
+            admission_date_value = (
+                admission_date.date()
+                if hasattr(admission_date, "date")
+                else admission_date
+            )
+
+            admission_date_iso = admission_date_value.strftime("%Y-%m-%d")
+
+        dob = student.get("dob")
+
+        dob_display = ""
+
+        if dob:
+            dob_display = format_date(dob)
+
+        # =====================================================
+        # 14. RENDER
+        # =====================================================
 
         return render_template(
             "clerk/tc_form.html",
             student=student,
             tc_number="Auto Generate On Save",
+            admission_date_iso=admission_date_iso,
+            dob_display=dob_display,
             role="clerk",
             school_name=school["school_name"],
             school_udise=school["school_udise"],
             active_page="tc",
         )
 
+    # =========================================================
+    # DUPLICATE KEY / OTHER ERROR
+    # =========================================================
+
     except Exception as e:
         if conn:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
 
-        logger.exception("TC Form ERROR")
+        # -----------------------------------------------------
+        # MySQL duplicate-key error
+        # Database-level one-active-TC protection
+        # -----------------------------------------------------
 
-        flash("Unable to load Transfer Certificate Form.", "danger")
+        duplicate_error = getattr(e, "errno", None) == 1062 or (
+            getattr(e, "args", None) and len(e.args) > 0 and e.args[0] == 1062
+        )
 
-        return redirect(url_for("clerk_dashboard"))
+        if duplicate_error:
+            try:
+                cursor.execute(
+                    """
+                    SELECT id, tc_number
+
+                    FROM tc
+
+                    WHERE student_id = %s
+                      AND school_id = %s
+                      AND is_deleted = 0
+
+                    ORDER BY id DESC
+
+                    LIMIT 1
+                    """,
+                    (id, school_id),
+                )
+
+                duplicate_tc = cursor.fetchone()
+
+                if duplicate_tc:
+                    flash(
+                        f"This student already has an active "
+                        f"Transfer Certificate ({duplicate_tc[1]}).",
+                        "info",
+                    )
+
+                    return redirect(url_for("view_tc", tc_id=duplicate_tc[0]))
+
+            except Exception:
+                pass
+
+            logger.exception("TC DUPLICATE KEY ERROR")
+
+            flash(
+                "The Transfer Certificate could not be created because "
+                "a duplicate record was detected.",
+                "warning",
+            )
+
+            return redirect(url_for("tc_form", id=id))
+
+        logger.exception("TC FORM ERROR")
+
+        flash("Unable to process the Transfer Certificate. Please try again.", "danger")
+
+        return redirect(url_for("clerk_students"))
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # =========================================================
@@ -24726,7 +28364,22 @@ def view_tc(tc_id):
                 """
 
                 SELECT 
-                    t.*,
+                     
+                    t.id,
+                    t.school_id,
+                    t.student_id,
+                    t.tc_number,
+                    t.public_share_token,
+                    t.tc_date,
+                    t.leaving_date,
+                    t.leaving_reason,
+                    t.remark,
+                    t.created_at,
+                    t.created_by,
+                    t.is_deleted,
+                    t.deleted_at,
+                    t.deleted_by,
+                    t.active_student_key,
 
                     s.name,
                     s.school_register_no,
@@ -24780,6 +28433,7 @@ def view_tc(tc_id):
                     ON t.school_id = sc.school_id
 
                 WHERE t.id = %s
+                    AND t.is_deleted = 0
 
                 LIMIT 1
 
@@ -24801,8 +28455,22 @@ def view_tc(tc_id):
                 """
 
                 SELECT 
-                    t.*,
-
+                    
+                    t.id,
+                    t.school_id,
+                    t.student_id,
+                    t.tc_number,
+                    t.public_share_token,
+                    t.tc_date,
+                    t.leaving_date,
+                    t.leaving_reason,
+                    t.remark,
+                    t.created_at,
+                    t.created_by,
+                    t.is_deleted,
+                    t.deleted_at,
+                    t.deleted_by,
+                    t.active_student_key,
                     s.name,
                     s.school_register_no,
                     s.student_uid,
@@ -24850,13 +28518,15 @@ def view_tc(tc_id):
 
                 JOIN students s
                     ON t.student_id = s.id
+                    AND t.school_id = s.school_id
+                    AND s.is_deleted = 0
 
                 JOIN schools sc
                     ON t.school_id = sc.school_id
 
                 WHERE t.id = %s
-                AND t.school_id = %s
-
+                    AND t.school_id = %s
+                    AND t.is_deleted = 0
                 LIMIT 1
 
             """,
@@ -24869,6 +28539,7 @@ def view_tc(tc_id):
 
         if not row:
             flash("Certificate not found.", "danger")
+            return redirect(url_for("clerk_tc_page"))
 
         columns = [col[0] for col in cursor.description]
         row = dict(zip(columns, row))
@@ -24876,6 +28547,7 @@ def view_tc(tc_id):
         tc = {
             "id": row["id"],
             "tc_number": row["tc_number"],
+            "public_share_token": row["public_share_token"] or "",
             "tc_date": format_date(row["tc_date"]),
             "leaving_date": format_date(row["leaving_date"]),
             "leaving_reason": row["leaving_reason"],
@@ -24906,7 +28578,9 @@ def view_tc(tc_id):
             "admission_date": format_date(row["admission_date"]),
             "progress": row["progress"] or "",
             "conduct": row["conduct"] or "",
-            "aadhaar": row["aadhaar"] or "",
+            "aadhaar": (
+                "XXXX-XXXX-" + str(row["aadhaar"])[-4:] if row["aadhaar"] else ""
+            ),
             "primary_mobile": row["primary_mobile"] or "",
             "email": row["email"] or "",
         }
@@ -24965,14 +28639,9 @@ def view_tc(tc_id):
 
 
 # =========================================================
-# 📄 DOWNLOAD TC PDF (HTML → PDFKIT)
+# 📄 DOWNLOAD / VIEW TC PDF
+#    DB-BACKED PDF STORAGE
 # =========================================================
-
-import pdfkit
-import os
-from flask import render_template, send_file, request, session
-
-
 @app.route("/clerk/tc/pdf/<int:tc_id>")
 @login_required
 @subscription_required
@@ -24983,159 +28652,290 @@ def download_tc_pdf(tc_id):
     cursor = None
 
     try:
-        mode = request.args.get("mode")
+        # =====================================================
+        # 1. BASIC VALIDATION
+        # =====================================================
+
+        if not isinstance(tc_id, int) or tc_id <= 0:
+            flash("Invalid Transfer Certificate request.", "danger")
+            return redirect(url_for("clerk_tc_page"))
+
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            return "School session missing ❌"
-            abort(404)
+            flash("Your school session has expired. Please log in again.", "warning")
+            return redirect(url_for("login"))
+
+        # =====================================================
+        # 2. LANGUAGE
+        # =====================================================
+
+        certificate_language = (request.args.get("lang", "mr") or "mr").strip().lower()
+
+        if certificate_language not in ("mr", "en"):
+            certificate_language = "mr"
+
+        # =====================================================
+        # 3. SELECT CORRECT PDF BLOB COLUMN
+        #
+        # IMPORTANT:
+        # These values are hard-coded.
+        # Never take a column name directly from request.args.
+        # =====================================================
+
+        if certificate_language == "en":
+            pdf_column = "pdf_en_data"
+            pdf_time_column = "pdf_en_generated_at"
+
+        else:
+            pdf_column = "pdf_mr_data"
+            pdf_time_column = "pdf_mr_generated_at"
+
+        # =====================================================
+        # 4. DATABASE
+        # =====================================================
 
         conn = get_connection()
-        cursor = conn.cursor()
+
+        if not conn:
+            flash("Unable to connect to the database. Please try again.", "danger")
+            return redirect(url_for("clerk_tc_page"))
+
+        cursor = conn.cursor(dictionary=True)
 
         # =====================================================
-        # ADMIN MODE
+        # 5. ADMIN / CLERK SCHOOL ACCESS
         # =====================================================
-        if (
-            mode == "admin"
-            and session.get("admin_logged_in")
+
+        admin_mode = (
+            session.get("admin_logged_in") is True
             and session.get("admin_role") == "admin"
-        ):
-            cursor.execute(
-                """
-            SELECT 
-                t.*,
-
-                s.school_register_no,
-                s.student_uid,
-                s.apaar_id,
-                s.name,
-                s.father_name,
-                s.mother_name,
-                s.class AS class_name,
-                s.admission_no,
-                s.dob,
-                s.aadhaar,
-                s.primary_mobile,
-                s.email,
-
-                s.birth_place,
-                s.nationality,
-                s.mother_tongue,
-                s.religion,
-                s.caste,
-
-                s.city,
-                s.taluka,
-                s.district,
-                s.state,
-
-                s.admission_date,
-                s.section,
-                s.previous_school,
-                s.last_exam,
-                s.result_status,
-
-                s.progress,
-                s.conduct,
-
-                sc.name AS school_name,
-                sc.address,
-                sc.phone,
-                sc.email,
-                sc.udise_no,
-                sc.recognition_no,
-                sc.medium,
-                sc.school_index_no,
-                sc.board_name,
-                sc.logo_path,
-                sc.watermark_path,
-                sc.website
-
-            FROM tc t
-            JOIN students s ON t.student_id = s.id
-            JOIN schools sc ON t.school_id = sc.school_id
-            WHERE t.id = %s
-            """,
-                (tc_id,),
-            )
+        )
 
         # =====================================================
-        # CLERK MODE
+        # 6. FETCH TC + STUDENT + SCHOOL
+        #
+        # IMPORTANT:
+        # Do NOT use t.*
+        # Do NOT select PDF BLOBs except the requested cached PDF.
         # =====================================================
+
+        if admin_mode:
+            query = f"""
+                SELECT
+                    t.id,
+                    t.school_id,
+                    t.student_id,
+                    t.tc_number,
+                    t.public_share_token,
+                    t.tc_date,
+                    t.leaving_date,
+                    t.leaving_reason,
+                    t.remark,
+                    t.created_at,
+                    t.created_by,
+                    t.is_deleted,
+                    t.deleted_at,
+                    t.deleted_by,
+                    t.active_student_key,
+
+                    t.{pdf_column} AS cached_pdf,
+                    t.{pdf_time_column} AS cached_pdf_generated_at,
+
+                    s.school_register_no,
+                    s.student_uid,
+                    s.apaar_id,
+                    s.name,
+                    s.father_name,
+                    s.mother_name,
+                    s.class AS class_name,
+                    s.admission_no,
+                    s.dob,
+                    s.aadhaar,
+                    s.primary_mobile,
+                    s.email AS student_email,
+                    s.birth_place,
+                    s.nationality,
+                    s.mother_tongue,
+                    s.religion,
+                    s.caste,
+                    s.city,
+                    s.taluka,
+                    s.district,
+                    s.state,
+                    s.admission_date,
+                    s.section,
+                    s.previous_school,
+                    s.last_exam,
+                    s.result_status,
+                    s.progress,
+                    s.conduct,
+
+                    sc.name AS school_name,
+                    sc.address,
+                    sc.phone,
+                    sc.email AS school_email,
+                    sc.udise_no,
+                    sc.recognition_no,
+                    sc.medium,
+                    sc.school_index_no,
+                    sc.board_name,
+                    sc.logo_path,
+                    sc.watermark_path,
+                    sc.website,
+                    sc.enable_certificate_labels,
+                    sc.show_tc_logo,
+                    sc.show_tc_watermark
+
+                FROM tc t
+
+                INNER JOIN students s
+                    ON t.student_id = s.id
+                    AND t.school_id = s.school_id
+
+                INNER JOIN schools sc
+                    ON t.school_id = sc.school_id
+
+                WHERE t.id = %s
+                  AND t.is_deleted = 0
+
+                LIMIT 1
+            """
+
+            cursor.execute(query, (tc_id,))
+
         else:
-            cursor.execute(
-                """
-            SELECT 
-                t.*,
+            query = f"""
+                SELECT
+                    t.id,
+                    t.school_id,
+                    t.student_id,
+                    t.tc_number,
+                    t.public_share_token,
+                    t.tc_date,
+                    t.leaving_date,
+                    t.leaving_reason,
+                    t.remark,
+                    t.created_at,
+                    t.created_by,
+                    t.is_deleted,
+                    t.deleted_at,
+                    t.deleted_by,
+                    t.active_student_key,
 
-                s.school_register_no,
-                s.student_uid,
-                s.apaar_id,
-                s.name,
-                s.father_name,
-                s.mother_name,
-                s.class AS class_name,
-                s.admission_no,
-                s.dob,
-                s.aadhaar,
-                s.primary_mobile,
-                s.email,
-                s.birth_place,
-                s.nationality,
-                s.mother_tongue,
-                s.religion,
-                s.caste,
+                    t.{pdf_column} AS cached_pdf,
+                    t.{pdf_time_column} AS cached_pdf_generated_at,
 
-                s.city,
-                s.taluka,
-                s.district,
-                s.state,
+                    s.school_register_no,
+                    s.student_uid,
+                    s.apaar_id,
+                    s.name,
+                    s.father_name,
+                    s.mother_name,
+                    s.class AS class_name,
+                    s.admission_no,
+                    s.dob,
+                    s.aadhaar,
+                    s.primary_mobile,
+                    s.email AS student_email,
+                    s.birth_place,
+                    s.nationality,
+                    s.mother_tongue,
+                    s.religion,
+                    s.caste,
+                    s.city,
+                    s.taluka,
+                    s.district,
+                    s.state,
+                    s.admission_date,
+                    s.section,
+                    s.previous_school,
+                    s.last_exam,
+                    s.result_status,
+                    s.progress,
+                    s.conduct,
 
-                s.admission_date,
-                s.section,
-                s.previous_school,
-                s.last_exam,
-                s.result_status,
+                    sc.name AS school_name,
+                    sc.address,
+                    sc.phone,
+                    sc.email AS school_email,
+                    sc.udise_no,
+                    sc.recognition_no,
+                    sc.medium,
+                    sc.school_index_no,
+                    sc.board_name,
+                    sc.logo_path,
+                    sc.watermark_path,
+                    sc.website,
+                    sc.enable_certificate_labels,
+                    sc.show_tc_logo,
+                    sc.show_tc_watermark
 
-                s.progress,
-                s.conduct,
+                FROM tc t
 
-                sc.name AS school_name,
-                sc.address,
-                sc.phone,
-                sc.email,
-                sc.udise_no,
-                sc.recognition_no,
-                sc.medium,
-                sc.school_index_no,
-                sc.board_name,
-                sc.logo_path,
-                sc.watermark_path,
-                sc.website
+                INNER JOIN students s
+                    ON t.student_id = s.id
+                    AND t.school_id = s.school_id
 
-            FROM tc t
-            JOIN students s ON t.student_id = s.id
-            JOIN schools sc ON t.school_id = sc.school_id
-            WHERE t.id = %s AND t.school_id = %s
-            """,
-                (tc_id, school_id),
-            )
+                INNER JOIN schools sc
+                    ON t.school_id = sc.school_id
+
+                WHERE t.id = %s
+                  AND t.school_id = %s
+                  AND t.is_deleted = 0
+
+                LIMIT 1
+            """
+
+            cursor.execute(query, (tc_id, school_id))
+
+        # =====================================================
+        # 7. FETCH
+        # =====================================================
 
         row = cursor.fetchone()
 
         if not row:
-            return "TC Not Found ❌"
-
-        columns = [col[0] for col in cursor.description]
-        row = dict(zip(columns, row))
+            flash(
+                "Transfer Certificate not found or you are not authorized to access it.",
+                "danger",
+            )
+            return redirect(url_for("clerk_tc_page"))
 
         # =====================================================
-        # TC DATA
+        # 8. CHECK CACHED PDF
+        #
+        # If already generated:
+        # DB BLOB → BytesIO → browser
+        # No pdfkit
+        # No filesystem
         # =====================================================
+
+        cached_pdf = row.get("cached_pdf")
+
+        if cached_pdf:
+            response = send_file(
+                BytesIO(cached_pdf),
+                mimetype="application/pdf",
+                as_attachment=True,
+                download_name=f"{row['tc_number']}.pdf",
+            )
+
+            response.headers["Cache-Control"] = (
+                "no-store, no-cache, must-revalidate, private"
+            )
+            response.headers["Pragma"] = "no-cache"
+
+            return response
+
+        # =====================================================
+        # 9. TC DATA
+        # =====================================================
+
         tc = {
             "id": row["id"],
             "tc_number": row["tc_number"],
+            "public_share_token": row["public_share_token"] or "",
             "tc_date": format_date(row["tc_date"]),
             "leaving_date": format_date(row["leaving_date"]),
             "leaving_reason": row["leaving_reason"],
@@ -25143,8 +28943,9 @@ def download_tc_pdf(tc_id):
         }
 
         # =====================================================
-        # STUDENT DATA
+        # 10. STUDENT DATA
         # =====================================================
+
         student = {
             "school_register_no": row["school_register_no"],
             "student_uid": row["student_uid"],
@@ -25155,9 +28956,11 @@ def download_tc_pdf(tc_id):
             "class_name": row["class_name"],
             "admission_no": row["admission_no"],
             "dob": format_date(row["dob"]),
-            "aadhaar": row["aadhaar"],
+            "aadhaar": (
+                "XXXX-XXXX-" + str(row["aadhaar"])[-4:] if row["aadhaar"] else ""
+            ),
             "primary_mobile": row["primary_mobile"] or "",
-            "email": row["email"] or "",
+            "email": row["student_email"] or "",
             "birth_place": row["birth_place"],
             "nationality": row["nationality"],
             "mother_tongue": row["mother_tongue"],
@@ -25177,7 +28980,10 @@ def download_tc_pdf(tc_id):
         }
 
         # =====================================================
-        # SCHOOL DATA
+        # 11. SCHOOL ASSETS
+        #
+        # Only source assets are read from static.
+        # The generated PDF itself is NEVER saved there.
         # =====================================================
 
         base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -25186,20 +28992,38 @@ def download_tc_pdf(tc_id):
         watermark_absolute = ""
 
         if row["logo_path"]:
+            logo_relative = (
+                str(row["logo_path"])
+                .replace("\\", "/")
+                .replace("static/", "", 1)
+                .lstrip("/")
+            )
+
             logo_absolute = "file:///" + os.path.join(
-                base_dir, "static", row["logo_path"].replace("static/", "")
+                base_dir, "static", logo_relative
             ).replace("\\", "/")
 
         if row["watermark_path"]:
+            watermark_relative = (
+                str(row["watermark_path"])
+                .replace("\\", "/")
+                .replace("static/", "", 1)
+                .lstrip("/")
+            )
+
             watermark_absolute = "file:///" + os.path.join(
-                base_dir, "static", row["watermark_path"].replace("static/", "")
+                base_dir, "static", watermark_relative
             ).replace("\\", "/")
+
+        # =====================================================
+        # 12. SCHOOL DATA
+        # =====================================================
 
         school = {
             "name": row["school_name"],
             "address": row["address"] or "",
             "phone": row["phone"] or "",
-            "email": row["email"] or "",
+            "email": row["school_email"] or "",
             "udise_no": row["udise_no"] or "",
             "recognition_no": row["recognition_no"] or "",
             "medium": row["medium"] or "",
@@ -25208,79 +29032,132 @@ def download_tc_pdf(tc_id):
             "logo_path": logo_absolute,
             "watermark_path": watermark_absolute,
             "website": row["website"] or "",
+            "enable_certificate_labels": row["enable_certificate_labels"] or "Enabled",
+            "show_tc_logo": row["show_tc_logo"] or "Disabled",
+            "show_tc_watermark": row["show_tc_watermark"] or "Disabled",
         }
 
         # =====================================================
-        # RENDER HTML
+        # 13. RENDER TC HTML
         # =====================================================
+
         html = render_template(
-            "clerk/tc_generate.html", tc=tc, student=student, school=school, is_pdf=True
+            "clerk/tc_generate.html",
+            tc=tc,
+            student=student,
+            school=school,
+            school_name=school["name"],
+            school_address=school["address"],
+            school_phone=school["phone"],
+            school_email=school["email"],
+            school_udise=school["udise_no"],
+            school_recognition_no=school["recognition_no"],
+            school_medium=school["medium"],
+            school_index_no=school["school_index_no"],
+            school_board_name=school["board_name"],
+            school_logo_path=school["logo_path"],
+            school_watermark_path=school["watermark_path"],
+            school_website=school["website"],
+            is_pdf=True,
+            certificate_language=certificate_language,
         )
 
         # =====================================================
-        # PDF SAVE FOLDER
-        # =====================================================
-        pdf_folder = os.path.join("static", "generated_tc")
-
-        if not os.path.exists(pdf_folder):
-            os.makedirs(pdf_folder)
-
-        pdf_path = os.path.join(pdf_folder, f"tc_{tc['id']}.pdf")
-
-        # =====================================================
-        # PDF OPTIONS
+        # 14. PDF OPTIONS
         # =====================================================
         options = {
             "page-size": "A4",
-            "margin-top": "5mm",
-            "margin-right": "5mm",
-            "margin-bottom": "5mm",
-            "margin-left": "5mm",
+            "orientation": "Portrait",
+            "margin-top": "0mm",
+            "margin-right": "0mm",
+            "margin-bottom": "0mm",
+            "margin-left": "0mm",
             "encoding": "UTF-8",
             "enable-local-file-access": "",
+            "print-media-type": "",
+            "dpi": "96",
+            "zoom": "1",
+            "image-dpi": "96",
+            "image-quality": "100",
         }
 
         # =====================================================
-        # GENERATE PDF
+        # 15. GENERATE PDF IN MEMORY
+        #
+        # IMPORTANT:
+        # output_path=None means:
+        # NO PDF FILE IS CREATED.
         # =====================================================
 
-        pdfkit.from_string(html, pdf_path, configuration=pdf_config, options=options)
+        pdf_bytes = pdfkit.from_string(
+            html, output_path=None, configuration=pdf_config, options=options
+        )
+
+        if not pdf_bytes:
+            raise RuntimeError("PDF generation returned empty data.")
 
         # =====================================================
-        # 📧 AUTO SEND TC PDF EMAIL
+        # 16. STORE PDF BLOB IN DATABASE
+        # =====================================================
+
+        update_query = f"""
+            UPDATE tc
+            SET
+                {pdf_column} = %s,
+                {pdf_time_column} = NOW()
+            WHERE id = %s
+              AND school_id = %s
+              AND is_deleted = 0
+        """
+
+        cursor.execute(
+            update_query,
+            (
+                pdf_bytes,
+                tc["id"],
+                row["school_id"],
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            raise RuntimeError("Generated PDF could not be stored.")
+
+        conn.commit()
+
+        # =====================================================
+        # 17. EMAIL
+        #
+        # IMPORTANT:
+        # Do NOT pass pdf_path because there is no PDF file.
+        #
+        # The email helper must support byte attachments.
+        # See STEP 4 below.
         # =====================================================
 
         try:
             student_email = student.get("email")
 
             if student_email:
-                # =========================================
-                # CHECK ALREADY SENT
-                # =========================================
-
                 cursor.execute(
                     """
-
                     SELECT id
                     FROM tc_email_logs
                     WHERE school_id = %s
-                    AND tc_id = %s
-
-                """,
-                    (school_id, tc["id"]),
+                      AND tc_id = %s
+                    LIMIT 1
+                    """,
+                    (
+                        row["school_id"],
+                        tc["id"],
+                    ),
                 )
 
                 already_sent = cursor.fetchone()
-
-                # =========================================
-                # SEND ONLY ONCE
-                # =========================================
 
                 if not already_sent:
                     subject = f"Transfer Certificate - {student['name']}"
 
                     body = f"""
-
                     <div style="font-family:Arial;padding:20px;">
 
                         <h2 style="color:#14b8a6;">
@@ -25292,7 +29169,8 @@ def download_tc_pdf(tc_id):
                         </p>
 
                         <p>
-                            Your Transfer Certificate has been generated successfully.
+                            Your Transfer Certificate has been
+                            generated successfully.
                         </p>
 
                         <hr>
@@ -25315,7 +29193,8 @@ def download_tc_pdf(tc_id):
                         <hr>
 
                         <p>
-                            Please find the TC PDF attached.
+                            Please find the Transfer Certificate
+                            PDF attached to this email.
                         </p>
 
                         <p>
@@ -25325,36 +29204,24 @@ def download_tc_pdf(tc_id):
                         </p>
 
                     </div>
-
                     """
 
-                    # =========================================
-                    # SEND MAIL WITH ATTACHMENT
-                    # =========================================
+                    # -------------------------------------------------
+                    # This requires the updated send_email helper
+                    # shown in STEP 4.
+                    # -------------------------------------------------
 
                     email_sent = send_email(
-                        student_email, subject, body, pdf_path, f"{tc['tc_number']}.pdf"
+                        student_email,
+                        subject,
+                        body,
+                        attachment_bytes=pdf_bytes,
+                        attachment_filename=f"{tc['tc_number']}.pdf",
                     )
-                    # FOR SMS
-                    # sms_sent = send_sms(
-                    #     mobile_number,
-                    #     f"Your OTP is {otp}"
-                    # )
 
-                    # =========================================
-                    # EMAIL SUCCESS
-                    # =========================================
-
-                    if email_sent == True:
-                        print("✅ TC PDF EMAIL SENT")
-
-                        # =====================================
-                        # SAVE EMAIL LOG
-                        # =====================================
-
+                    if email_sent is True:
                         cursor.execute(
                             """
-
                             INSERT INTO tc_email_logs
                             (
                                 school_id,
@@ -25362,61 +29229,148 @@ def download_tc_pdf(tc_id):
                                 student_email
                             )
                             VALUES (%s, %s, %s)
-
-                        """,
-                            (school_id, tc["id"], student_email),
+                            """,
+                            (
+                                row["school_id"],
+                                tc["id"],
+                                student_email,
+                            ),
                         )
 
                         conn.commit()
 
-                    # =========================================
-                    # EMAIL FAILED
-                    # =========================================
-
-                    else:
-                        print("❌ TC EMAIL FAILED:", email_sent)
-
-        except Exception as email_error:
-            print("❌ TC EMAIL ERROR:", email_error)
+        except Exception:
+            # Email failure must NOT make the already-created
+            # TC/PDF transaction fail.
+            logger.exception("TC PDF EMAIL ERROR | tc_id=%s", tc["id"])
 
         # =====================================================
-        # RETURN FILE
+        # 18. RETURN PDF FROM MEMORY
         # =====================================================
-        return send_file(
-            pdf_path, as_attachment=True, download_name=f"{tc['tc_number']}.pdf"
+
+        response = send_file(
+            BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"{tc['tc_number']}.pdf",
         )
 
-    except Exception as e:
-        print("❌ TC PDF ERROR:", e)
-        return "Something went wrong ❌"
+        response.headers["Cache-Control"] = (
+            "no-store, no-cache, must-revalidate, private"
+        )
+        response.headers["Pragma"] = "no-cache"
+
+        return response
+
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception(
+            "TC PDF ERROR | tc_id=%s | school_id=%s",
+            tc_id,
+            session.get("clerk_school_id"),
+        )
+
+        flash(
+            "Unable to generate the Transfer Certificate PDF. Please try again.",
+            "danger",
+        )
+
+        return redirect(url_for("view_tc", tc_id=tc_id))
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # =========================================================
-# 🔓 PUBLIC TC VIEW (SAFE PUBLIC VERIFY) FOR PARENT WP
+# 🔓 PUBLIC TC VIEW
+#    SECURE TOKEN-BASED PUBLIC ACCESS
+#    FOR PARENTS / WHATSAPP
 # =========================================================
-@app.route("/public/tc/<int:tc_id>")
-def public_tc(tc_id):
+@app.route("/public/tc/<string:token>")
+def public_tc(token):
 
     conn = None
     cursor = None
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
+        # =====================================================
+        # 1. VALIDATE TOKEN
+        # =====================================================
 
-        # ================= GET FULL TC DATA =================
+        if not token:
+            flash("This Transfer Certificate link is invalid or expired.", "warning")
+            return redirect(url_for("login"))
+
+        token = token.strip().lower()
+
+        if not re.fullmatch(r"[0-9a-f]{64}", token):
+            flash("This Transfer Certificate link is invalid or expired.", "warning")
+            return redirect(url_for("login"))
+
+        # =====================================================
+        # 2. LANGUAGE
+        # =====================================================
+
+        certificate_language = (request.args.get("lang", "mr") or "mr").strip().lower()
+
+        if certificate_language not in ("mr", "en"):
+            certificate_language = "mr"
+
+        # =====================================================
+        # 3. DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        if not conn:
+            flash("Unable to load the Transfer Certificate right now.", "danger")
+            return redirect(url_for("login"))
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # 4. FETCH TC
+        #
+        # IMPORTANT:
+        # No t.*
+        # No PDF BLOBs.
+        #
+        # Public page only needs certificate data.
+        # =====================================================
+
         cursor.execute(
             """
             SELECT
-                t.*,
+                t.id,
+                t.school_id,
+                t.student_id,
+                t.tc_number,
+                t.public_share_token,
+                t.tc_date,
+                t.leaving_date,
+                t.leaving_reason,
+                t.remark,
+                t.is_deleted,
 
+                s.school_register_no,
+                s.student_uid,
+                s.apaar_id,
+                
                 s.name,
                 s.father_name,
                 s.mother_name,
@@ -25452,47 +29406,68 @@ def public_tc(tc_id):
                 sc.board_name,
                 sc.logo_path,
                 sc.watermark_path,
-                sc.website
+                sc.website,
+                sc.enable_certificate_labels,
+                sc.show_tc_logo,
+                sc.show_tc_watermark
 
             FROM tc t
-            JOIN students s
+
+            INNER JOIN students s
                 ON t.student_id = s.id
-            JOIN schools sc
+                AND t.school_id = s.school_id
+
+            INNER JOIN schools sc
                 ON t.school_id = sc.school_id
-            WHERE t.id = %s
-        """,
-            (tc_id,),
+
+            WHERE t.public_share_token = %s
+              AND t.is_deleted = 0
+
+            LIMIT 1
+            """,
+            (token,),
         )
 
         row = cursor.fetchone()
 
         if not row:
-            return "TC Not Found ❌"
+            flash(
+                "This Transfer Certificate link is invalid, expired, or the certificate is no longer available.",
+                "warning",
+            )
+            return redirect(url_for("login"))
 
-        columns = [col[0] for col in cursor.description]
-        row = dict(zip(columns, row))
+        # =====================================================
+        # 5. TC DATA
+        # =====================================================
 
-        # ================= TC =================
         tc = {
             "id": row["id"],
             "tc_number": row["tc_number"],
+            "public_share_token": row["public_share_token"] or "",
             "tc_date": format_date(row["tc_date"]),
             "leaving_date": format_date(row["leaving_date"]),
             "leaving_reason": row["leaving_reason"],
             "remark": row["remark"],
         }
 
-        # ================= STUDENT =================
+        # =====================================================
+        # 6. STUDENT DATA
+        # =====================================================
+
         student = {
+            "school_register_no": row["school_register_no"] or "",
+            "student_uid": row["student_uid"] or "",
+            "apaar_id": row["apaar_id"] or "",
             "name": row["name"],
             "father_name": row["father_name"],
             "mother_name": row["mother_name"],
             "class_name": row["class_name"],
             "admission_no": row["admission_no"],
             "dob": format_date(row["dob"]),
-            "aadhaar": "XXXX-XXXX-" + str(row["aadhaar"])[-4:]
-            if row["aadhaar"]
-            else "",
+            "aadhaar": (
+                "XXXX-XXXX-" + str(row["aadhaar"])[-4:] if row["aadhaar"] else ""
+            ),
             "birth_place": row["birth_place"],
             "nationality": row["nationality"],
             "mother_tongue": row["mother_tongue"],
@@ -25511,7 +29486,14 @@ def public_tc(tc_id):
             "conduct": row["conduct"],
         }
 
-        # ================= SCHOOL =================
+        # =====================================================
+        # 7. SCHOOL DATA
+        #
+        # For browser HTML, keep the normal static-relative
+        # paths. The PDF route separately converts these
+        # source assets to absolute file:// paths.
+        # =====================================================
+
         school = {
             "name": row["school_name"],
             "address": row["address"] or "",
@@ -25525,7 +29507,13 @@ def public_tc(tc_id):
             "logo_path": row["logo_path"] or "",
             "watermark_path": row["watermark_path"] or "",
             "website": row["website"] or "",
+            "enable_certificate_labels": row["enable_certificate_labels"] or "Enabled",
+            "show_tc_logo": row["show_tc_logo"] or "Disabled",
+            "show_tc_watermark": row["show_tc_watermark"] or "Disabled",
         }
+        # =====================================================
+        # 8. RENDER PUBLIC TC PAGE
+        # =====================================================
 
         return render_template(
             "clerk/tc_generate.html",
@@ -25545,25 +29533,466 @@ def public_tc(tc_id):
             school_watermark_path=school["watermark_path"],
             school_website=school["website"],
             is_public=True,
+            certificate_language=certificate_language,
         )
 
-    except Exception as e:
-        print("❌ PUBLIC TC ERROR:", e)
-        return "Something went wrong ❌"
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception(
+            "PUBLIC TC ERROR | token=%s", token[:8] + "..." if token else "missing"
+        )
+
+        flash(
+            "Unable to load the Transfer Certificate right now. Please try again later.",
+            "danger",
+        )
+
+        return redirect(url_for("login"))
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # =========================================================
-# 📊 TC HISTORY PAGE
+# 🔓 PUBLIC TC PDF
+#    TOKEN-BASED
+#    DB-BACKED PDF
+#    NO LOGIN REQUIRED
+# =========================================================
+@app.route("/public/tc/pdf/<string:token>")
+def public_tc_pdf(token):
+
+    conn = None
+    cursor = None
+
+    try:
+        # =====================================================
+        # 1. VALIDATE TOKEN
+        # =====================================================
+
+        if not token:
+            flash(
+                "This Transfer Certificate PDF link is invalid or expired.", "warning"
+            )
+            return redirect(url_for("login"))
+
+        token = token.strip().lower()
+
+        if not re.fullmatch(r"[0-9a-f]{64}", token):
+            flash(
+                "This Transfer Certificate PDF link is invalid or expired.", "warning"
+            )
+            return redirect(url_for("login"))
+
+        # =====================================================
+        # 2. LANGUAGE
+        # =====================================================
+
+        certificate_language = (request.args.get("lang", "mr") or "mr").strip().lower()
+
+        if certificate_language not in ("mr", "en"):
+            certificate_language = "mr"
+
+        # =====================================================
+        # 3. PDF COLUMN
+        # =====================================================
+
+        if certificate_language == "en":
+            pdf_column = "pdf_en_data"
+            pdf_time_column = "pdf_en_generated_at"
+
+        else:
+            pdf_column = "pdf_mr_data"
+            pdf_time_column = "pdf_mr_generated_at"
+
+        # =====================================================
+        # 4. DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        if not conn:
+            flash("Unable to load the Transfer Certificate PDF right now.", "danger")
+            return redirect(url_for("login"))
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # 5. FETCH CERTIFICATE
+        # =====================================================
+
+        query = f"""
+            SELECT
+                t.id,
+                t.school_id,
+                t.student_id,
+                t.tc_number,
+                t.public_share_token,
+                t.tc_date,
+                t.leaving_date,
+                t.leaving_reason,
+                t.remark,
+                t.is_deleted,
+
+                t.{pdf_column} AS cached_pdf,
+
+                s.school_register_no,
+                s.student_uid,
+                s.apaar_id,
+                s.name,
+                s.father_name,
+                s.mother_name,
+                s.class AS class_name,
+                s.admission_no,
+                s.dob,
+                s.aadhaar,
+                s.primary_mobile,
+                s.email,
+                s.birth_place,
+                s.nationality,
+                s.mother_tongue,
+                s.religion,
+                s.caste,
+                s.city,
+                s.taluka,
+                s.district,
+                s.state,
+                s.admission_date,
+                s.section,
+                s.previous_school,
+                s.last_exam,
+                s.result_status,
+                s.progress,
+                s.conduct,
+
+                sc.name AS school_name,
+                sc.address,
+                sc.phone,
+                sc.email,
+                sc.udise_no,
+                sc.recognition_no,
+                sc.medium,
+                sc.school_index_no,
+                sc.board_name,
+                sc.logo_path,
+                sc.watermark_path,
+                sc.website,
+                sc.enable_certificate_labels,
+                sc.show_tc_logo,
+                sc.show_tc_watermark
+
+            FROM tc t
+
+            INNER JOIN students s
+                ON t.student_id = s.id
+                AND t.school_id = s.school_id
+
+            INNER JOIN schools sc
+                ON t.school_id = sc.school_id
+
+            WHERE t.public_share_token = %s
+              AND t.is_deleted = 0
+
+            LIMIT 1
+        """
+
+        cursor.execute(query, (token,))
+
+        row = cursor.fetchone()
+
+        if not row:
+            flash(
+                "This Transfer Certificate PDF link is invalid, expired, or unavailable.",
+                "warning",
+            )
+            return redirect(url_for("login"))
+
+        # =====================================================
+        # 6. RETURN CACHED PDF
+        # =====================================================
+
+        cached_pdf = row.get("cached_pdf")
+
+        if cached_pdf:
+            response = send_file(
+                BytesIO(cached_pdf),
+                mimetype="application/pdf",
+                as_attachment=False,
+                download_name=f"{row['tc_number']}.pdf",
+            )
+
+            response.headers["Cache-Control"] = (
+                "no-store, no-cache, must-revalidate, private"
+            )
+            response.headers["Pragma"] = "no-cache"
+
+            return response
+
+        # =====================================================
+        # 7. TC DATA
+        # =====================================================
+
+        tc = {
+            "id": row["id"],
+            "tc_number": row["tc_number"],
+            "public_share_token": row["public_share_token"] or "",
+            "tc_date": format_date(row["tc_date"]),
+            "leaving_date": format_date(row["leaving_date"]),
+            "leaving_reason": row["leaving_reason"],
+            "remark": row["remark"],
+        }
+
+        # =====================================================
+        # 8. STUDENT DATA
+        # =====================================================
+
+        student = {
+            "school_register_no": row["school_register_no"],
+            "student_uid": row["student_uid"],
+            "apaar_id": row["apaar_id"],
+            "name": row["name"],
+            "father_name": row["father_name"],
+            "mother_name": row["mother_name"],
+            "class_name": row["class_name"],
+            "admission_no": row["admission_no"],
+            "dob": format_date(row["dob"]),
+            "aadhaar": (
+                "XXXX-XXXX-" + str(row["aadhaar"])[-4:] if row["aadhaar"] else ""
+            ),
+            "primary_mobile": row["primary_mobile"] or "",
+            "email": row["email"] or "",
+            "birth_place": row["birth_place"],
+            "nationality": row["nationality"],
+            "mother_tongue": row["mother_tongue"],
+            "religion": row["religion"],
+            "caste": row["caste"],
+            "city": row["city"],
+            "taluka": row["taluka"],
+            "district": row["district"],
+            "state": row["state"],
+            "admission_date": format_date(row["admission_date"]),
+            "section": row["section"],
+            "previous_school": row["previous_school"],
+            "last_exam": row["last_exam"],
+            "result_status": row["result_status"],
+            "progress": row["progress"],
+            "conduct": row["conduct"],
+        }
+
+        # =====================================================
+        # 9. SCHOOL FILE PATHS
+        # =====================================================
+
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+
+        logo_absolute = ""
+        watermark_absolute = ""
+
+        if row["logo_path"]:
+            logo_relative = (
+                str(row["logo_path"])
+                .replace("\\", "/")
+                .replace("static/", "", 1)
+                .lstrip("/")
+            )
+
+            logo_absolute = "file:///" + os.path.join(
+                base_dir, "static", logo_relative
+            ).replace("\\", "/")
+
+        if row["watermark_path"]:
+            watermark_relative = (
+                str(row["watermark_path"])
+                .replace("\\", "/")
+                .replace("static/", "", 1)
+                .lstrip("/")
+            )
+
+            watermark_absolute = "file:///" + os.path.join(
+                base_dir, "static", watermark_relative
+            ).replace("\\", "/")
+
+        # =====================================================
+        # 10. SCHOOL DATA
+        # =====================================================
+
+        school = {
+            "name": row["school_name"],
+            "address": row["address"] or "",
+            "phone": row["phone"] or "",
+            "email": row["email"] or "",
+            "udise_no": row["udise_no"] or "",
+            "recognition_no": row["recognition_no"] or "",
+            "medium": row["medium"] or "",
+            "school_index_no": row["school_index_no"] or "",
+            "board_name": row["board_name"] or "",
+            "logo_path": logo_absolute,
+            "enable_certificate_labels": row["enable_certificate_labels"] or "Enabled",
+            "show_tc_logo": row["show_tc_logo"] or "Disabled",
+            "show_tc_watermark": row["show_tc_watermark"] or "Disabled",
+            "watermark_path": watermark_absolute,
+            "website": row["website"] or "",
+        }
+
+        # =====================================================
+        # 11. RENDER PDF HTML
+        # =====================================================
+
+        html = render_template(
+            "clerk/tc_generate.html",
+            tc=tc,
+            student=student,
+            school=school,
+            school_name=school["name"],
+            school_address=school["address"],
+            school_phone=school["phone"],
+            school_email=school["email"],
+            school_udise=school["udise_no"],
+            school_recognition_no=school["recognition_no"],
+            school_medium=school["medium"],
+            school_index_no=school["school_index_no"],
+            school_board_name=school["board_name"],
+            school_logo_path=school["logo_path"],
+            school_watermark_path=school["watermark_path"],
+            school_website=school["website"],
+            is_pdf=True,
+            certificate_language=certificate_language,
+        )
+
+        # =====================================================
+        # 12. PDF OPTIONS
+        # =====================================================
+
+        options = {
+            "page-size": "A4",
+            "orientation": "Portrait",
+            "margin-top": "0mm",
+            "margin-right": "0mm",
+            "margin-bottom": "0mm",
+            "margin-left": "0mm",
+            "encoding": "UTF-8",
+            "enable-local-file-access": "",
+            "print-media-type": "",
+            "dpi": "96",
+            "zoom": "1",
+            "image-dpi": "96",
+            "image-quality": "100",
+        }
+
+        # =====================================================
+        # 13. GENERATE IN MEMORY
+        # =====================================================
+
+        pdf_bytes = pdfkit.from_string(
+            html, output_path=None, configuration=pdf_config, options=options
+        )
+
+        if not pdf_bytes:
+            raise RuntimeError("Public TC PDF generation returned empty data.")
+
+        # =====================================================
+        # 14. CACHE PDF IN DATABASE
+        # =====================================================
+
+        update_query = f"""
+            UPDATE tc
+            SET
+                {pdf_column} = %s,
+                {pdf_time_column} = NOW()
+            WHERE id = %s
+              AND school_id = %s
+              AND public_share_token = %s
+              AND is_deleted = 0
+        """
+
+        cursor.execute(
+            update_query,
+            (
+                pdf_bytes,
+                row["id"],
+                row["school_id"],
+                token,
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            raise RuntimeError("Public TC PDF could not be stored.")
+
+        conn.commit()
+
+        # =====================================================
+        # 15. RETURN PDF
+        # =====================================================
+
+        response = send_file(
+            BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name=f"{row['tc_number']}.pdf",
+        )
+
+        response.headers["Cache-Control"] = (
+            "no-store, no-cache, must-revalidate, private"
+        )
+        response.headers["Pragma"] = "no-cache"
+
+        return response
+
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception(
+            "PUBLIC TC PDF ERROR | token=%s", token[:8] + "..." if token else "missing"
+        )
+
+        flash("Unable to generate the Transfer Certificate PDF right now.", "danger")
+
+        return redirect(url_for("login"))
+
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+
+# =========================================================
+# 📊 TC HISTORY / MANAGEMENT PAGE
+#
 # PURPOSE:
-# Show active TC records for logged-in clerk school
-# Backend search + class/year filter + pagination
-# Soft-delete aware
+# - Show active TC records for logged-in Clerk's school
+# - Server-side search
+# - Server-side class filter
+# - Server-side TC-year filter
+# - Server-side pagination
+# - School isolation
+# - Soft-delete aware
 # =========================================================
 
 
@@ -25578,7 +30007,7 @@ def clerk_tc_page():
 
     try:
         # =====================================================
-        # CLERK SCHOOL SESSION
+        # 1. CLERK SESSION
         # =====================================================
 
         school_id = session.get("clerk_school_id")
@@ -25586,30 +30015,76 @@ def clerk_tc_page():
         if not school_id:
             flash("Your school session has expired. Please log in again.", "warning")
 
+            return redirect(url_for("login"))
+
+        if session.get("clerk_role") != "clerk":
+            flash("You are not authorized to access Transfer Certificates.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
 
         # =====================================================
-        # FILTER VALUES
+        # 2. GET FILTERS
         # =====================================================
 
         search = (request.args.get("search") or "").strip()
+
         class_filter = (request.args.get("class") or "").strip()
+
         year_filter = (request.args.get("year") or "").strip()
 
         # =====================================================
-        # PAGINATION
+        # 3. VALIDATE SEARCH
+        # =====================================================
+
+        if len(search) > 100:
+            flash("Search text is too long.", "warning")
+
+            search = search[:100]
+
+        # =====================================================
+        # 4. VALIDATE CLASS
+        # =====================================================
+
+        if class_filter:
+            if not class_filter.isdigit():
+                flash("Invalid class filter.", "warning")
+
+                class_filter = ""
+
+            else:
+                class_number = int(class_filter)
+
+                if class_number < 1 or class_number > 10:
+                    flash("Invalid class filter.", "warning")
+
+                    class_filter = ""
+
+        # =====================================================
+        # 5. VALIDATE YEAR
+        # =====================================================
+
+        if year_filter:
+            if not year_filter.isdigit() or len(year_filter) != 4:
+                flash("Invalid year filter.", "warning")
+
+                year_filter = ""
+
+        # =====================================================
+        # 6. PAGINATION
         # =====================================================
 
         page = request.args.get("page", 1, type=int)
 
-        if not page or page < 1:
+        if page < 1:
             page = 1
 
+        # Same server-side page size as Student Records
         per_page = 10
+
         offset = (page - 1) * per_page
 
         # =====================================================
-        # DATABASE
+        # 7. DATABASE
         # =====================================================
 
         conn = get_connection()
@@ -25622,33 +30097,48 @@ def clerk_tc_page():
         cursor = conn.cursor(dictionary=True)
 
         # =====================================================
-        # COMMON WHERE QUERY
+        # 8. BASE QUERY
         #
-        # Only ACTIVE TC records.
+        # IMPORTANT:
         #
-        # We intentionally don't filter s.is_deleted because
-        # historical certificates should remain visible even
-        # if the student was later soft-deleted.
+        # t.school_id = current Clerk school
+        #
+        # t.is_deleted = 0
+        #
+        # We intentionally DO NOT require s.is_deleted = 0.
+        #
+        # A historical TC should remain visible even if the
+        # student is later archived/soft-deleted.
         # =====================================================
 
         where_query = """
             FROM tc t
 
-            JOIN students s
+            INNER JOIN students s
                 ON t.student_id = s.id
                 AND s.school_id = t.school_id
 
             WHERE t.school_id = %s
-            AND t.is_deleted = 0
+              AND t.is_deleted = 0
         """
 
         params = [school_id]
 
         # =====================================================
-        # SEARCH
+        # 9. SERVER-SIDE SEARCH
+        #
+        # Search:
+        # - Student name
+        # - Admission number
+        # - Register number
+        # - Student UID
+        # - APAAR ID
+        # - TC number
         # =====================================================
 
         if search:
+            like_search = f"%{search}%"
+
             where_query += """
                 AND (
                     s.name LIKE %s
@@ -25659,8 +30149,6 @@ def clerk_tc_page():
                     OR t.tc_number LIKE %s
                 )
             """
-
-            like_search = f"%{search}%"
 
             params.extend(
                 [
@@ -25674,7 +30162,7 @@ def clerk_tc_page():
             )
 
         # =====================================================
-        # CLASS FILTER
+        # 10. CLASS FILTER
         # =====================================================
 
         if class_filter:
@@ -25685,42 +30173,70 @@ def clerk_tc_page():
             params.append(class_filter)
 
         # =====================================================
-        # YEAR FILTER
+        # 11. TC YEAR FILTER
         #
-        # created_at = Issue date
+        # IMPORTANT:
+        #
+        # Filter using tc_date, because this is the official
+        # certificate date.
+        #
+        # Do NOT use created_at for the certificate year.
+        # created_at is only the system record creation time.
         # =====================================================
 
         if year_filter:
+            year_number = int(year_filter)
+
+            start_date = f"{year_number}-01-01"
+
+            end_date = f"{year_number + 1}-01-01"
+
             where_query += """
-                AND YEAR(t.created_at) = %s
+                AND t.tc_date >= %s
+                AND t.tc_date < %s
             """
 
-            params.append(year_filter)
+            params.extend([start_date, end_date])
 
         # =====================================================
-        # TOTAL FILTERED RECORDS
+        # 12. COUNT FILTERED RECORDS
         # =====================================================
 
-        cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
+        count_query = "SELECT COUNT(*) AS total " + where_query
 
-        total_records = cursor.fetchone()["total"] or 0
+        cursor.execute(count_query, tuple(params))
+
+        count_row = cursor.fetchone()
+
+        total_records = count_row["total"] if count_row else 0
+
+        # =====================================================
+        # 13. TOTAL PAGES
+        # =====================================================
 
         total_pages = max(1, (total_records + per_page - 1) // per_page)
 
+        # =====================================================
+        # 14. PROTECT AGAINST INVALID PAGE
+        # =====================================================
+
         if page > total_pages:
             page = total_pages
+
             offset = (page - 1) * per_page
 
         # =====================================================
-        # MAIN TC LIST
+        # 15. FETCH CURRENT PAGE
         # =====================================================
 
         query = (
             """
             SELECT
+
                 t.id,
                 t.tc_number,
                 t.tc_date,
+                t.leaving_date,
                 t.created_at,
 
                 s.name,
@@ -25729,11 +30245,17 @@ def clerk_tc_page():
                 s.school_register_no,
                 s.student_uid,
                 s.apaar_id
+
             """
             + where_query
             + """
-                ORDER BY t.created_at DESC
-                LIMIT %s OFFSET %s
+
+            ORDER BY
+                t.tc_date DESC,
+                t.id DESC
+
+            LIMIT %s
+            OFFSET %s
             """
         )
 
@@ -25741,90 +30263,145 @@ def clerk_tc_page():
 
         rows = cursor.fetchall()
 
+        # =====================================================
+        # 16. PREPARE TC LIST
+        # =====================================================
+
         tc_list = []
 
-        for r in rows:
+        for row in rows:
             tc_list.append(
                 {
-                    "id": r["id"],
-                    "tc_number": r["tc_number"],
-                    "tc_date": format_date(r["tc_date"]),
-                    # created_at is used as Issue Date
-                    "issue_date": format_date(r["created_at"]),
-                    "name": r["name"] or "",
-                    "class": r["class_name"] or "",
-                    "admission_no": r["admission_no"] or "",
-                    "school_register_no": r["school_register_no"] or "",
-                    "student_uid": r["student_uid"] or "",
-                    "apaar_id": r["apaar_id"] or "",
+                    "id": row["id"],
+                    "tc_number": row["tc_number"] or "",
+                    "tc_date": format_date(row["tc_date"]),
+                    "leaving_date": format_date(row["leaving_date"]),
+                    "name": row["name"] or "",
+                    "class": row["class_name"] or "",
+                    "admission_no": row["admission_no"] or "",
+                    "school_register_no": row["school_register_no"] or "",
+                    "student_uid": row["student_uid"] or "",
+                    "apaar_id": row["apaar_id"] or "",
                 }
             )
 
         # =====================================================
-        # TOTAL TC COUNT
-        # =====================================================
-
-        cursor.execute(
-            """
-            SELECT COUNT(*) AS total
-            FROM tc
-            WHERE school_id = %s
-            AND is_deleted = 0
-            """,
-            (school_id,),
-        )
-
-        total_tc = cursor.fetchone()["total"] or 0
-
-        # =====================================================
-        # TODAY TC COUNT
-        # =====================================================
-
-        cursor.execute(
-            """
-            SELECT COUNT(*) AS total
-            FROM tc
-            WHERE school_id = %s
-            AND is_deleted = 0
-            AND DATE(created_at) = CURDATE()
-            """,
-            (school_id,),
-        )
-
-        today_tc = cursor.fetchone()["total"] or 0
-
-        # =====================================================
-        # MONTH TC COUNT
-        # =====================================================
-
-        cursor.execute(
-            """
-            SELECT COUNT(*) AS total
-            FROM tc
-            WHERE school_id = %s
-            AND is_deleted = 0
-            AND MONTH(created_at) = MONTH(CURDATE())
-            AND YEAR(created_at) = YEAR(CURDATE())
-            """,
-            (school_id,),
-        )
-
-        month_tc = cursor.fetchone()["total"] or 0
-
-        # =====================================================
-        # YEAR DROPDOWN
+        # 17. BUILD PAGE NUMBERS
         #
-        # IMPORTANT:
-        # Use created_at because it represents Issue Date.
+        # Example:
+        #
+        # 1 2 3 4 5
+        #
+        # or:
+        #
+        # 1 2 ... 7 8 9 ... 20
+        # =====================================================
+
+        if total_pages <= 7:
+            page_numbers = list(range(1, total_pages + 1))
+
+        else:
+            page_set = {1, total_pages, page, page - 1, page + 1}
+
+            page_set = {p for p in page_set if 1 <= p <= total_pages}
+
+            sorted_pages = sorted(page_set)
+
+            page_numbers = []
+
+            previous = None
+
+            for page_number in sorted_pages:
+                if previous is not None and page_number - previous > 1:
+                    page_numbers.append(None)
+
+                page_numbers.append(page_number)
+
+                previous = page_number
+
+        # =====================================================
+        # 18. KPI — TOTAL ACTIVE TC
         # =====================================================
 
         cursor.execute(
             """
-            SELECT DISTINCT YEAR(created_at) AS year_no
+            SELECT COUNT(*) AS total
+
             FROM tc
+
             WHERE school_id = %s
-            AND is_deleted = 0
-            AND created_at IS NOT NULL
+              AND is_deleted = 0
+            """,
+            (school_id,),
+        )
+
+        row = cursor.fetchone()
+
+        total_tc = row["total"] if row else 0
+
+        # =====================================================
+        # 19. KPI — GENERATED TODAY
+        #
+        # This remains based on created_at because this KPI
+        # means "generated by the system today".
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS total
+
+            FROM tc
+
+            WHERE school_id = %s
+              AND is_deleted = 0
+              AND DATE(created_at) = CURDATE()
+            """,
+            (school_id,),
+        )
+
+        row = cursor.fetchone()
+
+        today_tc = row["total"] if row else 0
+
+        # =====================================================
+        # 20. KPI — GENERATED THIS MONTH
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS total
+
+            FROM tc
+
+            WHERE school_id = %s
+              AND is_deleted = 0
+              AND MONTH(created_at) = MONTH(CURDATE())
+              AND YEAR(created_at) = YEAR(CURDATE())
+            """,
+            (school_id,),
+        )
+
+        row = cursor.fetchone()
+
+        month_tc = row["total"] if row else 0
+
+        # =====================================================
+        # 21. TC YEAR DROPDOWN
+        #
+        # Use actual tc_date years.
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT DISTINCT
+                YEAR(tc_date) AS year_no
+
+            FROM tc
+
+            WHERE school_id = %s
+              AND is_deleted = 0
+              AND tc_date IS NOT NULL
+
             ORDER BY year_no DESC
             """,
             (school_id,),
@@ -25835,7 +30412,7 @@ def clerk_tc_page():
         years = [row["year_no"] for row in year_rows if row["year_no"]]
 
         # =====================================================
-        # SCHOOL DETAILS
+        # 22. SCHOOL DETAILS
         # =====================================================
 
         school = get_school_details(school_id)
@@ -25846,7 +30423,7 @@ def clerk_tc_page():
             return redirect(url_for("clerk_dashboard"))
 
         # =====================================================
-        # RENDER
+        # 23. RENDER
         # =====================================================
 
         return render_template(
@@ -25855,22 +30432,37 @@ def clerk_tc_page():
             school_name=school["school_name"],
             school_udise=school["school_udise"],
             active_page="tc",
+            # TC DATA
             tc_list=tc_list,
+            # KPI DATA
             total_tc=total_tc,
             today_tc=today_tc,
             month_tc=month_tc,
+            # FILTER DATA
             search=search,
             class_filter=class_filter,
             year_filter=year_filter,
             years=years,
+            # PAGINATION
             page=page,
             per_page=per_page,
             total_pages=total_pages,
             total_records=total_records,
+            page_numbers=page_numbers,
         )
 
+    # =====================================================
+    # 24. ERROR HANDLING
+    # =====================================================
+
     except Exception:
-        logger.exception("TC PAGE ERROR")
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception("TC HISTORY PAGE ERROR")
 
         flash(
             "Unable to load Transfer Certificate records. Please try again.", "danger"
@@ -25878,12 +30470,22 @@ def clerk_tc_page():
 
         return redirect(url_for("clerk_dashboard"))
 
+    # =====================================================
+    # 25. CLEANUP
+    # =====================================================
+
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # =========================================================
@@ -25974,10 +30576,54 @@ def generate_bonafide_number(cursor, school_id):
 
 
 # =========================================================
-# 👁️ VIEW BONAFIDE (PRINT PAGE)
+# 🔐 GENERATE BONAFIDE PUBLIC SHARE TOKEN
+# =========================================================
+
+
+def generate_bonafide_public_token(cursor):
+    """
+    Generates a cryptographically random public share token.
+
+    32 random bytes = 64 hexadecimal characters.
+    """
+
+    while True:
+        token = secrets.token_hex(32)
+
+        cursor.execute(
+            """
+            SELECT 1
+            FROM bonafide
+            WHERE public_share_token = %s
+            LIMIT 1
+            """,
+            (token,),
+        )
+
+        if not cursor.fetchone():
+            return token
+
+
+# =========================================================
+# 👁️ VIEW BONAFIDE
+#
 # PURPOSE:
-# Clerk can view only own school bonafide
-# Admin can view all only from valid admin session
+# Clerk:
+#   - Can view only Bonafide certificates belonging
+#     to the Clerk's authenticated school.
+#
+# Admin:
+#   - Can view certificates across schools only when
+#     a valid Admin session exists.
+#
+# FEATURES:
+#   - School isolation
+#   - Active certificate only
+#   - Optional school logo
+#   - Optional student photo
+#   - Optional watermark
+#   - Flash-based error handling
+#   - No database error exposed to user
 # =========================================================
 
 
@@ -25991,137 +30637,173 @@ def view_bonafide(bid):
     cursor = None
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
+        # =====================================================
+        # VALIDATE BONAFIDE ID
+        # =====================================================
 
-        # =========================================
-        # STRICT ADMIN CHECK
-        # =========================================
+        if not bid or bid <= 0:
+            flash("Invalid Bonafide certificate.", "danger")
+
+            return redirect(url_for("clerk_bonafide_page"))
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        if not conn:
+            flash("Unable to connect to the database. Please try again.", "danger")
+
+            return redirect(url_for("clerk_bonafide_page"))
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # ADMIN MODE
+        # =====================================================
 
         admin_mode = (
             session.get("admin_logged_in") is True
             and session.get("admin_role") == "admin"
         )
 
-        # =========================================
-        # ADMIN VIEW
-        # =========================================
+        # =====================================================
+        # CLERK MODE
+        # =====================================================
 
-        if admin_mode:
-            cursor.execute(
-                """
-                SELECT 
-                    b.*,
-
-                    s.name,
-                    s.class AS class_name,
-                    s.admission_date,
-                    s.dob,
-                    s.caste,
-                    s.primary_mobile,
-                    s.email AS student_email,
-                    s.school_register_no,
-
-                    sc.name AS school_name,
-                    sc.address,
-                    sc.phone,
-                    sc.email AS school_email,
-                    sc.logo_path,
-                    sc.watermark_path,
-
-                    sc.enable_certificate_labels,
-                    sc.show_bonafide_logo,
-                    sc.show_bonafide_watermark
-
-                FROM bonafide b
-
-                JOIN students s
-                    ON b.student_id = s.id
-                    AND b.school_id = s.school_id
-
-                JOIN schools sc
-                    ON b.school_id = sc.school_id
-
-                WHERE b.id = %s
-
-                LIMIT 1
-            """,
-                (bid,),
-            )
-
-            role = "admin"
-
-        # =========================================
-        # CLERK VIEW
-        # Clerk can view only own school bonafide
-        # =========================================
-
-        else:
+        if not admin_mode:
             school_id = session.get("clerk_school_id")
 
             if not school_id:
-                return "School session missing ❌"
-                abort(404)
-            cursor.execute(
-                """
-                SELECT 
-                    b.*,
+                flash(
+                    "Your school session has expired. Please log in again.", "warning"
+                )
 
-                    s.name,
-                    s.class AS class_name,
-                    s.admission_date,
-                    s.dob,
-                    s.caste,
-                    s.primary_mobile,
-                    s.email AS student_email,
-                    s.school_register_no,
+                return redirect(url_for("clerk_dashboard"))
 
-                    sc.name AS school_name,
-                    sc.address,
-                    sc.phone,
-                    sc.email AS school_email,
-                    sc.logo_path,
-                    sc.watermark_path,
+            if session.get("clerk_role") != "clerk":
+                flash("Unauthorized access.", "danger")
 
-                    sc.enable_certificate_labels,
-                    sc.show_bonafide_logo,
-                    sc.show_bonafide_watermark
+                return redirect(url_for("clerk_dashboard"))
 
-                FROM bonafide b
+        # =====================================================
+        # COMMON QUERY
+        #
+        # IMPORTANT:
+        # Student and Bonafide must belong to same school.
+        #
+        # profile_photo_data is loaded so the photo can be
+        # embedded directly into the certificate.
+        #
+        # This is important for PDF generation because the
+        # PDF engine should NOT depend on the authenticated
+        # Clerk photo route.
+        # =====================================================
 
-                JOIN students s
-                    ON b.student_id = s.id
-                    AND b.school_id = s.school_id
+        query = """
+            SELECT
 
-                JOIN schools sc
-                    ON b.school_id = sc.school_id
+                b.id,
+                b.school_id,
+                b.student_id,
+                b.bonafide_number,
+                b.purpose,
+                b.date,
+                b.is_deleted,
+                b.public_share_token,
 
-                WHERE b.id = %s
+                s.name,
+                s.class AS class_name,
+                s.admission_date,
+                s.dob,
+                s.caste,
+                s.primary_mobile,
+                s.email AS student_email,
+                s.school_register_no,
+
+                s.profile_photo_data,
+                s.profile_photo_mime_type,
+
+                sc.name AS school_name,
+                sc.address,
+                sc.phone,
+                sc.email AS school_email,
+
+                sc.logo_path,
+                sc.watermark_path,
+
+                sc.enable_certificate_labels,
+                sc.show_bonafide_logo,
+                sc.show_bonafide_student_photo,
+                sc.show_bonafide_watermark
+
+            FROM bonafide b
+
+            INNER JOIN students s
+                ON b.student_id = s.id
+                AND b.school_id = s.school_id
+
+            INNER JOIN schools sc
+                ON b.school_id = sc.school_id
+
+            WHERE b.id = %s
+
+              AND b.is_deleted = 0
+        """
+
+        params = [bid]
+
+        # =====================================================
+        # CLERK SCHOOL ISOLATION
+        # =====================================================
+
+        if not admin_mode:
+            query += """
                 AND b.school_id = %s
+            """
 
-                LIMIT 1
-            """,
-                (bid, school_id),
-            )
+            params.append(school_id)
 
-            role = "clerk"
+        query += """
+            LIMIT 1
+        """
 
-        row = cursor.fetchone()
+        cursor.execute(query, tuple(params))
 
-        if not row:
-            return "Bonafide Not Found ❌"
+        data = cursor.fetchone()
 
-        columns = [col[0] for col in cursor.description]
-        data = dict(zip(columns, row))
+        # =====================================================
+        # CERTIFICATE NOT FOUND
+        # =====================================================
 
-        # =========================================
+        if not data:
+            flash("Bonafide certificate not found or no longer available.", "warning")
+
+            return redirect(url_for("clerk_bonafide_page"))
+
+        # =====================================================
         # STUDENT DATA
-        # =========================================
+        # =====================================================
+
+        admission_date_raw = data.get("admission_date")
+
+        admission_year = ""
+
+        if admission_date_raw:
+            try:
+                admission_year = admission_date_raw.year
+            except AttributeError:
+                try:
+                    admission_year = str(admission_date_raw)[:4]
+                except Exception:
+                    admission_year = ""
 
         student = {
             "name": data.get("name") or "",
             "class": data.get("class_name") or "",
-            "admission_date": format_date(data.get("admission_date")),
+            "admission_date": format_date(admission_date_raw),
+            "admission_year": admission_year,
             "dob": format_date(data.get("dob")),
             "caste": data.get("caste") or "",
             "primary_mobile": data.get("primary_mobile") or "",
@@ -26129,9 +30811,44 @@ def view_bonafide(bid):
             "school_register_no": data.get("school_register_no") or "",
         }
 
-        # =========================================
+        # =====================================================
+        # STUDENT PHOTO
+        #
+        # Convert DB image into a data URL.
+        #
+        # This works for:
+        # - Browser preview
+        # - wkhtmltopdf
+        # - PDF
+        #
+        # No authenticated photo URL is required.
+        # =====================================================
+
+        student_photo_data_url = ""
+
+        photo_data = data.get("profile_photo_data")
+
+        photo_mime_type = data.get("profile_photo_mime_type") or "image/webp"
+
+        if photo_data:
+            try:
+                student_photo_data_url = (
+                    "data:"
+                    + photo_mime_type
+                    + ";base64,"
+                    + base64.b64encode(photo_data).decode("ascii")
+                )
+
+            except Exception:
+                logger.exception("BONAFIDE STUDENT PHOTO ENCODE ERROR | bid=%s", bid)
+
+                student_photo_data_url = ""
+
+        student["photo_data_url"] = student_photo_data_url
+
+        # =====================================================
         # BONAFIDE DATA
-        # =========================================
+        # =====================================================
 
         bonafide = {
             "id": data.get("id"),
@@ -26140,9 +30857,9 @@ def view_bonafide(bid):
             "date": format_date(data.get("date")),
         }
 
-        # =========================================
+        # =====================================================
         # SCHOOL DATA
-        # =========================================
+        # =====================================================
 
         school = {
             "name": data.get("school_name") or "",
@@ -26154,38 +30871,86 @@ def view_bonafide(bid):
             "enable_certificate_labels": data.get("enable_certificate_labels")
             or "Enabled",
             "show_bonafide_logo": data.get("show_bonafide_logo") or "Disabled",
+            "show_bonafide_student_photo": data.get("show_bonafide_student_photo")
+            or "Disabled",
             "show_bonafide_watermark": data.get("show_bonafide_watermark")
             or "Disabled",
         }
+
+        # =====================================================
+        # RENDER
+        # =====================================================
 
         return render_template(
             "clerk/bonafide_generate.html",
             student=student,
             bonafide=bonafide,
             school=school,
-            role=role,
+            role=("admin" if admin_mode else "clerk"),
+            is_pdf=False,
         )
 
-    except Exception as e:
-        print("❌ VIEW BONAFIDE ERROR:", e)
+    # =========================================================
+    # DATABASE / APPLICATION ERROR
+    # =========================================================
 
-        return "Something went wrong ❌"
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception(
+            "VIEW BONAFIDE ERROR | bid=%s | school_id=%s",
+            bid,
+            session.get("clerk_school_id"),
+        )
+
+        flash(
+            "Unable to open the Bonafide certificate right now. Please try again.",
+            "danger",
+        )
+
+        # =====================================================
+        # REDIRECT
+        # =====================================================
+
+        if session.get("clerk_school_id"):
+            return redirect(url_for("clerk_bonafide_page"))
+
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # =========================================================
 # 📜 BONAFIDE PAGE
 # PURPOSE:
-# Show active bonafide records for logged-in clerk school only
-# Backend search + class/year filter + pagination
-# Soft-delete aware
-# Production-safe for large data
+# Show active Bonafide records for logged-in Clerk school
+#
+# FEATURES:
+# - School isolation
+# - Search
+# - Class filter
+# - Section filter
+# - Purpose filter
+# - Year filter
+# - Server-side pagination
+# - Soft-delete aware
+# - Historical student records remain visible
+# - No embedded history JSON
 # =========================================================
 
 
@@ -26207,6 +30972,12 @@ def clerk_bonafide_page():
 
         if not school_id:
             flash("Your school session has expired. Please log in again.", "warning")
+
+            return redirect(url_for("clerk_dashboard"))
+
+        if session.get("clerk_role") != "clerk":
+            flash("Unauthorized access.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
 
         # =====================================================
@@ -26214,8 +30985,36 @@ def clerk_bonafide_page():
         # =====================================================
 
         search = (request.args.get("search") or "").strip()
+
         class_filter = (request.args.get("class") or "").strip()
+
+        section_filter = (request.args.get("section") or "").strip()
+
         year_filter = (request.args.get("year") or "").strip()
+
+        purpose_filter = (request.args.get("purpose") or "").strip()
+
+        # =====================================================
+        # INPUT LENGTH PROTECTION
+        # =====================================================
+
+        search = search[:100]
+
+        class_filter = class_filter[:50]
+
+        section_filter = section_filter[:50]
+
+        year_filter = year_filter[:4]
+
+        purpose_filter = purpose_filter[:255]
+
+        # =====================================================
+        # YEAR VALIDATION
+        # =====================================================
+
+        if year_filter:
+            if not year_filter.isdigit() or len(year_filter) != 4:
+                year_filter = ""
 
         # =====================================================
         # PAGINATION
@@ -26227,6 +31026,7 @@ def clerk_bonafide_page():
             page = 1
 
         per_page = 10
+
         offset = (page - 1) * per_page
 
         # =====================================================
@@ -26237,12 +31037,13 @@ def clerk_bonafide_page():
 
         if not conn:
             flash("Unable to connect to the database. Please try again.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
 
         cursor = conn.cursor(dictionary=True)
 
         # =====================================================
-        # SCHOOL INFO
+        # SCHOOL INFORMATION
         # =====================================================
 
         cursor.execute(
@@ -26251,8 +31052,11 @@ def clerk_bonafide_page():
                 school_id,
                 name,
                 school_code
+
             FROM schools
+
             WHERE school_id = %s
+
             LIMIT 1
             """,
             (school_id,),
@@ -26262,33 +31066,36 @@ def clerk_bonafide_page():
 
         if not school:
             flash("School information could not be found.", "danger")
+
             return redirect(url_for("clerk_dashboard"))
 
-        school_name = school["name"]
-        school_code = school["school_code"]
+        school_name = school["name"] or ""
+
+        school_code = school["school_code"] or ""
 
         # =====================================================
-        # COMMON WHERE QUERY
+        # BASE QUERY
         #
         # IMPORTANT:
-        # Only Bonafide records are filtered by is_deleted.
+        # Only Bonafide is required to be active.
         #
         # We intentionally DO NOT add:
+        #
         # s.is_deleted = 0
         #
-        # because certificate history should remain available
-        # even if the student is later soft-deleted.
+        # because old certificates must remain visible even
+        # if the student was later archived.
         # =====================================================
 
         where_query = """
             FROM bonafide b
 
-            JOIN students s
+            INNER JOIN students s
                 ON b.student_id = s.id
                 AND s.school_id = b.school_id
 
             WHERE b.school_id = %s
-            AND b.is_deleted = 0
+              AND b.is_deleted = 0
         """
 
         params = [school_id]
@@ -26301,11 +31108,18 @@ def clerk_bonafide_page():
             where_query += """
                 AND (
                     s.name LIKE %s
+
                     OR s.admission_no LIKE %s
+
                     OR s.school_register_no LIKE %s
+
                     OR s.student_uid LIKE %s
+
                     OR s.apaar_id LIKE %s
+
                     OR b.bonafide_number LIKE %s
+
+                    OR b.purpose LIKE %s
                 )
             """
 
@@ -26313,6 +31127,7 @@ def clerk_bonafide_page():
 
             params.extend(
                 [
+                    like_search,
                     like_search,
                     like_search,
                     like_search,
@@ -26334,9 +31149,29 @@ def clerk_bonafide_page():
             params.append(class_filter)
 
         # =====================================================
+        # SECTION FILTER
+        # =====================================================
+
+        if section_filter:
+            where_query += """
+                AND s.section = %s
+            """
+
+            params.append(section_filter)
+
+        # =====================================================
+        # PURPOSE FILTER
+        # =====================================================
+
+        if purpose_filter:
+            where_query += """
+                AND b.purpose = %s
+            """
+
+            params.append(purpose_filter)
+
+        # =====================================================
         # YEAR FILTER
-        #
-        # Certificate year = Bonafide certificate date
         # =====================================================
 
         if year_filter:
@@ -26344,7 +31179,7 @@ def clerk_bonafide_page():
                 AND YEAR(b.date) = %s
             """
 
-            params.append(year_filter)
+            params.append(int(year_filter))
 
         # =====================================================
         # TOTAL FILTERED RECORDS
@@ -26352,12 +31187,19 @@ def clerk_bonafide_page():
 
         cursor.execute("SELECT COUNT(*) AS total " + where_query, tuple(params))
 
-        total_records = cursor.fetchone()["total"] or 0
+        count_row = cursor.fetchone()
+
+        total_records = count_row["total"] if count_row else 0
 
         total_pages = max(1, (total_records + per_page - 1) // per_page)
 
+        # =====================================================
+        # PROTECT OUT-OF-RANGE PAGE
+        # =====================================================
+
         if page > total_pages:
             page = total_pages
+
             offset = (page - 1) * per_page
 
         # =====================================================
@@ -26367,27 +31209,48 @@ def clerk_bonafide_page():
         query = (
             """
             SELECT
+
                 b.id,
+
                 b.student_id,
+
                 b.bonafide_number,
+
+                b.public_share_token,
+
                 b.date,
+
                 b.purpose,
 
+
                 s.school_register_no,
+
                 s.name,
+
                 s.admission_no,
+
                 s.student_uid,
+
                 s.apaar_id,
+
                 s.primary_mobile,
+
                 s.email,
 
-                s.class AS class_name
+                s.class AS class_name,
+
+                s.section AS section_name
 
             """
             + where_query
             + """
-                ORDER BY b.id DESC
-                LIMIT %s OFFSET %s
+
+            ORDER BY
+                b.date DESC,
+                b.id DESC
+
+            LIMIT %s
+            OFFSET %s
             """
         )
 
@@ -26397,22 +31260,24 @@ def clerk_bonafide_page():
 
         bonafide_list = []
 
-        for r in rows:
+        for row in rows:
             bonafide_list.append(
                 {
-                    "id": r["id"],
-                    "student_id": r["student_id"],
-                    "bonafide_number": r["bonafide_number"],
-                    "date": format_date(r["date"]),
-                    "purpose": r["purpose"] or "",
-                    "school_register_no": r["school_register_no"] or "",
-                    "name": r["name"] or "",
-                    "admission_no": r["admission_no"] or "",
-                    "student_uid": r["student_uid"] or "",
-                    "apaar_id": r["apaar_id"] or "",
-                    "primary_mobile": r["primary_mobile"] or "",
-                    "email": r["email"] or "",
-                    "class": r["class_name"] or "",
+                    "id": row["id"],
+                    "student_id": row["student_id"],
+                    "bonafide_number": row["bonafide_number"] or "",
+                    "public_share_token": row["public_share_token"] or "",
+                    "date": format_date(row["date"]),
+                    "purpose": row["purpose"] or "",
+                    "school_register_no": row["school_register_no"] or "",
+                    "name": row["name"] or "",
+                    "admission_no": row["admission_no"] or "",
+                    "student_uid": row["student_uid"] or "",
+                    "apaar_id": row["apaar_id"] or "",
+                    "primary_mobile": row["primary_mobile"] or "",
+                    "email": row["email"] or "",
+                    "class": row["class_name"] or "",
+                    "section": row["section_name"] or "",
                 }
             )
 
@@ -26423,62 +31288,83 @@ def clerk_bonafide_page():
         cursor.execute(
             """
             SELECT COUNT(*) AS total
+
             FROM bonafide
+
             WHERE school_id = %s
-            AND is_deleted = 0
+              AND is_deleted = 0
             """,
             (school_id,),
         )
 
-        total_bonafide = cursor.fetchone()["total"] or 0
+        total_row = cursor.fetchone()
+
+        total_bonafide = total_row["total"] if total_row else 0
 
         # =====================================================
-        # TODAY BONAFIDE COUNT
+        # TODAY COUNT
         # =====================================================
 
         cursor.execute(
             """
             SELECT COUNT(*) AS total
+
             FROM bonafide
+
             WHERE school_id = %s
-            AND is_deleted = 0
-            AND DATE(created_at) = CURDATE()
+              AND is_deleted = 0
+              AND DATE(created_at) = CURDATE()
             """,
             (school_id,),
         )
 
-        today_bonafide = cursor.fetchone()["total"] or 0
+        today_row = cursor.fetchone()
+
+        today_bonafide = today_row["total"] if today_row else 0
 
         # =====================================================
-        # MONTH BONAFIDE COUNT
+        # MONTH COUNT
         # =====================================================
 
         cursor.execute(
             """
             SELECT COUNT(*) AS total
+
             FROM bonafide
+
             WHERE school_id = %s
-            AND is_deleted = 0
-            AND MONTH(created_at) = MONTH(CURDATE())
-            AND YEAR(created_at) = YEAR(CURDATE())
+              AND is_deleted = 0
+
+              AND MONTH(created_at)
+                  = MONTH(CURDATE())
+
+              AND YEAR(created_at)
+                  = YEAR(CURDATE())
             """,
             (school_id,),
         )
 
-        month_bonafide = cursor.fetchone()["total"] or 0
+        month_row = cursor.fetchone()
+
+        month_bonafide = month_row["total"] if month_row else 0
 
         # =====================================================
-        # YEAR DROPDOWN
+        # YEAR OPTIONS
         # =====================================================
 
         cursor.execute(
             """
-            SELECT DISTINCT YEAR(date) AS year_no
+            SELECT DISTINCT
+                YEAR(date) AS year_no
+
             FROM bonafide
+
             WHERE school_id = %s
-            AND is_deleted = 0
-            AND date IS NOT NULL
-            ORDER BY year_no DESC
+              AND is_deleted = 0
+              AND date IS NOT NULL
+
+            ORDER BY
+                year_no DESC
             """,
             (school_id,),
         )
@@ -26488,53 +31374,102 @@ def clerk_bonafide_page():
         years = [row["year_no"] for row in year_rows if row["year_no"]]
 
         # =====================================================
-        # HISTORY MAP
-        # Only ACTIVE Bonafide records
+        # CLASS OPTIONS
         # =====================================================
 
-        student_ids = list({b["student_id"] for b in bonafide_list if b["student_id"]})
+        cursor.execute(
+            """
+            SELECT DISTINCT
+                s.class AS class_name
 
-        bonafide_history_map = {}
+            FROM bonafide b
 
-        if student_ids:
-            placeholders = ",".join(["%s"] * len(student_ids))
+            INNER JOIN students s
+                ON b.student_id = s.id
+                AND s.school_id = b.school_id
 
-            cursor.execute(
-                f"""
-                SELECT
-                    id,
-                    student_id,
-                    bonafide_number,
-                    date,
-                    purpose
-                FROM bonafide
-                WHERE school_id = %s
-                AND is_deleted = 0
-                AND student_id IN ({placeholders})
-                ORDER BY id DESC
-                """,
-                tuple([school_id] + student_ids),
-            )
+            WHERE b.school_id = %s
+              AND b.is_deleted = 0
+              AND s.class IS NOT NULL
+              AND TRIM(s.class) <> ''
 
-            history_rows = cursor.fetchall()
+            ORDER BY
+                CAST(s.class AS UNSIGNED),
+                s.class
+            """,
+            (school_id,),
+        )
 
-            for h in history_rows:
-                sid = h["student_id"]
+        class_rows = cursor.fetchall()
 
-                if sid not in bonafide_history_map:
-                    bonafide_history_map[sid] = []
+        class_options = [row["class_name"] for row in class_rows if row["class_name"]]
 
-                bonafide_history_map[sid].append(
-                    {
-                        "id": h["id"],
-                        "number": h["bonafide_number"],
-                        "date": format_date(h["date"]),
-                        "purpose": h["purpose"] or "-",
-                    }
-                )
+        # =====================================================
+        # SECTION OPTIONS
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT DISTINCT
+                s.section AS section_name
+
+            FROM bonafide b
+
+            INNER JOIN students s
+                ON b.student_id = s.id
+                AND s.school_id = b.school_id
+
+            WHERE b.school_id = %s
+              AND b.is_deleted = 0
+              AND s.section IS NOT NULL
+              AND TRIM(s.section) <> ''
+
+            ORDER BY
+                s.section
+            """,
+            (school_id,),
+        )
+
+        section_rows = cursor.fetchall()
+
+        section_options = [
+            row["section_name"] for row in section_rows if row["section_name"]
+        ]
+
+        # =====================================================
+        # PURPOSE OPTIONS
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT DISTINCT
+                TRIM(purpose) AS purpose
+
+            FROM bonafide
+
+            WHERE school_id = %s
+              AND is_deleted = 0
+              AND purpose IS NOT NULL
+              AND TRIM(purpose) <> ''
+
+            ORDER BY
+                purpose
+            """,
+            (school_id,),
+        )
+
+        purpose_rows = cursor.fetchall()
+
+        purpose_options = [row["purpose"] for row in purpose_rows if row["purpose"]]
 
         # =====================================================
         # RENDER
+        #
+        # IMPORTANT:
+        # No bonafide_history_map anymore.
+        #
+        # History is loaded only when the Clerk clicks
+        # History.
         # =====================================================
 
         return render_template(
@@ -26544,18 +31479,34 @@ def clerk_bonafide_page():
             school_code=school_code,
             active_page="bonafide",
             bonafide_list=bonafide_list,
+            # =================================================
+            # KPI
+            # =================================================
             total_bonafide=total_bonafide,
             today_bonafide=today_bonafide,
             month_bonafide=month_bonafide,
+            # =================================================
+            # FILTER VALUES
+            # =================================================
             search=search,
             class_filter=class_filter,
+            section_filter=section_filter,
             year_filter=year_filter,
+            purpose_filter=purpose_filter,
+            # =================================================
+            # FILTER OPTIONS
+            # =================================================
+            class_options=class_options,
+            section_options=section_options,
             years=years,
+            purpose_options=purpose_options,
+            # =================================================
+            # PAGINATION
+            # =================================================
             page=page,
             per_page=per_page,
             total_pages=total_pages,
             total_records=total_records,
-            bonafide_history_map=bonafide_history_map,
             next_bonafide_number="Auto Generate On Save",
         )
 
@@ -26575,10 +31526,187 @@ def clerk_bonafide_page():
 
 
 # =========================================================
-# 📄 SAVE BONAFIDE
+# 📜 BONAFIDE HISTORY API
 # PURPOSE:
-# Clerk can generate bonafide only for own school student
-# Bonafide number + insert happen in one transaction
+# Load active Bonafide history for one student
+# Clerk school scoped
+# =========================================================
+
+
+@app.route("/clerk/bonafide/history/<int:student_id>", methods=["GET"])
+@login_required
+@subscription_required
+@feature_required("enable_bonafide_management")
+def clerk_bonafide_history(student_id):
+
+    conn = None
+    cursor = None
+
+    try:
+        # =====================================================
+        # CLERK SESSION
+        # =====================================================
+
+        school_id = session.get("clerk_school_id")
+
+        if not school_id:
+            return jsonify(
+                {"success": False, "message": "School session expired."}
+            ), 401
+
+        if session.get("clerk_role") != "clerk":
+            return jsonify({"success": False, "message": "Unauthorized."}), 403
+
+        # =====================================================
+        # VALIDATE STUDENT ID
+        # =====================================================
+
+        if not student_id or student_id <= 0:
+            return jsonify({"success": False, "message": "Invalid student."}), 400
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        if not conn:
+            return jsonify(
+                {"success": False, "message": "Database connection unavailable."}
+            ), 503
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # STUDENT
+        #
+        # IMPORTANT:
+        # Do NOT require students.is_deleted = 0.
+        #
+        # Historical Bonafide records must remain accessible
+        # even if the student was later archived.
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                school_id,
+                name,
+                school_register_no,
+                admission_no,
+                class,
+                section
+
+            FROM students
+
+            WHERE id = %s
+              AND school_id = %s
+
+            LIMIT 1
+            """,
+            (student_id, school_id),
+        )
+
+        student = cursor.fetchone()
+
+        if not student:
+            return jsonify({"success": False, "message": "Student not found."}), 404
+
+        # =====================================================
+        # BONAFIDE HISTORY
+        #
+        # Multiple Bonafide certificates are allowed for the
+        # same student.
+        # =====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                bonafide_number,
+                purpose,
+                date
+
+            FROM bonafide
+
+            WHERE school_id = %s
+              AND student_id = %s
+              AND is_deleted = 0
+
+            ORDER BY
+                date DESC,
+                id DESC
+            """,
+            (school_id, student_id),
+        )
+
+        history_rows = cursor.fetchall()
+
+        records = []
+
+        for row in history_rows:
+            records.append(
+                {
+                    "id": row["id"],
+                    "bonafide_number": row["bonafide_number"] or "-",
+                    "purpose": row["purpose"] or "-",
+                    "date": format_date(row["date"]),
+                    "view_url": url_for("view_bonafide", bid=row["id"]),
+                }
+            )
+
+        # =====================================================
+        # RESPONSE
+        # =====================================================
+
+        return jsonify(
+            {
+                "success": True,
+                "student": {
+                    "id": student["id"],
+                    "name": student["name"] or "",
+                    "school_register_no": student["school_register_no"] or "-",
+                    "admission_no": student["admission_no"] or "-",
+                    "class": student["class"] or "-",
+                    "section": student["section"] or "-",
+                },
+                "records": records,
+                "total": len(records),
+            }
+        )
+
+    except Exception:
+        logger.exception("BONAFIDE HISTORY API ERROR")
+
+        return jsonify(
+            {"success": False, "message": "Unable to load Bonafide history."}
+        ), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# =========================================================
+# 📄 SAVE BONAFIDE CERTIFICATE
+#
+# PURPOSE:
+#   Clerk can generate a Bonafide certificate only for a
+#   student belonging to the Clerk's authenticated school.
+#
+# SECURITY:
+#   - School comes ONLY from session
+#   - student_id is verified against school_id
+#   - Deleted students cannot receive certificates
+#   - Deleted Bonafide records are ignored for duplicates
+#   - No student details are trusted from the browser
+#   - Subscription limit is checked server-side
+#   - Bonafide number + insert happen in one transaction
+#   - Database errors are never exposed to the user
 # =========================================================
 
 
@@ -26592,50 +31720,123 @@ def save_bonafide():
     cursor = None
 
     try:
-        # =========================================
-        # CLERK SESSION CHECK
-        # =========================================
+        # =====================================================
+        # 1. VERIFY CLERK SESSION
+        # =====================================================
 
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            return "School session missing ❌"
-            abort(404)
-        if session.get("clerk_role") != "clerk":
-            return "Unauthorized ❌"
-            abort(401)
-        # =========================================
-        # GET FORM DATA
-        # =========================================
+            flash("Your school session has expired. Please log in again.", "warning")
 
-        student_id = (request.form.get("student_id") or "").strip()
+            return redirect(url_for("login"))
+
+        if session.get("clerk_role") != "clerk":
+            flash(
+                "You are not authorized to generate a Bonafide certificate.", "danger"
+            )
+
+            return redirect(url_for("clerk_dashboard"))
+
+        # =====================================================
+        # 2. READ FORM DATA
+        #
+        # IMPORTANT:
+        # Only these values come from the modal:
+        #
+        # student_id
+        # purpose
+        # date
+        #
+        # Student name/register/admission/etc. displayed in
+        # the modal are NOT trusted or submitted.
+        # =====================================================
+
+        student_id_raw = (request.form.get("student_id") or "").strip()
 
         purpose = (request.form.get("purpose") or "").strip()
 
         date_raw = (request.form.get("date") or "").strip()
 
-        certificate_date = parse_date(date_raw)
+        # =====================================================
+        # 3. VALIDATE STUDENT ID
+        # =====================================================
 
-        # =========================================
-        # VALIDATION
-        # =========================================
+        if not student_id_raw:
+            flash(
+                "No student was selected. Please select a student and try again.",
+                "warning",
+            )
 
-        if not student_id:
-            return "Student ID missing ❌"
+            return redirect(url_for("clerk_students"))
 
         try:
-            student_id = int(student_id)
-        except ValueError:
-            return "Invalid Student ID ❌"
+            student_id = int(student_id_raw)
+
+        except (TypeError, ValueError):
+            flash("Invalid student record selected.", "danger")
+
+            return redirect(url_for("clerk_students"))
+
+        if student_id <= 0:
+            flash("Invalid student record selected.", "danger")
+
+            return redirect(url_for("clerk_students"))
+
+        # =====================================================
+        # 4. NORMALIZE PURPOSE
+        #
+        # This prevents:
+        #
+        # "Scholarship"
+        # "Scholarship "
+        # "Scholarship    "
+        #
+        # from being treated as different purposes.
+        #
+        # Unicode/Marathi text remains supported.
+        # =====================================================
+
+        purpose = " ".join(purpose.split())
+
+        # =====================================================
+        # 5. PURPOSE VALIDATION
+        # =====================================================
 
         if not purpose:
-            return "Purpose required ❌"
+            flash("Please enter the purpose for the Bonafide certificate.", "warning")
+
+            return redirect(url_for("clerk_students"))
+
+        if len(purpose) < 2:
+            flash("Certificate purpose must contain at least 2 characters.", "warning")
+
+            return redirect(url_for("clerk_students"))
 
         if len(purpose) > 255:
-            return "Purpose too long ❌"
+            flash("Certificate purpose cannot exceed 255 characters.", "warning")
+
+            return redirect(url_for("clerk_students"))
+
+        # =====================================================
+        # 6. DATE VALIDATION
+        # =====================================================
+
+        if not date_raw:
+            flash("Please select a certificate date.", "warning")
+
+            return redirect(url_for("clerk_students"))
+
+        certificate_date = parse_date(date_raw)
 
         if not certificate_date:
-            return "Invalid date ❌"
+            flash("The selected certificate date is invalid.", "warning")
+
+            return redirect(url_for("clerk_students"))
+
+        # =====================================================
+        # CONVERT DATETIME -> DATE IF NECESSARY
+        # =====================================================
 
         certificate_date_value = (
             certificate_date.date()
@@ -26643,68 +31844,174 @@ def save_bonafide():
             else certificate_date
         )
 
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+        # =====================================================
+        # 7. PREVENT FUTURE CERTIFICATE DATE
+        # =====================================================
+
+        from datetime import date
+
+        today = date.today()
+
+        if certificate_date_value > today:
+            flash("Certificate date cannot be in the future.", "warning")
+
+            return redirect(url_for("clerk_students"))
+
+        # =====================================================
+        # 8. DATABASE CONNECTION
+        # =====================================================
 
         conn = get_connection()
+
+        if not conn:
+            flash("Unable to connect to the database. Please try again.", "danger")
+
+            return redirect(url_for("clerk_students"))
+
         cursor = conn.cursor()
 
-        # =========================================
-        # CHECK STUDENT BELONGS TO SAME SCHOOL
-        # Prevents cross-school certificate creation
-        # =========================================
+        # =====================================================
+        # 9. VERIFY STUDENT BELONGS TO AUTHENTICATED SCHOOL
+        #
+        # IMPORTANT SECURITY CHECK
+        #
+        # The browser only sends student_id.
+        #
+        # We NEVER trust:
+        #   student name
+        #   register number
+        #   admission number
+        #   APAAR ID
+        #   school_id from browser
+        #
+        # school_id comes ONLY from session.
+        #
+        # get_student_for_school() already performs:
+        #
+        #   id = student_id
+        #   school_id = authenticated school
+        #   is_deleted = 0
+        # =====================================================
 
-        student = get_student_for_school(
-            cursor,
-            student_id,
-            school_id,
-        )
+        student = get_student_for_school(cursor, student_id, school_id)
 
         if not student:
-            return "Student Not Found ❌"
+            flash("The selected student was not found in your school.", "danger")
 
-        # =========================================
-        # CHECK EXISTING BONAFIDE
-        # Same purpose certificate will not duplicate
-        # =========================================
+            return redirect(url_for("clerk_students"))
+
+        # =====================================================
+        # 10. CHECK EXISTING BONAFIDE
+        #
+        # Same:
+        #
+        #   school
+        #   student
+        #   purpose
+        #
+        # cannot generate another active certificate.
+        #
+        # Deleted records do not block a new certificate.
+        # =====================================================
 
         cursor.execute(
             """
-            SELECT id
+            SELECT
+                id,
+                bonafide_number,
+                date
+
             FROM bonafide
-            WHERE student_id = %s
-            AND school_id = %s
-            AND purpose = %s
+
+            WHERE
+                student_id = %s
+                AND school_id = %s
+                AND purpose = %s
+                AND is_deleted = 0
+
+            ORDER BY id DESC
+
             LIMIT 1
-        """,
+            """,
             (student_id, school_id, purpose),
         )
 
         existing_bonafide = cursor.fetchone()
 
         if existing_bonafide:
-            return redirect(url_for("view_bonafide", bid=existing_bonafide[0]))
+            existing_id = existing_bonafide[0]
 
-        # =========================================
-        # CHECK BONAFIDE SUBSCRIPTION LIMIT
-        # =========================================
+            existing_number = (
+                existing_bonafide[1] if len(existing_bonafide) > 1 else None
+            )
+
+            if existing_number:
+                flash(
+                    f"A Bonafide certificate ({existing_number}) already exists for this student with the same purpose.",
+                    "warning",
+                )
+
+            else:
+                flash(
+                    "A Bonafide certificate with the same purpose already exists for this student.",
+                    "warning",
+                )
+
+            return redirect(url_for("view_bonafide", bid=existing_id))
+
+        # =====================================================
+        # 11. CHECK SUBSCRIPTION LIMIT
+        #
+        # This uses the existing centralized subscription
+        # checker from your ERP.
+        #
+        # It validates:
+        #   - subscription exists
+        #   - subscription active
+        #   - subscription not expired
+        #   - Bonafide limit
+        #
+        # Your existing helper supports "bonafide" as a
+        # resource type.
+        # =====================================================
 
         limit_check = check_subscription_limit(cursor, school_id, "bonafide")
 
-        if not limit_check["allowed"]:
-            return limit_check["message"] + " Please upgrade your plan ❌"
+        if not limit_check:
+            flash("Unable to verify your Bonafide subscription limit.", "danger")
 
-        # =========================================
-        # GENERATE BONAFIDE NUMBER
-        # Same cursor + same transaction
-        # =========================================
+            return redirect(url_for("clerk_students"))
+
+        if not limit_check.get("allowed"):
+            limit_message = (
+                limit_check.get("message")
+                or "Your Bonafide certificate limit has been reached."
+            )
+
+            flash(limit_message, "warning")
+
+            return redirect(url_for("clerk_students"))
+
+        # =====================================================
+        # 12. GENERATE BONAFIDE NUMBER
+        #
+        # IMPORTANT:
+        # Use the SAME cursor and SAME transaction.
+        #
+        # If the INSERT fails later, the transaction rolls
+        # back together with the sequence update.
+        # =====================================================
 
         bonafide_number = generate_bonafide_number(cursor, school_id)
 
-        # =========================================
-        # INSERT BONAFIDE
-        # =========================================
+        if not bonafide_number:
+            raise RuntimeError("Bonafide number generation failed.")
+
+        public_share_token = generate_bonafide_public_token(cursor)
+
+        # =====================================================
+        # 13. INSERT BONAFIDE
+        # =====================================================
 
         cursor.execute(
             """
@@ -26712,46 +32019,151 @@ def save_bonafide():
                 school_id,
                 student_id,
                 bonafide_number,
+                public_share_token,
                 purpose,
                 date
             )
-            VALUES (%s, %s, %s, %s, %s)
-        """,
-            (school_id, student_id, bonafide_number, purpose, certificate_date_value),
+
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            """,
+            (
+                school_id,
+                student_id,
+                bonafide_number,
+                public_share_token,
+                purpose,
+                certificate_date_value,
+            ),
         )
+
+        # =====================================================
+        # 14. VERIFY INSERT
+        # =====================================================
 
         bonafide_id = cursor.lastrowid
 
-        # =========================================
-        # COMMIT BOTH:
-        # sequence update + bonafide insert
-        # =========================================
+        if not bonafide_id:
+            raise RuntimeError("Bonafide certificate ID was not generated.")
+
+        # =====================================================
+        # 15. COMMIT
+        #
+        # Bonafide sequence + certificate insert are committed
+        # together.
+        # =====================================================
 
         conn.commit()
 
-        print("✅ BONAFIDE SAVED")
+        # =====================================================
+        # 16. SUCCESS
+        # =====================================================
+
+        # get_student_for_school() returns SELECT *.
+        # student[1] is expected to be student name based on
+        # the existing students table ordering.
+        #
+        # We do not depend on it for security; this is only
+        # used for the success message.
+
+        student_name = (
+            str(student[1]).strip() if len(student) > 1 and student[1] else "Student"
+        )
+
+        flash(
+            f"Bonafide certificate {bonafide_number} generated successfully for {student_name}.",
+            "success",
+        )
 
         return redirect(url_for("view_bonafide", bid=bonafide_id))
 
+    # =========================================================
+    # 17. DATABASE / APPLICATION ERROR
+    # =========================================================
+
     except Exception as e:
+        # -----------------------------------------------------
+        # ROLLBACK
+        # -----------------------------------------------------
+
         if conn:
-            conn.rollback()
+            try:
+                conn.rollback()
 
-        print("❌ BONAFIDE SAVE ERROR:", e)
+            except Exception:
+                pass
 
-        return "Something went wrong ❌"
+        # -----------------------------------------------------
+        # LOG FULL ERROR SERVER-SIDE
+        #
+        # DO NOT display `str(e)` to the Clerk.
+        # It can expose SQL/table/database information.
+        # -----------------------------------------------------
+
+        try:
+            logger.exception(
+                "BONAFIDE SAVE ERROR | school_id=%s | student_id=%s",
+                session.get("clerk_school_id"),
+                request.form.get("student_id"),
+            )
+
+        except Exception:
+            logger.exception("BONAFIDE SAVE ERROR | UNABLE TO LOG SCHOOL/STUDENT")
+
+        # -----------------------------------------------------
+        # USER-FRIENDLY ERROR
+        # -----------------------------------------------------
+
+        flash(
+            "Unable to generate the Bonafide certificate right now. Please try again.",
+            "danger",
+        )
+
+        return redirect(url_for("clerk_students"))
+
+    # =========================================================
+    # 18. CLEANUP
+    # =========================================================
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # =========================================================
 # 📄 DOWNLOAD BONAFIDE PDF
+#
+# PURPOSE:
+# Generate the SAME certificate shown in browser preview.
+#
+# FEATURES:
+# - A5 Landscape
+# - Same HTML/CSS as preview
+# - Same logo
+# - Same student photo
+# - Same watermark
+# - Same certificate title setting
+# - Same language selected by user
+# - Strict school isolation for Clerk
+# - Admin mode supported
 # =========================================================
+
+
 @app.route("/clerk/bonafide/pdf/<int:bid>")
 @login_required
 @subscription_required
@@ -26760,392 +32172,80 @@ def download_bonafide_pdf(bid):
 
     conn = None
     cursor = None
+    row = None
 
     try:
-        mode = request.args.get("mode")
+        # =====================================================
+        # VALIDATE ID
+        # =====================================================
 
-        school_id = session.get("clerk_school_id")
+        if not bid or bid <= 0:
+            flash("Invalid Bonafide certificate.", "danger")
+
+            return redirect(url_for("clerk_bonafide_page"))
+
+        # =====================================================
+        # LANGUAGE
+        # =====================================================
+
+        certificate_language = request.args.get("lang", "mr").strip().lower()
+
+        if certificate_language not in ("mr", "en"):
+            certificate_language = "mr"
+
+        if certificate_language == "en":
+            pdf_column = "pdf_en_data"
+            pdf_time_column = "pdf_en_generated_at"
+
+        else:
+            pdf_column = "pdf_mr_data"
+            pdf_time_column = "pdf_mr_generated_at"
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
 
         conn = get_connection()
-        cursor = conn.cursor()
+
+        if not conn:
+            flash("Unable to connect to the database. Please try again.", "danger")
+
+            return redirect(url_for("clerk_bonafide_page"))
+
+        cursor = conn.cursor(dictionary=True)
 
         # =====================================================
         # ADMIN MODE
         # =====================================================
-        if (
-            mode == "admin"
-            and session.get("admin_logged_in")
+
+        admin_mode = (
+            request.args.get("mode") == "admin"
+            and session.get("admin_logged_in") is True
             and session.get("admin_role") == "admin"
-        ):
-            cursor.execute(
-                """
-
-                SELECT
-
-                    b.*,
-
-                    s.name,
-                    s.school_register_no,
-                    s.`class` AS class_name,
-                    s.admission_date,
-                    s.dob,
-                    s.caste,
-                    s.primary_mobile,
-
-                    s.email AS student_email,
-
-                    sc.name AS school_name,
-                    sc.address,
-                    sc.phone,
-
-                    sc.email AS school_email,
-
-                    sc.logo_path,
-                    sc.watermark_path,
-                    sc.website
-
-                FROM bonafide b
-
-                JOIN students s
-                    ON b.student_id = s.id
-
-                JOIN schools sc
-                    ON b.school_id = sc.school_id
-
-                WHERE b.id = %s
-
-            """,
-                (bid,),
-            )
-
-        # =====================================================
-        # CLERK MODE
-        # =====================================================
-        else:
-            if not school_id:
-                return "School session missing ❌"
-                abort(404)
-            cursor.execute(
-                """
-
-                SELECT
-
-                    b.*,
-
-                    s.name,
-                    s.school_register_no,
-                    s.`class` AS class_name,
-                    s.admission_date,
-                    s.dob,
-                    s.caste,
-                    s.primary_mobile,
-
-                    s.email AS student_email,
-
-                    sc.name AS school_name,
-                    sc.address,
-                    sc.phone,
-
-                    sc.email AS school_email,
-
-                    sc.logo_path,
-                    sc.watermark_path,
-                    sc.website
-
-                FROM bonafide b
-
-                JOIN students s
-                    ON b.student_id = s.id
-
-                JOIN schools sc
-                    ON b.school_id = sc.school_id
-
-                WHERE b.id = %s
-                AND b.school_id = %s
-
-            """,
-                (bid, school_id),
-            )
-
-        row = cursor.fetchone()
-
-        if not row:
-            return "Bonafide Not Found ❌"
-
-        columns = [col[0] for col in cursor.description]
-        row = dict(zip(columns, row))
-
-        # =====================================================
-        # BONAFIDE DATA
-        # =====================================================
-
-        bonafide = {
-            "id": row["id"],
-            "bonafide_number": row["bonafide_number"],
-            "purpose": row["purpose"] or "",
-            "date": format_date(row["date"]),
-        }
-
-        # =====================================================
-        # STUDENT DATA
-        # =====================================================
-
-        student = {
-            "name": row["name"] or "",
-            "school_register_no": row["school_register_no"] or "",
-            "class": row["class_name"] or "",
-            "admission_date": format_date(row["admission_date"]),
-            "dob": format_date(row["dob"]),
-            "caste": row["caste"] or "",
-            "primary_mobile": row["primary_mobile"] or "",
-            "email": row["student_email"] or "",
-        }
-
-        # =====================================================
-        # SCHOOL DATA
-        # =====================================================
-
-        base_dir = os.path.abspath(os.path.dirname(__file__))
-
-        logo_absolute = ""
-        watermark_absolute = ""
-
-        if row["logo_path"]:
-            logo_absolute = "file:///" + os.path.join(
-                base_dir, "static", row["logo_path"].replace("static/", "")
-            ).replace("\\", "/")
-
-        if row["watermark_path"]:
-            watermark_absolute = "file:///" + os.path.join(
-                base_dir, "static", row["watermark_path"].replace("static/", "")
-            ).replace("\\", "/")
-
-        school = {
-            "name": row["school_name"] or "",
-            "address": row["address"] or "",
-            "phone": row["phone"] or "",
-            "email": row["school_email"] or "",
-            "logo_path": logo_absolute,
-            "watermark_path": watermark_absolute,
-            "website": row["website"] or "",
-        }
-
-        # =====================================================
-        # HTML TEMPLATE
-        # =====================================================
-
-        html = render_template(
-            "clerk/bonafide_generate.html",
-            student=student,
-            bonafide=bonafide,
-            school=school,
-            is_pdf=True,
         )
 
         # =====================================================
-        # PDF FOLDER
+        # QUERY
         # =====================================================
 
-        pdf_folder = os.path.join("static", "generated_bonafide")
-
-        if not os.path.exists(pdf_folder):
-            os.makedirs(pdf_folder)
-
-        pdf_path = os.path.join(pdf_folder, f"bonafide_{bonafide['id']}.pdf")
-
-        # =====================================================
-        # PDF OPTIONS
-        # =====================================================
-
-        options = {
-            "page-size": "A4",
-            "margin-top": "5mm",
-            "margin-right": "5mm",
-            "margin-bottom": "5mm",
-            "margin-left": "5mm",
-            "encoding": "UTF-8",
-            "enable-local-file-access": "",
-        }
-
-        # =====================================================
-        # GENERATE PDF
-        # =====================================================
-
-        pdfkit.from_string(html, pdf_path, configuration=pdf_config, options=options)
-
-        # =====================================================
-        # 📧 AUTO SEND BONAFIDE PDF EMAIL
-        # =====================================================
-
-        try:
-            student_email = student.get("email")
-
-            if student_email:
-                # =========================================
-                # CHECK ALREADY SENT
-                # =========================================
-
-                cursor.execute(
-                    """
-
-                    SELECT id
-                    FROM bonafide_email_logs
-                    WHERE school_id = %s
-                    AND bonafide_id = %s
-
-                """,
-                    (row["school_id"], bonafide["id"]),
-                )
-
-                already_sent = cursor.fetchone()
-
-                # =========================================
-                # SEND ONLY ONCE
-                # =========================================
-
-                if student_email and not already_sent:
-                    subject = f"Bonafide Certificate - {student['name']}"
-
-                    body = f"""
-
-                    <div style="font-family:Arial;padding:20px;">
-
-                        <h2 style="color:#14b8a6;">
-                            Bonafide Certificate Generated
-                        </h2>
-
-                        <p>
-                            Dear Parent/Student,
-                        </p>
-
-                        <p>
-                            Your Bonafide Certificate
-                            has been generated successfully.
-                        </p>
-
-                        <hr>
-
-                        <p>
-                            <b>Student Name:</b>
-                            {student["name"]}
-                        </p>
-
-                        <p>
-                            <b>Bonafide Number:</b>
-                            {bonafide["bonafide_number"]}
-                        </p>
-
-                        <p>
-                            <b>School:</b>
-                            {school["name"]}
-                        </p>
-
-                        <hr>
-
-                        <p>
-                            Please find the Bonafide PDF attached.
-                        </p>
-
-                        <p>
-                            Thank you,
-                            <br>
-                            <b>{school["name"]}</b>
-                        </p>
-
-                    </div>
-
-                    """
-
-            # =========================================
-            # SEND MAIL
-            # =========================================
-
-            email_sent = send_email(
-                student_email,
-                subject,
-                body,
-                pdf_path,
-                f"{bonafide['bonafide_number']}.pdf",
-            )
-
-            # =========================================
-            # EMAIL SUCCESS
-            # =========================================
-
-            if email_sent == True:
-                print("✅ BONAFIDE PDF EMAIL SENT")
-
-                # =====================================
-                # SAVE EMAIL LOG
-                # =====================================
-
-                cursor.execute(
-                    """
-
-                    INSERT INTO bonafide_email_logs
-                    (
-                        school_id,
-                        bonafide_id,
-                        student_email
-                    )
-                    VALUES (%s, %s, %s)
-
-                """,
-                    (row["school_id"], bonafide["id"], student_email),
-                )
-
-                conn.commit()
-
-            # =========================================
-            # EMAIL FAILED
-            # =========================================
-
-            else:
-                print("❌ BONAFIDE EMAIL FAILED:", email_sent)
-
-        except Exception as email_error:
-            print("❌ BONAFIDE EMAIL ERROR:", email_error)
-
-        # =====================================================
-        # RETURN PDF
-        # =====================================================
-
-        return send_file(
-            pdf_path,
-            as_attachment=True,
-            download_name=f"{bonafide['bonafide_number']}.pdf",
-        )
-
-    except Exception as e:
-        print("❌ BONAFIDE PDF ERROR:", e)
-
-        return "Something went wrong ❌"
-
-    finally:
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
-
-
-# =========================================================
-# 🔓 PUBLIC BONAFIDE PDF DOWNLOAD - NO LOGIN
-# =========================================================
-@app.route("/public/bonafide/pdf/<int:bid>")
-def public_bonafide_pdf(bid):
-
-    conn = None
-    cursor = None
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        cursor.execute(
-            """
+        query = f"""
             SELECT
-                b.*,
+
+                b.id,
+                b.school_id,
+                b.student_id,
+                b.bonafide_number,
+                b.public_share_token,
+                b.purpose,
+                b.date,
+                b.is_deleted,
+
+                b.{pdf_column} AS cached_pdf,
+
+                /* =========================
+                   STUDENT
+                ========================= */
+
                 s.name,
                 s.school_register_no,
                 s.class AS class_name,
@@ -27155,47 +32255,592 @@ def public_bonafide_pdf(bid):
                 s.primary_mobile,
                 s.email AS student_email,
 
+                s.profile_photo_data,
+                s.profile_photo_mime_type,
+
+                /* =========================
+                   SCHOOL
+                ========================= */
+
                 sc.name AS school_name,
                 sc.address,
                 sc.phone,
                 sc.email AS school_email,
                 sc.logo_path,
                 sc.watermark_path,
-                sc.website
+                sc.website,
+
+                sc.enable_certificate_labels,
+                sc.show_bonafide_logo,
+                sc.show_bonafide_student_photo,
+                sc.show_bonafide_watermark
+
             FROM bonafide b
-            JOIN students s
+
+            INNER JOIN students s
                 ON b.student_id = s.id
                 AND b.school_id = s.school_id
-            JOIN schools sc
+
+            INNER JOIN schools sc
                 ON b.school_id = sc.school_id
+
             WHERE b.id = %s
+              AND b.is_deleted = 0
+        """
+
+        params = [bid]
+
+        # =====================================================
+        # CLERK SCHOOL ISOLATION
+        # =====================================================
+
+        if not admin_mode:
+            school_id = session.get("clerk_school_id")
+
+            if not school_id:
+                flash(
+                    "Your school session has expired. Please log in again.", "warning"
+                )
+
+                return redirect(url_for("clerk_dashboard"))
+
+            if session.get("clerk_role") != "clerk":
+                flash("Unauthorized access.", "danger")
+
+                return redirect(url_for("clerk_dashboard"))
+
+            query += """
+                AND b.school_id = %s
+            """
+
+            params.append(school_id)
+
+        query += """
             LIMIT 1
-        """,
-            (bid,),
+        """
+
+        cursor.execute(query, tuple(params))
+
+        row = cursor.fetchone()
+
+        # =====================================================
+        # NOT FOUND
+        # =====================================================
+
+        if not row:
+            flash("Bonafide certificate not found or no longer available.", "warning")
+
+            return redirect(url_for("clerk_bonafide_page"))
+
+        # =====================================================
+        # RETURN CACHED PDF
+        # =====================================================
+
+        cached_pdf = row.get("cached_pdf")
+
+        if cached_pdf:
+            response = send_file(
+                BytesIO(cached_pdf),
+                mimetype="application/pdf",
+                as_attachment=False,
+                download_name=f"{row['bonafide_number']}.pdf",
+            )
+
+            response.headers["Cache-Control"] = "no-store, private"
+            response.headers["Pragma"] = "no-cache"
+
+            return response
+
+        # =====================================================
+        # ADMISSION YEAR
+        # =====================================================
+
+        admission_date_raw = row.get("admission_date")
+
+        admission_year = ""
+
+        if admission_date_raw:
+            try:
+                admission_year = admission_date_raw.year
+
+            except AttributeError:
+                try:
+                    admission_year = str(admission_date_raw)[:4]
+
+                except Exception:
+                    admission_year = ""
+
+        # =====================================================
+        # STUDENT
+        # =====================================================
+
+        student_photo_data_url = ""
+
+        photo_data = row.get("profile_photo_data")
+
+        photo_mime_type = row.get("profile_photo_mime_type") or "image/webp"
+
+        if photo_data:
+            try:
+                student_photo_data_url = (
+                    "data:"
+                    + photo_mime_type
+                    + ";base64,"
+                    + base64.b64encode(photo_data).decode("ascii")
+                )
+
+            except Exception:
+                logger.exception(
+                    "BONAFIDE PDF STUDENT PHOTO ENCODE ERROR | bid=%s", bid
+                )
+
+                student_photo_data_url = ""
+
+        student = {
+            "name": row.get("name") or "",
+            "school_register_no": row.get("school_register_no") or "",
+            "class": row.get("class_name") or "",
+            "admission_date": format_date(admission_date_raw),
+            "admission_year": admission_year,
+            "dob": format_date(row.get("dob")),
+            "caste": row.get("caste") or "",
+            "primary_mobile": row.get("primary_mobile") or "",
+            "email": row.get("student_email") or "",
+            "photo_data_url": student_photo_data_url,
+        }
+
+        # =====================================================
+        # BONAFIDE DATA
+        # =====================================================
+
+        bonafide = {
+            "id": row.get("id"),
+            "bonafide_number": row.get("bonafide_number") or "",
+            "public_share_token": row.get("public_share_token") or "",
+            "purpose": row.get("purpose") or "",
+            "date": format_date(row.get("date")),
+        }
+
+        # =====================================================
+        # STATIC ASSETS
+        # =====================================================
+
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+
+        logo_absolute = ""
+        watermark_absolute = ""
+
+        if row.get("logo_path"):
+            logo_relative = (
+                row["logo_path"].replace("\\", "/").replace("static/", "", 1)
+            )
+
+            logo_absolute = "file:///" + os.path.join(
+                base_dir, "static", logo_relative
+            ).replace("\\", "/")
+
+        if row.get("watermark_path"):
+            watermark_relative = (
+                row["watermark_path"].replace("\\", "/").replace("static/", "", 1)
+            )
+
+            watermark_absolute = "file:///" + os.path.join(
+                base_dir, "static", watermark_relative
+            ).replace("\\", "/")
+
+        # =====================================================
+        # SCHOOL
+        # =====================================================
+
+        school = {
+            "name": row.get("school_name") or "",
+            "address": row.get("address") or "",
+            "phone": row.get("phone") or "",
+            "email": row.get("school_email") or "",
+            "logo_path": logo_absolute,
+            "watermark_path": watermark_absolute,
+            "website": row.get("website") or "",
+            "enable_certificate_labels": (
+                row.get("enable_certificate_labels") or "Enabled"
+            ),
+            "show_bonafide_logo": (row.get("show_bonafide_logo") or "Disabled"),
+            "show_bonafide_student_photo": (
+                row.get("show_bonafide_student_photo") or "Disabled"
+            ),
+            "show_bonafide_watermark": (
+                row.get("show_bonafide_watermark") or "Disabled"
+            ),
+        }
+
+        # =====================================================
+        # RENDER
+        # =====================================================
+
+        html = render_template(
+            "clerk/bonafide_generate.html",
+            student=student,
+            bonafide=bonafide,
+            school=school,
+            role=("admin" if admin_mode else "clerk"),
+            is_pdf=True,
+            is_public=False,
+            certificate_language=certificate_language,
+        )
+
+        # =====================================================
+        # PDF OPTIONS
+        # =====================================================
+
+        options = {
+            "page-size": "A5",
+            "orientation": "Landscape",
+            "margin-top": "0mm",
+            "margin-right": "0mm",
+            "margin-bottom": "0mm",
+            "margin-left": "0mm",
+            "encoding": "UTF-8",
+            "enable-local-file-access": "",
+            "print-media-type": "",
+            "dpi": "96",
+            "zoom": "1",
+        }
+
+        # =====================================================
+        # GENERATE PDF IN MEMORY
+        # =====================================================
+
+        pdf_bytes = pdfkit.from_string(
+            html,
+            output_path=None,
+            configuration=pdf_config,
+            options=options,
+        )
+
+        if not pdf_bytes:
+            logger.error("BONAFIDE PDF EMPTY | bid=%s", row.get("id"))
+
+            flash("Certificate PDF could not be generated.", "danger")
+
+            return redirect(url_for("view_bonafide", bid=row["id"]))
+
+        # =====================================================
+        # STORE PDF IN MYSQL
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            UPDATE bonafide
+            SET
+                {pdf_column} = %s,
+                {pdf_time_column} = NOW()
+            WHERE id = %s
+              AND is_deleted = 0
+            """,
+            (
+                pdf_bytes,
+                row["id"],
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            raise RuntimeError("Bonafide PDF database update failed.")
+
+        conn.commit()
+
+        # =====================================================
+        # RETURN PDF
+        # =====================================================
+
+        response = send_file(
+            BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name=f"{bonafide['bonafide_number']}.pdf",
+        )
+
+        response.headers["Cache-Control"] = "no-store, private"
+        response.headers["Pragma"] = "no-cache"
+
+        return response
+
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception(
+            "BONAFIDE PDF ERROR | bid=%s | school_id=%s",
+            bid,
+            session.get("clerk_school_id"),
+        )
+
+        flash(
+            "Unable to generate the Bonafide PDF right now. Please try again.",
+            "danger",
+        )
+
+        if session.get("clerk_school_id"):
+            return redirect(url_for("view_bonafide", bid=bid))
+
+        return redirect(url_for("clerk_dashboard"))
+
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+
+# =========================================================
+# 🔓 PUBLIC BONAFIDE PDF
+# =========================================================
+#
+# Purpose:
+# Share an active Bonafide certificate through WhatsApp.
+#
+# No login is required.
+#
+# Access is controlled by a cryptographically random
+# 64-character public_share_token.
+#
+# =========================================================
+
+
+@app.route("/public/bonafide/pdf/<string:token>")
+def public_bonafide_pdf(token):
+
+    conn = None
+    cursor = None
+    row = None
+
+    try:
+        # =====================================================
+        # VALIDATE TOKEN
+        # =====================================================
+
+        if not token:
+            return "Bonafide certificate not found.", 404
+
+        token = token.strip().lower()
+
+        if not re.fullmatch(r"[0-9a-f]{64}", token):
+            return "Bonafide certificate not found.", 404
+
+        # =====================================================
+        # LANGUAGE
+        # =====================================================
+
+        certificate_language = request.args.get("lang", "mr").strip().lower()
+
+        if certificate_language not in ("mr", "en"):
+            certificate_language = "mr"
+
+        if certificate_language == "en":
+            pdf_column = "pdf_en_data"
+            pdf_time_column = "pdf_en_generated_at"
+
+        else:
+            pdf_column = "pdf_mr_data"
+            pdf_time_column = "pdf_mr_generated_at"
+
+        # =====================================================
+        # DATABASE
+        # =====================================================
+
+        conn = get_connection()
+
+        if not conn:
+            return "Service temporarily unavailable.", 503
+
+        cursor = conn.cursor(dictionary=True)
+
+        # =====================================================
+        # GET BONAFIDE
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            SELECT
+
+                b.id,
+                b.school_id,
+                b.student_id,
+                b.bonafide_number,
+                b.public_share_token,
+                b.purpose,
+                b.date,
+                b.is_deleted,
+
+                b.{pdf_column} AS cached_pdf,
+
+                /* =========================
+                   STUDENT
+                ========================= */
+
+                s.name,
+                s.school_register_no,
+                s.class AS class_name,
+                s.admission_date,
+                s.dob,
+                s.caste,
+                s.primary_mobile,
+                s.email AS student_email,
+
+                s.profile_photo_data,
+                s.profile_photo_mime_type,
+
+                /* =========================
+                   SCHOOL
+                ========================= */
+
+                sc.name AS school_name,
+                sc.address,
+                sc.phone,
+                sc.email AS school_email,
+                sc.logo_path,
+                sc.watermark_path,
+                sc.website,
+
+                sc.enable_certificate_labels,
+                sc.show_bonafide_logo,
+                sc.show_bonafide_student_photo,
+                sc.show_bonafide_watermark
+
+            FROM bonafide b
+
+            INNER JOIN students s
+                ON b.student_id = s.id
+                AND b.school_id = s.school_id
+
+            INNER JOIN schools sc
+                ON b.school_id = sc.school_id
+
+            WHERE b.public_share_token = %s
+              AND b.is_deleted = 0
+
+            LIMIT 1
+            """,
+            (token,),
         )
 
         row = cursor.fetchone()
 
-        if not row:
-            return "Bonafide Not Found ❌"
+        # =====================================================
+        # NOT FOUND
+        # =====================================================
 
-        bonafide = {
-            "id": row["id"],
-            "bonafide_number": row["bonafide_number"],
-            "purpose": row["purpose"] or "",
-            "date": format_date(row["date"]),
-        }
+        if not row:
+            return (
+                "Bonafide certificate not found or no longer available.",
+                404,
+            )
+
+        # =====================================================
+        # RETURN CACHED PDF
+        # =====================================================
+
+        cached_pdf = row.get("cached_pdf")
+
+        if cached_pdf:
+            response = send_file(
+                BytesIO(cached_pdf),
+                mimetype="application/pdf",
+                as_attachment=False,
+                download_name=f"{row['bonafide_number']}.pdf",
+            )
+
+            response.headers["Cache-Control"] = "no-store, private"
+            response.headers["Pragma"] = "no-cache"
+
+            return response
+
+        # =====================================================
+        # ADMISSION YEAR
+        # =====================================================
+
+        admission_date_raw = row.get("admission_date")
+
+        admission_year = ""
+
+        if admission_date_raw:
+            try:
+                admission_year = admission_date_raw.year
+
+            except AttributeError:
+                try:
+                    admission_year = str(admission_date_raw)[:4]
+
+                except Exception:
+                    admission_year = ""
+
+        # =====================================================
+        # STUDENT PHOTO
+        # =====================================================
+
+        student_photo_data_url = ""
+
+        photo_data = row.get("profile_photo_data")
+
+        photo_mime_type = row.get("profile_photo_mime_type") or "image/webp"
+
+        if photo_data:
+            try:
+                student_photo_data_url = (
+                    "data:"
+                    + photo_mime_type
+                    + ";base64,"
+                    + base64.b64encode(photo_data).decode("ascii")
+                )
+
+            except Exception:
+                logger.exception(
+                    "PUBLIC BONAFIDE STUDENT PHOTO ERROR | bid=%s",
+                    row["id"],
+                )
+
+                student_photo_data_url = ""
+
+        # =====================================================
+        # STUDENT
+        # =====================================================
 
         student = {
             "name": row["name"] or "",
             "school_register_no": row["school_register_no"] or "",
             "class": row["class_name"] or "",
-            "admission_date": format_date(row["admission_date"]),
+            "admission_date": format_date(admission_date_raw),
+            "admission_year": admission_year,
             "dob": format_date(row["dob"]),
             "caste": row["caste"] or "",
             "primary_mobile": row["primary_mobile"] or "",
             "email": row["student_email"] or "",
+            "photo_data_url": student_photo_data_url,
         }
+
+        # =====================================================
+        # BONAFIDE
+        # =====================================================
+
+        bonafide = {
+            "id": row["id"],
+            "bonafide_number": row["bonafide_number"] or "",
+            "public_share_token": (row["public_share_token"] or ""),
+            "purpose": row["purpose"] or "",
+            "date": format_date(row["date"]),
+        }
+
+        # =====================================================
+        # STATIC ASSETS
+        # =====================================================
 
         base_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -27203,14 +32848,30 @@ def public_bonafide_pdf(bid):
         watermark_absolute = ""
 
         if row["logo_path"]:
+            logo_relative = (
+                row["logo_path"].replace("\\", "/").replace("static/", "", 1)
+            )
+
             logo_absolute = "file:///" + os.path.join(
-                base_dir, "static", row["logo_path"].replace("static/", "")
+                base_dir,
+                "static",
+                logo_relative,
             ).replace("\\", "/")
 
         if row["watermark_path"]:
+            watermark_relative = (
+                row["watermark_path"].replace("\\", "/").replace("static/", "", 1)
+            )
+
             watermark_absolute = "file:///" + os.path.join(
-                base_dir, "static", row["watermark_path"].replace("static/", "")
+                base_dir,
+                "static",
+                watermark_relative,
             ).replace("\\", "/")
+
+        # =====================================================
+        # SCHOOL
+        # =====================================================
 
         school = {
             "name": row["school_name"] or "",
@@ -27220,49 +32881,140 @@ def public_bonafide_pdf(bid):
             "logo_path": logo_absolute,
             "watermark_path": watermark_absolute,
             "website": row["website"] or "",
+            "enable_certificate_labels": (
+                row["enable_certificate_labels"] or "Enabled"
+            ),
+            "show_bonafide_logo": (row["show_bonafide_logo"] or "Disabled"),
+            "show_bonafide_student_photo": (
+                row["show_bonafide_student_photo"] or "Disabled"
+            ),
+            "show_bonafide_watermark": (row["show_bonafide_watermark"] or "Disabled"),
         }
+
+        # =====================================================
+        # RENDER
+        # =====================================================
 
         html = render_template(
             "clerk/bonafide_generate.html",
             student=student,
             bonafide=bonafide,
             school=school,
+            role="clerk",
             is_pdf=True,
             is_public=True,
+            certificate_language=certificate_language,
         )
 
-        pdf_folder = os.path.join("static", "generated_bonafide")
-        os.makedirs(pdf_folder, exist_ok=True)
-
-        pdf_path = os.path.join(pdf_folder, f"bonafide_{bonafide['id']}.pdf")
+        # =====================================================
+        # PDF OPTIONS
+        # =====================================================
 
         options = {
-            "page-size": "A4",
-            "margin-top": "5mm",
-            "margin-right": "5mm",
-            "margin-bottom": "5mm",
-            "margin-left": "5mm",
+            "page-size": "A5",
+            "orientation": "Landscape",
+            "margin-top": "0mm",
+            "margin-right": "0mm",
+            "margin-bottom": "0mm",
+            "margin-left": "0mm",
             "encoding": "UTF-8",
             "enable-local-file-access": "",
+            "print-media-type": "",
+            "dpi": "96",
+            "zoom": "1",
         }
 
-        pdfkit.from_string(html, pdf_path, configuration=pdf_config, options=options)
+        # =====================================================
+        # GENERATE PDF IN MEMORY
+        # =====================================================
 
-        return send_file(
-            pdf_path,
-            as_attachment=True,
+        pdf_bytes = pdfkit.from_string(
+            html,
+            output_path=None,
+            configuration=pdf_config,
+            options=options,
+        )
+
+        if not pdf_bytes:
+            logger.error(
+                "PUBLIC BONAFIDE PDF EMPTY | bid=%s",
+                row["id"],
+            )
+
+            return (
+                "Certificate PDF could not be generated.",
+                500,
+            )
+
+        # =====================================================
+        # STORE PDF IN DATABASE
+        # =====================================================
+
+        cursor.execute(
+            f"""
+            UPDATE bonafide
+            SET
+                {pdf_column} = %s,
+                {pdf_time_column} = NOW()
+            WHERE id = %s
+              AND is_deleted = 0
+            """,
+            (
+                pdf_bytes,
+                row["id"],
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            raise RuntimeError("Public Bonafide PDF database update failed.")
+
+        conn.commit()
+
+        # =====================================================
+        # RETURN PDF
+        # =====================================================
+
+        response = send_file(
+            BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=False,
             download_name=f"{bonafide['bonafide_number']}.pdf",
         )
 
-    except Exception as e:
-        print("❌ PUBLIC BONAFIDE PDF ERROR:", e)
-        return "Something went wrong ❌"
+        response.headers["Cache-Control"] = "no-store, private"
+        response.headers["Pragma"] = "no-cache"
+
+        return response
+
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        logger.exception(
+            "PUBLIC BONAFIDE PDF ERROR | bid=%s",
+            row["id"] if row else "N/A",
+        )
+
+        return (
+            "Unable to open this certificate right now. Please try again later.",
+            500,
+        )
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # =========================================================

@@ -320,7 +320,7 @@
 ========================================================== */
 
 .sh-billing-card {
-    
+
     padding: 17px 18px;
 
     margin-bottom: 18px;
@@ -355,8 +355,8 @@
 
     color: #0f766e;
 
-    font-size: 9px;
-    font-weight: 850;
+    font-size: 9.5px;
+    font-weight: 800;
 
     letter-spacing: .65px;
 
@@ -369,8 +369,8 @@
 
     color: #0f172a;
 
-    font-size: 15px;
-    font-weight: 850;
+    font-size: 18px;
+    font-weight: 800;
 }
 
 .sh-live-badge {
@@ -394,7 +394,7 @@
 }
 
 .sh-live-badge i {
-    font-size: 5.5px;
+    font-size: 6.5px;
 }
 
 
@@ -455,7 +455,7 @@
 
     color: #94a3b8;
 
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
 }
 
@@ -468,7 +468,7 @@
 
     color: #334155;
 
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-weight: 800;
 
     text-overflow: ellipsis;
@@ -510,7 +510,7 @@
 
     color: #2563eb;
 
-    font-size: 11.5px;
+    font-size: 12.5px;
 }
 
 .sh-empty-billing strong {
@@ -518,7 +518,7 @@
 
     color: #475569;
 
-    font-size: 11.5px;
+    font-size: 12.5px;
 }
 
 .sh-empty-billing span {
@@ -528,7 +528,7 @@
 
     color: #94a3b8;
 
-    font-size: 9px;
+    font-size: 10px;
 }
 
 
@@ -573,7 +573,7 @@
 
     color: #94a3b8;
 
-    font-size: 8px;
+    font-size: 9.5px;
 }
 
 .sh-record-count {
@@ -590,7 +590,7 @@
 
     color: #1c2027;
 
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 750;
 
     white-space: nowrap;
@@ -598,7 +598,7 @@
 
 .sh-record-count i {
     color: #0f766e;
-    font-size: 9px;
+    font-size: 9.5px;
 }
 
 .sh-record-count small {
@@ -648,7 +648,7 @@
 
     color: #94a3b8;
 
-    font-size: 9px;
+    font-size: 10px;
 
     pointer-events: none;
 }
@@ -721,8 +721,8 @@
 
     color: #64748b;
 
-    font-size: 9px;
-    font-weight: 750;
+    font-size: 10px;
+    font-weight: 700;
 
     cursor: pointer;
 
@@ -783,8 +783,8 @@
 
     color: #64748b;
 
-    font-size: 10px;
-    font-weight: 850;
+    font-size: 11px;
+    font-weight: 750;
 
     letter-spacing: .25px;
 
@@ -800,7 +800,7 @@
 
     color: #334155;
 
-    font-size: 12.5px;
+    font-size: 13.5px;
 
     vertical-align: middle;
 }
@@ -827,7 +827,7 @@
 
     color: #334155;
 
-    font-size: 9px;
+    font-size: 10.2px;
     font-weight: 800;
 
     white-space: nowrap;
@@ -840,7 +840,7 @@
 
     color: #abb5c4;
 
-    font-size: 8.2px;
+    font-size: 9.2px;
 
     white-space: nowrap;
 }
@@ -855,8 +855,8 @@
 
     color: #2563eb;
 
-    font-size: 9px;
-    font-weight: 750;
+    font-size: 10px;
+    font-weight: 700;
 
     white-space: nowrap;
 }
@@ -864,7 +864,7 @@
 .sh-muted {
     color: #a1acba;
 
-    font-size: 8px;
+    font-size: 9px;
 }
 
 
@@ -887,14 +887,14 @@
 
     color: #154abb;
 
-    font-size: 8.5px;
+    font-size: 10px;
     font-weight: 800;
 
     white-space: nowrap;
 }
 
 .sh-plan-badge i {
-    font-size: 7px;
+    font-size: 8px;
 }
 
 
@@ -913,7 +913,7 @@
 
     color: #475569;
 
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 750;
 
     white-space: nowrap;
@@ -930,7 +930,7 @@
 
     color: #a1acba;
 
-    font-size: 8.5px;
+    font-size: 9px;
 
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -944,8 +944,8 @@
 .sh-amount {
     color: #0f172a;
 
-    font-size: 10.2px;
-    font-weight: 850;
+    font-size: 10.5px;
+    font-weight: 800;
 
     white-space: nowrap;
 }
@@ -964,14 +964,14 @@
 
     border-radius: 7px;
 
-    font-size: 9.5px;
-    font-weight: 850;
+    font-size: 10px;
+    font-weight: 800;
 
     white-space: nowrap;
 }
 
 .sh-status i {
-    font-size: 6.5px;
+    font-size: 8.5px;
 }
 
 .sh-success {
@@ -1001,15 +1001,15 @@
 
     color: #475569;
 
-    font-size: 10px;
-    font-weight: 650;
+    font-size: 10.5px;
+    font-weight: 750;
 
     white-space: nowrap;
 }
 
 .sh-gateway i {
     color: #94a3b8;
-    font-size: 7px;
+    font-size: 8.5px;
 }
 
 
@@ -1034,7 +1034,8 @@
         Consolas,
         monospace;
 
-    font-size: 10px;
+    font-size: 10.5px;
+    font-weight: 750;
 
     text-overflow: ellipsis;
 
@@ -1069,7 +1070,7 @@
 
     text-decoration: none;
 
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 800;
 
     white-space: nowrap;
@@ -1163,6 +1164,335 @@
     cursor: pointer;
 }
 
+/* ==========================================================
+   ACTIVE FILTER BAR
+========================================================== */
+
+.sh-active-filter-bar {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding: 9px 13px;
+
+    background: #f8fbff;
+
+    border-top: 1px solid #e5edf6;
+
+    border-bottom: 1px solid #e5edf6;
+
+}
+
+
+.sh-active-filter-info {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    min-width: 0;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+}
+
+
+.sh-active-filter-info i {
+
+    color: #2563eb;
+
+    font-size: 9px;
+
+}
+
+
+.sh-active-filter-info strong {
+
+    color: #334155;
+
+    font-weight: 800;
+
+}
+
+
+.sh-clear-filter-inline {
+
+    flex-shrink: 0;
+
+    color: #2563eb;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    text-decoration: none;
+
+}
+
+
+.sh-clear-filter-inline:hover {
+
+    text-decoration: underline;
+
+}
+
+
+/* ==========================================================
+   SERVER-SIDE PAGINATION
+========================================================== */
+
+.sh-pagination {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 14px;
+
+    padding: 12px 14px;
+
+    border-top: 1px solid #eef2f7;
+
+    background: #ffffff;
+
+}
+
+
+.sh-pagination-info {
+
+    color: #94a3b8;
+
+    font-size: 9.5px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+}
+
+
+.sh-pagination-info strong {
+
+    color: #475569;
+
+    font-weight: 800;
+
+}
+
+
+.sh-pagination-nav {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 4px;
+
+}
+
+
+.sh-page-btn {
+
+    width: 30px;
+
+    height: 30px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: 1px solid #dbe3ec;
+
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font-size: 9.5px;
+
+    font-weight: 800;
+
+    text-decoration: none;
+
+    box-sizing: border-box;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        border-color .18s ease,
+        transform .18s ease;
+
+}
+
+
+a.sh-page-btn:hover {
+
+    background: #f1f5f9;
+
+    border-color: #cbd5e1;
+
+    color: #0f766e;
+
+    transform: translateY(-1px);
+
+}
+
+
+.sh-page-active {
+
+    background: #0f766e;
+
+    border-color: #0f766e;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 3px 8px rgba(15, 118, 110, .16);
+
+}
+
+
+.sh-page-disabled {
+
+    background: #f8fafc;
+
+    color: #cbd5e1;
+
+    border-color: #edf2f7;
+
+    cursor: not-allowed;
+
+}
+
+
+.sh-page-ellipsis {
+
+    width: 24px;
+
+    text-align: center;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+}
+
+
+/* ==========================================================
+   SEARCH FORM
+========================================================== */
+
+.sh-history-filter-form {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    flex: 1;
+
+    min-width: 0;
+
+}
+
+
+.sh-search-submit {
+
+    height: 36px;
+
+    padding: 0 13px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    background: #0f766e;
+
+    color: #ffffff;
+
+    font-size: 9.5px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition:
+        background .18s ease,
+        transform .18s ease;
+
+}
+
+
+.sh-search-submit:hover {
+
+    background: #0d6b63;
+
+    transform: translateY(-1px);
+
+}
+
+
+.sh-clear-filter {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    height: 36px;
+
+    padding: 0 10px;
+
+    border: 1px solid #dbe3ec;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+}
+
+
+.sh-clear-filter:hover {
+
+    background: #f8fafc;
+
+    color: #334155;
+
+}
 
 /* ==========================================================
    INFORMATION CARD
@@ -1251,7 +1581,7 @@
    2 STATS PER ROW
 ========================================================== */
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
 
     .sh-container {
         padding: 17px 13px 30px;
@@ -1386,6 +1716,86 @@
         font-size: 8px;
     }
 
+    .sh-history-filter-form {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        width: 100%;
+
+    }
+
+
+    .sh-search-submit {
+
+        width: 100%;
+
+    }
+
+
+    .sh-clear-filter {
+
+        width: 100%;
+
+    }
+
+
+    /* ------------------------------------------
+   ACTIVE FILTER
+------------------------------------------ */
+
+    .sh-active-filter-bar {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 6px;
+
+    }
+
+
+    /* ------------------------------------------
+   PAGINATION
+------------------------------------------ */
+
+    .sh-pagination {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 9px;
+
+    }
+
+
+    .sh-pagination-info {
+
+        width: 100%;
+
+    }
+
+
+    .sh-pagination-nav {
+
+        width: 100%;
+
+        justify-content: center;
+
+        flex-wrap: wrap;
+
+    }
+
+
+    .sh-page-btn {
+
+        width: 29px;
+
+        height: 29px;
+
+    }
 
     /* ------------------------------------------
        HISTORY
@@ -1450,7 +1860,7 @@
    SMALL MOBILE
 ========================================================== */
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
 
     .sh-container {
         padding-left: 10px;
@@ -1481,5 +1891,86 @@
     .sh-billing-grid {
         grid-template-columns: 1fr;
     }
+
+    .sh-history-filter-form {
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    width: 100%;
+
+}
+
+
+.sh-search-submit {
+
+    width: 100%;
+
+}
+
+
+.sh-clear-filter {
+
+    width: 100%;
+
+}
+
+
+/* ------------------------------------------
+   ACTIVE FILTER
+------------------------------------------ */
+
+.sh-active-filter-bar {
+
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 6px;
+
+}
+
+
+/* ------------------------------------------
+   PAGINATION
+------------------------------------------ */
+
+.sh-pagination {
+
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 9px;
+
+}
+
+
+.sh-pagination-info {
+
+    width: 100%;
+
+}
+
+
+.sh-pagination-nav {
+
+    width: 100%;
+
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+}
+
+
+.sh-page-btn {
+
+    width: 29px;
+
+    height: 29px;
+
+}
 
 }

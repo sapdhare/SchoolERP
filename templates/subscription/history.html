@@ -361,12 +361,12 @@
 
                 <i class="fa-solid fa-list"></i>
 
-                <span id="visibleRecordCount">
-                    {{ history|length }}
+                <span>
+                    {{ total_records }}
                 </span>
 
                 <small>
-                    records
+                    matching records
                 </small>
 
             </div>
@@ -375,49 +375,118 @@
 
 
         <!-- =================================================
-             FILTER TOOLBAR
-        ================================================== -->
+     SERVER-SIDE FILTER TOOLBAR
+================================================== -->
 
         <div class="sh-toolbar">
 
             <!-- SEARCH -->
 
-            <div class="sh-search">
+            <form method="GET" action="{{ url_for('subscription_history') }}" class="sh-history-filter-form">
 
-                <i class="fa-solid fa-magnifying-glass"></i>
+                <div class="sh-search">
 
-                <input type="search" id="historySearch" autocomplete="off"
-                    placeholder="Search invoice, payment ID, plan, gateway..." aria-label="Search subscription history">
+                    <i class="fa-solid fa-magnifying-glass"></i>
 
-        
+                    <input type="search" name="q" value="{{ search_query }}" autocomplete="off" maxlength="100"
+                        placeholder="Search invoice, payment ID, order ID, plan..."
+                        aria-label="Search subscription history">
 
-            </div>
+                </div>
+
+                <!-- Keep current status when searching -->
+
+                <input type="hidden" name="status" value="{{ status_filter }}">
+
+                <button type="submit" class="sh-search-submit">
+                    Search
+                </button>
+
+                {% if search_query or status_filter != 'all' %}
+
+                <a href="{{ url_for('subscription_history') }}" class="sh-clear-filter">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Reset
+                </a>
+
+                {% endif %}
+
+            </form>
 
 
             <!-- STATUS FILTER -->
 
             <div class="sh-status-filter">
 
-                <button type="button" class="sh-filter-btn active" data-status="all">
+                <a href="{{ url_for(
+                'subscription_history',
+                status='all',
+                q=search_query
+            ) }}" class="sh-filter-btn {% if status_filter == 'all' %}active{% endif %}">
                     All
-                </button>
+                </a>
 
-                <button type="button" class="sh-filter-btn" data-status="success">
+                <a href="{{ url_for(
+                'subscription_history',
+                status='success',
+                q=search_query
+            ) }}" class="sh-filter-btn {% if status_filter == 'success' %}active{% endif %}">
                     Success
-                </button>
+                </a>
 
-                <button type="button" class="sh-filter-btn" data-status="pending">
+                <a href="{{ url_for(
+                'subscription_history',
+                status='pending',
+                q=search_query
+            ) }}" class="sh-filter-btn {% if status_filter == 'pending' %}active{% endif %}">
                     Pending
-                </button>
+                </a>
 
-                <button type="button" class="sh-filter-btn" data-status="failed">
+                <a href="{{ url_for(
+                'subscription_history',
+                status='failed',
+                q=search_query
+            ) }}" class="sh-filter-btn {% if status_filter == 'failed' %}active{% endif %}">
                     Failed
-                </button>
+                </a>
 
             </div>
 
         </div>
+        {% if search_query or status_filter != 'all' %}
 
+        <div class="sh-active-filter-bar">
+
+            <div class="sh-active-filter-info">
+
+                <i class="fa-solid fa-filter"></i>
+
+                <span>
+
+                    {% if status_filter != 'all' %}
+                    Showing
+                    <strong>{{ status_filter|title }}</strong>
+                    transactions
+                    {% else %}
+                    Showing matching transactions
+                    {% endif %}
+
+                    {% if search_query %}
+                    for
+                    <strong>"{{ search_query }}"</strong>
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+            <a href="{{ url_for('subscription_history') }}" class="sh-clear-filter-inline">
+                Clear filters
+            </a>
+
+        </div>
+
+        {% endif %}
 
         <!-- =================================================
              TABLE
@@ -586,9 +655,7 @@
 
                         <td>
 
-                            {% set status =
-                            (item.payment_status or 'pending')|lower
-                            %}
+                            {% set status = (item.payment_status or 'pending')|lower %}
 
                             {% if status == "success" %}
 
@@ -604,11 +671,18 @@
                                 Failed
                             </span>
 
-                            {% else %}
+                            {% elif status in ["pending", "created"] %}
 
                             <span class="sh-status sh-pending">
                                 <i class="fa-solid fa-clock"></i>
                                 Pending
+                            </span>
+
+                            {% else %}
+
+                            <span class="sh-status sh-pending">
+                                <i class="fa-solid fa-circle-question"></i>
+                                {{ status|title }}
                             </span>
 
                             {% endif %}
@@ -688,31 +762,207 @@
                 </tbody>
 
             </table>
+            <!-- =================================================
+     SERVER-SIDE PAGINATION
+================================================== -->
 
+            {% if total_records > 0 %}
+
+            <div class="sh-pagination">
+
+                <div class="sh-pagination-info">
+
+                    Showing
+                    <strong>{{ showing_from }}</strong>
+                    –
+                    <strong>{{ showing_to }}</strong>
+                    of
+                    <strong>{{ total_records }}</strong>
+                    records
+
+                </div>
+
+
+                {% if total_pages > 1 %}
+
+                <nav class="sh-pagination-nav" aria-label="Subscription history pagination">
+
+                    <!-- PREVIOUS -->
+
+                    {% if page > 1 %}
+
+                    <a href="{{ url_for(
+                            'subscription_history',
+                            page=page - 1,
+                            status=status_filter,
+                            q=search_query
+                        ) }}" class="sh-page-btn sh-page-prev" aria-label="Previous page">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+
+                    {% else %}
+
+                    <span class="sh-page-btn sh-page-disabled" aria-disabled="true">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </span>
+
+                    {% endif %}
+
+
+                    <!-- PAGE NUMBERS -->
+
+                    {% set start_page = [1, page - 2]|max %}
+                    {% set end_page = [total_pages, page + 2]|min %}
+
+                    {% if start_page > 1 %}
+
+                    <a href="{{ url_for(
+                            'subscription_history',
+                            page=1,
+                            status=status_filter,
+                            q=search_query
+                        ) }}" class="sh-page-btn">
+                        1
+                    </a>
+
+                    {% if start_page > 2 %}
+                    <span class="sh-page-ellipsis">
+                        …
+                    </span>
+                    {% endif %}
+
+                    {% endif %}
+
+
+                    {% for page_number in range(start_page, end_page + 1) %}
+
+                    {% if page_number == page %}
+
+                    <span class="sh-page-btn sh-page-active" aria-current="page">
+                        {{ page_number }}
+                    </span>
+
+                    {% else %}
+
+                    <a href="{{ url_for(
+                                'subscription_history',
+                                page=page_number,
+                                status=status_filter,
+                                q=search_query
+                            ) }}" class="sh-page-btn">
+                        {{ page_number }}
+                    </a>
+
+                    {% endif %}
+
+                    {% endfor %}
+
+
+                    {% if end_page < total_pages %} {% if end_page < total_pages - 1 %} <span class="sh-page-ellipsis">
+                        …
+                        </span>
+                        {% endif %}
+
+                        <a href="{{ url_for(
+                            'subscription_history',
+                            page=total_pages,
+                            status=status_filter,
+                            q=search_query
+                        ) }}" class="sh-page-btn">
+                            {{ total_pages }}
+                        </a>
+
+                        {% endif %}
+
+
+                        <!-- NEXT -->
+
+                        {% if page < total_pages %} <a href="{{ url_for(
+                            'subscription_history',
+                            page=page + 1,
+                            status=status_filter,
+                            q=search_query
+                        ) }}" class="sh-page-btn sh-page-next" aria-label="Next page">
+                            <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+
+                            {% else %}
+
+                            <span class="sh-page-btn sh-page-disabled" aria-disabled="true">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </span>
+
+                            {% endif %}
+
+                </nav>
+
+                {% endif %}
+
+            </div>
+
+            {% endif %}
 
             <!-- =================================================
                  EMPTY SEARCH RESULT
             ================================================== -->
 
-            <div id="historyNoResults" class="sh-no-results hidden">
+            {% if not history %}
+
+            <div class="sh-no-results">
 
                 <div class="sh-no-results-icon">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    {% if search_query or status_filter != 'all' %}
+
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+
+                    {% else %}
+
+                    <i class="fa-solid fa-receipt"></i>
+
+                    {% endif %}
+
                 </div>
 
                 <strong>
+
+                    {% if search_query or status_filter != 'all' %}
+
                     No matching transactions
+
+                    {% else %}
+
+                    No billing transactions yet
+
+                    {% endif %}
+
                 </strong>
 
                 <span>
-                    Try a different search term or status filter.
+
+                    {% if search_query or status_filter != 'all' %}
+
+                    Try a different search term or clear the filters.
+
+                    {% else %}
+
+                    Subscription payment records will appear here.
+
+                    {% endif %}
+
                 </span>
 
-                <button type="button" id="resetHistoryFilters" class="sh-reset-btn">
+                {% if search_query or status_filter != 'all' %}
+
+                <a href="{{ url_for('subscription_history') }}" class="sh-reset-btn">
                     Reset Filters
-                </button>
+                </a>
+
+                {% endif %}
 
             </div>
+
+            {% endif %}
 
         </div>
 
@@ -748,279 +998,7 @@
 
 </div>
 
-
-<!-- =========================================================
-     PAGE JAVASCRIPT
-========================================================= -->
-
-<script>
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-
-            const searchInput =
-                document.getElementById(
-                    "historySearch"
-                );
-
-            const clearSearchButton =
-                document.getElementById(
-                    "clearHistorySearch"
-                );
-
-            const rows =
-                Array.from(
-                    document.querySelectorAll(
-                        "#historyTable .sh-history-row"
-                    )
-                );
-
-            const statusButtons =
-                document.querySelectorAll(
-                    ".sh-filter-btn"
-                );
-
-            const visibleCount =
-                document.getElementById(
-                    "visibleRecordCount"
-                );
-
-            const noResults =
-                document.getElementById(
-                    "historyNoResults"
-                );
-
-            const resetButton =
-                document.getElementById(
-                    "resetHistoryFilters"
-                );
-
-
-            let activeStatus = "all";
-
-
-            /* =====================================================
-               FILTER TABLE
-            ===================================================== */
-
-            function filterHistory() {
-
-                const searchValue =
-                    (
-                        searchInput?.value || ""
-                    )
-                        .trim()
-                        .toLowerCase();
-
-
-                let visibleRows = 0;
-
-
-                rows.forEach(
-                    function (row) {
-
-                        const rowText =
-                            row.innerText
-                                .toLowerCase();
-
-                        const rowStatus =
-                            (
-                                row.dataset.status ||
-                                "pending"
-                            ).toLowerCase();
-
-
-                        const matchesSearch =
-                            !searchValue ||
-                            rowText.includes(
-                                searchValue
-                            );
-
-
-                        const matchesStatus =
-                            activeStatus === "all" ||
-                            rowStatus === activeStatus;
-
-
-                        const shouldShow =
-                            matchesSearch &&
-                            matchesStatus;
-
-
-                        row.style.display =
-                            shouldShow
-                                ? ""
-                                : "none";
-
-
-                        if (shouldShow) {
-                            visibleRows++;
-                        }
-
-                    }
-                );
-
-
-                if (visibleCount) {
-
-                    visibleCount.innerText =
-                        visibleRows;
-
-                }
-
-
-                if (noResults) {
-
-                    noResults.classList.toggle(
-                        "hidden",
-                        visibleRows !== 0
-                    );
-
-                }
-
-
-                if (clearSearchButton) {
-
-                    clearSearchButton.classList.toggle(
-                        "visible",
-                        Boolean(searchValue)
-                    );
-
-                }
-
-            }
-
-
-            /* =====================================================
-               SEARCH
-            ===================================================== */
-
-            if (searchInput) {
-
-                searchInput.addEventListener(
-                    "input",
-                    filterHistory
-                );
-
-            }
-
-
-            /* =====================================================
-               STATUS FILTER
-            ===================================================== */
-
-            statusButtons.forEach(
-                function (button) {
-
-                    button.addEventListener(
-                        "click",
-                        function () {
-
-                            statusButtons.forEach(
-                                function (item) {
-
-                                    item.classList.remove(
-                                        "active"
-                                    );
-
-                                }
-                            );
-
-
-                            this.classList.add(
-                                "active"
-                            );
-
-
-                            activeStatus =
-                                this.dataset.status ||
-                                "all";
-
-
-                            filterHistory();
-
-                        }
-                    );
-
-                }
-            );
-
-
-            /* =====================================================
-               CLEAR SEARCH
-            ===================================================== */
-
-            if (clearSearchButton) {
-
-                clearSearchButton.addEventListener(
-                    "click",
-                    function () {
-
-                        if (searchInput) {
-
-                            searchInput.value =
-                                "";
-
-                            searchInput.focus();
-
-                        }
-
-                        filterHistory();
-
-                    }
-                );
-
-            }
-
-
-            /* =====================================================
-               RESET ALL FILTERS
-            ===================================================== */
-
-            if (resetButton) {
-
-                resetButton.addEventListener(
-                    "click",
-                    function () {
-
-                        if (searchInput) {
-                            searchInput.value = "";
-                        }
-
-
-                        activeStatus = "all";
-
-
-                        statusButtons.forEach(
-                            function (button) {
-
-                                button.classList.toggle(
-                                    "active",
-                                    button.dataset.status === "all"
-                                );
-
-                            }
-                        );
-
-
-                        filterHistory();
-
-                    }
-                );
-
-            }
-
-
-            /* =====================================================
-               INITIAL STATE
-            ===================================================== */
-
-            filterHistory();
-
-        }
-    );
-
-</script>
+ 
+ 
 
 {% endblock %}

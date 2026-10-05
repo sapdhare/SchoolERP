@@ -40,7 +40,7 @@
      
 </head>
 
-<body>
+<body class="{% if request.endpoint == 'login' or request.endpoint == 'superadmin_login' %}auth-page-body{% endif %}">
 
 <header class="navbar" id="navbar">
 

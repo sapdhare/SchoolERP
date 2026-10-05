@@ -3888,31 +3888,20 @@ rgba(7,18,28,.90)
 }
 
 .trust-item{
-
     padding:14px 22px;
-
     border-radius:50px;
-
-    background:white;
-
+    background:#ffffff;
     border:1px solid #e2e8f0;
-
-    box-shadow:
-    0 10px 25px rgba(0,0,0,.05);
-
+    box-shadow:0 10px 25px rgba(0,0,0,.05);
     font-weight:700;
-
     color:#334155;
-
-    transition:.3s;
+    transition:.3s ease;
+    font-size:14px;
 }
 
 .trust-item:hover{
-
-    transform:translateY(-5px);
-
+    transform:translateY(-4px);
     border-color:#14b8a6;
-
     color:#14b8a6;
 }
 

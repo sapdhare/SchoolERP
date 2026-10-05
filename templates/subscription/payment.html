@@ -1,192 +1,859 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Payment</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/subscription/payment.css') }}">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Secure Checkout | SchoolSphere ERP
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/subscription/payment.css'
+        ) }}"
+    >
+
 </head>
+
+
 <body>
 
-<div class="pay-wrapper">
 
-    <div class="pay-header">
+<div class="pay-page">
 
-        <a href="{{ url_for('renew_subscription') }}"
-           class="pay-back-btn">
-            ← Back to Plans
+
+    <!-- =====================================================
+         TOP HEADER
+    ====================================================== -->
+
+    <header class="pay-header">
+
+        <a
+            href="{{ url_for('renew_subscription') }}"
+            class="pay-back-btn"
+        >
+            <span class="pay-back-arrow">←</span>
+            <span>Back to Plans</span>
         </a>
 
-        <div>
-            <h1>Secure Checkout</h1>
-            <p>
-                Complete your subscription payment securely.
-            </p>
-        </div>
 
-    </div>
+        <div class="pay-header-content">
 
-    <div class="pay-grid">
-
-        <!-- LEFT -->
-
-        <div class="pay-plan-card">
-
-            <span class="pay-badge">
-                Selected Plan
+            <span class="pay-eyebrow">
+                SUBSCRIPTION CHECKOUT
             </span>
 
-            <h2>{{ plan_name }}</h2>
+            <h1>
+                Secure Checkout
+            </h1>
+
+            <p>
+                Review your subscription before continuing
+                to secure payment.
+            </p>
+
+        </div>
+
+
+        <div class="pay-security-badge">
+
+            <span class="pay-security-dot"></span>
+
+            Secure Payment
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         CHECKOUT GRID
+    ====================================================== -->
+
+    <main class="pay-grid">
+
+
+        <!-- =================================================
+             LEFT — PLAN DETAILS
+        ================================================== -->
+
+        <section class="pay-plan-card">
+
+
+            <div class="pay-card-top">
+
+                <div>
+
+                    <span class="pay-badge">
+                        Selected Plan
+                    </span>
+
+                    <h2>
+                        {{ plan_name }}
+                    </h2>
+
+                </div>
+
+
+                <div class="pay-cycle-badge">
+
+                    {% if billing_cycle == "yearly" %}
+
+                        Yearly
+
+                    {% else %}
+
+                        Monthly
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
 
             <p class="pay-desc">
+
                 Your school subscription will be activated
-                immediately after successful payment.
+                after the payment is successfully verified.
+
             </p>
+
+
+
+            <!-- =================================================
+                 CHECKOUT BENEFITS
+            ================================================== -->
 
             <div class="pay-benefits">
 
-                <div>✓ Instant Activation</div>
-                <div>✓ Secure Razorpay Payment</div>
-                <div>✓ GST Invoice Included</div>
-                <div>✓ Email Receipt</div>
+
+                <div class="pay-benefit">
+
+                    <span class="pay-benefit-check">
+                        ✓
+                    </span>
+
+                    <span>
+                        Secure Razorpay Checkout
+                    </span>
+
+                </div>
+
+
+                <div class="pay-benefit">
+
+                    <span class="pay-benefit-check">
+                        ✓
+                    </span>
+
+                    <span>
+                        Server-verified Payment
+                    </span>
+
+                </div>
+
+
+                <div class="pay-benefit">
+
+                    <span class="pay-benefit-check">
+                        ✓
+                    </span>
+
+                    <span>
+                        Subscription Activation
+                    </span>
+
+                </div>
+
+
+                <div class="pay-benefit">
+
+                    <span class="pay-benefit-check">
+                        ✓
+                    </span>
+
+                    <span>
+                        Payment Record
+                    </span>
+
+                </div>
+
 
             </div>
 
-        </div>
 
-        <!-- RIGHT -->
 
-        <div class="pay-summary-card">
+            <!-- =================================================
+                 PAYMENT SECURITY INFORMATION
+            ================================================== -->
 
-            <h3>Order Summary</h3>
+            <div class="pay-security-info">
 
-            <div class="pay-row">
-                <span>Subscription Plan</span>
-                <strong>{{ plan_name }}</strong>
+                <div class="pay-security-info-icon">
+                    🔒
+                </div>
+
+                <div>
+
+                    <strong>
+                        Your payment is processed securely
+                    </strong>
+
+                    <p>
+                        Payment details are handled by Razorpay.
+                        SchoolSphere does not store your card,
+                        UPI or banking credentials.
+                    </p>
+
+                </div>
+
             </div>
 
-            <div class="pay-row">
-                <span>Amount</span>
-                <strong>₹{{ amount }}</strong>
+
+        </section>
+
+
+
+        <!-- =================================================
+             RIGHT — ORDER SUMMARY
+        ================================================== -->
+
+        <aside class="pay-summary-card">
+
+
+            <div class="pay-summary-heading">
+
+                <span class="pay-section-label">
+                    ORDER SUMMARY
+                </span>
+
+                <h2>
+                    Payment Details
+                </h2>
+
             </div>
 
-            <div class="pay-row">
-                <span>Taxes</span>
-                <strong>Included</strong>
+
+
+            <!-- =================================================
+                 SUMMARY ROWS
+            ================================================== -->
+
+            <div class="pay-summary-rows">
+
+
+                <div class="pay-row">
+
+                    <span>
+                        Subscription Plan
+                    </span>
+
+                    <strong>
+                        {{ plan_name }}
+                    </strong>
+
+                </div>
+
+
+                <div class="pay-row">
+
+                    <span>
+                        Billing Cycle
+                    </span>
+
+                    <strong>
+
+                        {% if billing_cycle == "yearly" %}
+
+                            Yearly
+
+                        {% else %}
+
+                            Monthly
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+
+                <div class="pay-row">
+
+                    <span>
+                        Plan Price
+                    </span>
+
+                    <strong>
+                        ₹{{ "%.2f"|format(amount|float) }}
+                    </strong>
+
+                </div>
+
+
+                <div class="pay-row">
+
+                    <span>
+                        Taxes
+                    </span>
+
+                    <strong class="pay-tax-note">
+                        GST as applicable
+                    </strong>
+
+                </div>
+
+
             </div>
+
+
 
             <div class="pay-divider"></div>
 
+
+
+            <!-- =================================================
+                 TOTAL
+            ================================================== -->
+
             <div class="pay-total">
 
-                <span>Total Payable</span>
+                <span>
+                    Total Payable
+                </span>
 
-                <h2>₹{{ amount }}</h2>
+                <strong>
+                    ₹{{ "{:,.2f}".format(amount|float) }}
+                </strong>
+
+                <small>
+                    {% if billing_cycle == "yearly" %}
+                        billed yearly
+                    {% else %}
+                        billed monthly
+                    {% endif %}
+                </small>
 
             </div>
 
-            <button id="rzp-button"
-                    class="pay-btn">
 
-                🔒 Pay Securely
+
+            <!-- =================================================
+                 PAYMENT BUTTON
+            ================================================== -->
+
+            <button
+                type="button"
+                id="rzp-button"
+                class="pay-btn"
+            >
+
+                <span class="pay-btn-lock">
+                    🔒
+                </span>
+
+                <span>
+                    Pay ₹{{ "{:,.2f}".format(amount|float) }}
+                </span>
+
+                <span class="pay-btn-arrow">
+                    →
+                </span>
 
             </button>
 
-        </div>
+
+            <p class="pay-button-note">
+                You will be redirected to Razorpay's secure
+                checkout window.
+            </p>
+
+
+
+            <!-- =================================================
+                 ORDER INFORMATION
+            ================================================== -->
+
+            <div class="pay-order-info">
+
+                <div>
+
+                    <span>
+                        Order
+                    </span>
+
+                    <strong>
+                        {{ razorpay_order_id }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+        </aside>
+
+
+    </main>
+
+
+
+    <!-- =====================================================
+         FOOTER NOTE
+    ====================================================== -->
+
+    <div class="pay-footer-note">
+
+        <span class="pay-footer-icon">
+            ✓
+        </span>
+
+        <span>
+            Never share your OTP, UPI PIN, card PIN or
+            banking password with anyone.
+        </span>
 
     </div>
 
+
 </div>
 
-<!-- Razorpay SDK -->
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+
+<!-- =========================================================
+     RAZORPAY CHECKOUT SDK
+========================================================= -->
+
+<script
+    src="https://checkout.razorpay.com/v1/checkout.js">
+</script>
+
 
 <script>
-    var options = {
-        "key": "{{ razorpay_key }}",
-        "amount": "{{ amount * 100 }}",
-        "currency": "INR",
-        "name": "SchoolSphere ERP",
-        "description": "Subscription Payment",
-        "order_id": "{{ razorpay_order_id }}",
 
-        "handler": function (response) {
+/* =========================================================
+   PAYMENT CONFIGURATION
+========================================================= */
 
-            const form = document.createElement("form");
-            form.method = "POST";
-            form.action = "/clerk/subscription/payment-success";
+const paymentConfig = {
+    key: {{ razorpay_key|tojson }},
+    amount: {{ amount_paise }},
+    currency: "INR",
+    name: "SchoolSphere ERP",
+    description: {{ (plan_name ~ " Subscription")|tojson }},
+    orderId: {{ razorpay_order_id|tojson }},
+    subscriptionId: {{ subscription_id|tojson }},
+    planId: {{ plan_id|tojson }},
+    billingCycle: {{ billing_cycle|tojson }}
+};
 
-            const csrf = document.createElement("input");
-            csrf.type = "hidden";
-            csrf.name = "csrf_token";
-            csrf.value = "{{ csrf_token() }}";
 
-            const subscription = document.createElement("input");
-            subscription.type = "hidden";
-            subscription.name = "subscription_id";
-            subscription.value = "{{ subscription_id }}";
+/* =========================================================
+   ELEMENTS
+========================================================= */
 
-            const plan = document.createElement("input");
-            plan.type = "hidden";
-            plan.name = "plan_id";
-            plan.value = "{{ plan_id }}";
+const payButton =
+    document.getElementById("rzp-button");
 
-            const payment_id = document.createElement("input");
-            payment_id.type = "hidden";
-            payment_id.name = "razorpay_payment_id";
-            payment_id.value = response.razorpay_payment_id;
 
-            const order_id = document.createElement("input");
-            order_id.type = "hidden";
-            order_id.name = "razorpay_order_id";
-            order_id.value = response.razorpay_order_id;
+/* =========================================================
+   PAYMENT LOCK
+========================================================= */
 
-            const signature = document.createElement("input");
-            signature.type = "hidden";
-            signature.name = "razorpay_signature";
-            signature.value = response.razorpay_signature;
+let paymentStarted = false;
 
-            form.appendChild(csrf);
-            form.appendChild(subscription);
-            form.appendChild(plan);
-            form.appendChild(payment_id);
-            form.appendChild(order_id);
-            form.appendChild(signature);
 
-            document.body.appendChild(form);
-            form.submit();
-        },
+/* =========================================================
+   RAZORPAY OPTIONS
+========================================================= */
 
-        "theme": {
-            "color": "#14b8a6"
+const razorpayOptions = {
+
+    key: paymentConfig.key,
+
+    amount: paymentConfig.amount,
+
+    currency: paymentConfig.currency,
+
+    name: paymentConfig.name,
+
+    description: paymentConfig.description,
+
+    order_id: paymentConfig.orderId,
+
+
+    theme: {
+        color: "#0f9f8f"
+    },
+
+
+    modal: {
+
+        ondismiss: function () {
+
+            paymentStarted = false;
+
+            resetPayButton();
+
         }
-    };
 
-    var rzp = new Razorpay(options);
+    },
 
-    rzp.on(
-        'payment.failed',
-        function(response){
 
-            window.location.href =
-            "/clerk/subscription/payment-failed";
+    handler: function (response) {
+
+        handlePaymentSuccess(response);
+
+    }
+
+};
+
+
+/* =========================================================
+   CREATE RAZORPAY INSTANCE
+========================================================= */
+
+let razorpayCheckout = null;
+
+
+try {
+
+    razorpayCheckout =
+        new Razorpay(razorpayOptions);
+
+
+    razorpayCheckout.on(
+        "payment.failed",
+        function (response) {
+
+            handlePaymentFailure(response);
 
         }
     );
 
-    document.getElementById("rzp-button").onclick =
-    function(e){
+}
+catch (error) {
 
-        rzp.open();
+    console.error(
+        "Razorpay initialization failed:",
+        error
+    );
 
-        e.preventDefault();
+    showPaymentError(
+        "Unable to initialize secure payment. Please try again."
+    );
 
-    };
+}
 
- 
+
+/* =========================================================
+   OPEN CHECKOUT
+========================================================= */
+
+payButton.addEventListener(
+    "click",
+    function (event) {
+
+        event.preventDefault();
+
+
+        if (paymentStarted) {
+            return;
+        }
+
+
+        if (!razorpayCheckout) {
+
+            showPaymentError(
+                "Secure payment is currently unavailable."
+            );
+
+            return;
+        }
+
+
+        paymentStarted = true;
+
+        setPayButtonLoading();
+
+
+        try {
+
+            razorpayCheckout.open();
+
+        }
+        catch (error) {
+
+            console.error(
+                "Razorpay checkout error:",
+                error
+            );
+
+            paymentStarted = false;
+
+            resetPayButton();
+
+            showPaymentError(
+                "Unable to open payment checkout. Please try again."
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   SUCCESS
+========================================================= */
+
+function handlePaymentSuccess(response) {
+
+    if (
+        !response ||
+        !response.razorpay_payment_id ||
+        !response.razorpay_order_id ||
+        !response.razorpay_signature
+    ) {
+
+        console.error(
+            "Incomplete Razorpay response:",
+            response
+        );
+
+        showPaymentError(
+            "Payment response could not be verified."
+        );
+
+        paymentStarted = false;
+
+        resetPayButton();
+
+        return;
+
+    }
+
+
+    setPayButtonProcessing();
+
+
+    /*
+       Do NOT activate the subscription here.
+
+       The server must verify the Razorpay signature
+       and payment/order details first.
+    */
+
+    submitPaymentVerification(response);
+
+}
+
+
+/* =========================================================
+   SEND PAYMENT RESPONSE TO SERVER
+========================================================= */
+
+function submitPaymentVerification(response) {
+
+    const form =
+        document.createElement("form");
+
+
+    form.method = "POST";
+
+    form.action =
+        "{{ url_for('payment_success') }}";
+
+
+    appendHiddenInput(
+        form,
+        "csrf_token",
+        "{{ csrf_token() }}"
+    );
+
+
+    appendHiddenInput(
+        form,
+        "subscription_id",
+        paymentConfig.subscriptionId
+    );
+
+
+    appendHiddenInput(
+        form,
+        "plan_id",
+        paymentConfig.planId
+    );
+
+
+    appendHiddenInput(
+        form,
+        "billing_cycle",
+        paymentConfig.billingCycle
+    );
+
+
+    appendHiddenInput(
+        form,
+        "razorpay_payment_id",
+        response.razorpay_payment_id
+    );
+
+
+    appendHiddenInput(
+        form,
+        "razorpay_order_id",
+        response.razorpay_order_id
+    );
+
+
+    appendHiddenInput(
+        form,
+        "razorpay_signature",
+        response.razorpay_signature
+    );
+
+
+    document.body.appendChild(form);
+
+    form.submit();
+
+}
+
+
+/* =========================================================
+   HIDDEN INPUT HELPER
+========================================================= */
+
+function appendHiddenInput(
+    form,
+    name,
+    value
+) {
+
+    const input =
+        document.createElement("input");
+
+    input.type = "hidden";
+
+    input.name = name;
+
+    input.value = value;
+
+    form.appendChild(input);
+
+}
+
+
+/* =========================================================
+   PAYMENT FAILURE
+========================================================= */
+
+function handlePaymentFailure(response) {
+
+    console.error(
+        "Razorpay payment failed:",
+        response
+    );
+
+
+    paymentStarted = false;
+
+    resetPayButton();
+
+
+    /*
+       We use a normal GET failure page here.
+       No subscription is activated.
+    */
+
+    const failureUrl =
+        "{{ url_for('payment_failed') }}";
+
+
+    window.location.href =
+        failureUrl +
+        "?reason=payment_failed";
+
+}
+
+
+/* =========================================================
+   BUTTON STATES
+========================================================= */
+
+function setPayButtonLoading() {
+
+    payButton.disabled = true;
+
+    payButton.classList.add(
+        "is-loading"
+    );
+
+    payButton.innerHTML = `
+        <span class="pay-spinner"></span>
+        <span>Opening Secure Checkout...</span>
+    `;
+
+}
+
+
+function setPayButtonProcessing() {
+
+    payButton.disabled = true;
+
+    payButton.classList.add(
+        "is-loading"
+    );
+
+    payButton.innerHTML = `
+        <span class="pay-spinner"></span>
+        <span>Verifying Payment...</span>
+    `;
+
+}
+
+
+function resetPayButton() {
+
+    payButton.disabled = false;
+
+    payButton.classList.remove(
+        "is-loading"
+    );
+
+    payButton.innerHTML = `
+        <span class="pay-btn-lock">🔒</span>
+        <span>Pay ₹{{ "{:,.2f}".format(amount|float) }}</span>
+        <span class="pay-btn-arrow">→</span>
+    `;
+
+}
+
+
+/* =========================================================
+   USER-FRIENDLY ERROR
+========================================================= */
+
+function showPaymentError(message) {
+
+    alert(message);
+
+}
+
 </script>
+
 
 </body>
 </html>

@@ -7,58 +7,50 @@
 <div class="tc-page">
 
     <!-- ==================================================
-TC HEADER
+     TC PAGE HEADER
 ================================================== -->
 
     <div class="tc-page-header">
 
+        <!-- LEFT -->
         <div class="tc-header-left">
 
             <span class="tc-page-badge">
-
-                📄 Transfer Certificate
-
+                <span class="tc-badge-icon">📄</span>
+                Transfer Certificate
             </span>
 
             <h1>
-
                 Manage Transfer Certificates
-
             </h1>
 
             <p>
-
-                Search students, generate transfer certificates and manage issued records.
-
+                Search and manage issued transfer certificates for students.
             </p>
 
-            <small>
-
-                विद्यार्थी शोधा, टीसी तयार करा आणि प्रमाणपत्रे व्यवस्थापित करा
-
-            </small>
+            <span class="tc-header-subtitle">
+                विद्यार्थींच्या टीसी शोधा आणि व्यवस्थापित करा
+            </span>
 
         </div>
 
+
+        <!-- RIGHT -->
         <div class="tc-header-right">
 
             <div class="tc-status-card">
 
-                <span class="tc-status-dot"></span>
+                <span class="tc-status-dot" aria-hidden="true"></span>
 
-                <div>
+                <div class="tc-status-content">
 
-                    <strong>
-
+                    <span class="tc-status-label">
                         Module Status
+                    </span>
 
-                    </strong>
-
-                    <small>
-
+                    <span class="tc-status-value">
                         TC Module Active
-
-                    </small>
+                    </span>
 
                 </div>
 
@@ -70,164 +62,194 @@ TC HEADER
 
 
 
-    <!-- ================= TC STATS ================= -->
+    <!-- =========================================================
+     TC KPI SUMMARY
+========================================================= -->
 
-    <div class="tc-stats">
+    <section class="tc-stats" aria-label="Transfer Certificate Summary">
 
-        <div class="tc-stat-card total">
+        <!-- TOTAL -->
+        <article class="tc-stat-card total">
 
             <div class="tc-stat-content">
 
                 <span class="tc-stat-title">
-
-                    Total Transfer Certificates
-
+                    Total Issued
                 </span>
 
-                <h3>
-
+                <div class="tc-stat-number">
                     {{ total_tc or 0 }}
+                </div>
 
-                </h3>
-
-                <p>
-
+                <span class="tc-stat-subtitle">
                     एकूण टीसी
-
-                </p>
+                </span>
 
             </div>
 
-            <div class="tc-stat-icon">
-
+            <div class="tc-stat-icon" aria-hidden="true">
                 📄
-
             </div>
 
-        </div>
+        </article>
 
-        <div class="tc-stat-card today">
+
+        <!-- TODAY -->
+        <article class="tc-stat-card today">
 
             <div class="tc-stat-content">
 
                 <span class="tc-stat-title">
-
-                    Today Generated
-
+                    Generated Today
                 </span>
 
-                <h3>
-
+                <div class="tc-stat-number">
                     {{ today_tc or 0 }}
+                </div>
 
-                </h3>
-
-                <p>
-
+                <span class="tc-stat-subtitle">
                     आज तयार
-
-                </p>
+                </span>
 
             </div>
 
-            <div class="tc-stat-icon">
-
+            <div class="tc-stat-icon" aria-hidden="true">
                 ⚡
-
             </div>
 
-        </div>
+        </article>
 
-        <div class="tc-stat-card month">
+
+        <!-- THIS MONTH -->
+        <article class="tc-stat-card month">
 
             <div class="tc-stat-content">
 
                 <span class="tc-stat-title">
-
                     This Month
-
                 </span>
 
-                <h3>
-
+                <div class="tc-stat-number">
                     {{ month_tc or 0 }}
+                </div>
 
-                </h3>
-
-                <p>
-
+                <span class="tc-stat-subtitle">
                     या महिन्यात
-
-                </p>
+                </span>
 
             </div>
 
-            <div class="tc-stat-icon">
-
+            <div class="tc-stat-icon" aria-hidden="true">
                 📅
+            </div>
+
+        </article>
+
+    </section>
+
+
+
+    <!-- =========================================================
+     TC SEARCH & FILTER
+========================================================= -->
+
+    <section class="tc-filter-panel">
+
+        <form method="GET" action="{{ url_for('clerk_tc_page') }}" class="tc-search-box" id="tcSearchForm"
+            autocomplete="off">
+
+            <!-- SEARCH -->
+            <div class="tc-filter-field tc-search-field">
+
+                <label for="tcSearch">
+                    Search
+                </label>
+
+                <div class="tc-search-input-wrap">
+
+                    <span class="tc-search-icon" aria-hidden="true">
+                        🔎
+                    </span>
+
+                    <input type="search" id="tcSearch" name="search" value="{{ search or '' }}"
+                        placeholder="Student name, admission no, register no or TC number" autocomplete="off"
+                        spellcheck="false" maxlength="100">
+
+                </div>
 
             </div>
 
-        </div>
 
-    </div>
+            <!-- CLASS -->
+            <div class="tc-filter-field">
 
-    <!-- ================= TC SEARCH ================= -->
+                <label for="tcClass">
+                    Class
+                </label>
 
-    <form method="GET" action="{{ url_for('clerk_tc_page') }}" class="tc-search-box" autocomplete="off">
+                <select id="tcClass" name="class">
 
-        <input type="search" name="search" value="{{ search or '' }}"
-            placeholder="Search by Student Name or Admission No" autocomplete="off" spellcheck="false" maxlength="100">
+                    <option value="">
+                        All Classes
+                    </option>
 
-        <select name="class">
+                    {% for c in range(1, 11) %}
 
-            <option value="">
-                Class
-            </option>
+                    <option value="{{ c }}" {% if class_filter==c|string %}selected{% endif %}>
+                        Class {{ c }}
+                    </option>
 
-            {% for c in range(1,11) %}
+                    {% endfor %}
 
-            <option value="{{ c }}" {% if class_filter==c|string %}selected{% endif %}>
+                </select>
 
-                Class {{ c }}
+            </div>
 
-            </option>
 
-            {% endfor %}
+            <!-- ISSUE YEAR -->
+            <div class="tc-filter-field">
 
-        </select>
+                <label for="tcYear">
+                    Issue Year
+                </label>
 
-        <select name="year">
+                <select id="tcYear" name="year">
 
-            <option value="">
-                Year
-            </option>
+                    <option value="">
+                        All Years
+                    </option>
 
-            {% for y in years %}
+                    {% for y in years %}
 
-            <option value="{{ y }}" {% if year_filter==y|string %}selected{% endif %}>
+                    <option value="{{ y }}" {% if year_filter==y|string %}selected{% endif %}>
+                        {{ y }}
+                    </option>
 
-                {{ y }}
+                    {% endfor %}
 
-            </option>
+                </select>
 
-            {% endfor %}
+            </div>
 
-        </select>
 
-        <button type="submit" class="btn-search" aria-label="Search Transfer Certificates">
+            <!-- ACTIONS -->
+            <div class="tc-filter-actions">
 
-            Search
+                <button type="submit" class="btn-search" id="tcSearchBtn">
+                    <span class="btn-search-text">
+                        Search
+                    </span>
+                </button>
 
-        </button>
+                <a href="{{ url_for('clerk_tc_page') }}" class="btn-clear" id="tcClearBtn">
+                    Clear
+                </a>
 
-        <a href="{{ url_for('clerk_tc_page') }}" class="btn-clear">
+            </div>
 
-            Clear
+        </form>
 
-        </a>
-
-    </form>
+    </section>
 
 
     <!-- ================= TC NOTICE ================= -->
@@ -250,220 +272,428 @@ TC HEADER
 
             <span>
 
-                Open <b>Student Records</b>, select a student and click
-                <b>Transfer Certificate</b> to create a new certificate.
+                To generate a new TC <b>, open Student Records,</b>select the required student and choose
+                <b>Transfer Certificate</b>.
 
             </span>
 
+            <small>नवीन टीसी तयार करण्यासाठी Student Records मध्ये जाऊन विद्यार्थी निवडा आणि Transfer Certificate पर्याय
+                निवडा.</small>
+
 
         </div>
 
     </div>
 
-    <!-- ================= TC TABLE ================= -->
+    <!-- =========================================================
+     TC HISTORY TABLE
+========================================================= -->
 
-    <div class="tc-table">
+    <section class="tc-history-section">
 
-        <div class="tc-table-wrapper">
+        <div class="tc-table">
 
-            <table class="tc-table-grid">
+            <div class="tc-table-wrapper">
 
-                <thead>
+                <table class="tc-table-grid">
 
-                    <tr>
+                    <thead>
 
-                        <th>Student</th>
+                        <tr>
 
-                        <th>TC Number</th>
+                            <th class="student-header">
+                                Student
+                            </th>
 
-                        <th>Leaving Date</th>
+                            <th>
+                                TC Number
+                            </th>
 
-                        <th>Issued</th>
+                            <th>
+                                TC Date
+                            </th>
 
-                        <th>Status</th>
+                            <th>
+                                Leaving Date
+                            </th>
 
-                        <th class="action-cell">
-                            Action
-                        </th>
+                            <th>
+                                Status
+                            </th>
 
-                    </tr>
+                            <th class="action-cell">
+                                Action
+                            </th>
 
-                </thead>
+                        </tr>
 
-                <tbody id="tcTableBody">
+                    </thead>
 
-                    {% if tc_list %}
 
-                    {% for tc in tc_list %}
+                    <tbody id="tcTableBody">
 
-                    <tr>
+                        {% if tc_list %}
 
-                        <!-- STUDENT -->
+                        {% for tc in tc_list %}
 
-                        <td class="student-column">
+                        <tr>
 
-                            <div class="student-name">
+                            <!-- =================================
+                                 STUDENT
+                            ================================== -->
 
-                                {{ tc.name }}
+                            <td class="student-column">
 
-                            </div>
+                                <div class="student-name">
 
-                            <div class="student-meta">
-
-                                ADM:
-                                {{ tc.admission_no }}
-
-                                •
-
-                                Class
-                                {{ tc.class }}
-
-                            </div>
-
-                        </td>
-
-                        <!-- TC NUMBER -->
-
-                        <td class="certificate-column">
-
-                            {{ tc.tc_number }}
-
-                        </td>
-
-                        <!-- DATE -->
-
-                        <td class="date-column">
-
-                            {{ tc.tc_date }}
-
-                        </td>
-
-                        <td class="date-column">
-                            {{ tc.issue_date }}
-                        </td>
-
-                        <!-- STATUS -->
-
-                        <td>
-
-                            <span class="status-badge generated">
-
-                                Issued
-
-                            </span>
-
-                        </td>
-
-                        <!-- ACTION -->
-
-                        <td class="action-cell">
-
-                            <a href="{{ url_for('view_tc', tc_id=tc.id) }}" class="btn-view">
-
-                                View
-
-                            </a>
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                    {% else %}
-
-                    <tr>
-
-                        <td colspan="5">
-
-                            <div class="empty-state">
-
-                                <div>
-
-                                    📄
+                                    {{ tc.name or 'Unnamed Student' }}
 
                                 </div>
 
-                                <h3>
+                                <div class="student-meta">
 
-                                    No Transfer Certificates Found
+                                    <span>
+                                        ADM: {{ tc.admission_no or '—' }}
+                                    </span>
 
-                                </h3>
+                                    <span class="meta-separator">
+                                        •
+                                    </span>
 
-                                <p>
+                                    <span>
+                                        Class {{ tc.class or '—' }}
+                                    </span>
 
-                                    Generate your first Transfer Certificate from Student List.
+                                </div>
 
-                                </p>
+                            </td>
 
-                            </div>
 
-                        </td>
+                            <!-- =================================
+                                 TC NUMBER
+                            ================================== -->
 
-                    </tr>
+                            <td class="certificate-column">
+
+                                <span class="tc-number">
+
+                                    {{ tc.tc_number or '—' }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =================================
+                                 TC DATE
+                            ================================== -->
+
+                            <td class="date-column">
+
+                                {{ tc.tc_date or '—' }}
+
+                            </td>
+
+
+                            <!-- =================================
+                                 LEAVING DATE
+                            ================================== -->
+
+                            <td class="date-column">
+
+                                {{ tc.leaving_date or '—' }}
+
+                            </td>
+
+
+                            <!-- =================================
+                                 STATUS
+                            ================================== -->
+
+                            <td>
+
+                                <span class="status-badge issued">
+
+                                    <span class="status-dot" aria-hidden="true"></span>
+
+                                    Issued
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =================================
+                                 ACTION
+                            ================================== -->
+
+                            <td class="action-cell">
+
+                                <a href="{{ url_for('view_tc', tc_id=tc.id) }}" class="btn-view"
+                                    aria-label="View TC {{ tc.tc_number }}">
+
+                                    <span>
+                                        View
+                                    </span>
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                        {% else %}
+
+                        <!-- =================================
+                             EMPTY STATE
+                        ================================== -->
+
+                        <tr>
+
+                            <td colspan="6" class="empty-cell">
+
+                                <div class="empty-state">
+
+                                    <div class="empty-state-icon" aria-hidden="true">
+                                        📄
+                                    </div>
+
+                                    <h3>
+                                        No Transfer Certificates Found
+                                    </h3>
+
+                                    <p>
+
+                                        {% if search or class_filter or year_filter %}
+
+                                        No certificates match the selected
+                                        search or filters.
+
+                                        {% else %}
+
+                                        No Transfer Certificates have been
+                                        generated yet.
+
+                                        {% endif %}
+
+                                    </p>
+
+                                    {% if search or class_filter or year_filter %}
+
+                                    <a href="{{ url_for('clerk_tc_page') }}" class="empty-clear-btn">
+                                        Clear Filters
+                                    </a>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+         SERVER-SIDE PAGINATION
+    ====================================================== -->
+
+        {% if total_records > 0 %}
+
+        {% set start_record = ((page - 1) * per_page) + 1 %}
+
+        {% set end_record = [page * per_page, total_records] | min %}
+
+
+        <div class="tc-pagination">
+
+            <!-- RECORD SUMMARY -->
+
+            <div class="tc-pagination-summary">
+
+                Showing
+                <strong>{{ start_record }}</strong>
+                –
+                <strong>{{ end_record }}</strong>
+                of
+                <strong>{{ total_records }}</strong>
+                records
+
+            </div>
+
+
+            <!-- PAGE CONTROLS -->
+
+            {% if total_pages > 1 %}
+
+            <nav class="tc-pagination-actions" aria-label="Transfer Certificate pagination">
+
+                <!-- PREVIOUS -->
+
+                {% if page > 1 %}
+
+                <a href="{{ url_for(
+                    'clerk_tc_page',
+                    search=search,
+                    class=class_filter,
+                    year=year_filter,
+                    page=page-1
+                ) }}" class="tc-page-btn tc-page-prev" aria-label="Previous page">
+                    <span aria-hidden="true">←</span>
+                    <span>Previous</span>
+                </a>
+
+                {% else %}
+
+                <span class="tc-page-btn tc-page-prev disabled" aria-disabled="true">
+                    <span aria-hidden="true">←</span>
+                    <span>Previous</span>
+                </span>
+
+                {% endif %}
+
+
+                <!-- PAGE NUMBERS -->
+
+                <div class="tc-page-numbers">
+
+                    {% for page_number in page_numbers %}
+
+                    {% if page_number is none %}
+
+                    <span class="tc-page-ellipsis" aria-hidden="true">
+                        …
+                    </span>
+
+                    {% elif page_number == page %}
+
+                    <span class="tc-page-number active" aria-current="page">
+                        {{ page_number }}
+                    </span>
+
+                    {% else %}
+
+                    <a href="{{ url_for(
+                                'clerk_tc_page',
+                                search=search,
+                                class=class_filter,
+                                year=year_filter,
+                                page=page_number
+                            ) }}" class="tc-page-number" aria-label="Go to page {{ page_number }}">
+                        {{ page_number }}
+                    </a>
 
                     {% endif %}
 
-                </tbody>
+                    {% endfor %}
 
-            </table>
-
-        </div>
-
-    </div>
+                </div>
 
 
+                <!-- NEXT -->
 
-    {% if total_records > 0 %}
+                {% if page < total_pages %} <a href="{{ url_for(
+                    'clerk_tc_page',
+                    search=search,
+                    class=class_filter,
+                    year=year_filter,
+                    page=page+1
+                ) }}" class="tc-page-btn tc-page-next" aria-label="Next page">
+                    <span>Next</span>
+                    <span aria-hidden="true">→</span>
+                    </a>
 
-    <div class="tc-pagination">
+                    {% else %}
 
-        <div>
-            Page {{ page }} of {{ total_pages }} • {{ total_records }} records
-        </div>
+                    <span class="tc-page-btn tc-page-next disabled" aria-disabled="true">
+                        <span>Next</span>
+                        <span aria-hidden="true">→</span>
+                    </span>
 
-        <div class="tc-pagination-actions">
+                    {% endif %}
 
-            {% if page > 1 %}
-            <a href="{{ url_for('clerk_tc_page', search=search, class=class_filter, year=year_filter, page=page-1) }}">
-                ← Previous
-            </a>
+            </nav>
+
             {% endif %}
 
-            <span>{{ page }}</span>
-
-            {% if page < total_pages %} <a
-                href="{{ url_for('clerk_tc_page', search=search, class=class_filter, year=year_filter, page=page+1) }}">
-                Next →
-                </a>
-                {% endif %}
-
         </div>
 
-    </div>
+        {% endif %}
 
-    {% endif %}
+    </section>
 
-    <script>
+</div>
 
-        document.addEventListener("DOMContentLoaded", function () {
+<!-- SEARCH JS  -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
 
-            const form = document.querySelector(".tc-search-box");
+        const form = document.getElementById("tcSearchForm");
 
-            if (!form) return;
+        if (!form) return;
 
-            form.addEventListener("submit", function () {
+        form.addEventListener("submit", function () {
 
-                const btn = form.querySelector(".btn-search");
+            const button = document.getElementById("tcSearchBtn");
 
-                btn.disabled = true;
+            if (!button) return;
 
-                btn.innerHTML = "Searching...";
+            button.disabled = true;
+
+            const text = button.querySelector(".btn-search-text");
+
+            if (text) {
+                text.textContent = "Searching...";
+            }
+
+        });
+
+    });
+</script>
+
+<!-- TABLE SECTION JS  -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        /*
+         * Prevent accidental double-clicks on View.
+         * Actual navigation remains server-side.
+         */
+
+        document.querySelectorAll(".btn-view").forEach(function (button) {
+
+            button.addEventListener("click", function () {
+
+                if (button.dataset.loading === "true") {
+                    return;
+                }
+
+                button.dataset.loading = "true";
+
+                const text = button.querySelector("span");
+
+                if (text) {
+                    text.textContent = "Opening...";
+                }
 
             });
 
         });
-    </script>
 
+    });
+</script>
 
-    {% endblock %}
+{% endblock %}

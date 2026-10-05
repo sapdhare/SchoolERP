@@ -3,89 +3,455 @@
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Payment Failed</title>
+    <meta name="theme-color" content="#123b5d">
 
-<link rel="stylesheet"
-      href="{{ url_for(
-      'static',
-      filename='css/subscription/payment_failed.css'
-      ) }}">
+    <title>
+        {% if reason == "cancelled" %}
+        Payment Cancelled
+        {% elif reason == "verification_failed" %}
+        Payment Verification Issue
+        {% else %}
+        Payment Not Completed
+        {% endif %}
+        | ShalaSarthi ERP
+    </title>
+
+    <link rel="stylesheet" href="{{ url_for(
+            'static',
+            filename='css/subscription/payment_failed.css'
+        ) }}">
 
 </head>
 
+
 <body>
 
-<div class="failed-wrapper">
 
-    <div class="failed-card">
+    <!-- =========================================================
+     BACKGROUND DECORATION
+========================================================= -->
 
-        <div class="failed-icon">
+    <div class="page-decoration decoration-one"></div>
 
-            ✕
+    <div class="page-decoration decoration-two"></div>
 
-        </div>
+    <div class="page-decoration decoration-three"></div>
 
-        <h1>
-            Payment Failed
-        </h1>
 
-        <p class="failed-subtitle">
+    <!-- =========================================================
+     FLOATING SHAPES
+========================================================= -->
 
-            We couldn't complete your payment.
+    <div class="floating-shape shape-one" aria-hidden="true"></div>
 
-            Please try again or choose a
-            different payment method.
+    <div class="floating-shape shape-two" aria-hidden="true"></div>
 
-        </p>
 
-        <div class="failed-info">
+    <!-- =========================================================
+     MAIN
+========================================================= -->
 
-            <div class="info-item">
+    <main class="failed-page">
 
-                <span>Possible Reasons</span>
 
-                <ul>
+        <section class="failed-card" aria-labelledby="failed-title">
 
-                    <li>Insufficient balance</li>
 
-                    <li>Payment cancelled</li>
+            <!-- =================================================
+             BRAND
+        ================================================== -->
 
-                    <li>Network interruption</li>
+            <div class="failed-brand">
 
-                    <li>Bank declined transaction</li>
+                <div class="brand-mark">
+                    S
+                </div>
 
-                </ul>
+                <div class="brand-copy">
+
+                    <strong>
+                        ShalaSarthi ERP
+                    </strong>
+
+                    <span>
+                        School Management & Automation Platform
+                    </span>
+
+                </div>
 
             </div>
 
-        </div>
 
-        <div class="failed-actions">
+            <!-- =================================================
+             STATUS ICON
+        ================================================== -->
 
-            <a href="{{ url_for('renew_subscription') }}"
-               class="retry-btn">
+            <div class="failed-visual">
 
-                Try Again
+                <div class="failed-glow"></div>
 
-            </a>
+                <div class="failed-circle">
 
-            <a href="{{ url_for('clerk_dashboard') }}"
-               class="dashboard-btn">
+                    {% if reason == "cancelled" %}
 
-                Go To Dashboard
+                    <svg viewBox="0 0 52 52" aria-hidden="true">
 
-            </a>
+                        <path d="M15 26
+                               H37" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
 
-        </div>
+                    </svg>
 
-    </div>
+                    {% elif reason == "verification_failed" %}
 
-</div>
+                    <svg viewBox="0 0 52 52" aria-hidden="true">
+
+                        <path d="M26 14
+                               V29" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+
+                        <circle cx="26" cy="37" r="2" fill="currentColor" />
+
+                    </svg>
+
+                    {% else %}
+
+                    <svg viewBox="0 0 52 52" aria-hidden="true">
+
+                        <path d="M17 17
+                               L35 35
+                               M35 17
+                               L17 35" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+
+                    </svg>
+
+                    {% endif %}
+
+                </div>
+
+
+                <span class="status-dot dot-one"></span>
+
+                <span class="status-dot dot-two"></span>
+
+                <span class="status-dot dot-three"></span>
+
+            </div>
+
+
+            <!-- =================================================
+             EYEBROW
+        ================================================== -->
+
+            <div class="failed-eyebrow">
+
+                PAYMENT NOT COMPLETED
+
+            </div>
+
+
+            <!-- =================================================
+             TITLE
+        ================================================== -->
+
+            {% if reason == "cancelled" %}
+
+            <h1 id="failed-title">
+                Payment Cancelled
+            </h1>
+
+            <p class="failed-subtitle">
+                The payment window was closed or the
+                transaction was cancelled before completion.
+            </p>
+
+            {% elif reason == "verification_failed" %}
+
+            <h1 id="failed-title">
+                Payment Verification Issue
+            </h1>
+
+            <p class="failed-subtitle">
+                We could not safely verify this payment.
+                No subscription changes were applied.
+            </p>
+
+            {% elif reason == "payment_failed" %}
+
+            <h1 id="failed-title">
+                Payment Couldn’t Be Completed
+            </h1>
+
+            <p class="failed-subtitle">
+                Your payment was not completed successfully.
+                You can safely try again from the subscription page.
+            </p>
+
+            {% else %}
+
+            <h1 id="failed-title">
+                Payment Not Completed
+            </h1>
+
+            <p class="failed-subtitle">
+                We could not complete this payment.
+                Please return to subscription billing and try again.
+            </p>
+
+            {% endif %}
+
+
+            <!-- =================================================
+             INFORMATION CARD
+        ================================================== -->
+
+            <div class="failed-info">
+
+
+                <div class="info-heading">
+
+                    <span class="info-icon">
+                        i
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            What happens now?
+                        </strong>
+
+                        <p>
+                            Your subscription has not been changed
+                            because this payment was not completed.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="reason-list">
+
+
+                    <div class="reason-item">
+
+                        <span class="reason-check">
+                            ✓
+                        </span>
+
+                        <span>
+                            No successful payment was recorded.
+                        </span>
+
+                    </div>
+
+
+                    <div class="reason-item">
+
+                        <span class="reason-check">
+                            ✓
+                        </span>
+
+                        <span>
+                            Your existing subscription remains unchanged.
+                        </span>
+
+                    </div>
+
+
+                    <div class="reason-item">
+
+                        <span class="reason-check">
+                            ✓
+                        </span>
+
+                        <span>
+                            You can return to billing and try again.
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =================================================
+                 POSSIBLE REASONS
+            ================================================== -->
+
+                <details class="possible-reasons">
+
+                    <summary>
+                        Common reasons for an unsuccessful payment
+                    </summary>
+
+                    <ul>
+
+                        <li>
+                            Payment was cancelled before completion.
+                        </li>
+
+                        <li>
+                            Bank or card issuer declined the transaction.
+                        </li>
+
+                        <li>
+                            Insufficient available balance or payment limit.
+                        </li>
+
+                        <li>
+                            Temporary network or payment gateway interruption.
+                        </li>
+
+                        <li>
+                            Payment verification could not be completed safely.
+                        </li>
+
+                    </ul>
+
+                </details>
+
+
+            </div>
+
+
+            <!-- =================================================
+             ACTIONS
+        ================================================== -->
+
+            <div class="failed-actions">
+
+
+                <a href="{{ url_for('renew_subscription') }}" class="btn btn-primary">
+
+                    <span class="btn-icon">
+                        ↻
+                    </span>
+
+                    Try Payment Again
+
+                </a>
+
+
+                <a href="{{ url_for('clerk_dashboard') }}" class="btn btn-secondary">
+
+                    <span class="btn-icon">
+                        →
+                    </span>
+
+                    Go to Dashboard
+
+                </a>
+
+
+            </div>
+
+
+            <!-- =================================================
+             SUPPORT NOTE
+        ================================================== -->
+
+            <div class="support-note">
+
+                <span class="support-icon">
+                    ?
+                </span>
+
+                <span>
+                    If money was deducted but the payment is shown
+                    as unsuccessful, please do not pay again immediately.
+                    Check your bank/payment status or contact support.
+                </span>
+
+            </div>
+
+
+            <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+            <div class="failed-footer">
+
+                <span>
+                    Secure payment processing
+                </span>
+
+                <span class="footer-separator">
+                    •
+                </span>
+
+                <span>
+                    ShalaSarthi ERP
+                </span>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+    <script>
+
+        (function () {
+
+            "use strict";
+
+
+            /*
+             * Small entrance enhancement.
+             * No external library required.
+             */
+
+            const card =
+                document.querySelector(".failed-card");
+
+
+            if (card) {
+
+                requestAnimationFrame(function () {
+
+                    card.classList.add("is-visible");
+
+                });
+
+            }
+
+
+            /*
+             * Prevent accidental double-click navigation.
+             */
+
+            const actionButtons =
+                document.querySelectorAll(".failed-actions .btn");
+
+
+            actionButtons.forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        button.classList.add("is-loading");
+
+                    }
+                );
+
+            });
+
+
+        })();
+
+    </script>
+
 
 </body>
 

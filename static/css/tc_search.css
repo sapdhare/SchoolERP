@@ -1,342 +1,501 @@
-/* ================= TC PAGE ================= */
+/* =========================================================
+   TC PAGE
+   ========================================================= */
 
 .tc-page {
-    padding: 20px 25px;
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 4px 0 40px;
+    color: #0f172a;
+    box-sizing: border-box;
 }
 
 .tc-page>div {
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
-/*==================================================
-TC HEADER
-==================================================*/
+
+/* =========================================================
+   TC PAGE HEADER
+   ========================================================= */
 
 .tc-page-header {
-
     position: relative;
 
     display: flex;
-
+    align-items: center;
     justify-content: space-between;
 
-    align-items: center;
+    gap: 28px;
 
-    gap: 30px;
+    min-height: 150px;
 
-    padding: 28px 34px;
-
-    border-radius: 24px;
+    padding: 20px 24px;
 
     background: #ffffff;
 
-    border: 1px solid #dfeef1;
+    border: 1px solid #dfecef;
+    border-radius: 20px;
 
     box-shadow:
-        0 12px 35px rgba(15, 23, 42, .05);
+        0 8px 26px rgba(15, 23, 42, 0.05);
 
     overflow: hidden;
-
 }
 
-.tc-page-header::before {
 
+/* =========================================================
+   SUBTLE HEADER DECORATION
+   ========================================================= */
+
+.tc-page-header::after {
     content: "";
 
     position: absolute;
 
-    right: -80px;
+    width: 170px;
+    height: 170px;
 
-    top: -80px;
-
-    width: 220px;
-
-    height: 220px;
+    top: -85px;
+    right: -55px;
 
     border-radius: 50%;
 
     background:
-        radial-gradient(rgba(20, 184, 166, .08),
-            transparent 72%);
+        radial-gradient(circle,
+            rgba(20, 184, 166, 0.07) 0%,
+            rgba(20, 184, 166, 0) 70%);
 
+    pointer-events: none;
 }
+
+
+/* =========================================================
+   HEADER LEFT
+   ========================================================= */
 
 .tc-header-left {
-
     position: relative;
 
-    z-index: 2;
+    z-index: 1;
 
+    min-width: 0;
 }
 
-.tc-page-badge {
 
+/* =========================================================
+   PAGE BADGE
+   ========================================================= */
+
+.tc-page-badge {
     display: inline-flex;
 
     align-items: center;
+    gap: 7px;
 
-    gap: 8px;
+    margin-bottom: 10px;
 
-    padding: 8px 15px;
-
-    margin-bottom: 16px;
+    padding: 6px 11px;
 
     border-radius: 999px;
 
-    background: #ecfeff;
+    border: 1px solid #ccfbf1;
 
     color: #0f766e;
 
-    font-size: 12px;
-
+    font-size: 10px;
     font-weight: 800;
 
+    line-height: 1;
+
+    letter-spacing: 0.01em;
+
+    white-space: nowrap;
 }
 
+
+/* Badge icon */
+
+.tc-badge-icon {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 12px;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   HEADER TITLE
+   ========================================================= */
+
 .tc-page-header h1 {
-
     margin: 0;
-
-    font-size: 34px;
-
-    font-weight: 800;
-
-    line-height: 1.2;
 
     color: #0f172a;
 
+    font-size: 25px;
+
+    font-weight: 750;
+
+    line-height: 1.25;
+
+    letter-spacing: -0.025em;
 }
 
+
+/* =========================================================
+   HEADER DESCRIPTION
+   ========================================================= */
+
 .tc-page-header p {
-
-    margin-top: 12px;
-
-    margin-bottom: 4px;
+    margin: 8px 0 0;
 
     max-width: 620px;
 
-    font-size: 15px;
-
-    line-height: 1.6;
-
     color: #475569;
 
+    font-size: 12px;
+
+    font-weight: 400;
+
+    line-height: 1.55;
 }
 
-.tc-page-header small {
 
+/* =========================================================
+   SECONDARY LANGUAGE
+   ========================================================= */
+
+.tc-header-subtitle {
     display: block;
 
-    font-size: 13px;
-
-    line-height: 1.5;
+    margin-top: 3px;
 
     color: #94a3b8;
 
+    font-size: 12px;
+
+    font-weight: 400;
+
+    line-height: 1.45;
 }
 
-.tc-header-right {
 
+/* =========================================================
+   HEADER RIGHT
+   ========================================================= */
+
+.tc-header-right {
     position: relative;
 
     z-index: 2;
 
+    flex-shrink: 0;
 }
 
-/*==========================
-STATUS CARD
-==========================*/
+
+/* =========================================================
+   MODULE STATUS
+   ========================================================= */
 
 .tc-status-card {
-
     display: flex;
 
     align-items: center;
 
-    gap: 14px;
+    gap: 10px;
 
-    padding: 14px 18px;
+    min-width: 166px;
 
-    border-radius: 18px;
+    padding: 10px 13px;
 
     background: #f0fdf4;
 
     border: 1px solid #bbf7d0;
 
+    border-radius: 14px;
 }
 
+
+/* =========================================================
+   STATUS DOT
+   ========================================================= */
+
 .tc-status-dot {
+    flex: 0 0 auto;
 
-    width: 12px;
-
-    height: 12px;
+    width: 8px;
+    height: 8px;
 
     border-radius: 50%;
 
     background: #22c55e;
 
     box-shadow:
-        0 0 10px rgba(34, 197, 94, .45);
-
+        0 0 0 3px rgba(34, 197, 94, 0.10);
 }
 
-.tc-status-card strong {
 
+/* =========================================================
+   STATUS CONTENT
+   ========================================================= */
+
+.tc-status-content {
+    min-width: 0;
+}
+
+
+/* Status heading */
+
+.tc-status-label {
     display: block;
 
-    margin-bottom: 2px;
-
-    font-size: 13px;
+    margin: 0;
 
     color: #166534;
 
+    font-size: 12px;
+
+    font-weight: 600;
+
+    line-height: 1.35;
 }
 
-.tc-status-card small {
 
-    font-size: 12px;
+/* Status value */
+
+.tc-status-value {
+    display: block;
+
+    margin-top: 2px;
 
     color: #15803d;
 
+    font-size: 11px;
+
+    font-weight: 500;
+
+    line-height: 1.35;
 }
 
-/*==================================================
-MOBILE
-==================================================*/
 
-@media (max-width:576px) {
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
 
     .tc-page {
-
-        padding: 16px;
-
-    }
-
-    .tc-page>div {
-
-        margin-bottom: 18px;
-
+        padding: 18px 18px 24px;
     }
 
     .tc-page-header {
+        padding: 22px 24px;
 
-        flex-direction: column;
-
-        align-items: flex-start;
-
-        gap: 18px;
-
-        padding: 22px 18px;
-
-        border-radius: 20px;
-
-    }
-
-    .tc-page-badge {
-
-        padding: 7px 12px;
-
-        margin-bottom: 12px;
-
-        font-size: 11px;
-
-        gap: 6px;
-
+        gap: 20px;
     }
 
     .tc-page-header h1 {
-
         font-size: 28px;
+    }
+
+    .tc-page-header p {
+        font-size: 13.5px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .tc-page {
+        padding: 14px 14px 22px;
+    }
+
+    .tc-page>div {
+        margin-bottom: 18px;
+    }
+
+
+    /* Header */
+
+    .tc-page-header {
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 16px;
+
+        min-height: auto;
+
+        padding: 20px 18px;
+
+        border-radius: 18px;
+    }
+
+
+    /* Badge */
+
+    .tc-page-badge {
+        margin-bottom: 9px;
+
+        padding: 6px 10px;
+
+        font-size: 10.5px;
+    }
+
+
+    .tc-badge-icon {
+        font-size: 11px;
+    }
+
+
+    /* Heading */
+
+    .tc-page-header h1 {
+        font-size: 25px;
 
         line-height: 1.25;
 
         letter-spacing: -0.02em;
-
     }
 
+
+    /* Description */
+
     .tc-page-header p {
-
-        margin-top: 10px;
-
-        margin-bottom: 6px;
-
-        font-size: 13px;
-
-        line-height: 1.6;
+        margin-top: 7px;
 
         max-width: 100%;
 
+        font-size: 13px;
+
+        line-height: 1.55;
     }
 
-    .tc-page-header small {
 
-        font-size: 12px;
+    /* Marathi */
 
-        line-height: 1.5;
+    .tc-header-subtitle {
+        margin-top: 3px;
 
+        font-size: 11.5px;
+
+        line-height: 1.45;
     }
+
+
+    /* Status */
 
     .tc-header-right {
-
         width: 100%;
-
     }
+
 
     .tc-status-card {
-
         width: 100%;
 
-        justify-content: flex-start;
+        min-width: 0;
 
-        padding: 12px 14px;
+        box-sizing: border-box;
 
-        border-radius: 14px;
+        padding: 10px 12px;
 
-        gap: 10px;
+        border-radius: 13px;
 
+        gap: 9px;
     }
 
-    .tc-status-card strong {
 
-        font-size: 12px;
-
+    .tc-status-dot {
+        width: 7px;
+        height: 7px;
     }
 
-    .tc-status-card small {
+
+    .tc-status-label {
+        font-size: 11.5px;
+    }
 
 
+    .tc-status-value {
+        font-size: 10.5px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL DEVICES
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .tc-page {
+        padding: 12px;
+    }
+
+    .tc-page-header {
+        padding: 18px 15px;
+    }
+
+    .tc-page-header h1 {
+        font-size: 23px;
+    }
+
+    .tc-page-header p {
+        font-size: 12.5px;
+    }
+
+    .tc-header-subtitle {
         font-size: 11px;
-
-        line-height: 1.4;
     }
 
 }
 
 
 
-/*==================================================
-TC STATS
-==================================================*/
+
+
+
+
+
+
+
+/* =========================================================
+   TC KPI SUMMARY
+   ========================================================= */
 
 .tc-stats {
 
     display: grid;
 
-    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 22px;
 
-    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 
+    gap: 16px;
+
+    width: 100%;
 }
 
-/*==============================
-CARD
-==============================*/
+
+/* =========================================================
+   KPI CARD
+   ========================================================= */
 
 .tc-stat-card {
 
     position: relative;
-
-    overflow: hidden;
 
     display: flex;
 
@@ -344,24 +503,32 @@ CARD
 
     justify-content: space-between;
 
-    gap: 18px;
+    gap: 16px;
+
+    min-width: 0;
 
     min-height: 126px;
 
-    padding: 24px;
+    padding: 21px 22px;
 
-    border-radius: 22px;
+    overflow: hidden;
+
+    border-radius: 20px;
 
     color: #ffffff;
 
     box-shadow:
-        0 18px 40px rgba(15, 23, 42, .12);
+        0 10px 28px rgba(15, 23, 42, 0.10);
 
     transition:
-        transform .30s ease,
-        box-shadow .30s ease;
-
+        transform 0.22s ease,
+        box-shadow 0.22s ease;
 }
+
+
+/* =========================================================
+   SOFT DECORATIVE CIRCLE
+   ========================================================= */
 
 .tc-stat-card::before {
 
@@ -369,53 +536,87 @@ CARD
 
     position: absolute;
 
-    width: 150px;
+    width: 145px;
+    height: 145px;
 
-    height: 150px;
-
-    top: -55px;
-
-    right: -45px;
+    top: -66px;
+    right: -42px;
 
     border-radius: 50%;
 
-    background: rgba(255, 255, 255, .10);
+    background: rgba(255, 255, 255, 0.09);
 
+    pointer-events: none;
 }
+
+
+.tc-stat-card::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 80px;
+    height: 80px;
+
+    bottom: -48px;
+    left: -28px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.045);
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   KPI COLORS
+   ========================================================= */
 
 .tc-stat-card.total {
 
     background:
-        linear-gradient(135deg, #14b8a6, #0f766e);
-
+        linear-gradient(135deg,
+            #14b8a6 0%,
+            #0f8f83 100%);
 }
+
 
 .tc-stat-card.today {
 
     background:
-        linear-gradient(135deg, #06b6d4, #0284c7);
-
+        linear-gradient(135deg,
+            #06b6d4 0%,
+            #0785bd 100%);
 }
+
 
 .tc-stat-card.month {
 
     background:
-        linear-gradient(135deg, #8b5cf6, #6366f1);
-
+        linear-gradient(135deg,
+            #7c5ce6 0%,
+            #6255df 100%);
 }
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
 
 .tc-stat-card:hover {
 
-    transform: translateY(-4px);
+    transform: translateY(-2px);
 
     box-shadow:
-        0 24px 55px rgba(15, 23, 42, .18);
-
+        0 16px 34px rgba(15, 23, 42, 0.14);
 }
 
-/*==============================
-CONTENT
-==============================*/
+
+/* =========================================================
+   KPI CONTENT
+   ========================================================= */
 
 .tc-stat-content {
 
@@ -423,57 +624,63 @@ CONTENT
 
     z-index: 2;
 
+    min-width: 0;
 }
+
 
 .tc-stat-title {
 
     display: block;
 
-    margin-bottom: 12px;
+    margin-bottom: 9px;
 
-    font-size: 15px;
+    color: rgba(255, 255, 255, 0.94);
 
-    font-weight: 700;
+    font-size: 14px;
 
-    letter-spacing: .2px;
+    font-weight: 600;
 
-    color: rgba(255, 255, 255, .94);
+    line-height: 1.35;
 
+    white-space: nowrap;
 }
 
-.tc-stat-card h3 {
+
+.tc-stat-number {
 
     margin: 0;
 
-    font-size: 34px;
+    color: #ffffff;
+
+    font-size: 32px;
+
+    font-weight: 700;
 
     line-height: 1;
 
-    font-weight: 800;
-
-    letter-spacing: -1px;
-
-    color: #ffffff;
-
+    letter-spacing: -0.7px;
 }
 
-.tc-stat-card p {
 
-    margin-top: 10px;
+.tc-stat-subtitle {
 
-    font-size: 13px;
+    display: block;
 
-    font-weight: 500;
+    margin-top: 8px;
 
-    letter-spacing: .2px;
+    color: rgba(255, 255, 255, 0.78);
 
-    color: rgba(255, 255, 255, .82);
+    font-size: 11.5px;
 
+    font-weight: 400;
+
+    line-height: 1.3;
 }
 
-/*==============================
-ICON
-==============================*/
+
+/* =========================================================
+   KPI ICON
+   ========================================================= */
 
 .tc-stat-icon {
 
@@ -481,156 +688,136 @@ ICON
 
     z-index: 2;
 
-    width: 54px;
+    flex: 0 0 auto;
 
-    height: 54px;
+    width: 50px;
+    height: 50px;
 
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
-    border-radius: 18px;
+    border-radius: 15px;
 
-    background: rgba(255, 255, 255, .16);
+    background: rgba(255, 255, 255, 0.15);
 
-    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
 
-    font-size: 28px;
+    backdrop-filter: blur(7px);
 
-    transition: .30s ease;
+    font-size: 23px;
 
+    transition:
+        transform 0.22s ease;
 }
+
 
 .tc-stat-card:hover .tc-stat-icon {
 
-    transform: scale(1.08);
-
-}
-
-/*==================================================
-MOBILE
-==================================================*/
-
-@media (max-width:576px) {
-
-    .tc-stats {
-
-        grid-template-columns: repeat(3, 1fr);
-
-        gap: 8px;
-
-    }
-
-    .tc-stat-card {
-
-        flex-direction: column;
-
-        justify-content: center;
-
-        align-items: center;
-
-        text-align: center;
-
-        min-height: 112px;
-
-        padding: 14px 10px;
-
-        border-radius: 18px;
-
-    }
-
-    .tc-stat-content {
-
-        order: 2;
-
-    }
-
-    .tc-stat-title {
-
-        margin-bottom: 6px;
-
-        font-size: 11px;
-
-        font-weight: 700;
-
-        line-height: 1.25;
-
-    }
-
-    .tc-stat-card h3 {
-
-
-        font-size: 30px;
-
-        letter-spacing: -1px;
-
-    }
-
-    .tc-stat-card p {
-
-        margin-top: 4px;
-
-        font-size: 10px;
-
-        line-height: 1.2;
-
-    }
-
-    .tc-stat-icon {
-
-        order: 1;
-
-        width: 42px;
-
-        height: 42px;
-
-        margin-bottom: 8px;
-
-        border-radius: 12px;
-
-        font-size: 20px;
-
-    }
-
+    transform: scale(1.05);
 }
 
 
 
 
+/* =========================================================
+   TC FILTER PANEL
+   ========================================================= */
 
-/*==================================================
-TC SEARCH
-==================================================*/
+.tc-filter-panel {
+
+    width: 100%;
+
+    padding: 14px;
+
+    margin-bottom:22px;
+
+    background: #ffffff;
+
+    border: 1px solid #dbecef;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.045);
+}
+
+
+/* =========================================================
+   FILTER FORM
+   ========================================================= */
 
 .tc-search-box {
 
     display: grid;
 
     grid-template-columns:
-        minmax(340px, 2fr) 180px 180px 104px 90px;
+        minmax(320px, 1fr) 170px 170px auto;
 
-    gap: 12px;
+    align-items: end;
 
-    align-items: center;
+    gap: 11px;
 
-    padding: 14px 16px;
-
-    border-radius: 22px;
-
-    background: #ffffff;
-
-    border: 1px solid #dbeef1;
-
-    box-shadow:
-        0 14px 35px rgba(15, 23, 42, .05);
-
+    width: 100%;
 }
 
-/*==============================
-FIELDS
-==============================*/
+
+/* =========================================================
+   FILTER FIELD
+   ========================================================= */
+
+.tc-filter-field {
+
+    min-width: 0;
+}
+
+
+.tc-filter-field label {
+
+    display: block;
+
+    margin: 0 0 6px 2px;
+
+    color: #475569;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   SEARCH INPUT
+   ========================================================= */
+
+.tc-search-input-wrap {
+
+    position: relative;
+}
+
+
+.tc-search-icon {
+
+    position: absolute;
+
+    left: 13px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    font-size: 14px;
+
+    line-height: 1;
+
+    pointer-events: none;
+}
+
 
 .tc-search-box input,
 .tc-search-box select {
@@ -639,34 +826,60 @@ FIELDS
 
     height: 46px;
 
-    padding: 0 18px;
+    box-sizing: border-box;
 
-    border-radius: 15px;
+    border: 1px solid #d7e3ec;
 
-    border: 1.5px solid #d8e5ef;
+    border-radius: 13px;
+
+    outline: none;
 
     background: #f8fafc;
 
     color: #0f172a;
 
-    font-size: 14px;
+    font-family: inherit;
 
-    font-weight: 500;
+    font-size: 13px;
 
-    outline: none;
+    font-weight: 400;
 
     transition:
-        border-color .25s,
-        background .25s,
-        box-shadow .25s;
-
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
+
+
+.tc-search-box input {
+
+    padding: 0 14px 0 38px;
+}
+
+
+.tc-search-box select {
+
+    padding: 0 36px 0 13px;
+
+    cursor: pointer;
+}
+
 
 .tc-search-box input::placeholder {
 
-    color: #64748b;
+    color: #94a3b8;
+
+    opacity: 1;
+}
+
+
+.tc-search-box input:hover,
+.tc-search-box select:hover {
+
+    border-color: #c5d8e2;
 
 }
+
 
 .tc-search-box input:focus,
 .tc-search-box select:focus {
@@ -676,67 +889,95 @@ FIELDS
     border-color: #14b8a6;
 
     box-shadow:
-        0 0 0 4px rgba(20, 184, 166, .10);
-
+        0 0 0 3px rgba(20, 184, 166, 0.09);
 }
 
-/*==============================
-BUTTONS
-==============================*/
 
-.btn-search,
-.btn-clear {
+/* =========================================================
+   FILTER ACTIONS
+   ========================================================= */
 
-    height: 48px;
-
-    border-radius: 15px;
+.tc-filter-actions {
 
     display: flex;
 
     align-items: center;
 
+    gap: 8px;
+
+    height: 46px;
+}
+
+
+.btn-search,
+.btn-clear {
+
+    height: 46px;
+
+    box-sizing: border-box;
+
+    display: inline-flex;
+
+    align-items: center;
+
     justify-content: center;
+
+    border-radius: 13px;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 600;
 
     text-decoration: none;
 
-    font-size: 15px;
+    white-space: nowrap;
 
-    font-weight: 700;
-
-    transition: .25s;
-
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
+
+
+/* SEARCH */
 
 .btn-search {
 
-    border: none;
+    min-width: 96px;
 
-    cursor: pointer;
+    padding: 0 18px;
 
-    color: #ffffff;
+    border: 0;
 
     background:
         linear-gradient(135deg,
             #14b8a6,
-            #06b6d4);
+            #08a9b8);
+
+    color: #ffffff;
+
+    cursor: pointer;
 
     box-shadow:
-        0 10px 24px rgba(20, 184, 166, .22);
-
+        0 7px 17px rgba(20, 184, 166, 0.20);
 }
+
 
 .btn-search:hover {
 
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 
     box-shadow:
-        0 16px 30px rgba(20, 184, 166, .30);
-
+        0 10px 22px rgba(20, 184, 166, 0.25);
 }
+
 
 .btn-search:disabled {
 
-    opacity: .7;
+    opacity: 0.65;
 
     cursor: not-allowed;
 
@@ -744,67 +985,375 @@ BUTTONS
 
 }
 
+
+/* CLEAR */
+
 .btn-clear {
+
+    min-width: 72px;
+
+    padding: 0 15px;
 
     background: #ffffff;
 
     color: #475569;
 
-    border: 1.5px solid #dbe5ef;
-
+    border: 1px solid #d7e3ec;
 }
+
 
 .btn-clear:hover {
 
-    border-color: #14b8a6;
+    background: #f0fdfa;
 
     color: #0f766e;
 
-    background: #f0fdfa;
+    border-color: #8bd8ce;
+}
+
+
+/* =========================================================
+   TABLET
+   768px
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .tc-stats {
+
+        gap: 12px;
+    }
+
+
+    .tc-stat-card {
+
+        min-height: 116px;
+
+        padding: 18px;
+    }
+
+
+    .tc-stat-title {
+
+        font-size: 12.5px;
+    }
+
+
+    .tc-stat-number {
+
+        font-size: 29px;
+    }
+
+
+    .tc-stat-icon {
+
+        width: 45px;
+        height: 45px;
+
+        border-radius: 13px;
+
+        font-size: 21px;
+    }
+
+
+    .tc-search-box {
+
+        grid-template-columns:
+            minmax(220px, 1fr) 140px 140px auto;
+    }
 
 }
 
-/*==================================================
-576px
-==================================================*/
 
-@media (max-width:576px) {
+/* =========================================================
+   768px AND BELOW
+   KEEP 3 KPI CARDS IN ONE ROW
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .tc-stats {
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        gap: 9px;
+    }
+
+
+    .tc-stat-card {
+
+        min-height: 108px;
+
+        padding: 13px 9px;
+
+        border-radius: 16px;
+
+        gap: 7px;
+    }
+
+
+    .tc-stat-title {
+
+        margin-bottom: 5px;
+
+        font-size: 10.5px;
+
+        line-height: 1.25;
+
+        white-space: normal;
+    }
+
+
+    .tc-stat-number {
+
+        font-size: 27px;
+    }
+
+
+    .tc-stat-subtitle {
+
+        margin-top: 5px;
+
+        font-size: 9.5px;
+    }
+
+
+    .tc-stat-icon {
+
+        width: 38px;
+        height: 38px;
+
+        border-radius: 11px;
+
+        font-size: 18px;
+    }
+
+
+    /* Filter becomes two rows */
+
+    .tc-search-box {
+
+        grid-template-columns:
+            1fr 1fr;
+
+        gap: 10px;
+    }
+
+
+    .tc-search-field {
+
+        grid-column: 1 / -1;
+    }
+
+
+    .tc-filter-actions {
+
+        grid-column: 1 / -1;
+
+        justify-content: flex-end;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   480px
+   KEEP 3 KPI CARDS IN ONE ROW
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .tc-stats {
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        gap: 7px;
+    }
+
+
+    .tc-stat-card {
+
+        min-height: 103px;
+
+        padding: 11px 6px;
+
+        border-radius: 14px;
+
+        flex-direction: column;
+
+        justify-content: center;
+
+        text-align: center;
+    }
+
+
+    .tc-stat-content {
+
+        width: 100%;
+    }
+
+
+    .tc-stat-icon {
+
+        order: -1;
+
+        width: 34px;
+        height: 34px;
+
+        margin-bottom: 5px;
+
+        border-radius: 10px;
+
+        font-size: 16px;
+    }
+
+
+    .tc-stat-title {
+
+        font-size: 9.5px;
+
+        line-height: 1.2;
+    }
+
+
+    .tc-stat-number {
+
+        font-size: 24px;
+    }
+
+
+    .tc-stat-subtitle {
+
+        font-size: 8.5px;
+
+        margin-top: 4px;
+    }
+
+
+    /* Filter */
+
+    .tc-filter-panel {
+
+        padding: 12px;
+
+        border-radius: 16px;
+    }
+
 
     .tc-search-box {
 
         grid-template-columns: 1fr;
 
-        gap: 10px;
-
-        padding: 14px;
-
-        border-radius: 18px;
-
+        gap: 9px;
     }
+
+
+    .tc-search-field {
+
+        grid-column: auto;
+    }
+
+
+    .tc-filter-field label {
+
+        font-size: 10.5px;
+
+        margin-bottom: 5px;
+    }
+
 
     .tc-search-box input,
     .tc-search-box select {
 
-        height: 46px;
+        height: 44px;
 
-        font-size: 14px;
+        font-size: 13px;
 
+        border-radius: 12px;
     }
+
+
+    .tc-filter-actions {
+
+        display: grid;
+
+        grid-template-columns: 1fr 0.75fr;
+
+        gap: 8px;
+
+        height: 44px;
+    }
+
 
     .btn-search,
     .btn-clear {
 
         width: 100%;
 
-        height: 46px;
+        height: 44px;
 
-        font-size: 14px;
+        border-radius: 12px;
 
-        border-radius: 14px;
-
+        font-size: 12.5px;
     }
 
 }
+
+
+/* =========================================================
+   VERY SMALL DEVICES
+   ========================================================= */
+
+@media (max-width: 350px) {
+
+    .tc-stats {
+
+        gap: 5px;
+    }
+
+
+    .tc-stat-card {
+
+        padding: 9px 4px;
+    }
+
+
+    .tc-stat-title {
+
+        font-size: 8.5px;
+    }
+
+
+    .tc-stat-number {
+
+        font-size: 22px;
+    }
+
+
+    .tc-stat-subtitle {
+
+        font-size: 8px;
+    }
+
+
+    .tc-stat-icon {
+
+        width: 31px;
+        height: 31px;
+
+        font-size: 14px;
+    }
+
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -814,7 +1363,7 @@ TC NOTICE
 
 .tc-info-note {
 
-display: flex;
+    display: flex;
 
     align-items: center;
 
@@ -837,7 +1386,7 @@ display: flex;
 
 .tc-note-icon {
 
-     flex-shrink: 0;
+    flex-shrink: 0;
 
     width: 38px;
 
@@ -866,7 +1415,7 @@ display: flex;
 
 .tc-note-content {
 
-     display: flex;
+    display: flex;
 
     align-items: center;
 
@@ -884,7 +1433,7 @@ display: flex;
 
 .tc-note-content strong {
 
-   color: #0f172a;
+    color: #0f172a;
 
     font-size: 14px;
 
@@ -923,7 +1472,7 @@ display: flex;
     }
 
     .tc-note-content {
-        
+
         display: block;
 
         line-height: 1.6;
@@ -945,53 +1494,404 @@ display: flex;
 
 
 
+/* =========================================================
+   TC HISTORY SECTION
+========================================================= */
 
-/*==================================================
-TC TABLE
-==================================================*/
+.tc-history-section {
 
-.tc-table{
+    width: 100%;
 
-    margin-top:26px;
+    margin-top: 24px;
+}
 
-    background:#ffffff;
 
-    border:1px solid #dbeaf5;
+/* =========================================================
+   TABLE CONTAINER
+========================================================= */
 
-    border-radius:22px;
+.tc-table {
 
-    overflow:hidden;
+    width: 100%;
+
+    background: #ffffff;
+
+    border: 1px solid #dbe8ef;
+
+    border-radius: 20px;
+
+    overflow: hidden;
 
     box-shadow:
-        0 14px 40px rgba(15,23,42,.06);
-
+        0 10px 30px rgba(15, 23, 42, 0.055);
 }
 
-.tc-table-wrapper{
 
-    overflow-x:auto;
+/* =========================================================
+   HORIZONTAL SCROLL
+========================================================= */
 
-    overflow-y:hidden;
+.tc-table-wrapper {
 
-    -webkit-overflow-scrolling:touch;
+    width: 100%;
 
+    overflow-x: auto;
+
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+
+    scrollbar-width: thin;
 }
 
-.tc-table-grid{
 
-    width:100%;
+/* =========================================================
+   TABLE
+========================================================= */
 
-    min-width:760px;
+.tc-table-grid {
 
-    border-collapse:separate;
+    width: 100%;
 
-    border-spacing:0;
+    min-width: 850px;
 
+    border-collapse: separate;
+
+    border-spacing: 0;
+
+    table-layout: fixed;
 }
 
-/*================ HEADER ================*/
 
-.tc-table-grid thead{
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+.tc-table-grid th:nth-child(1),
+.tc-table-grid td:nth-child(1) {
+
+    width: 34%;
+}
+
+
+.tc-table-grid th:nth-child(2),
+.tc-table-grid td:nth-child(2) {
+
+    width: 18%;
+}
+
+
+.tc-table-grid th:nth-child(3),
+.tc-table-grid td:nth-child(3) {
+
+    width: 13%;
+}
+
+
+.tc-table-grid th:nth-child(4),
+.tc-table-grid td:nth-child(4) {
+
+    width: 14%;
+}
+
+
+.tc-table-grid th:nth-child(5),
+.tc-table-grid td:nth-child(5) {
+
+    width: 11%;
+}
+
+
+.tc-table-grid th:nth-child(6),
+.tc-table-grid td:nth-child(6) {
+
+    width: 10%;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.tc-table-grid thead {
+
+    background:
+        linear-gradient(
+            135deg,
+            #14b8a6 0%,
+            #0f766e 100%
+        );
+}
+
+
+.tc-table-grid th {
+
+    height: 48px;
+
+    padding: 0 18px;
+
+    text-align: left;
+
+    color: #ffffff;
+
+    font-size: 10.5px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.075em;
+
+    line-height: 1;
+
+    text-transform: uppercase;
+
+    white-space: nowrap;
+
+    border-right: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+
+.tc-table-grid th:last-child {
+
+    border-right: none;
+}
+
+
+/* =========================================================
+   BODY ROW
+========================================================= */
+
+.tc-table-grid tbody tr {
+
+    background: #ffffff;
+
+    transition:
+        background 0.18s ease;
+}
+
+
+.tc-table-grid tbody tr:nth-child(even) {
+
+    background: #fbfdfe;
+}
+
+
+.tc-table-grid tbody tr:hover {
+
+    background: #f0fdfa;
+}
+
+
+/* =========================================================
+   BODY CELLS
+========================================================= */
+
+.tc-table-grid td {
+
+    padding: 16px 18px;
+
+    vertical-align: middle;
+
+    border-bottom: 1px solid #e8eef2;
+
+    border-right: 1px solid #e8eef2;
+
+    color: #1e293b;
+
+    font-size: 13px;
+}
+
+
+.tc-table-grid tbody tr:last-child td {
+
+    border-bottom: none;
+}
+
+
+.tc-table-grid td:last-child {
+
+    border-right: none;
+}
+
+
+/* =========================================================
+   STUDENT
+========================================================= */
+
+.student-column {
+
+    overflow: hidden;
+}
+
+
+.student-name {
+
+    overflow: hidden;
+
+    color: #0f172a;
+
+    font-size: 13.5px;
+
+    font-weight: 700;
+
+    line-height: 1.35;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.student-meta {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 5px;
+
+    overflow: hidden;
+
+    color: #64748b;
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+    line-height: 1.25;
+
+    white-space: nowrap;
+}
+
+
+.meta-separator {
+
+    color: #94a3b8;
+}
+
+
+/* =========================================================
+   TC NUMBER
+========================================================= */
+
+.certificate-column {
+
+    white-space: nowrap;
+}
+
+
+.tc-number {
+
+    color: #0f766e;
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+
+    font-size: 11.5px;
+
+    font-weight: 700;
+
+    letter-spacing: -0.1px;
+}
+
+
+/* =========================================================
+   DATES
+========================================================= */
+
+.date-column {
+
+    color: #334155;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
+    min-width: 76px;
+
+    height: 30px;
+
+    padding: 0 11px;
+
+    border-radius: 999px;
+
+    font-size: 10.5px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+.status-badge.issued {
+
+    background: #dcfce7;
+
+    color: #15803d;
+}
+
+
+.status-dot {
+
+    width: 6px;
+
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+}
+
+
+/* =========================================================
+   ACTION
+========================================================= */
+
+.action-cell {
+
+    text-align: center !important;
+
+    white-space: nowrap;
+}
+
+
+.btn-view {
+
+    min-width: 70px;
+
+    height: 34px;
+
+    padding: 0 14px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 11px;
 
     background:
         linear-gradient(
@@ -1000,388 +1900,571 @@ TC TABLE
             #0f766e
         );
 
-}
+    color: #ffffff;
 
-.tc-table-grid th{
+    font-size: 11.5px;
 
-    padding:18px 20px;
+    font-weight: 700;
 
-    font-size:12px;
-
-    font-weight:800;
-
-    letter-spacing:.08em;
-
-    text-transform:uppercase;
-
-    color:#ffffff;
-
-    text-align:left;
-
-    border-right:1px solid rgba(255,255,255,.10);
-
-    white-space:nowrap;
-
-}
-
-.tc-table-grid th:last-child{
-
-    border-right:none;
-
-}
-
-/*================ BODY ================*/
-
-.tc-table-grid td{
-
-    padding:18px 20px;
-
-    vertical-align:middle;
-
-    border-bottom:1px solid #edf2f7;
-
-    border-right:1px solid #edf2f7;
-
-    font-size:14px;
-
-    color:#1e293b;
-
-}
-
-.tc-table-grid td:last-child{
-
-    border-right:none;
-
-}
-
-.tc-table-grid tbody tr{
-
-    transition:.25s;
-
-}
-
-.tc-table-grid tbody tr:nth-child(even){
-
-    background:#fbfdff;
-
-}
-
-.tc-table-grid tbody tr:hover{
-
-    background:#eefcff;
-
-}
-
-/*================ STUDENT ================*/
-
-.student-column{
-
-    min-width:300px;
-
-}
-
-.student-name{
-
-    font-size:15px;
-
-    font-weight:700;
-
-    color:#0f172a;
-
-    line-height:1.4;
-
-}
-
-.student-meta{
-
-    margin-top:5px;
-
-    font-size:12px;
-
-    color:#64748b;
-
-}
-
-/*================ CERTIFICATE ================*/
-
-.certificate-column{
-
-    font-family:monospace;
-
-    font-size:13px;
-
-    font-weight:700;
-
-    color:#0f766e;
-
-}
-
-/*================ DATE ================*/
-
-.date-column{
-
-    white-space:nowrap;
-
-    font-weight:600;
-
-}
-
-/*================ STATUS ================*/
-
-.status-badge{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    min-width:90px;
-
-    padding:8px 14px;
-
-    border-radius:999px;
-
-    font-size:12px;
-
-    font-weight:700;
-
-}
-
-.status-badge.generated{
-
-    background:#dcfce7;
-
-    color:#15803d;
-
-}
-
-/*================ ACTION ================*/
-
-.action-cell{
-
-    text-align:center;
-
-    white-space:nowrap;
-
-}
-
-.btn-view{
-
-    min-width:78px;
-
-    height:36px;
-
-    display:inline-flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    border-radius:12px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #14b8a6,
-            #0f766e
-        );
-
-    color:#ffffff;
-
-    font-size:13px;
-
-    font-weight:700;
-
-    text-decoration:none;
-
-    transition:.25s;
-
-}
-
-.btn-view:hover{
-
-    transform:translateY(-2px);
+    text-decoration: none;
 
     box-shadow:
-        0 10px 22px rgba(20,184,166,.25);
+        0 5px 12px rgba(20, 184, 166, 0.14);
 
-}
-
-/*================ EMPTY ================*/
-
-.empty-state{
-
-    padding:55px 20px;
-
-    text-align:center;
-
-}
-
-.empty-state div{
-
-    font-size:40px;
-
-}
-
-.empty-state h3{
-
-    margin:14px 0 8px;
-
-    font-size:18px;
-
-    color:#0f172a;
-
-}
-
-.empty-state p{
-
-    margin:0;
-
-    color:#64748b;
-
-}
-
-@media(max-width:576px){
-
-    .tc-table{
-
-        border-radius:18px;
-
-    }
-
-    .tc-table-grid{
-
-        min-width:720px;
-
-    }
-
-    .tc-table-grid th{
-
-        padding:15px 16px;
-
-        font-size:11px;
-
-    }
-
-    .tc-table-grid td{
-
-        padding:16px;
-
-    }
-
-    .student-name{
-
-        font-size:14px;
-
-    }
-
-    .student-meta{
-
-        font-size:11px;
-
-    }
-
-    .btn-view{
-
-        min-width:70px;
-
-        height:34px;
-
-        font-size:12px;
-
-    }
-
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
 }
 
 
+.btn-view:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 17px rgba(20, 184, 166, 0.22);
+}
 
 
+.btn-view:focus-visible {
+
+    outline: 3px solid rgba(20, 184, 166, 0.20);
+
+    outline-offset: 2px;
+}
 
 
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-cell {
+
+    padding: 0 !important;
+
+    border-right: none !important;
+}
 
 
+.empty-state {
 
-/* ================= TC PAGINATION ================= */
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-height: 260px;
+
+    padding: 35px 20px;
+
+    text-align: center;
+}
+
+
+.empty-state-icon {
+
+    width: 54px;
+
+    height: 54px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin-bottom: 12px;
+
+    border-radius: 16px;
+
+    background: #f0fdfa;
+
+    color: #0f766e;
+
+    font-size: 25px;
+}
+
+
+.empty-state h3 {
+
+    margin: 0 0 7px;
+
+    color: #0f172a;
+
+    font-size: 16px;
+
+    font-weight: 700;
+}
+
+
+.empty-state p {
+
+    max-width: 420px;
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+.empty-clear-btn {
+
+    margin-top: 15px;
+
+    padding: 8px 13px;
+
+    border: 1px solid #ccefe9;
+
+    border-radius: 9px;
+
+    background: #f0fdfa;
+
+    color: #0f766e;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+
+.empty-clear-btn:hover {
+
+    background: #ccfbf1;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
 
 .tc-pagination {
-    margin-top: 22px;
-    padding: 16px 18px;
-    border-radius: 20px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 12px 30px rgba(15, 23, 42, .05);
+
+    width: 100%;
+
+    min-height: 64px;
+
+    margin-top: 16px;
+
+    padding: 11px 14px;
+
+    box-sizing: border-box;
+
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
-    gap: 16px;
-    font-size: 13px;
-    font-weight: 800;
-    color: #64748b;
+
+    gap: 15px;
+
+    background: #ffffff;
+
+    border: 1px solid #dfe9ef;
+
+    border-radius: 17px;
+
+    box-shadow:
+        0 8px 24px rgba(15, 23, 42, 0.045);
 }
+
+
+/* =========================================================
+   PAGINATION SUMMARY
+========================================================= */
+
+.tc-pagination-summary {
+
+    color: #64748b;
+
+    font-size: 11.5px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+.tc-pagination-summary strong {
+
+    color: #334155;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   PAGINATION ACTIONS
+========================================================= */
 
 .tc-pagination-actions {
+
     display: flex;
+
     align-items: center;
-    gap: 10px;
+
+    gap: 5px;
 }
 
-.tc-pagination-actions a,
-.tc-pagination-actions span {
-    min-width: 42px;
-    height: 38px;
-    padding: 0 14px;
-    border-radius: 12px;
+
+/* =========================================================
+   PAGE BUTTON
+========================================================= */
+
+.tc-page-btn,
+.tc-page-number {
+
+    min-width: 34px;
+
+    height: 34px;
+
+    box-sizing: border-box;
+
     display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
+
+    border-radius: 9px;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
     text-decoration: none;
-    font-size: 13px;
-    font-weight: 900;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease;
 }
 
-.tc-pagination-actions span {
-    background: #14b8a6;
-    color: white;
-}
 
-.tc-pagination-actions a {
+.tc-page-btn {
+
+    gap: 5px;
+
+    padding: 0 10px;
+
+    color: #475569;
+
     background: #ffffff;
+
+    border: 1px solid #dbe5eb;
+}
+
+
+.tc-page-btn:hover {
+
+    background: #f0fdfa;
+
+    border-color: #99ddd3;
+
     color: #0f766e;
-    border: 1px solid #ccfbf1;
 }
 
-.tc-pagination-actions a:hover {
-    background: #ecfeff;
+
+.tc-page-btn.disabled {
+
+    opacity: 0.42;
+
+    cursor: default;
+
+    pointer-events: none;
 }
 
-/* ================= MOBILE ================= */
 
-@media(max-width:576px) {
+/* =========================================================
+   PAGE NUMBERS
+========================================================= */
+
+.tc-page-numbers {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 4px;
+}
+
+
+.tc-page-number {
+
+    color: #475569;
+
+    border: 1px solid transparent;
+
+    background: transparent;
+}
+
+
+.tc-page-number:hover {
+
+    color: #0f766e;
+
+    background: #f0fdfa;
+
+    border-color: #ccfbf1;
+}
+
+
+.tc-page-number.active {
+
+    background: #14b8a6;
+
+    color: #ffffff;
+
+    border-color: #14b8a6;
+
+    box-shadow:
+        0 5px 12px rgba(20, 184, 166, 0.18);
+}
+
+
+.tc-page-ellipsis {
+
+    width: 25px;
+
+    text-align: center;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   900px
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .tc-table-grid {
+
+        min-width: 820px;
+    }
+
+    .tc-table-grid th {
+
+        padding: 0 15px;
+
+        font-size: 10px;
+    }
+
+    .tc-table-grid td {
+
+        padding: 14px 15px;
+    }
+
+}
+
+
+/* =========================================================
+   768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .tc-history-section {
+
+        margin-top: 18px;
+    }
+
 
     .tc-table {
-        margin-top: 18px;
-        border-radius: 18px;
-        overflow-x: auto;
+
+        border-radius: 16px;
     }
 
-    .tc-table table {
-        min-width: 760px;
+
+    .tc-table-grid {
+
+        min-width: 810px;
     }
 
-    .tc-table th,
-    .tc-table td {
-        padding: 14px;
-        font-size: 15px;
-    }
 
     .tc-pagination {
-        flex-direction: column;
-        align-items: flex-start;
+
+        min-height: 60px;
+
+        padding: 10px 12px;
     }
 
-    .tc-pagination-actions {
-        width: 100%;
-        justify-content: space-between;
+}
+
+
+/* =========================================================
+   576px
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .tc-table {
+
+        border-radius: 15px;
     }
+
+
+    .tc-table-grid {
+
+        min-width: 790px;
+    }
+
+
+    .tc-table-grid th {
+
+        height: 44px;
+
+        padding: 0 13px;
+
+        font-size: 9px;
+    }
+
+
+    .tc-table-grid td {
+
+        padding: 13px;
+
+        font-size: 12px;
+    }
+
+
+    .student-name {
+
+        font-size: 13px;
+    }
+
+
+    .student-meta {
+
+        font-size: 10px;
+    }
+
+
+    .tc-number {
+
+        font-size: 10.5px;
+    }
+
+
+    .date-column {
+
+        font-size: 11px;
+    }
+
+
+    .status-badge {
+
+        min-width: 68px;
+
+        height: 27px;
+
+        font-size: 9.5px;
+    }
+
+
+    .btn-view {
+
+        min-width: 62px;
+
+        height: 32px;
+
+        padding: 0 11px;
+
+        font-size: 10.5px;
+    }
+
+
+    /* Pagination */
+
+    .tc-pagination {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 10px;
+
+        padding: 11px;
+    }
+
+
+    .tc-pagination-summary {
+
+        text-align: center;
+
+        font-size: 10.5px;
+    }
+
+
+    .tc-pagination-actions {
+
+        justify-content: center;
+
+        width: 100%;
+
+        gap: 4px;
+    }
+
+
+    .tc-page-btn {
+
+        min-width: 32px;
+
+        height: 32px;
+
+        padding: 0 8px;
+
+        font-size: 10px;
+    }
+
+
+    .tc-page-number {
+
+        min-width: 30px;
+
+        height: 32px;
+
+        font-size: 10px;
+    }
+
+}
+
+
+/* =========================================================
+   400px
+========================================================= */
+
+@media (max-width: 400px) {
+
+    .tc-page-btn span:not([aria-hidden="true"]) {
+
+        display: none;
+    }
+
+
+    .tc-page-btn {
+
+        width: 32px;
+
+        padding: 0;
+    }
+
+
+    .tc-pagination-summary {
+
+        font-size: 10px;
+    }
+
 }

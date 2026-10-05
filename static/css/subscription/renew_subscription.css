@@ -1,736 +1,3426 @@
-/* =========================
-   ROOT VARIABLES
-========================= */
+/* =========================================================
+   SUBSCRIPTION PAGE
+   PAGE SHELL + HEADER
+========================================================= */
 
-:root{
+:root {
+    --rs-primary: #0f9f8f;
+    --rs-primary-dark: #087f72;
+    --rs-primary-soft: #eaf8f5;
 
-    --primary:#00C389;
-    --primary-dark:#00A676;
-    --secondary:#0EA5A4;
-    --accent:#14B8A6;
+    --rs-text: #17212b;
+    --rs-text-secondary: #5f6b76;
+    --rs-text-muted: #7b8792;
 
-    --white:#ffffff;
-    --dark:#111827;
-    --text:#4B5563;
-    --light:#F9FAFB;
-    --border:#E5E7EB;
+    --rs-white: #ffffff;
+    --rs-bg: #f6f9f8;
 
-    --shadow:
-    0 10px 40px rgba(0,0,0,0.08);
+    --rs-border: #e2e8e6;
+    --rs-border-soft: #edf1f0;
 
+    --rs-shadow-sm: 0 2px 10px rgba(15, 35, 45, 0.05);
+    --rs-shadow-md: 0 8px 24px rgba(15, 35, 45, 0.07);
+
+    --rs-radius-sm: 8px;
+    --rs-radius-md: 12px;
+    --rs-radius-lg: 16px;
+
+    --rs-font: "Inter", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-/* =========================
-   RESET
-========================= */
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:"Segoe UI",sans-serif;
-}
+/* =========================================================
+   PAGE BODY
+========================================================= */
 
-body{
+body {
+    margin: 0;
+    padding: 0;
+
+    font-family: var(--rs-font);
+    font-size: 14px;
+    line-height: 1.5;
+
+    color: var(--rs-text);
 
     background:
-    linear-gradient(
-        135deg,
-        #F8FFFD,
-        #F5F7FB
-    );
+        linear-gradient(180deg,
+            #f8fbfa 0%,
+            #f5f8f7 100%);
 
-    min-height:100vh;
-
-    color:var(--dark);
+    min-height: 100vh;
 }
 
-/* =========================
-   CONTAINER
-========================= */
 
-.rs-container{
+/* =========================================================
+   MAIN PAGE CONTAINER
+========================================================= */
 
-    width:95%;
-    max-width:1450px;
+.rs-container {
+    width: min(1240px, calc(100% - 48px));
 
-    margin:auto;
+    margin: 0 auto;
 
-    padding:40px 0 80px;
-}
-/* =========================
-   ALERTS
-========================= */
-.rs-expired-banner{
-    display:flex;
-    align-items:center;
-    gap:15px;
+    padding: 28px 0 64px;
 
-    background:#fef2f2;
-    border:1px solid #fecaca;
-
-    padding:20px;
-    border-radius:16px;
-
-    margin-bottom:25px;
+    box-sizing: border-box;
 }
 
-.rs-warning-banner{
-    display:flex;
-    align-items:center;
-    gap:15px;
 
-    background:#fff7ed;
-    border:1px solid #fdba74;
+/* =========================================================
+   PAGE HEADER
+========================================================= */
 
-    padding:20px;
-    border-radius:16px;
+.rs-page-header {
 
-    margin-bottom:25px;
+    min-height: 78px;
+
+    display: grid;
+
+    grid-template-columns: 180px minmax(0, 1fr) 180px;
+
+    align-items: center;
+
+    gap: 24px;
+
+    padding: 0 0 22px;
+
+    margin-bottom: 22px;
+
+    border-bottom: 1px solid var(--rs-border);
 }
 
-.rs-expired-icon{
-    font-size:28px;
+
+/* =========================================================
+   HEADER LEFT
+========================================================= */
+
+.rs-header-left {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
 
-.rs-expired-banner h3,
-.rs-warning-banner h3{
-    margin-bottom:5px;
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.rs-back-btn {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    min-height: 36px;
+
+    padding: 0 13px;
+
+    border: 1px solid var(--rs-border);
+
+    border-radius: var(--rs-radius-sm);
+
+    background: var(--rs-white);
+
+    color: var(--rs-text-secondary);
+
+    font-size: 13px;
+    font-weight: 500;
+
+    line-height: 1;
+
+    text-decoration: none;
+
+    box-shadow: var(--rs-shadow-sm);
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
-.rs-alert{
-    padding:14px 18px;
-    border-radius:12px;
-    margin-bottom:15px;
-    font-weight:600;
+
+.rs-back-btn:hover {
+
+    background: var(--rs-primary-soft);
+
+    border-color: #b9e5dd;
+
+    color: var(--rs-primary-dark);
+
+    transform: translateY(-1px);
 }
 
-.rs-alert.danger{
-    background:#fef2f2;
-    color:#dc2626;
-    border:1px solid #fecaca;
+
+.rs-back-icon {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 16px;
+
+    line-height: 1;
 }
 
-.rs-alert.success{
-    background:#ecfdf5;
-    color:#059669;
-    border:1px solid #a7f3d0;
+
+/* =========================================================
+   HEADER MAIN
+========================================================= */
+
+.rs-header-main {
+
+    min-width: 0;
+
+    text-align: center;
 }
 
-/* =========================
-   HEADER
-========================= */
 
-.rs-header{
+.rs-header-eyebrow {
 
-    display:flex;
+    margin-bottom: 4px;
 
-    justify-content:space-between;
+    color: var(--rs-primary-dark);
 
-    align-items:center;
+    font-size: 10px;
 
-    margin-bottom:35px;
+    font-weight: 700;
 
-    gap:20px;
+    letter-spacing: 0.12em;
+
+    line-height: 1.2;
+
+    text-transform: uppercase;
 }
 
-.rs-header h1{
 
-    font-size:34px;
-    font-weight:700;
+.rs-header-main h1 {
+
+    margin: 0;
+
+    color: var(--rs-text);
+
+    font-size: 25px;
+
+    font-weight: 700;
+
+    line-height: 1.25;
+
+    letter-spacing: -0.02em;
 }
 
-.rs-header p{
 
-    color:var(--text);
-    margin-top:5px;
+.rs-header-main p {
+
+    margin: 5px 0 0;
+
+    color: var(--rs-text-muted);
+
+    font-size: 13px;
+
+    font-weight: 400;
+
+    line-height: 1.4;
 }
 
-.rs-back-btn{
 
-    background:var(--white);
+/* =========================================================
+   HEADER RIGHT
+========================================================= */
 
-    border:1px solid var(--border);
+.rs-header-right {
 
-    padding:14px 22px;
+    display: flex;
 
-    border-radius:14px;
+    align-items: center;
 
-    text-decoration:none;
-
-    color:var(--dark);
-
-    font-weight:600;
-
-    transition:.3s;
+    justify-content: flex-end;
 }
 
-.rs-back-btn:hover{
 
-    transform:translateY(-2px);
+.rs-billing-context {
 
-    box-shadow:var(--shadow);
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    min-height: 34px;
+
+    padding: 0 12px;
+
+    border: 1px solid #dcebe8;
+
+    border-radius: 999px;
+
+    background: var(--rs-primary-soft);
+
+    color: var(--rs-primary-dark);
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
 }
 
-/* =========================
-   CURRENT PLAN CARD
-========================= */
 
-.rs-current-card{
+.rs-billing-dot {
 
-    background:var(--white);
+    width: 7px;
+    height: 7px;
 
-    border-radius:25px;
+    flex: 0 0 7px;
 
-    padding:35px;
+    border-radius: 50%;
 
-    box-shadow:var(--shadow);
+    background: var(--rs-primary);
 
-    border:1px solid var(--border);
-
-    margin-bottom:45px;
+    box-shadow: 0 0 0 3px rgba(15, 159, 143, 0.10);
 }
 
-.rs-current-top{
+/* =========================================================
+   TABLET
+   768px
+========================================================= */
 
-    display:flex;
+@media (max-width: 768px) {
 
-    justify-content:space-between;
+    .rs-container {
+        width: min(100% - 32px, 700px);
 
-    align-items:center;
+        padding: 22px 0 48px;
+    }
 
-    gap:25px;
+
+    .rs-page-header {
+
+        grid-template-columns: auto minmax(0, 1fr) auto;
+
+        gap: 16px;
+
+        min-height: 70px;
+
+        padding-bottom: 18px;
+
+        margin-bottom: 20px;
+    }
+
+
+    .rs-back-btn {
+
+        min-height: 34px;
+
+        padding: 0 11px;
+
+        font-size: 12.5px;
+    }
+
+
+    .rs-back-icon {
+        font-size: 15px;
+    }
+
+
+    .rs-header-eyebrow {
+
+        font-size: 9px;
+
+        letter-spacing: 0.10em;
+
+        margin-bottom: 3px;
+    }
+
+
+    .rs-header-main h1 {
+
+        font-size: 22px;
+
+        line-height: 1.25;
+    }
+
+
+    .rs-header-main p {
+
+        margin-top: 4px;
+
+        font-size: 12.5px;
+    }
+
+
+    .rs-billing-context {
+
+        min-height: 32px;
+
+        padding: 0 10px;
+
+        font-size: 11.5px;
+    }
 }
 
-.rs-badge{
+/* =========================================================
+   MOBILE
+   480px
+========================================================= */
 
-    display:inline-block;
+@media (max-width: 480px) {
 
-    background:
-    linear-gradient(
-        135deg,
-        var(--primary),
-        var(--accent)
-    );
+    .rs-container {
 
-    color:white;
+        width: calc(100% - 24px);
 
-    padding:8px 16px;
+        padding: 16px 0 40px;
+    }
 
-    border-radius:30px;
 
-    font-size:13px;
+    .rs-page-header {
 
-    margin-bottom:12px;
+        display: grid;
+
+        grid-template-columns: auto 1fr;
+
+        grid-template-areas:
+            "back billing"
+            "title title";
+
+        gap: 12px 10px;
+
+        min-height: auto;
+
+        padding-bottom: 16px;
+
+        margin-bottom: 18px;
+    }
+
+
+    .rs-header-left {
+
+        grid-area: back;
+
+        justify-content: flex-start;
+    }
+
+
+    .rs-header-right {
+
+        grid-area: billing;
+
+        justify-content: flex-end;
+    }
+
+
+    .rs-header-main {
+
+        grid-area: title;
+
+        text-align: left;
+
+        padding-top: 2px;
+    }
+
+
+    .rs-back-btn {
+
+        min-height: 32px;
+
+        padding: 0 10px;
+
+        gap: 6px;
+
+        font-size: 12px;
+    }
+
+
+    .rs-back-icon {
+
+        font-size: 14px;
+    }
+
+
+    .rs-billing-context {
+
+        min-height: 30px;
+
+        padding: 0 9px;
+
+        gap: 6px;
+
+        font-size: 11px;
+    }
+
+
+    .rs-billing-dot {
+
+        width: 6px;
+        height: 6px;
+
+        flex-basis: 6px;
+    }
+
+
+    .rs-header-eyebrow {
+
+        margin-bottom: 3px;
+
+        font-size: 8.5px;
+
+        letter-spacing: 0.09em;
+    }
+
+
+    .rs-header-main h1 {
+
+        font-size: 21px;
+
+        line-height: 1.25;
+
+        letter-spacing: -0.015em;
+    }
+
+
+    .rs-header-main p {
+
+        margin-top: 5px;
+
+        max-width: 100%;
+
+        font-size: 12px;
+
+        line-height: 1.45;
+    }
 }
 
-.rs-current-top h2{
 
-    font-size:34px;
+
+
+/* =========================================================
+   SUBSCRIPTION STATUS ALERT
+========================================================= */
+
+.rs-status-alert {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    display: grid;
+
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 15px 17px;
+
+    margin-bottom: 22px;
+
+    border-radius: 12px;
+
+    box-shadow: var(--rs-shadow-sm);
 }
 
-.rs-price{
 
-    font-size:50px;
+/* =========================================================
+   EXPIRED
+========================================================= */
 
-    font-weight:700;
+.rs-status-alert-expired {
 
-    color:var(--primary);
+    background: #fff8f7;
+
+    border: 1px solid #f5cfcb;
 }
 
-.rs-price span{
 
-    font-size:15px;
+/* =========================================================
+   WARNING
+========================================================= */
 
-    color:var(--text);
+.rs-status-alert-warning {
+
+    background: #fffbf2;
+
+    border: 1px solid #f0dfb5;
 }
 
-/* =========================
-   STATS
-========================= */
 
-.rs-stats{
+/* =========================================================
+   ICON
+========================================================= */
 
-    margin-top:30px;
+.rs-alert-icon-wrap {
 
-    display:grid;
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+}
+
+
+.rs-status-alert-expired .rs-alert-icon-wrap {
+
+    background: #fde8e6;
+
+    color: #c43d35;
+}
+
+
+.rs-status-alert-warning .rs-alert-icon-wrap {
+
+    background: #fff0c9;
+
+    color: #9a6700;
+}
+
+
+.rs-alert-icon {
+
+    width: 18px;
+    height: 18px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    line-height: 1;
+}
+
+
+.rs-status-alert-expired .rs-alert-icon {
+
+    background: #d84d45;
+
+    color: #ffffff;
+}
+
+
+.rs-status-alert-warning .rs-alert-icon {
+
+    background: #d99a00;
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   ALERT CONTENT
+========================================================= */
+
+.rs-alert-content {
+
+    min-width: 0;
+}
+
+
+.rs-alert-title-row {
+
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-bottom: 3px;
+}
+
+
+.rs-alert-content h3 {
+
+    margin: 0;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+
+    color: var(--rs-text);
+}
+
+
+.rs-alert-content p {
+
+    margin: 0;
+
+    color: var(--rs-text-secondary);
+
+    font-size: 11.5px;
+
+    font-weight: 400;
+
+    line-height: 1.45;
+}
+
+
+.rs-alert-content strong {
+
+    font-weight: 600;
+
+    color: var(--rs-text);
+}
+
+
+/* =========================================================
+   ALERT LABEL
+========================================================= */
+
+.rs-alert-label {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 20px;
+
+    padding: 0 7px;
+
+    border-radius: 999px;
+
+    font-size: 9.5px;
+
+    font-weight: 600;
+
+    line-height: 1;
+}
+
+
+.rs-status-alert-expired .rs-alert-label {
+
+    color: #b42318;
+
+    background: #fde8e6;
+
+    border: 1px solid #f5cfcb;
+}
+
+
+.rs-status-alert-warning .rs-alert-label {
+
+    color: #8a5a00;
+
+    background: #fff0c9;
+
+    border: 1px solid #f0dfb5;
+}
+
+
+/* =========================================================
+   ALERT ACTION
+========================================================= */
+
+.rs-alert-action {
+
+    min-height: 34px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 0 12px;
+
+    border-radius: 8px;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    line-height: 1;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.rs-status-alert-expired .rs-alert-action {
+
+    color: #b42318;
+
+    background: #ffffff;
+
+    border: 1px solid #efc4c0;
+}
+
+
+.rs-status-alert-expired .rs-alert-action:hover {
+
+    background: #fff0ee;
+
+    border-color: #e4aaa5;
+
+    transform: translateY(-1px);
+}
+
+
+.rs-status-alert-warning .rs-alert-action {
+
+    color: #8a5a00;
+
+    background: #ffffff;
+
+    border: 1px solid #ead6a6;
+}
+
+
+.rs-status-alert-warning .rs-alert-action:hover {
+
+    background: #fff8e4;
+
+    border-color: #ddc484;
+
+    transform: translateY(-1px);
+}
+
+
+.rs-alert-action span {
+
+    font-size: 14px;
+
+    line-height: 1;
+}
+/* =========================================================
+   STATUS ALERT - TABLET
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .rs-status-alert {
+
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+
+        gap: 11px;
+
+        padding: 14px;
+    }
+
+
+    .rs-alert-icon-wrap {
+
+        width: 30px;
+        height: 30px;
+    }
+
+
+    .rs-alert-content h3 {
+        font-size: 12.5px;
+    }
+
+
+    .rs-alert-content p {
+        font-size: 11px;
+    }
+
+
+    .rs-alert-action {
+
+        min-height: 32px;
+
+        padding: 0 10px;
+
+        font-size: 10.5px;
+    }
+}
+/* =========================================================
+   STATUS ALERT - MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .rs-status-alert {
+
+        grid-template-columns: 32px minmax(0, 1fr);
+
+        gap: 10px;
+
+        padding: 13px;
+
+        margin-bottom: 18px;
+
+        border-radius: 11px;
+    }
+
+
+    .rs-alert-icon-wrap {
+
+        width: 29px;
+        height: 29px;
+    }
+
+
+    .rs-alert-title-row {
+
+        gap: 6px;
+
+        margin-bottom: 3px;
+    }
+
+
+    .rs-alert-content h3 {
+
+        font-size: 12px;
+    }
+
+
+    .rs-alert-content p {
+
+        font-size: 10.5px;
+
+        line-height: 1.45;
+    }
+
+
+    .rs-alert-label {
+
+        min-height: 18px;
+
+        padding: 0 6px;
+
+        font-size: 8.5px;
+    }
+
+
+    .rs-alert-action {
+
+        grid-column: 1 / -1;
+
+        width: 100%;
+
+        min-height: 34px;
+
+        box-sizing: border-box;
+
+        font-size: 10.5px;
+    }
+}
+
+
+
+
+
+
+
+
+/* =========================================================
+   CURRENT SUBSCRIPTION SECTION
+========================================================= */
+
+.rs-current-section {
+    margin-top: 0;
+    margin-bottom: 42px;
+}
+
+
+/* =========================================================
+   SECTION HEADING
+========================================================= */
+
+.rs-section-heading {
+    margin-bottom: 16px;
+}
+
+
+.rs-section-kicker {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: var(--rs-primary-dark);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.11em;
+
+    line-height: 1.2;
+
+    text-transform: uppercase;
+}
+
+
+.rs-section-heading h2 {
+    margin: 0;
+
+    color: var(--rs-text);
+
+    font-size: 20px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+}
+
+
+.rs-section-heading p {
+    margin: 4px 0 0;
+
+    color: var(--rs-text-muted);
+
+    font-size: 12.5px;
+
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   CURRENT CARD
+========================================================= */
+
+.rs-current-card {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 26px;
+
+    background: var(--rs-white);
+
+    border: 1px solid var(--rs-border);
+
+    border-radius: var(--rs-radius-lg);
+
+    box-shadow: var(--rs-shadow-sm);
+}
+
+
+/* =========================================================
+   CURRENT PLAN HEADER
+========================================================= */
+
+.rs-current-header {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 30px;
+
+    padding-bottom: 22px;
+
+    border-bottom: 1px solid var(--rs-border-soft);
+}
+
+
+.rs-current-plan-info {
+    min-width: 0;
+}
+
+
+.rs-plan-status-row {
+    margin-bottom: 9px;
+}
+
+
+.rs-status-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    min-height: 25px;
+
+    padding: 0 9px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    line-height: 1;
+
+    border: 1px solid transparent;
+}
+
+
+.rs-status-dot {
+
+    width: 6px;
+    height: 6px;
+
+    flex: 0 0 6px;
+
+    border-radius: 50%;
+}
+
+
+.rs-status-badge.active {
+
+    color: #087f72;
+
+    background: #eaf8f5;
+
+    border-color: #c8ebe4;
+}
+
+
+.rs-status-badge.active .rs-status-dot {
+    background: #0f9f8f;
+}
+
+
+.rs-status-badge.expired {
+
+    color: #b42318;
+
+    background: #fff1f0;
+
+    border-color: #ffd0cc;
+}
+
+
+.rs-status-badge.expired .rs-status-dot {
+    background: #dc4c43;
+}
+
+
+.rs-status-badge.pending {
+
+    color: #9a6700;
+
+    background: #fff8e6;
+
+    border-color: #f5dfaa;
+}
+
+
+.rs-status-badge.pending .rs-status-dot {
+    background: #d99a00;
+}
+
+
+.rs-current-plan-name {
+
+    margin: 0;
+
+    color: var(--rs-text);
+
+    font-size: 25px;
+
+    font-weight: 700;
+
+    line-height: 1.25;
+
+    letter-spacing: -0.02em;
+}
+
+
+.rs-current-plan-description {
+
+    margin: 5px 0 0;
+
+    color: var(--rs-text-secondary);
+
+    font-size: 12.5px;
+
+    font-weight: 400;
+
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   CURRENT PRICE
+========================================================= */
+
+.rs-current-price {
+
+    flex: 0 0 auto;
+
+    min-width: 150px;
+
+    text-align: right;
+
+    padding-top: 4px;
+}
+
+
+.rs-price-value {
+
+    color: var(--rs-text);
+
+    font-size: 28px;
+
+    font-weight: 700;
+
+    line-height: 1.15;
+
+    letter-spacing: -0.025em;
+
+    white-space: nowrap;
+}
+
+
+.rs-price-cycle {
+
+    margin-top: 4px;
+
+    color: var(--rs-text-muted);
+
+    font-size: 11.5px;
+
+    font-weight: 500;
+
+    line-height: 1.3;
+}
+
+
+/* =========================================================
+   SUBSCRIPTION INFO
+========================================================= */
+
+.rs-subscription-info-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 12px;
+
+    padding: 18px 0;
+
+    border-bottom: 1px solid var(--rs-border-soft);
+}
+
+
+.rs-info-item {
+
+    min-width: 0;
+
+    padding: 13px 14px;
+
+    background: #f8faf9;
+
+    border: 1px solid var(--rs-border-soft);
+
+    border-radius: 10px;
+}
+
+
+.rs-info-label {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--rs-text-muted);
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+    line-height: 1.3;
+}
+
+
+.rs-info-value {
+
+    display: block;
+
+    color: var(--rs-text);
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    line-height: 1.35;
+
+    text-transform: capitalize;
+}
+
+
+.rs-value-active {
+    color: var(--rs-primary-dark);
+}
+
+
+.rs-value-expired {
+    color: #c24138;
+}
+
+
+/* =========================================================
+   SUBSECTION TITLE
+========================================================= */
+
+.rs-current-limits,
+.rs-current-modules {
+
+    padding-top: 20px;
+}
+
+
+.rs-current-modules {
+
+    margin-top: 4px;
+
+    padding-bottom: 20px;
+
+    border-bottom: 1px solid var(--rs-border-soft);
+}
+
+
+.rs-subsection-title {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 12px;
+}
+
+
+.rs-subsection-title h3 {
+
+    margin: 0;
+
+    color: var(--rs-text);
+
+    font-size: 14px;
+
+    font-weight: 650;
+
+    line-height: 1.3;
+}
+
+
+.rs-subsection-title p {
+
+    margin: 3px 0 0;
+
+    color: var(--rs-text-muted);
+
+    font-size: 11.5px;
+
+    font-weight: 400;
+
+    line-height: 1.4;
+}
+
+
+.rs-module-count {
+
+    flex: 0 0 auto;
+
+    padding: 5px 9px;
+
+    color: var(--rs-primary-dark);
+
+    background: var(--rs-primary-soft);
+
+    border: 1px solid #ccebe5;
+
+    border-radius: 999px;
+
+    font-size: 10.5px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   PLAN LIMITS
+========================================================= */
+
+.rs-limit-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+
+.rs-limit-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-width: 0;
+
+    padding: 11px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--rs-border);
+
+    border-radius: 10px;
+}
+
+
+.rs-limit-icon {
+
+    width: 29px;
+    height: 29px;
+
+    flex: 0 0 29px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    color: var(--rs-primary-dark);
+
+    background: var(--rs-primary-soft);
+
+    font-size: 8.5px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.02em;
+}
+
+
+.rs-limit-content {
+
+    min-width: 0;
+}
+
+
+.rs-limit-content span {
+
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: var(--rs-text-muted);
+
+    font-size: 9.5px;
+
+    font-weight: 500;
+
+    line-height: 1.2;
+
+    white-space: nowrap;
+}
+
+
+.rs-limit-content strong {
+
+    display: block;
+
+    overflow: hidden;
+
+    color: var(--rs-text);
+
+    font-size: 12px;
+
+    font-weight: 650;
+
+    line-height: 1.3;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   MODULE GRID
+========================================================= */
+
+.rs-module-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 9px;
+}
+
+
+.rs-module-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-height: 38px;
+
+    padding: 0 11px;
+
+    border-radius: 9px;
+
+    font-size: 11.5px;
+
+    font-weight: 500;
+
+    line-height: 1.3;
+}
+
+
+.rs-module-item.included {
+
+    color: #245e57;
+
+    background: #f0faf7;
+
+    border: 1px solid #d3eee8;
+}
+
+
+.rs-module-check {
+
+    width: 19px;
+    height: 19px;
+
+    flex: 0 0 19px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    color: #ffffff;
+
+    background: var(--rs-primary);
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   CURRENT ACTION
+========================================================= */
+
+.rs-current-action {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 24px;
+
+    padding-top: 20px;
+}
+
+
+.rs-action-note {
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+
+.rs-action-note strong {
+
+    color: var(--rs-text);
+
+    font-size: 12px;
+
+    font-weight: 650;
+
+    line-height: 1.35;
+}
+
+
+.rs-action-note span {
+
+    color: var(--rs-text-muted);
+
+    font-size: 11px;
+
+    font-weight: 400;
+
+    line-height: 1.4;
+}
+
+
+.rs-renew-form {
+
+    flex: 0 0 auto;
+}
+
+
+.rs-renew-btn {
+
+    min-width: 190px;
+
+    min-height: 40px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 9px;
+
+    padding: 0 16px;
+
+    border: 1px solid var(--rs-primary-dark);
+
+    border-radius: 9px;
+
+    background: var(--rs-primary);
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    box-shadow: 0 4px 12px rgba(15, 159, 143, 0.16);
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.rs-renew-btn:hover {
+
+    background: var(--rs-primary-dark);
+
+    border-color: var(--rs-primary-dark);
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 6px 16px rgba(15, 159, 143, 0.20);
+}
+
+
+.rs-renew-btn:active {
+
+    transform: translateY(0);
+}
+
+
+.rs-btn-arrow {
+
+    font-size: 15px;
+
+    line-height: 1;
+}
+
+/* =========================================================
+   CURRENT SUBSCRIPTION - TABLET
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .rs-current-card {
+        padding: 22px;
+    }
+
+
+    .rs-current-header {
+        gap: 20px;
+    }
+
+
+    .rs-current-plan-name {
+        font-size: 23px;
+    }
+
+
+    .rs-price-value {
+        font-size: 25px;
+    }
+
+
+    .rs-subscription-info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+
+    .rs-limit-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+
+    .rs-module-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+
+    .rs-current-action {
+        align-items: flex-start;
+    }
+
+
+    .rs-renew-btn {
+        min-width: 175px;
+    }
+}
+
+/* =========================================================
+   CURRENT SUBSCRIPTION - MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .rs-current-section {
+        margin-bottom: 32px;
+    }
+
+
+    .rs-section-heading {
+        margin-bottom: 13px;
+    }
+
+
+    .rs-section-heading h2 {
+        font-size: 18px;
+    }
+
+
+    .rs-section-heading p {
+        font-size: 11.5px;
+    }
+
+
+    .rs-current-card {
+        padding: 17px;
+
+        border-radius: 13px;
+    }
+
+
+    .rs-current-header {
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 14px;
+
+        padding-bottom: 17px;
+    }
+
+
+    .rs-current-plan-name {
+        font-size: 21px;
+    }
+
+
+    .rs-current-plan-description {
+        font-size: 11.5px;
+    }
+
+
+    .rs-current-price {
+
+        width: 100%;
+
+        min-width: 0;
+
+        padding-top: 0;
+
+        text-align: left;
+    }
+
+
+    .rs-price-value {
+        font-size: 24px;
+    }
+
+
+    .rs-price-cycle {
+        font-size: 11px;
+    }
+
+
+    .rs-subscription-info-grid {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        gap: 8px;
+
+        padding: 15px 0;
+    }
+
+
+    .rs-info-item {
+        padding: 11px;
+    }
+
+
+    .rs-info-label {
+        font-size: 9.5px;
+    }
+
+
+    .rs-info-value {
+        font-size: 11.5px;
+    }
+
+
+    .rs-current-limits,
+    .rs-current-modules {
+        padding-top: 17px;
+    }
+
+
+    .rs-subsection-title {
+
+        align-items: flex-start;
+
+        margin-bottom: 10px;
+    }
+
+
+    .rs-subsection-title h3 {
+        font-size: 13px;
+    }
+
+
+    .rs-subsection-title p {
+        font-size: 10.5px;
+    }
+
+
+    .rs-module-count {
+        font-size: 9.5px;
+        padding: 4px 7px;
+    }
+
+
+    .rs-limit-grid {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        gap: 8px;
+    }
+
+
+    .rs-limit-item {
+        padding: 9px;
+    }
+
+
+    .rs-limit-icon {
+
+        width: 27px;
+        height: 27px;
+
+        flex-basis: 27px;
+    }
+
+
+    .rs-limit-content span {
+        font-size: 9px;
+    }
+
+
+    .rs-limit-content strong {
+        font-size: 11px;
+    }
+
+
+    .rs-module-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 7px;
+    }
+
+
+    .rs-module-item {
+        min-height: 36px;
+
+        font-size: 11px;
+    }
+
+
+    .rs-current-action {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 14px;
+
+        padding-top: 17px;
+    }
+
+
+    .rs-action-note strong {
+        font-size: 11.5px;
+    }
+
+
+    .rs-action-note span {
+        font-size: 10.5px;
+    }
+
+
+    .rs-renew-form {
+        width: 100%;
+    }
+
+
+    .rs-renew-btn {
+
+        width: 100%;
+
+        min-width: 0;
+
+        min-height: 40px;
+
+        font-size: 11.5px;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   AVAILABLE PLANS
+========================================================= */
+
+.rs-plans-section {
+    margin-top: 42px;
+    margin-bottom: 48px;
+}
+
+
+/* =========================================================
+   PLANS HEADER
+========================================================= */
+
+.rs-plans-heading {
+
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    gap: 25px;
+
+    margin-bottom: 16px;
+}
+
+
+.rs-plans-heading-text {
+    min-width: 0;
+}
+
+
+.rs-plans-heading h2 {
+
+    margin: 0;
+
+    color: var(--rs-text);
+
+    font-size: 20px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+}
+
+
+.rs-plans-heading p {
+
+    margin: 4px 0 0;
+
+    color: var(--rs-text-muted);
+
+    font-size: 12.5px;
+
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   BILLING TOGGLE
+========================================================= */
+
+.rs-billing-switch-wrap {
+    flex: 0 0 auto;
+}
+
+
+.rs-billing-switch {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 3px;
+
+    background: #eef4f2;
+
+    border: 1px solid var(--rs-border);
+
+    border-radius: 9px;
+}
+
+
+.rs-billing-btn {
+
+    min-height: 32px;
+
+    padding: 0 13px;
+
+    border: 0;
+
+    border-radius: 7px;
+
+    background: transparent;
+
+    color: var(--rs-text-secondary);
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color .2s ease,
+        color .2s ease,
+        box-shadow .2s ease;
+}
+
+
+.rs-billing-btn.active {
+
+    background: #ffffff;
+
+    color: var(--rs-primary-dark);
+
+    box-shadow: 0 2px 7px rgba(20, 40, 45, .08);
+}
+
+
+.rs-save-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    margin-left: 4px;
+
+    padding: 2px 5px;
+
+    border-radius: 999px;
+
+    background: #dff5ef;
+
+    color: #087f72;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   BILLING NOTE
+========================================================= */
+
+.rs-billing-note {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 18px;
+
+    padding: 9px 12px;
+
+    border: 1px solid #dcebe7;
+
+    border-radius: 9px;
+
+    background: #f5fbf9;
+
+    color: var(--rs-text-secondary);
+
+    font-size: 10.5px;
+
+    line-height: 1.4;
+}
+
+
+.rs-billing-note-icon {
+
+    width: 17px;
+    height: 17px;
+
+    flex: 0 0 17px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--rs-primary);
+
+    color: white;
+
+    font-size: 10px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   PLAN GRID
+========================================================= */
+
+.rs-plan-grid {
+
+    display: grid;
 
     grid-template-columns:
-    repeat(3,1fr);
+        repeat(3, minmax(0, 1fr));
 
-    gap:20px;
+    gap: 16px;
+
+    align-items: stretch;
 }
 
-.rs-stat{
 
-    background:var(--light);
+/* =========================================================
+   PLAN CARD
+========================================================= */
 
-    border:1px solid var(--border);
+.rs-plan-card {
 
-    border-radius:16px;
+    position: relative;
 
-    padding:22px;
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    box-sizing: border-box;
+
+    padding: 21px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--rs-border);
+
+    border-radius: 14px;
+
+    box-shadow: var(--rs-shadow-sm);
+
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
 }
 
-.rs-stat span{
 
-    display:block;
+.rs-plan-card:hover {
 
-    color:var(--text);
+    transform: translateY(-3px);
 
-    margin-bottom:10px;
+    border-color: #b9ddd7;
+
+    box-shadow: var(--rs-shadow-md);
 }
 
-.rs-stat strong{
 
-    font-size:20px;
-}
+.rs-plan-card.featured {
 
-/* =========================
-   FEATURE BOX
-========================= */
-
-.rs-feature-box{
-
-    margin-top:35px;
-}
-
-.rs-feature-box h3{
-
-    margin-bottom:15px;
-}
-
-.rs-feature-grid{
-
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(220px,1fr));
-
-    gap:15px;
-}
-
-.rs-feature-grid span{
-
-    background:
-    rgba(0,195,137,.08);
-
-    border:
-    1px solid rgba(0,195,137,.15);
-
-    color:var(--dark);
-
-    padding:14px;
-
-    border-radius:12px;
-
-    font-weight:600;
-}
-
-/* =========================
-   BUTTONS
-========================= */
-
-.rs-renew-btn,
-.rs-plan-btn{
-
-    width:100%;
-
-    border:none;
-
-    cursor:pointer;
-
-    color:white;
-
-    font-weight:700;
-
-    padding:16px;
-
-    border-radius:14px;
-
-    margin-top:25px;
-
-    background:
-    linear-gradient(
-        135deg,
-        var(--primary),
-        var(--secondary)
-    );
-
-    transition:.3s;
-}
-
-.rs-renew-btn:hover,
-.rs-plan-btn:hover{
-
-    transform:translateY(-3px);
+    border-color: #9edbd1;
 
     box-shadow:
-    0 12px 25px rgba(0,195,137,.25);
+        0 7px 24px rgba(15, 159, 143, .09);
 }
 
-/* =========================
-   SECTION TITLE
-========================= */
 
-.rs-section-title{
+.rs-plan-card.current {
 
-    font-size:30px;
+    border-color: var(--rs-primary);
 
-    font-weight:700;
-
-    margin-bottom:25px;
 }
 
-/* =========================
-   PLAN GRID
-========================= */
 
-.rs-plan-grid{
+/* =========================================================
+   PLAN LABELS
+========================================================= */
 
-    display:grid;
+.rs-plan-featured {
 
-    grid-template-columns:
-    repeat(auto-fit,minmax(340px,1fr));
+    position: absolute;
 
-    gap:25px;
+    top: 14px;
+
+    right: 14px;
+
+    padding: 5px 8px;
+
+    border-radius: 999px;
+
+    background: #eaf8f5;
+
+    border: 1px solid #c9ebe4;
+
+    color: var(--rs-primary-dark);
+
+    font-size: 8.5px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .03em;
 }
 
-/* =========================
-   PLAN CARD
-========================= */
 
-.rs-plan-card{
+.rs-current-plan-label {
 
-    background:var(--white);
+    display: inline-flex;
 
-    border-radius:22px;
+    align-items: center;
 
-    padding:30px;
+    align-self: flex-start;
 
-    border:1px solid var(--border);
+    margin-bottom: 8px;
 
-    box-shadow:var(--shadow);
+    padding: 4px 7px;
 
-    position:relative;
+    border-radius: 999px;
 
-    transition:.35s;
+    background: #eef7f5;
+
+    color: var(--rs-primary-dark);
+
+    font-size: 8.5px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
 }
 
-.rs-plan-card:hover{
 
-    transform:translateY(-8px);
+/* =========================================================
+   PLAN HEADER
+========================================================= */
 
-    border-color:var(--primary);
+.rs-plan-header {
+
+    padding-right: 70px;
+
+    min-height: 62px;
 }
 
-/* =========================
-   MOST POPULAR
-========================= */
 
-.rs-popular{
-
-    position:absolute;
-
-    right:18px;
-    top:18px;
-
-    background:
-    linear-gradient(
-        135deg,
-        #F59E0B,
-        #F97316
-    );
-
-    color:white;
-
-    padding:8px 14px;
-
-    border-radius:20px;
-
-    font-size:12px;
-
-    font-weight:700;
+.rs-plan-card:not(.featured) .rs-plan-header {
+    padding-right: 0;
 }
 
-/* =========================
-   PLAN TITLE
-========================= */
 
-.rs-plan-card h3{
+.rs-plan-header h3 {
 
-    font-size:30px;
+    margin: 0;
 
-    margin-bottom:15px;
+    color: var(--rs-text);
+
+    font-size: 19px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
 }
 
-.rs-plan-price{
 
-    font-size:42px;
+.rs-plan-description {
 
-    font-weight:700;
+    margin: 5px 0 0;
 
-    color:var(--primary);
+    color: var(--rs-text-muted);
 
-    margin-bottom:25px;
+    font-size: 10.5px;
+
+    line-height: 1.4;
+}
+/* =========================================================
+   BEST FOR
+   ========================================================= */
+
+.rs-plan-best-for {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #f7faf9;
+    border: 1px solid #edf2f0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-/* =========================
-   LIMITS
-========================= */
-
-.rs-limits{
-
-    margin-bottom:20px;
+.rs-best-for-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    color: #8a9694;
 }
 
-.rs-limits p{
-
-    margin-bottom:10px;
-
-    color:var(--text);
-
-    font-size:15px;
+.rs-best-for-value {
+    font-size: 11px;
+    line-height: 1.35;
+    font-weight: 600;
+    color: #263330;
 }
 
-/* =========================
+/* =========================================================
+   PRICE
+========================================================= */
+
+.rs-plan-price-area {
+
+    margin-top: 17px;
+
+    padding-bottom: 15px;
+
+    border-bottom: 1px solid var(--rs-border-soft);
+}
+
+
+.rs-plan-price-row {
+
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 2px;
+}
+
+
+.rs-currency {
+
+    color: var(--rs-text);
+
+    font-size: 18px;
+
+    font-weight: 650;
+}
+
+
+.rs-plan-price {
+
+    color: var(--rs-text);
+
+    font-size: 29px;
+
+    font-weight: 700;
+
+    line-height: 1.1;
+
+    letter-spacing: -.025em;
+}
+
+
+.rs-plan-duration {
+
+    margin-top: 2px;
+
+    color: var(--rs-text-muted);
+
+    font-size: 10px;
+
+    font-weight: 500;
+}
+
+
+.rs-yearly-summary {
+
+    display: none;
+
+    margin-top: 5px;
+
+    color: var(--rs-primary-dark);
+
+    font-size: 9.5px;
+
+    font-weight: 500;
+}
+
+
+.rs-plan-card.yearly .rs-yearly-summary {
+    display: block;
+}
+
+
+.rs-custom-price {
+
+    color: var(--rs-text);
+
+    font-size: 23px;
+
+    font-weight: 700;
+
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   PLAN LIMITS
+========================================================= */
+
+.rs-plan-limits {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 7px;
+
+    padding: 14px 0;
+
+    border-bottom: 1px solid var(--rs-border-soft);
+}
+
+
+.rs-plan-limit {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    min-width: 0;
+
+    padding: 8px;
+
+    border: 1px solid var(--rs-border-soft);
+
+    border-radius: 8px;
+
+    background: #fafcfb;
+}
+
+
+.rs-limit-symbol {
+
+    width: 25px;
+    height: 25px;
+
+    flex: 0 0 25px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 7px;
+
+    background: var(--rs-primary-soft);
+
+    color: var(--rs-primary-dark);
+
+    font-size: 7.5px;
+
+    font-weight: 700;
+}
+
+
+.rs-plan-limit div {
+    min-width: 0;
+}
+
+
+.rs-plan-limit div span {
+
+    display: block;
+
+    color: var(--rs-text-muted);
+
+    font-size: 8.5px;
+
+    line-height: 1.2;
+}
+
+
+.rs-plan-limit div strong {
+
+    display: block;
+
+    margin-top: 2px;
+
+    overflow: hidden;
+
+    color: var(--rs-text);
+
+    font-size: 10px;
+
+    font-weight: 650;
+
+    line-height: 1.25;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
    FEATURES
-========================= */
+========================================================= */
 
-.rs-features{
+.rs-plan-features {
 
-    list-style:none;
+    flex: 1;
 
-    margin-top:20px;
-
-    min-height:280px;
+    padding-top: 14px;
 }
 
-.rs-features li{
 
-    padding:10px 0;
+.rs-feature-heading {
 
-    border-bottom:
-    1px dashed var(--border);
+    margin-bottom: 8px;
 
-    color:var(--dark);
+    color: var(--rs-text);
+
+    font-size: 10.5px;
+
+    font-weight: 650;
+
+    line-height: 1.3;
 }
 
-/* =========================
-   CONTACT SALES
-========================= */
 
-.rs-contact-btn{
+.rs-plan-feature {
 
-    width:100%;
+    display: flex;
 
-    display:block;
+    align-items: center;
 
-    text-align:center;
+    gap: 7px;
 
-    text-decoration:none;
+    min-height: 29px;
 
-    padding:16px;
+    color: var(--rs-text-secondary);
 
-    border-radius:14px;
+    font-size: 10.5px;
 
-    color:white;
-
-    font-weight:700;
-
-    background:
-    linear-gradient(
-        135deg,
-        #111827,
-        #374151
-    );
+    line-height: 1.3;
 }
 
-/* =========================
+
+.rs-feature-check {
+
+    width: 17px;
+    height: 17px;
+
+    flex: 0 0 17px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #e7f7f3;
+
+    color: var(--rs-primary-dark);
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   PLAN ACTION
+========================================================= */
+
+.rs-plan-action {
+
+    margin-top: 17px;
+
+    padding-top: 14px;
+
+    border-top: 1px solid var(--rs-border-soft);
+}
+
+
+.rs-plan-form {
+    width: 100%;
+}
+
+
+.rs-plan-btn {
+
+    width: 100%;
+
+    min-height: 38px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    box-sizing: border-box;
+
+    padding: 0 13px;
+
+    border: 1px solid var(--rs-primary-dark);
+
+    border-radius: 8px;
+
+    background: var(--rs-primary);
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 10.5px;
+
+    font-weight: 600;
+
+    line-height: 1;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background-color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+
+.rs-plan-btn:hover {
+
+    background: var(--rs-primary-dark);
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 5px 13px rgba(15, 159, 143, .16);
+}
+
+
+.rs-plan-btn span {
+
+    font-size: 13px;
+}
+
+
+.rs-current-btn {
+
+    background: #f2f5f4;
+
+    color: #718078;
+
+    border-color: #dce4e1;
+
+    cursor: default;
+
+    box-shadow: none;
+}
+
+
+.rs-current-btn:hover {
+
+    background: #f2f5f4;
+
+    color: #718078;
+
+    border-color: #dce4e1;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+.rs-contact-plan-btn {
+
+    background: #25323a;
+
+    border-color: #25323a;
+}
+
+
+.rs-contact-plan-btn:hover {
+
+    background: #172128;
+
+    border-color: #172128;
+}
+
+
+/* =========================================================
+   FOOTNOTE
+========================================================= */
+
+.rs-plan-footnote {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 7px;
+
+    margin-top: 13px;
+
+    color: var(--rs-text-muted);
+
+    font-size: 9.5px;
+
+    line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+
+    .rs-plans-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 13px;
+    }
+
+
+    .rs-billing-switch-wrap {
+        width: 100%;
+    }
+
+
+    .rs-billing-switch {
+        width: 100%;
+    }
+
+
+    .rs-billing-btn {
+        flex: 1;
+    }
+
+
+    .rs-plan-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+
+    .rs-plan-card {
+        padding: 18px;
+    }
+
+
+    .rs-plan-header {
+        padding-right: 55px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .rs-plans-section {
+        margin-top: 32px;
+        margin-bottom: 36px;
+    }
+
+
+    .rs-plans-heading {
+        gap: 12px;
+    }
+
+
+    .rs-plans-heading h2 {
+        font-size: 18px;
+    }
+
+
+    .rs-plans-heading p {
+        font-size: 11.5px;
+    }
+
+
+    .rs-billing-note {
+        align-items: flex-start;
+        font-size: 10px;
+    }
+
+
+    .rs-plan-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+
+    .rs-plan-card {
+        padding: 17px;
+
+        border-radius: 12px;
+    }
+
+
+    .rs-plan-header {
+        padding-right: 65px;
+
+        min-height: 58px;
+    }
+
+
+    .rs-plan-header h3 {
+        font-size: 18px;
+    }
+
+
+    .rs-plan-description {
+        font-size: 10px;
+    }
+
+
+    .rs-plan-price {
+        font-size: 27px;
+    }
+
+
+    .rs-plan-limits {
+        gap: 6px;
+    }
+
+
+    .rs-plan-limit {
+        padding: 7px;
+    }
+
+
+    .rs-plan-feature {
+        min-height: 30px;
+
+        font-size: 10.5px;
+    }
+
+
+    .rs-plan-btn {
+        min-height: 40px;
+
+        font-size: 10.5px;
+    }
+
+
+    .rs-plan-footnote {
+        font-size: 9px;
+    }
+}
+
+
+
+
+/* =========================================================
+   BILLING & SUPPORT
+========================================================= */
+
+.rs-billing-support-section {
+    margin-top: 32px;
+    padding: 28px 0 48px;
+    border-top: 1px solid var(--rs-border-soft);
+}
+
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+.rs-billing-support-heading {
+    margin-bottom: 18px;
+}
+
+
+/* =========================================================
+   SUPPORT GRID
+========================================================= */
+
+.rs-billing-support-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+
+/* =========================================================
+   SUPPORT CARD
+========================================================= */
+
+.rs-support-card {
+    min-width: 0;
+    padding: 18px;
+    background: var(--rs-white);
+    border: 1px solid var(--rs-border);
+    border-radius: var(--rs-radius-md);
+    box-shadow: var(--rs-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        transform .2s ease;
+}
+
+.rs-support-card:hover {
+    border-color: #cddfdc;
+    box-shadow: var(--rs-shadow-md);
+    transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.rs-support-card-header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rs-border-soft);
+}
+
+.rs-support-card-header h3 {
+    margin: 3px 0 0;
+    color: var(--rs-text);
+    font-size: 15px;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.rs-support-label {
+    display: block;
+    color: var(--rs-text-muted);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   ICONS
+========================================================= */
+
+.rs-support-icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.rs-support-icon-payment,
+.rs-support-icon-renew,
+.rs-support-icon-support {
+    background: var(--rs-primary-soft);
+    color: var(--rs-primary-dark);
+}
+
+
+/* =========================================================
+   PAYMENT DETAILS
+========================================================= */
+
+.rs-payment-details {
+    padding-top: 10px;
+}
+
+.rs-payment-row {
+    min-height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    border-bottom: 1px solid var(--rs-border-soft);
+}
+
+.rs-payment-row:last-child {
+    border-bottom: 0;
+}
+
+.rs-payment-row span {
+    color: var(--rs-text-muted);
+    font-size: 11px;
+}
+
+.rs-payment-row strong {
+    color: var(--rs-text);
+    font-size: 11px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.rs-payment-reference {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   PAYMENT STATUS
+========================================================= */
+
+.rs-payment-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.rs-payment-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.rs-payment-status.success {
+    color: #16805f;
+}
+
+.rs-payment-status.success .rs-payment-status-dot {
+    background: #20a874;
+}
+
+.rs-payment-status.pending {
+    color: #9a6810;
+}
+
+.rs-payment-status.pending .rs-payment-status-dot {
+    background: #d89b2b;
+}
+
+.rs-payment-status.failed {
+    color: #b44b4b;
+}
+
+.rs-payment-status.failed .rs-payment-status-dot {
+    background: #d85b5b;
+}
+
+
+/* =========================================================
+   NO PAYMENT
+========================================================= */
+
+.rs-no-payment {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    padding-top: 15px;
+}
+
+.rs-no-payment-icon {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #f4f7f6;
+    color: var(--rs-text-muted);
+
+    font-weight: 800;
+}
+
+.rs-no-payment strong {
+    display: block;
+    margin-bottom: 3px;
+
+    color: var(--rs-text);
+    font-size: 11px;
+}
+
+.rs-no-payment p {
+    margin: 0;
+
+    color: var(--rs-text-muted);
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   RENEWAL HELP
+========================================================= */
+
+.rs-renewal-help-content {
+    flex: 1;
+    padding-top: 14px;
+}
+
+.rs-renewal-help-content p {
+    margin: 9px 0 0;
+
+    color: var(--rs-text-secondary);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.rs-renewal-help-content p strong {
+    color: var(--rs-text);
+}
+
+
+/* =========================================================
+   HELP STATUS
+========================================================= */
+
+.rs-help-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.rs-help-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.rs-help-status.active {
+    color: #16805f;
+}
+
+.rs-help-status.active .rs-help-status-dot {
+    background: #20a874;
+}
+
+.rs-help-status.warning {
+    color: #9a6810;
+}
+
+.rs-help-status.warning .rs-help-status-dot {
+    background: #d89b2b;
+}
+
+.rs-help-status.expired {
+    color: #b44b4b;
+}
+
+.rs-help-status.expired .rs-help-status-dot {
+    background: #d85b5b;
+}
+
+
+/* =========================================================
+   SUPPORT CONTENT
+========================================================= */
+
+.rs-support-content {
+    flex: 1;
+    padding-top: 13px;
+}
+
+.rs-support-content > p {
+    margin: 0 0 12px;
+
+    color: var(--rs-text-secondary);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   SUPPORT POINTS
+========================================================= */
+
+.rs-support-points {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.rs-support-point {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+
+    color: var(--rs-text-secondary);
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.rs-support-check {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--rs-primary-soft);
+    color: var(--rs-primary-dark);
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   ACTION BUTTON
+========================================================= */
+
+.rs-support-action {
+    margin-top: 15px;
+
+    min-height: 34px;
+    padding: 8px 11px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    border-radius: 8px;
+
+    font-size: 10px;
+    font-weight: 750;
+    text-decoration: none;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease;
+}
+
+.rs-support-action span {
+    font-size: 13px;
+    line-height: 1;
+}
+
+.rs-support-action.primary {
+    background: var(--rs-primary);
+    border: 1px solid var(--rs-primary);
+    color: #fff;
+}
+
+.rs-support-action.primary:hover {
+    background: var(--rs-primary-dark);
+    border-color: var(--rs-primary-dark);
+}
+
+.rs-support-action.secondary {
+    background: var(--rs-primary-soft);
+    border: 1px solid #d3eee9;
+    color: var(--rs-primary-dark);
+}
+
+.rs-support-action.secondary:hover {
+    background: #ddf4f0;
+}
+
+
+/* =========================================================
+   FINAL BILLING NOTE
+========================================================= */
+
+.rs-billing-support-note {
+    margin-top: 45px;
+    padding: 11px 13px;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    background: #f8faf9;
+    border: 1px solid var(--rs-border-soft);
+    border-radius: 9px;
+}
+
+.rs-billing-support-note-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--rs-primary-soft);
+    color: var(--rs-primary-dark);
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.rs-billing-support-note p {
+    margin: 0;
+
+    color: var(--rs-text-muted);
+    font-size: 10.5px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .rs-billing-support-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rs-contact-support-card {
+        grid-column: 1 / -1;
+    }
+}
+
+
+/* =========================================================
    MOBILE
-========================= */
+========================================================= */
 
-@media(max-width:992px){
+@media (max-width: 600px) {
 
-    .rs-current-top{
-
-        flex-direction:column;
-
-        align-items:flex-start;
+    .rs-billing-support-section {
+        margin-top: 24px;
+        padding: 24px 0 34px;
     }
 
-    .rs-stats{
-
-        grid-template-columns:1fr;
-    }
-}
-
-/* ==================================
-   MOBILE PREMIUM (576px)
-================================== */
-
-@media (max-width:576px){
-
-    .rs-container{
-        width:94%;
-        padding:20px 0 50px;
+    .rs-billing-support-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
 
-    /* Header */
-
-    .rs-header{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:15px;
-        margin-bottom:20px;
+    .rs-contact-support-card {
+        grid-column: auto;
     }
 
-    .rs-header h1{
-        font-size:24px;
-        line-height:1.3;
+    .rs-support-card {
+        padding: 15px;
     }
 
-    .rs-header p{
-        font-size:14px;
+    .rs-support-card:hover {
+        transform: none;
     }
 
-    .rs-back-btn{
-        width:100%;
-        text-align:center;
-        padding:12px;
-        border-radius:12px;
+    .rs-payment-row {
+        min-height: 34px;
     }
 
-    /* Current Plan Card */
-
-    .rs-current-card{
-        padding:20px;
-        border-radius:18px;
+    .rs-billing-support-note {
+        padding: 10px;
     }
-
-    .rs-current-top{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:15px;
-    }
-
-    .rs-current-top h2{
-        font-size:26px;
-    }
-
-    .rs-price{
-        font-size:34px;
-        width:100%;
-        text-align:left;
-    }
-
-    .rs-price span{
-        display:block;
-        margin-top:4px;
-    }
-
-    /* Stats */
-
-    .rs-stats{
-        grid-template-columns:1fr;
-        gap:12px;
-    }
-
-    .rs-stat{
-        padding:16px;
-    }
-
-    .rs-stat strong{
-        font-size:18px;
-    }
-
-    /* Features */
-
-    .rs-feature-box{
-        margin-top:25px;
-    }
-
-    .rs-feature-box h3{
-        font-size:18px;
-    }
-
-    .rs-feature-grid{
-        grid-template-columns:1fr;
-        gap:10px;
-    }
-
-    .rs-feature-grid span{
-        padding:12px;
-        font-size:14px;
-    }
-
-    /* Buttons */
-
-    .rs-renew-btn,
-    .rs-plan-btn,
-    .rs-contact-btn{
-
-        padding:14px;
-        font-size:15px;
-        border-radius:12px;
-    }
-
-    /* Section */
-
-    .rs-section-title{
-        font-size:24px;
-        margin-bottom:18px;
-    }
-
-    /* Plan Cards */
-
-    .rs-plan-grid{
-        grid-template-columns:1fr;
-        gap:18px;
-    }
-
-    .rs-plan-card{
-        padding:20px;
-        border-radius:18px;
-    }
-
-    .rs-plan-card h3{
-        font-size:24px;
-    }
-
-    .rs-plan-price{
-        font-size:32px;
-        margin-bottom:18px;
-    }
-
-    .rs-popular{
-        top:12px;
-        right:12px;
-        font-size:11px;
-        padding:6px 10px;
-    }
-
-    .rs-limits p{
-        font-size:14px;
-    }
-
-    .rs-features{
-        min-height:auto;
-    }
-
-    .rs-features li{
-        font-size:14px;
-        padding:8px 0;
-    }
-
-    /* Better touch spacing */
-
-    form{
-        margin-top:10px;
-    }
-
-    button{
-        min-height:48px;
-    }
-
 }

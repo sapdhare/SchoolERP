@@ -3,1019 +3,492 @@
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>
-    Invoice {{ invoice.invoice_number }}
-</title>
- 
+    <title>
+        Invoice {{ invoice.invoice_number }}
+    </title>
 
+    <link rel="stylesheet" href="{{ url_for(
+            'static',
+            filename='css/subscription/invoice.css'
+        ) }}">
 
-<style>
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:
-    "Segoe UI",
-    Arial,
-    sans-serif;
-}
 
-body{
-
-    background:#eef2f7;
-
-    padding:30px;
-
-    color:#1f2937;
-}
-
-.invoice-page{
-
-    max-width:900px;
-
-    margin:auto;
-
-    background:#fff;
-
-    padding:50px;
-
-    box-shadow:
-    0 10px 35px rgba(0,0,0,.08);
-}
-
-/* ===================================== */
-/* HEADER */
-/* ===================================== */
-
-.invoice-header{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:flex-start;
-
-    margin-bottom:40px;
-}
-
-.company-section h1{
-
-    font-size:38px;
-
-    font-weight:800;
-
-    background:
-    linear-gradient(
-    135deg,
-    #0EA5A4,
-    #14B8A6
-    );
-
-    -webkit-background-clip:text;
-
-    -webkit-text-fill-color:transparent;
-}
-
-.company-section p{
-
-    color:#6b7280;
-
-    margin-top:6px;
-}
-
-.invoice-title{
-
-    text-align:right;
-}
-
-.invoice-title h2{
-
-    font-size:46px;
-
-    color:#0f4c81;
-
-    margin-bottom:10px;
-}
-
-.invoice-number{
-
-    display:inline-block;
-
-    padding:10px 18px;
-
-    border-radius:8px;
-
-    color:white;
-
-    background:
-    linear-gradient(
-    135deg,
-    #0EA5A4,
-    #14B8A6
-    );
-
-    font-size:14px;
-
-    font-weight:600;
-}
-
-/* ===================================== */
-/* BILLING SECTION */
-/* ===================================== */
-
-.invoice-info{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    gap:50px;
-
-    margin-bottom:35px;
-}
-
-.info-box{
-
-    flex:1;
-}
-
-.info-title{
-
-    font-size:14px;
-
-    color:#6b7280;
-
-    margin-bottom:10px;
-
-    text-transform:uppercase;
-
-    letter-spacing:1px;
-}
-
-.info-box h3{
-
-    margin-bottom:10px;
-
-    font-size:22px;
-}
-
-.info-box p{
-
-    margin-bottom:6px;
-
-    line-height:1.5;
-}
-
-/* ===================================== */
-/* TABLE */
-/* ===================================== */
-
-.invoice-table{
-
-    width:100%;
-
-    border-collapse:collapse;
-
-    margin-bottom:30px;
-}
-
-.invoice-table thead{
-
-    background:
-    linear-gradient(
-    135deg,
-    #0EA5A4,
-    #14B8A6
-    );
-
-    color:white;
-}
-
-.invoice-table th{
-
-    text-align:left;
-
-    padding:16px;
-}
-
-.invoice-table td{
-
-    padding:18px 16px;
-
-    border-bottom:
-    1px solid #e5e7eb;
-}
-
-.invoice-table tbody tr:hover{
-
-    background:#f8fafc;
-}
-
-/* ===================================== */
-/* TOTALS */
-/* ===================================== */
-
-.total-wrapper{
-
-    display:flex;
-
-    justify-content:flex-end;
-
-    margin-bottom:40px;
-}
-
-.total-box{
-
-    width:320px;
-}
-
-.total-row{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    padding:12px 0;
-
-    border-bottom:
-    1px solid #e5e7eb;
-}
-
-.grand-total{
-
-    background:
-    linear-gradient(
-    135deg,
-    #0EA5A4,
-    #14B8A6
-    );
-
-    color:white;
-
-    padding:16px;
-
-    margin-top:12px;
-
-    border-radius:8px;
-
-    font-size:22px;
-
-    font-weight:700;
-
-    display:flex;
-
-    justify-content:space-between;
-}
-
-/* ===================================== */
-/* PAYMENT DETAILS */
-/* ===================================== */
-
-.payment-box{
-
-    margin-bottom:40px;
-}
-
-.payment-box h4{
-
-    margin-bottom:15px;
-
-    color:#0f4c81;
-}
-
-.payment-box p{
-
-    margin-bottom:8px;
-}
-
-/* ===================================== */
-/* FOOTER */
-/* ===================================== */
-
-.invoice-footer{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:flex-end;
-
-    margin-top:60px;
-}
-
-.footer-left{
-
-    color:#6b7280;
-}
-
-.signature{
-
-    text-align:center;
-}
-
-.signature-line{
-
-    width:220px;
-
-    border-top:
-    2px solid #9ca3af;
-
-    margin-bottom:10px;
-}
-
-/* ===================================== */
-/* BUTTONS */
-/* ===================================== */
-
-.invoice-actions{
-
-    margin-top:40px;
-
-    display:flex;
-
-    gap:15px;
-
-    justify-content:center;
-}
-
-.print-btn,
-.pdf-btn{
-
-    text-decoration:none;
-
-    border:none;
-
-    cursor:pointer;
-
-    padding:14px 24px;
-
-    border-radius:8px;
-
-    font-size:15px;
-
-    font-weight:600;
-
-    color:white;
-
-    background:
-    linear-gradient(
-    135deg,
-    #0EA5A4,
-    #14B8A6
-    );
-}
-
-/* ===================================== */
-/* PRINT + PDF SETTINGS */
-/* ===================================== */
-
-@media print {
-
-    @page {
-        size: A4 portrait;
-        margin: 12mm;
-    }
-
-    html,
-    body {
-
-        width: 100%;
-        height: auto;
-
-        margin: 0;
-        padding: 0;
-
-        background: #ffffff;
-    }
-
-    .invoice-page {
-
-        width: 100%;
-
-        max-width: none;
-
-        min-height: auto;
-
-        margin: 0 auto;
-
-        padding: 0;
-
-        box-shadow: none;
-
-        border: none;
-    }
-
-     .company-section h1{
-
-        background:none !important;
-
-        color:#0EA5A4 !important;
-
-        -webkit-text-fill-color:#0EA5A4 !important;
-    }
-
-    .invoice-actions {
-        display: none !important;
-    }
-
-    .invoice-table tr,
-    .invoice-table td,
-    .invoice-table th,
-    .invoice-info,
-    .invoice-footer {
-
-        page-break-inside: avoid;
-    }
-}
-
-/* ===================================== */
-/* MOBILE */
-/* ===================================== */
-
-@media(max-width:576px){
-
-    body{
-
-        padding:10px;
-    }
-
-    .invoice-page{
-
-        padding:20px;
-    }
-
-    .invoice-header{
-
-        flex-direction:column;
-
-        gap:25px;
-    }
-
-    .invoice-title{
-
-        text-align:left;
-    }
-
-    .invoice-info{
-
-        flex-direction:column;
-    }
-
-    .invoice-table{
-
-        display:block;
-
-        overflow-x:auto;
-    }
-
-    .invoice-footer{
-
-        flex-direction:column;
-
-        gap:30px;
-
-        align-items:flex-start;
-    }
-
-    .invoice-actions{
-
-        flex-direction:column;
-    }
-
-    .company-section h1{
-
-        font-size:30px;
-    }
-
-    .invoice-title h2{
-
-        font-size:34px;
-    }
-}
-
-</style>
-
-{% if is_pdf %}
-<style>
-
-/* =========================================
-   PDF ONLY STYLES
-========================================= */
-
-@page{
-    size:A4 portrait;
-    margin:10mm;
-}
-
-html,
-body{
-
-    margin:0;
-    padding:0;
-
-    background:#ffffff;
-
-    font-family:
-    "Segoe UI",
-    Arial,
-    sans-serif;
-}
-
-/* HIDE BUTTONS */
-
-.invoice-actions{
-    display:none !important;
-}
-
-/* MAIN CONTAINER */
-
-.invoice-page{
-
-    width:190mm;
-
-    min-height:277mm;
-
-    margin:0 auto;
-
-    padding:15mm;
-
-    background:#ffffff;
-
-    box-shadow:none !important;
-
-    border:none !important;
-}
-
-/* =========================================
-   HEADER
-========================================= */
-
-.invoice-header{
-
-    display:table !important;
-
-    width:100%;
-
-    table-layout:fixed;
-
-    margin-bottom:35px;
-}
-
-.company-section{
-
-    display:table-cell;
-
-    width:60%;
-
-    vertical-align:top;
-}
-
-.invoice-title{
-
-    display:table-cell;
-
-    width:40%;
-
-    vertical-align:top;
-
-    text-align:right;
-}
-
-/* FIX GRADIENT TEXT IN PDF */
-
-.company-section h1{
-
-    background:none !important;
-
-    color:#0EA5A4 !important;
-
-    -webkit-text-fill-color:#0EA5A4 !important;
-}
-
-/* =========================================
-   BILL TO SECTION
-========================================= */
-
-.invoice-info{
-
-    display:table !important;
-
-    width:100%;
-
-    table-layout:fixed;
-
-    margin-bottom:30px;
-}
-
-.info-box{
-
-    display:table-cell;
-
-    width:50%;
-
-    vertical-align:top;
-}
-
-/* =========================================
-   TABLE
-========================================= */
-
-.invoice-table{
-
-    width:100%;
-
-    border-collapse:collapse;
-
-    margin-top:20px;
-
-    margin-bottom:30px;
-}
-
-.invoice-table thead{
-
-    background:#0EA5A4 !important;
-
-    color:#ffffff !important;
-}
-
-.invoice-table th{
-
-    padding:12px;
-
-    text-align:left;
-}
-
-.invoice-table td{
-
-    padding:12px;
-
-    border-bottom:1px solid #dddddd;
-}
-
-/* =========================================
-   TOTAL SECTION
-========================================= */
-
-.total-wrapper{
-
-    width:100%;
-
-    margin-top:20px;
-
-    margin-bottom:40px;
-}
-
-.total-box{
-
-    width:320px;
-
-    margin-left:auto;
-}
-
-.total-row{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    padding:10px 0;
-
-    border-bottom:1px solid #dddddd;
-}
-
-.grand-total{
-
-    background:#0EA5A4;
-
-    color:#ffffff;
-
-    padding:14px;
-
-    margin-top:10px;
-
-    border-radius:6px;
-
-    display:flex;
-
-    justify-content:space-between;
-
-    font-weight:700;
-}
-
-/* =========================================
-   PAYMENT SECTION
-========================================= */
-
-.payment-box{
-
-    margin-top:20px;
-
-    margin-bottom:50px;
-}
-
-/* =========================================
-   FOOTER
-========================================= */
-
-.invoice-footer{
-
-    display:table !important;
-
-    width:100%;
-
-    table-layout:fixed;
-
-    margin-top:70px;
-}
-
-.footer-left{
-
-    display:table-cell;
-
-    width:60%;
-
-    vertical-align:bottom;
-}
-
-.signature{
-
-    display:table-cell;
-
-    width:40%;
-
-    vertical-align:bottom;
-
-    text-align:right;
-}
-
-.signature-line{
-
-    width:220px;
-
-    border-top:1px solid #666;
-
-    margin-left:auto;
-
-    margin-bottom:10px;
-}
-
-/* =========================================
-   PAGE BREAK SAFETY
-========================================= */
-
-.invoice-header,
-.invoice-info,
-.invoice-table,
-.total-wrapper,
-.payment-box,
-.invoice-footer{
-
-    page-break-inside:avoid;
-}
-
-</style>
-{% endif %}
 </head>
 
 <body>
 
-<div class="invoice-page">
+    <main class="invoice-shell">
 
-    <div class="invoice-header">
+        <article class="invoice-card">
 
-        <div class="company-section">
+            <!-- ================================================= -->
+            <!-- HEADER -->
+            <!-- ================================================= -->
 
-            <h1>ShalaSarthi ERP</h1>
+            <header class="invoice-header">
 
-            <p>
-                School Management &
-                Automation Platform
-            </p>
+                <div class="brand-block">
 
-        </div>
+                    <div class="brand-mark">
+                        S
+                    </div>
 
-        <div class="invoice-title">
+                    <div>
 
-            <h2>INVOICE</h2>
+                        <div class="brand-name">
+                            ShalaSarthi ERP
+                        </div>
 
-            <div class="invoice-number">
+                        <div class="brand-subtitle">
+                            School Management & Automation Platform
+                        </div>
 
-                {{ invoice.invoice_number }}
+                    </div>
+
+                </div>
+
+
+                <div class="invoice-heading">
+
+                    <div class="invoice-label">
+                        INVOICE
+                    </div>
+
+                    <div class="invoice-number">
+                        {{ invoice.invoice_number }}
+                    </div>
+
+                    <div class="invoice-status">
+                        <span class="status-dot"></span>
+                        Payment Successful
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- ================================================= -->
+            <!-- BILLING / INVOICE META -->
+            <!-- ================================================= -->
+
+            <section class="invoice-meta">
+
+                <div class="meta-card">
+
+                    <div class="section-eyebrow">
+                        BILLED TO
+                    </div>
+
+                    <h2>
+                        {{ invoice.school_name }}
+                    </h2>
+
+                    {% if invoice.school_email %}
+                    <p>
+                        {{ invoice.school_email }}
+                    </p>
+                    {% endif %}
+
+                    {% if invoice.address %}
+                    <p class="muted">
+                        {{ invoice.address }}
+                    </p>
+                    {% endif %}
+
+                </div>
+
+
+                <div class="meta-card meta-right">
+
+                    <div class="section-eyebrow">
+                        INVOICE DETAILS
+                    </div>
+
+                    <div class="meta-row">
+                        <span>Invoice Date</span>
+                        <strong>
+                            {{ invoice.created_at.strftime('%d %b %Y') }}
+                        </strong>
+                    </div>
+
+                    <div class="meta-row">
+                        <span>Payment ID</span>
+                        <strong class="mono">
+                            {{ invoice.payment_id }}
+                        </strong>
+                    </div>
+
+                    <div class="meta-row">
+                        <span>Order ID</span>
+                        <strong class="mono">
+                            {{ invoice.order_id }}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- PAYMENT SUMMARY -->
+            <!-- ================================================= -->
+
+            <section class="payment-summary">
+
+                <div class="summary-item">
+
+                    <span class="summary-label">
+                        PLAN
+                    </span>
+
+                    <strong>
+                        {{ invoice.plan_name }}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <span class="summary-label">
+                        BILLING
+                    </span>
+
+                    <strong>
+                        {% if invoice.billing_cycle == 'yearly' %}
+                        Annual
+                        {% else %}
+                        Monthly
+                        {% endif %}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <span class="summary-label">
+                        GATEWAY
+                    </span>
+
+                    <strong>
+                        {{ invoice.payment_gateway or 'Razorpay' }}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <span class="summary-label">
+                        STATUS
+                    </span>
+
+                    <strong class="success-text">
+                        Paid
+                    </strong>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- CHARGES -->
+            <!-- ================================================= -->
+
+            <section class="charges-section">
+
+                <div class="table-title">
+                    Payment Summary
+                </div>
+
+                <table class="invoice-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Description
+                            </th>
+
+                            <th class="center">
+                                Qty
+                            </th>
+
+                            <th class="right">
+                                Unit Price
+                            </th>
+
+                            <th class="right">
+                                Amount
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        <tr>
+
+                            <td>
+
+                                <div class="item-title">
+                                    {{ invoice.plan_name }} Subscription
+                                </div>
+
+                                <div class="item-description">
+
+                                    {% if invoice.billing_cycle == 'yearly' %}
+                                    Annual subscription
+                                    {% else %}
+                                    Monthly subscription
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                            <td class="center">
+                                1
+                            </td>
+
+                            <td class="right">
+                                ₹{{ "%.2f"|format(invoice.amount|float) }}
+                            </td>
+
+                            <td class="right amount-cell">
+                                ₹{{ "%.2f"|format(invoice.amount|float) }}
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- TOTALS -->
+            <!-- ================================================= -->
+
+            <section class="totals-section">
+
+                <div class="totals-box">
+
+                    <div class="total-row">
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <strong>
+                            ₹{{ "%.2f"|format(invoice.amount|float) }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="total-row">
+
+                        <span>
+                            Tax
+                        </span>
+
+                        <strong>
+                            ₹{{ "%.2f"|format(invoice.tax_amount|float) }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="total-row grand-total">
+
+                        <span>
+                            Total Paid
+                        </span>
+
+                        <strong>
+                            ₹{{ "%.2f"|format(invoice.amount|float + invoice.tax_amount|float) }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- PAYMENT INFORMATION -->
+            <!-- ================================================= -->
+
+            <section class="payment-information">
+
+                <div class="payment-info-header">
+
+                    <div class="payment-info-icon">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Payment received successfully
+                        </h3>
+
+                        <p>
+                            This invoice confirms the successful payment
+                            of your ShalaSarthi ERP subscription.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="payment-details-grid">
+
+                    <div>
+
+                        <span>
+                            Transaction Type
+                        </span>
+
+                        <strong>
+                            {{ invoice.transaction_type or 'Subscription Renewal' }}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Currency
+                        </span>
+
+                        <strong>
+                            {{ invoice.currency or 'INR' }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- FOOTER -->
+            <!-- ================================================= -->
+
+            <footer class="invoice-footer">
+
+                <div class="footer-message">
+
+                    <strong>
+                        Thank you for choosing ShalaSarthi ERP.
+                    </strong>
+
+                    <p>
+                        This invoice is generated electronically
+                        and serves as proof of payment.
+                    </p>
+
+                </div>
+
+
+                <div class="authorized">
+
+                    <div class="signature-line"></div>
+
+                    <span>
+                        Authorized Signature
+                    </span>
+
+                </div>
+
+            </footer>
+
+
+            <!-- ================================================= -->
+            <!-- ACTIONS -->
+            <!-- ================================================= -->
+
+            <div class="invoice-actions">
+
+                <button type="button" class="invoice-btn secondary" onclick="printInvoice()">
+                    <span>🖨</span>
+                    Print Invoice
+                </button>
+
+
+                <a href="{{ url_for(
+                    'download_invoice_pdf',
+                    payment_log_id=invoice.id
+                ) }}" class="invoice-btn primary">
+                    <span>↓</span>
+                    Download PDF
+                </a>
 
             </div>
 
-        </div>
+        </article>
 
-    </div>
+    </main>
 
-    <div class="invoice-info">
 
-        <div class="info-box">
+    <script>
+        /* =========================================================
+       SHALASARTHI ERP
+       INVOICE ACTIONS
+       ========================================================= */
 
-            <div class="info-title">
-                Bill To
-            </div>
+        (function () {
 
-            <h3>
-                {{ invoice.school_name }}
-            </h3>
+            "use strict";
 
-            <p>
-                {{ invoice.school_email }}
-            </p>
 
-            <p>
-                {{ invoice.address or '-' }}
-            </p>
+            window.printInvoice = function () {
 
-        </div>
+                window.print();
 
-        <div class="info-box">
+            };
 
-            <div class="info-title">
-                Invoice Details
-            </div>
 
-            <p>
-                <strong>Date:</strong>
-                {{ invoice.created_at.strftime('%d %b %Y') }}
-            </p>
+            document.addEventListener("keydown", function (event) {
 
-            <p>
-                <strong>Payment ID:</strong>
-                {{ invoice.payment_id }}
-            </p>
+                if (
+                    (event.ctrlKey || event.metaKey) &&
+                    event.key.toLowerCase() === "p"
+                ) {
 
-            <p>
-                <strong>Order ID:</strong>
-                {{ invoice.order_id }}
-            </p>
+                    event.preventDefault();
 
-            <p>
-                <strong>Status:</strong>
-                {{ invoice.payment_status }}
-            </p>
+                    window.print();
 
-        </div>
+                }
 
-    </div>
+            });
 
-    <table class="invoice-table">
 
-        <thead>
+        })();
 
-            <tr>
+    </script>
 
-                <th>Description</th>
-
-                <th>Qty</th>
-
-                <th>Price</th>
-
-                <th>Total</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            <tr>
-
-                <td>
-                    {{ invoice.plan_name }}
-                    Subscription Plan
-                </td>
-
-                <td>1</td>
-
-                <td>
-                    ₹{{ invoice.amount }}
-                </td>
-
-                <td>
-                    ₹{{ invoice.amount }}
-                </td>
-
-            </tr>
-
-        </tbody>
-
-    </table>
-
-    <div class="total-wrapper">
-
-        <div class="total-box">
-
-            <div class="total-row">
-
-                <span>Subtotal</span>
-
-                <strong>
-                    ₹{{ invoice.amount }}
-                </strong>
-
-            </div>
-
-            <div class="total-row">
-
-                <span>Tax</span>
-
-                <strong>₹0</strong>
-
-            </div>
-
-            <div class="grand-total">
-
-                <span>Total</span>
-
-                <span>
-                    ₹{{ invoice.amount }}
-                </span>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="payment-box">
-
-        <h4>
-            Payment Information
-        </h4>
-
-        <p>
-            Gateway:
-            {{ invoice.payment_gateway }}
-        </p>
-
-        <p>
-            Transaction Type:
-            Subscription Renewal
-        </p>
-
-    </div>
-
-    <div class="invoice-footer">
-
-        <div class="footer-left">
-
-            <p>
-                Thank you for choosing
-                ShalaSarthi ERP.
-            </p>
-
-            <p>
-                This invoice serves as proof
-                of payment.
-            </p>
-
-        </div>
-
-        <div class="signature">
-
-            <div class="signature-line"></div>
-
-            <p>
-                Authorized Signature
-            </p>
-
-        </div>
-
-    </div>
-
-    <div class="invoice-actions">
-
-        <button
-            onclick="window.print()"
-            class="print-btn">
-
-            🖨 Print Invoice
-
-        </button>
-
-        <a href="{{ url_for(
-        'download_invoice_pdf',
-        payment_log_id=invoice.id
-        ) }}"
-        class="pdf-btn"
-        target="_blank">
-
-            📄 Download PDF
-
-        </a>
-
-    </div>
-
-</div>
-
- 
 </body>
+
 </html>

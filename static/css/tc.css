@@ -2,326 +2,934 @@
    TC MASTER STYLESHEET
 ========================================================= */
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-html,body{
-    width:100%;
-    height:100%;
-    background:#f5f5f5;
-    font-family:"Noto Sans Devanagari", Arial, sans-serif;
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    font-family: "Noto Sans Devanagari", Arial, sans-serif;
 }
 
 /* =========================================================
    MAIN A4 PAGE
 ========================================================= */
 
-.tc-container{
-    width:210mm;
-    height:297mm;
-    margin:auto;
-    background:#fff;
-    border:2px solid #222;
-    padding:10mm;
-    display:flex;
-    flex-direction:column;
-    position:relative;
-    overflow:hidden;
+.tc-container {
+    width: 210mm;
+    height: 297mm;
+    margin: auto;
+    background: #fff;
+    border: 2px solid #222;
+    padding: 10mm;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
 }
 
 /* =========================================================
    FLOATING BUTTONS
 ========================================================= */
 
-.tc-floating-actions{
-    position:fixed;
-    right:80px;
-    top:220px;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    z-index:999;
+.tc-floating-actions {
+    position: fixed;
+    right: 80px;
+    top: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 999;
 }
 
-.fab-btn{
-    width:110px;
-    height:48px;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    font-size:14px;
-    font-weight:600;
-    color:#fff;
-    text-decoration:none;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+.fab-btn {
+    width: 110px;
+    height: 48px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.fab-btn.back{
-    background:#6c757d;
+.fab-btn.back {
+    background: #6c757d;
 }
 
-.fab-btn.lang{
-    background:#fff;
-    color:#222;
-    border:1px solid #ddd;
+.fab-btn.lang {
+    background: #fff;
+    color: #222;
+    border: 1px solid #ddd;
 }
 
-.fab-btn.print{
-    background:#0d6efd;
+.fab-btn.print {
+    background: #0d6efd;
 }
 
-.fab-btn.pdf{
-    background:#dc2626;
+.fab-btn.pdf {
+    background: #dc2626;
 }
 
-.fab-btn.wa{
-    background:#16a34a;
+.fab-btn.wa {
+    background: #16a34a;
 }
 
-.fab-btn.lang.active{
-    background:#0b8f8e;
-    color:white;
+.fab-btn.lang.active {
+    background: #0b8f8e;
+    color: white;
 }
 
 /* =========================================================
-   HEADER
+   TC HEADER — CLEAN OFFICIAL DOCUMENT STYLE
 ========================================================= */
 
-.tc-header{
-    display:grid;
-    grid-template-columns:90px 1fr;
-    gap:16px;
-    padding-bottom:17px;
-    border-bottom:2px solid #222;
+.tc-header {
+    width: 100%;
+    position: relative;
+
+    padding: 0mm 3mm 5mm;
+
+    border-bottom: 1.2px solid #222;
+
+    margin-bottom: 0;
+
+    z-index: 5;
 }
 
-/* LOGO */
 
-.tc-logo-box{
-    width:85px;
-    height:85px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+/* =========================================================
+   TC NUMBER + DATE
+========================================================= */
+
+.tc-document-meta {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 3mm;
+
+    font-size: 9.8px;
+    line-height: 1.3;
+
+    color: #222;
+
+    position: relative;
+    z-index: 6;
 }
 
-.school-logo{
-    width:80px;
-    height:80px;
-    object-fit:contain;
+.tc-document-meta-left,
+.tc-document-meta-right {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    white-space: nowrap;
 }
 
-/* HEADER CENTER */
-
-.tc-header-center{
-    text-align:center;
+.tc-document-meta-left {
+    text-align: left;
 }
 
-.tc-header-center h1{
-    font-size:28px;
-    font-weight:700;
-    line-height:1.2;
-    margin-bottom:4px;
+.tc-document-meta-right {
+    text-align: right;
 }
 
-.school-address{
-    font-size:13px;
-    margin-bottom:8px;
+.tc-document-meta strong {
+    font-weight: 700;
+    letter-spacing: .1px;
 }
 
-.header-row{
-    display:flex;
-    justify-content:space-between;
-    gap:14px;
-    flex-wrap:wrap;
-    font-size:12px;
-    margin-bottom:4px;
+
+/* =========================================================
+   SCHOOL IDENTITY
+========================================================= */
+
+.tc-school-identity {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7mm;
+
+    position: relative;
+    z-index: 5;
+}
+
+
+/* =========================================================
+   SCHOOL LOGO
+========================================================= */
+
+.tc-logo-box {
+    width: 23mm;
+    min-width: 23mm;
+    height: 23mm;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+}
+
+.school-logo {
+    width: 20mm;
+    height: 20mm;
+
+    object-fit: contain;
+
+    display: block;
+}
+
+
+/* =========================================================
+   SCHOOL INFORMATION
+========================================================= */
+
+.tc-school-info {
+    flex: 1;
+
+    min-width: 0;
+
+    text-align: center;
+
+    padding-right: 18mm;
+}
+
+
+/* SCHOOL NAME */
+
+.tc-school-info h1 {
+    margin: 0;
+
+    font-size: 24px;
+    line-height: 1.25;
+
+    font-weight: 800;
+
+    letter-spacing: .1px;
+
+    color: #111827;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* ADDRESS */
+
+.tc-school-info .school-address {
+    margin: 1.5mm auto 2.5mm;
+
+    max-width: 145mm;
+
+    font-size: 12px;
+    line-height: 1.45;
+
+    font-weight: 500;
+
+    color: #374151;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   CONTACT ROW
+========================================================= */
+
+.tc-contact-row {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    column-gap: 8mm;
+    row-gap: 1mm;
+
+    margin-top: 1mm;
+
+    font-size: 10.2px;
+    line-height: 1.4;
+
+    color: #374151;
+}
+
+.tc-contact-row span {
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   OFFICIAL INFORMATION
+========================================================= */
+
+.tc-official-row {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    column-gap: 5mm;
+    row-gap: 1mm;
+
+    margin-top: 1.5mm;
+
+    font-size: 9.8px;
+    line-height: 1.4;
+
+    color: #4b5563;
+}
+
+.tc-official-row span {
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   PDF SAFETY
+========================================================= */
+
+.tc-header,
+.tc-document-meta,
+.tc-school-identity,
+.tc-school-info {
+    page-break-inside: avoid;
 }
 
 /* DIVIDER */
 
-.tc-line{
-    border:none;
-    border-top:1px solid black;
-    margin:10px 0;
+.tc-line {
+    border: none;
+    border-top: 1px solid black;
+    margin: 10px 0;
 }
 
 /* =========================================================
-   TITLE
+   CERTIFICATE TITLE
 ========================================================= */
 
-.tc-title{
-    text-align:center;
-    margin:12px 0 14px 0;
+.tc-title {
+    position: relative;
+
+    text-align: center;
+
+    margin: 8mm 0 9mm;
+
+    padding: 0;
+
+    z-index: 2;
+
+    page-break-inside: avoid;
 }
 
-.tc-title h2{
-    font-size:22px;
-    padding:10px 0;
-    font-weight:700;
-    letter-spacing:.5px;
+.tc-title h2 {
+    margin: 0;
+
+    padding: 0;
+
+    font-size: 20px;
+
+    line-height: 1.35;
+
+    font-weight: 750;
+
+    letter-spacing: .15px;
+
+    color: #111827;
 }
+
+ 
 
 /* =========================================================
    WATERMARK
 ========================================================= */
 
-.tc-watermark{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    width:280px;
-    opacity:.08;
-    z-index:0;
-}
+.tc-watermark {
+    position: absolute;
 
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: 68mm;
+    height: auto;
+
+    opacity: 0.035;
+
+    z-index: 0;
+
+    pointer-events: none;
+
+    user-select: none;
+
+    filter: grayscale(100%);
+}
 .tc-body,
 .tc-title,
-.tc-footer{
-    position:relative;
-    z-index:2;
+.tc-footer {
+    position: relative;
+    z-index: 2;
 }
 
 /* =========================================================
-   BODY
+   TC BODY
 ========================================================= */
 
-.tc-body{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
+.tc-body {
+    position: relative;
+
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 13px;
+
+    z-index: 2;
 }
 
-/* SINGLE ROW */
 
-.tc-row{
-    display:grid;
-    grid-template-columns:180px 1fr;
-    gap:16px;
-    align-items:end;
-}
- 
+/* =========================================================
+   SINGLE COLUMN ROW
+========================================================= */
 
-/* DOUBLE ROW */
+.tc-row {
+    width: 100%;
 
-.tc-row-2{
-    display:grid;
-    grid-template-columns:90px 1fr 90px 1fr;
-    gap:16px;
-    align-items:end;
-}
+    display: grid;
 
-/* LABEL */
+    grid-template-columns: 155px minmax(0, 1fr);
 
-.tc-label{
-    font-size:12px;
-    font-weight:600;
-    line-height:1.3;
+    column-gap: 12px;
+
+    align-items: end;
+
+    min-height: 23px;
+
+    page-break-inside: avoid;
 }
 
-/* VALUE */
 
-.tc-value{
-    border-bottom:1px solid #111;
-    min-height:22px;
-    padding:2px 4px;
-    font-size:12px;
-    line-height:1.4;
-    display:flex;
-    align-items:flex-end;
+/* =========================================================
+   TWO COLUMN ROW
+========================================================= */
+
+.tc-row-2 {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        120px
+        minmax(0, 1fr)
+        120px
+        minmax(0, 1fr);
+
+    column-gap: 10px;
+
+    align-items: end;
+
+    min-height: 23px;
+
+    page-break-inside: avoid;
 }
 
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.tc-label {
+    min-width: 0;
+
+    font-size: 11.5px;
+
+    font-weight: 650;
+
+    line-height: 1.35;
+
+    color: #111827;
+
+    overflow-wrap: break-word;
+
+    word-break: normal;
+}
+
+
+/* =========================================================
+   VALUE
+========================================================= */
+
+.tc-value {
+    min-width: 0;
+
+    min-height: 22px;
+
+    display: flex;
+
+    align-items: flex-end;
+
+    padding: 2px 4px 3px;
+
+    border-bottom: 1px solid #222;
+
+    font-size: 11.5px;
+
+    font-weight: 500;
+
+    line-height: 1.4;
+
+    color: #111827;
+
+    overflow-wrap: anywhere;
+
+    word-break: break-word;
+}
 /* =========================================================
    FOOTER
 ========================================================= */
 
-.tc-footer{
-    margin-top:20px;
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:40px;
-    align-items:end;
+/* =========================================================
+   SIGNATURE FOOTER
+========================================================= */
+
+.tc-footer {
+    width: 100%;
+
+    margin-top: 85px;
+
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    column-gap: 28px;
+
+    align-items: end;
+
+    position: relative;
+
+    z-index: 2;
+
+    page-break-inside: avoid;
 }
 
-.footer-box{
-    text-align:center;
+
+.footer-box {
+    min-width: 0;
+
+    text-align: center;
 }
 
-.footer-line{
-    width:100%;
-    border-top:1px solid #222;
-    margin-bottom:8px;
+
+.footer-line {
+    width: 82%;
+
+    margin: 0 auto 7px;
+
+    border-top: 1px solid #222;
 }
 
-.footer-box p{
-    font-size:12px;
-    font-weight:600;
+
+.footer-box p {
+    margin: 0;
+
+    font-size: 11.5px;
+
+    line-height: 1.4;
+
+    font-weight: 650;
+
+    color: #111827;
+}
+ 
+
+/* =========================================================
+   CERTIFICATE NOTE
+========================================================= */
+
+.tc-note {
+    width: 100%;
+
+    margin-top: 48px;
+
+    padding-top: 7px;
+
+    border-top: 1px solid #e2e2e2;
+
+    font-size: 9.5px;
+
+    line-height: 1.45;
+
+    color: #374151;
+
+    position: relative;
+
+    z-index: 2;
+
+    page-break-inside: avoid;
+}
+
+.tc-note span {
+    display: block;
+}
+/* =========================================================
+   PRINT / PDF SAFETY
+========================================================= */
+
+.tc-row,
+.tc-row-2,
+.tc-title,
+.tc-footer,
+.tc-note {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.tc-value {
+    break-inside: avoid;
 }
 
 /* =========================================================
-   BOTTOM NOTE
+   FINAL PRINT MODE
+   PRINT MUST MATCH SCREEN PREVIEW
 ========================================================= */
 
-.tc-note{
-    margin-top:28px;
-    font-size:12px;
-    line-height:1.5;
-    border-top:1px solid #ddd;
-    padding-top:8px;
-}
+@media print {
 
-/* =========================================================
-   PRINT MODE
-========================================================= */
+    /* -----------------------------------------
+       A4 PAPER
+    ----------------------------------------- */
 
-@media print{
-
-    @page{
-        size:A4 portrait;
-        margin:4mm;
+    @page {
+        size: A4 portrait;
+        margin: 0;
     }
 
-    html,body{
-        width:210mm;
-        height:297mm;
-        background:#fff;
+
+    /* -----------------------------------------
+       PAGE / BODY
+    ----------------------------------------- */
+
+    html,
+    body {
+        width: 210mm !important;
+        height: 297mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: hidden !important;
     }
 
-    .tc-container{
-        width:100%;
-        height:287mm;
-        margin:0;
-        border:2px solid #222;
-        padding:10mm;
-    }
+
+    /* -----------------------------------------
+       HIDE ERP / SCREEN CONTROLS
+    ----------------------------------------- */
 
     .tc-floating-actions,
     .sidebar,
     .navbar,
     header,
-    .no-print{
-        display:none !important;
+    .no-print {
+        display: none !important;
     }
 
-    body *{
-        visibility:hidden;
+
+    /* -----------------------------------------
+       CERTIFICATE
+       SAME SIZE AS SCREEN PREVIEW
+    ----------------------------------------- */
+
+    .tc-container {
+        width: 210mm !important;
+        height: 297mm !important;
+
+        margin: 0 !important;
+
+        padding: 10mm !important;
+
+        box-sizing: border-box !important;
+
+        background: #ffffff !important;
+
+        border: 2px solid #222 !important;
+
+        position: relative !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+
+        overflow: hidden !important;
+
+        visibility: visible !important;
     }
+
+
+    /* -----------------------------------------
+       MAKE ALL CERTIFICATE CONTENT VISIBLE
+    ----------------------------------------- */
 
     .tc-container,
-    .tc-container *{
-        visibility:visible;
+    .tc-container * {
+        visibility: visible !important;
     }
 
-    .tc-container{
-        position:absolute;
-        top:0;
-        left:0;
+
+    /* -----------------------------------------
+       HEADER
+    ----------------------------------------- */
+
+    .tc-header {
+        display: block !important;
+        visibility: visible !important;
+
+        width: 100% !important;
+
+        position: relative !important;
+
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+
+    .tc-document-meta,
+    .tc-school-identity,
+    .tc-school-info {
+        visibility: visible !important;
+
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+
+    /* -----------------------------------------
+       SCHOOL LOGO
+    ----------------------------------------- */
+
+    .tc-logo-box {
+        display: flex !important;
+
+        visibility: visible !important;
+
+        width: 23mm !important;
+        min-width: 23mm !important;
+        height: 23mm !important;
+
+        align-items: center !important;
+        justify-content: center !important;
+
+        flex-shrink: 0 !important;
+    }
+
+
+    .school-logo {
+        display: block !important;
+
+        visibility: visible !important;
+
+        width: 20mm !important;
+        height: 20mm !important;
+
+        object-fit: contain !important;
+    }
+
+
+    /* -----------------------------------------
+       TITLE
+    ----------------------------------------- */
+
+    .tc-title {
+        display: block !important;
+
+        visibility: visible !important;
+
+        position: relative !important;
+
+        text-align: center !important;
+
+        margin: 8mm 0 9mm !important;
+
+        padding: 0 !important;
+
+        z-index: 2 !important;
+
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+
+    .tc-title h2 {
+        display: block !important;
+
+        visibility: visible !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        font-size: 20px !important;
+        line-height: 1.35 !important;
+
+        font-weight: 750 !important;
+
+        letter-spacing: .15px !important;
+
+        color: #111827 !important;
+    }
+
+
+    /* -----------------------------------------
+       WATERMARK
+    ----------------------------------------- */
+
+    .tc-watermark {
+        display: block !important;
+
+        visibility: visible !important;
+
+        position: absolute !important;
+
+        top: 50% !important;
+        left: 50% !important;
+
+        transform: translate(-50%, -50%) !important;
+
+        width: 68mm !important;
+        height: auto !important;
+
+        margin: 0 !important;
+
+        opacity: 0.035 !important;
+
+        z-index: 0 !important;
+
+        pointer-events: none !important;
+
+        user-select: none !important;
+
+        filter: grayscale(100%) !important;
+    }
+
+
+    /* -----------------------------------------
+       BODY
+    ----------------------------------------- */
+
+    .tc-body {
+        display: flex !important;
+
+        visibility: visible !important;
+
+        position: relative !important;
+
+        width: 100% !important;
+
+        flex-direction: column !important;
+
+        gap: 13px !important;
+
+        z-index: 2 !important;
+
+        page-break-inside: avoid !important;
+    }
+
+
+    .tc-row,
+    .tc-row-2 {
+        visibility: visible !important;
+
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+
+    .tc-label,
+    .tc-value {
+        visibility: visible !important;
+    }
+
+
+    /* -----------------------------------------
+       FOOTER
+    ----------------------------------------- */
+
+    .tc-footer {
+        display: grid !important;
+
+        visibility: visible !important;
+
+        width: 100% !important;
+
+        margin-top: 85px !important;
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr)) !important;
+
+        column-gap: 28px !important;
+
+        align-items: end !important;
+
+        position: relative !important;
+
+        z-index: 2 !important;
+
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+
+    .footer-box,
+    .footer-line,
+    .footer-box p {
+        visibility: visible !important;
+    }
+
+
+    /* -----------------------------------------
+       NOTE
+    ----------------------------------------- */
+
+    .tc-note {
+        display: block !important;
+
+        visibility: visible !important;
+
+        width: 100% !important;
+
+        margin-top: 48px !important;
+
+        padding-top: 7px !important;
+
+        border-top: 1px solid #e2e2e2 !important;
+
+        font-size: 9.5px !important;
+
+        line-height: 1.45 !important;
+
+        color: #374151 !important;
+
+        position: relative !important;
+
+        z-index: 2 !important;
+
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
 }

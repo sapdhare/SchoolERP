@@ -4,21 +4,81 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 
-<section class="login-page">
+
+<!-- =====================================================
+     AUTH HEADER
+====================================================== -->
+
+<header class="auth-header">
+
+    <a href="/" class="auth-brand">
+
+        {% if global_settings.system_logo %}
+        <img src="{{ url_for(
+                    'static',
+                    filename=global_settings.system_logo
+                ) }}" alt="{{ global_settings.system_name or 'SPL ShalaSarthi' }}" class="auth-brand-logo">
+        {% endif %}
+
+        <div class="auth-brand-text">
+
+            <strong>
+                {{ global_settings.system_name or "SPL ShalaSarthi" }}
+            </strong>
+
+            <span>
+                School ERP
+            </span>
+
+        </div>
+
+    </a>
+
+
+    <a href="/" class="auth-back-link">
+
+        <i class="fa-solid fa-arrow-left"></i>
+
+        <span>Back to Website</span>
+
+    </a>
+
+</header>
+
+
+<section class="login-page superadmin-login-page" data-login-type="superadmin">
 
     <div class="login-container">
 
-        <!-- LEFT SIDE -->
+        <!-- =====================================================
+             LEFT BRAND / ADMIN PANEL
+        ====================================================== -->
+
         <div class="login-left">
 
-            <!-- TEXT -->
             <div class="left-content">
 
-                <h2>
-                    {{ global_settings.system_name or "SchoolSphere" }}
-                </h2>
+                <!-- BRAND PILL -->
 
-                <h1>Admin Control Panel</h1>
+                <div class="login-brand-pill">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    <span>
+                        {{ global_settings.system_name or "SPL ShalaSarthi" }}
+                    </span>
+
+                </div>
+
+
+                <!-- MAIN HEADING -->
+
+                <h1>
+                    Admin Control Panel
+                </h1>
+
+
+                <!-- DESCRIPTION -->
 
                 <p>
                     Secure access to manage all schools,
@@ -27,107 +87,227 @@
 
             </div>
 
-            <!-- SVG IMAGE -->
-            <img
-                src="{{ url_for('static', filename='images/student_login.png') }}"
-                class="student-svg"
-                alt="Admin ERP Login"
-            >
 
-            <!-- DOT PATTERN -->
+            <!-- =================================================
+                 ADMIN ILLUSTRATION
+            ================================================== -->
+
+            <img src="{{ url_for(
+                    'static',
+                    filename='images/student_login.png'
+                ) }}" class="student-svg" alt="SPL ShalaSarthi Admin Control Panel">
+
+
+            <!-- =================================================
+                 DECORATIVE DOTS
+            ================================================== -->
+
             <div class="dots1"></div>
+
             <div class="dots2"></div>
 
         </div>
 
-        <!-- RIGHT SIDE -->
+
+        <!-- =====================================================
+             RIGHT LOGIN PANEL
+        ====================================================== -->
+
         <div class="login-right">
 
             <div class="login-box">
 
-                <h2>Admin Access 🔐</h2>
 
-                <p class="login-sub">
-                    Restricted system login
-                </p>
+                <!-- =================================================
+                     PORTAL LABEL
+                ================================================== -->
 
-                <!-- FLASH MSSGE  -->
+                <div class="login-portal-label">
 
-                {% with messages = get_flashed_messages(with_categories=true) %} {% if
-                messages %} {% for category, message in messages %}
-        
-                <div class="login-alert {{ category }}">
-                  <i class="fa-solid fa-circle-exclamation"></i>
-        
-                  <span>{{ message }}</span>
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    Administrator Portal
+
                 </div>
-        
-                {% endfor %} {% endif %} {% endwith %}
 
-                <!-- FORM -->
-                <form
-                    class="login-form"
-                    method="POST"
-                    action="{{ url_for('superadmin_login') }}"
-                >
 
-                    <input
-                        type="hidden"
-                        name="csrf_token"
-                        value="{{ csrf_token() }}"
-                    >
+                <!-- =================================================
+                     LOGIN HEADING
+                ================================================== -->
 
-                    <!-- EMAIL -->
+                <div class="login-heading">
 
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Admin Email"
-                        autocomplete="email"
-                        maxlength="120"
-                        required
-                    >
+                    <div class="login-icon">
 
-                    <!-- PASSWORD -->
+                        <i class="fa-solid fa-lock"></i>
 
-                    <div class="password-field">
+                    </div>
 
-                        <input
-                            type="password"
-                            name="password"
-                            id="adminPassword"
-                            placeholder="Password"
-                            autocomplete="current-password"
-                            maxlength="100"
-                            required
-                        >
 
-                        <span
-                            class="toggle-password"
-                            onclick="toggleAdminPassword()"
-                        >
-                            👁
+                    <div>
+
+                        <h2>
+                            Admin Access
+                        </h2>
+
+                        <p class="login-sub">
+                            Restricted system login
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     FLASH MESSAGES
+                ================================================== -->
+
+                {% with messages = get_flashed_messages(
+                with_categories=true
+                ) %}
+
+                {% if messages %}
+
+                <div class="login-alerts">
+
+                    {% for category, message in messages %}
+
+                    <div class="login-alert {{ category }}">
+
+                        {% if category == "success" %}
+
+                        <i class="fa-solid fa-circle-check"></i>
+
+                        {% elif category == "warning" %}
+
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+
+                        {% else %}
+
+                        <i class="fa-solid fa-circle-exclamation"></i>
+
+                        {% endif %}
+
+
+                        <span>
+                            {{ message }}
                         </span>
 
                     </div>
 
-                    <!-- BUTTON -->
+                    {% endfor %}
 
-                    <button
-                        type="submit"
-                        class="btn-login"
-                        id="adminLoginBtn"
-                    >
+                </div>
+
+                {% endif %}
+
+                {% endwith %}
+
+
+                <!-- =================================================
+                     LOGIN FORM
+                ================================================== -->
+
+                <form class="login-form" method="POST" action="{{ url_for('superadmin_login') }}" autocomplete="on">
+
+                    <!-- CSRF -->
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                    <!-- =================================================
+                         EMAIL
+                    ================================================== -->
+
+                    <div class="login-field">
+
+                        <label for="adminEmail">
+                            Admin Email
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <i class="fa-solid fa-envelope"></i>
+
+                            <input type="email" id="adminEmail" name="email" placeholder="Enter admin email"
+                                autocomplete="username" maxlength="120" inputmode="email" spellcheck="false" required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PASSWORD
+                    ================================================== -->
+
+                    <div class="login-field">
+
+                        <label for="adminPassword">
+                            Password
+                        </label>
+
+
+                        <div class="input-wrapper password-wrapper">
+
+                            <i class="fa-solid fa-lock"></i>
+
+
+                            <input type="password" id="adminPassword" name="password" placeholder="Enter admin password"
+                                autocomplete="current-password" maxlength="100" required>
+
+
+                            <button type="button" class="toggle-password" id="adminPasswordToggle"
+                                aria-label="Show password" aria-pressed="false">
+
+                                <i class="fa-regular fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         LOGIN BUTTON
+                    ================================================== -->
+
+                    <button type="submit" class="btn-login" id="adminLoginBtn">
 
                         <span class="btn-text">
-                            Login
+
+                            <span>
+                                Sign In
+                            </span>
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
                         </span>
 
-                        <span class="btn-loader"></span>
+
+                        <span class="btn-loader" aria-hidden="true"></span>
 
                     </button>
 
                 </form>
+
+
+                <!-- =================================================
+                     SECURITY NOTE
+                ================================================== -->
+
+                <div class="login-security-note">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    <span>
+                        Restricted administrator access
+                    </span>
+
+                </div>
 
             </div>
 
@@ -135,53 +315,147 @@
 
     </div>
 
+
+    <!-- =====================================================
+         AUTH FOOTER
+    ====================================================== -->
+
+    <div class="auth-footer">
+
+        © {{ current_year }}
+        {{ global_settings.system_name or "SPL ShalaSarthi" }}
+
+        <span>•</span>
+
+        Secure Administrator Access
+
+    </div>
+
 </section>
 
 
-<!-- =====================================================
-     ADMIN LOGIN JS
-====================================================== -->
+<!-- =========================================================
+     SUPER ADMIN LOGIN JAVASCRIPT
+========================================================= -->
 
 <script>
 
-/* =====================================================
-   TOGGLE PASSWORD
-====================================================== */
+    document.addEventListener("DOMContentLoaded", function () {
 
-function toggleAdminPassword(){
+        /* =====================================================
+           ELEMENTS
+        ====================================================== */
 
-    const passwordInput = document.getElementById(
-        "adminPassword"
-    );
+        const form =
+            document.querySelector(
+                ".superadmin-login-page .login-form"
+            );
 
-    if(passwordInput.type === "password"){
+        const passwordInput =
+            document.getElementById(
+                "adminPassword"
+            );
 
-        passwordInput.type = "text";
+        const passwordToggle =
+            document.getElementById(
+                "adminPasswordToggle"
+            );
 
-    }else{
-
-        passwordInput.type = "password";
-    }
-
-}
+        const loginButton =
+            document.getElementById(
+                "adminLoginBtn"
+            );
 
 
-/* =====================================================
-   LOGIN BUTTON LOADER
-====================================================== */
+        /* =====================================================
+           PASSWORD VISIBILITY
+        ====================================================== */
 
-document.querySelector(".login-form")
-.addEventListener("submit", function(){
+        if (passwordToggle && passwordInput) {
 
-    const btn = document.getElementById(
-        "adminLoginBtn"
-    );
+            passwordToggle.addEventListener(
+                "click",
+                function () {
 
-    btn.disabled = true;
+                    const isPassword =
+                        passwordInput.type === "password";
 
-    btn.classList.add("loading");
 
-});
+                    if (isPassword) {
+
+                        passwordInput.type = "text";
+
+                        passwordToggle.setAttribute(
+                            "aria-label",
+                            "Hide password"
+                        );
+
+                        passwordToggle.setAttribute(
+                            "aria-pressed",
+                            "true"
+                        );
+
+                        passwordToggle.innerHTML =
+                            '<i class="fa-regular fa-eye-slash"></i>';
+
+                    } else {
+
+                        passwordInput.type = "password";
+
+                        passwordToggle.setAttribute(
+                            "aria-label",
+                            "Show password"
+                        );
+
+                        passwordToggle.setAttribute(
+                            "aria-pressed",
+                            "false"
+                        );
+
+                        passwordToggle.innerHTML =
+                            '<i class="fa-regular fa-eye"></i>';
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           LOGIN LOADER
+        ====================================================== */
+
+        if (form && loginButton) {
+
+            form.addEventListener(
+                "submit",
+                function () {
+
+                    /*
+                     * Prevent accidental double submission.
+                     */
+
+                    if (loginButton.disabled) {
+
+                        return;
+
+                    }
+
+
+                    loginButton.disabled = true;
+
+                    loginButton.classList.add(
+                        "loading"
+                    );
+
+                }
+            );
+
+        }
+
+    });
 
 </script>
 

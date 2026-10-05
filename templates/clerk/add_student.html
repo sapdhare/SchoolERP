@@ -1,561 +1,2108 @@
 {% extends "dashboard/dashboard_base.html" %}
 
+{% block title %}
+Add Student | {{ global_settings.system_name or "SPL ShalaSarthi" }}
+{% endblock %}
+
 {% block content %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_student.css') }}">
-
-<!-- FLATPICKR CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-<!-- FLATPICKR JS -->
+<div class="student-page">
+
+    <!-- =========================================================
+         PAGE HEADER
+    ========================================================== -->
+    <header class="student-page-header">
+
+        <div class="student-header-main">
+
+            <div class="student-header-icon">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+
+            <div class="student-header-copy">
+                <div class="student-header-eyebrow">
+                    STUDENT MANAGEMENT
+                </div>
+
+                <h1>
+                    Add Student
+                </h1>
+
+                <p class="student-header-subtitle">
+                    विद्यार्थी नोंदणी
+                </p>
+
+                <p class="student-header-description">
+                    Create a complete student record for your school.
+                    Information entered here is used for certificates,
+                    reports and future student records.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="student-header-status">
+            <span class="header-status-dot"></span>
+            <span>New Student Record</span>
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+         IMPORTANT NOTE
+    ========================================================== -->
+    <div class="student-note">
+
+        <div class="student-note-icon">
+            <i class="fa-solid fa-circle-info"></i>
+        </div>
+
+        <div class="student-note-content">
+            <strong>Enter verified information</strong>
+
+            <p>
+                कृपया माहिती अचूक भरा. ही माहिती TC, प्रमाणपत्रे,
+                अहवाल आणि इतर शालेय नोंदींसाठी वापरली जाईल.
+            </p>
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         FORM
+    ========================================================== -->
+    <form method="POST" action="{{ url_for('add_student') }}" enctype="multipart/form-data" id="studentForm" novalidate>
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+        <!-- =====================================================
+             TWO COLUMN FORM LAYOUT
+        ====================================================== -->
+        <div class="student-sections-grid">
+
+
+            <!-- =================================================
+                 01 STUDENT IDENTITY
+            ================================================== -->
+            <section class="student-card">
+
+                <div class="card-header">
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+
+                    <div>
+                        <h2>Student Identity</h2>
+                        <p>विद्यार्थ्याची ओळख</p>
+                    </div>
+
+                </div>
+
+                <div class="card-grid">
+
+                    <div class="form-group">
+                        <label for="schoolRegisterNo">
+                            School Register No
+                            <span>शाळा नोंदणी क्रमांक</span>
+                        </label>
+
+                        <input type="text" id="schoolRegisterNo" name="school_register_no" maxlength="50"
+                            placeholder="Enter register number" autocomplete="off" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="studentName">
+                            Full Name
+                            <span>पूर्ण नाव</span>
+                        </label>
+
+                        <input type="text" id="studentName" name="name" maxlength="200"
+                            placeholder="Enter student's full name" autocomplete="name" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="fatherName">
+                            Father Name
+                            <span>वडिलांचे नाव</span>
+                        </label>
+
+                        <input type="text" id="fatherName" name="father_name" maxlength="200"
+                            placeholder="Enter father's name" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="motherName">
+                            Mother Name
+                            <span>आईचे नाव</span>
+                        </label>
+
+                        <input type="text" id="motherName" name="mother_name" maxlength="200"
+                            placeholder="Enter mother's name" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="studentUid">
+                            Student UID
+                            <span>विद्यार्थी UID</span>
+                        </label>
+
+                        <input type="text" id="studentUid" name="student_uid" maxlength="50"
+                            placeholder="Optional student UID">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="aadhaarInput">
+                            Aadhaar Number
+                            <span>आधार क्रमांक</span>
+                        </label>
+
+                        <input type="text" id="aadhaarInput" name="aadhaar" inputmode="numeric" maxlength="12"
+                            pattern="[0-9]{12}" placeholder="12-digit Aadhaar number" autocomplete="off" required>
+                    </div>
+
+
+                    <div class="form-group full-width">
+                        <label for="apaarId">
+                            APAAR ID
+                            <span>अपार आयडी</span>
+                        </label>
+
+                        <input type="text" id="apaarId" name="apaar_id" maxlength="50" placeholder="Optional APAAR ID">
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 02 PROFILE PHOTO
+            ================================================== -->
+            <section class="student-card photo-card">
+
+                <div class="card-header">
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+
+                    <div>
+                        <h2>Profile Photo</h2>
+                        <p>विद्यार्थ्याचा फोटो</p>
+                    </div>
+
+                </div>
+
+                <div class="photo-layout">
+
+                    <div class="photo-preview-wrap">
+
+                        <div class="photo-preview" id="photoPreviewBox">
+
+                            <img id="photoPreview" src="" alt="Student photo preview">
+
+                            <div class="photo-placeholder" id="photoPlaceholder">
+
+                                <i class="fa-solid fa-user"></i>
+
+                                <span>No photo selected</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="photo-upload-content">
+
+                        <input type="file" id="studentPhoto" name="photo" accept="image/jpeg,image/png,image/webp"
+                            hidden>
+
+                        <button type="button" class="photo-select-btn" id="photoSelectBtn">
+
+                            <i class="fa-solid fa-upload"></i>
+                            Choose Photo
+
+                        </button>
+
+                        <p class="photo-file-name" id="photoFileName">
+                            JPG, PNG or WEBP
+                        </p>
+
+                        <div class="photo-rules">
+
+                            <span>
+                                <i class="fa-solid fa-shield-halved"></i>
+                                Stored securely in database
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-compress"></i>
+                                Converted to WEBP
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-weight-hanging"></i>
+                                Maximum 2 MB
+                            </span>
+
+                        </div>
+
+                        <button type="button" class="photo-remove-btn" id="photoRemoveBtn" hidden>
+
+                            <i class="fa-solid fa-trash-can"></i>
+                            Remove Photo
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 03 PERSONAL DETAILS
+            ================================================== -->
+            <section class="student-card">
+
+                <div class="card-header">
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+
+                    <div>
+                        <h2>Personal Details</h2>
+                        <p>वैयक्तिक माहिती</p>
+                    </div>
+
+                </div>
+
+                <div class="card-grid">
+
+                    <div class="form-group">
+                        <label for="dobPicker">
+                            Date of Birth
+                            <span>जन्मतारीख</span>
+                        </label>
+
+                        <div class="input-with-icon">
+                            <i class="fa-regular fa-calendar"></i>
+
+                            <input type="text" id="dobPicker" name="dob" placeholder="Select date" readonly required>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="birthPlace">
+                            Birth Place
+                            <span>जन्मस्थान</span>
+                        </label>
+
+                        <input type="text" id="birthPlace" name="birth_place" placeholder="Enter birth place" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="nationality">
+                            Nationality
+                            <span>राष्ट्रीयत्व</span>
+                        </label>
+
+                        <input type="text" id="nationality" name="nationality" value="Indian"
+                            placeholder="Enter nationality" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="motherTongue">
+                            Mother Tongue
+                            <span>मातृभाषा</span>
+                        </label>
+
+                        <input type="text" id="motherTongue" name="mother_tongue" placeholder="Enter mother tongue"
+                            required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="religion">
+                            Religion
+                            <span>धर्म</span>
+                        </label>
+
+                        <input type="text" id="religion" name="religion" placeholder="Enter religion" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="caste">
+                            Caste
+                            <span>जात</span>
+                        </label>
+
+                        <input type="text" id="caste" name="caste" placeholder="Enter caste" required>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 04 ADDRESS DETAILS
+            ================================================== -->
+            <section class="student-card">
+
+                <div class="card-header">
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+
+                    <div>
+                        <h2>Address Details</h2>
+                        <p>पत्ता माहिती</p>
+                    </div>
+
+                </div>
+
+                <div class="card-grid">
+
+                    <div class="form-group">
+                        <label for="city">
+                            Village / City
+                            <span>गाव / शहर</span>
+                        </label>
+
+                        <input type="text" id="city" name="city" placeholder="Enter village or city" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="taluka">
+                            Taluka
+                            <span>तालुका</span>
+                        </label>
+
+                        <input type="text" id="taluka" name="taluka" placeholder="Enter taluka" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="district">
+                            District
+                            <span>जिल्हा</span>
+                        </label>
+
+                        <input type="text" id="district" name="district" placeholder="Enter district" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="state">
+                            State
+                            <span>राज्य</span>
+                        </label>
+
+                        <input type="text" id="state" name="state" placeholder="Enter state" required>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 05 ADMISSION DETAILS
+            ================================================== -->
+            <section class="student-card">
+
+                <div class="card-header">
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-school"></i>
+                    </div>
+
+                    <div>
+                        <h2>Admission Details</h2>
+                        <p>प्रवेश माहिती</p>
+                    </div>
+
+                </div>
+
+                <div class="card-grid">
+
+                    <div class="form-group">
+                        <label>
+                            Admission Number
+                            <span>प्रवेश क्रमांक</span>
+                        </label>
+
+                        <div class="readonly-field">
+                            <i class="fa-solid fa-hashtag"></i>
+                            <span>{{ next_admission }}</span>
+                            <small>Auto-generated</small>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label>
+                            UDISE No
+                            <span>यूडायस क्रमांक</span>
+                        </label>
+
+                        <div class="readonly-field">
+                            <i class="fa-solid fa-building-columns"></i>
+                            <span>{{ school_udise or "—" }}</span>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="admissionPicker">
+                            Admission Date
+                            <span>प्रवेश दिनांक</span>
+                        </label>
+
+                        <div class="input-with-icon">
+                            <i class="fa-regular fa-calendar-check"></i>
+
+                            <input type="text" id="admissionPicker" name="admission_date" placeholder="Select date"
+                                readonly required>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="studentClass">
+                            Class
+                            <span>इयत्ता</span>
+                        </label>
+
+                        <select id="studentClass" name="class" required>
+
+                            <option value="">Select Class</option>
+                            {% for cls in range(1, 11) %}
+                            <option value="{{ cls }}">{{ cls }}</option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="section">
+                            Section
+                            <span>विभाग</span>
+                        </label>
+
+                        <select id="section" name="section" required>
+                            <option value="">Select Section</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="previousSchool">
+                            Previous School
+                            <span>मागील शाळा</span>
+                        </label>
+
+                        <input type="text" id="previousSchool" name="previous_school" maxlength="200"
+                            placeholder="Optional">
+                    </div>
+
+                </div>
+
+                <div class="card-inline-note">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>
+                        मागील शाळेची माहिती विद्यार्थी इतर शाळेतून आल्यासच भरा.
+                    </span>
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 06 PARENT / CONTACT
+            ================================================== -->
+            <section class="student-card">
+
+                <div class="card-header">
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-people-roof"></i>
+                    </div>
+
+                    <div>
+                        <h2>Parent / Guardian & Contact</h2>
+                        <p>पालक / संरक्षक व संपर्क माहिती</p>
+                    </div>
+
+                </div>
+
+                <div class="card-grid">
+
+                    <div class="form-group">
+                        <label for="primaryMobile">
+                            Primary Mobile
+                            <span>मुख्य मोबाईल</span>
+                        </label>
+
+                        <input type="tel" id="primaryMobile" name="primary_mobile" inputmode="numeric" maxlength="10"
+                            pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="alternateMobile">
+                            Alternate Mobile
+                            <span>पर्यायी मोबाईल</span>
+                        </label>
+
+                        <input type="tel" id="alternateMobile" name="alternate_mobile" inputmode="numeric"
+                            maxlength="10" pattern="[6-9][0-9]{9}" placeholder="Optional">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="email">
+                            Email Address
+                            <span>ईमेल पत्ता</span>
+                        </label>
+
+                        <input type="email" id="email" name="email" maxlength="255" placeholder="parent@example.com">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="occupation">
+                            Parent Occupation
+                            <span>पालक व्यवसाय</span>
+                        </label>
+
+                        <input type="text" id="occupation" name="occupation" maxlength="100"
+                            placeholder="e.g. Farmer / Teacher">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="income">
+                            Annual Income
+                            <span>वार्षिक उत्पन्न</span>
+                        </label>
+
+                        <input type="number" id="income" name="income" min="0" step="1" inputmode="numeric"
+                            placeholder="Optional">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="guardianName">
+                            Guardian Name
+                            <span>संरक्षक (ऐच्छिक)</span>
+                        </label>
+
+                        <input type="text" id="guardianName" name="guardian_name" maxlength="200"
+                            placeholder="Only if applicable">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="guardianMobile">
+                            Guardian Mobile
+                            <span>संरक्षक मोबाईल</span>
+                        </label>
+
+                        <input type="tel" id="guardianMobile" name="guardian_mobile" inputmode="numeric" maxlength="10"
+                            pattern="[6-9][0-9]{9}" placeholder="Optional">
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 07 PREVIOUS ACADEMIC DETAILS
+            ================================================== -->
+            <section class="student-card student-card-wide">
+
+                <div class="card-header">
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+
+                    <div>
+                        <h2>Previous Academic Details</h2>
+                        <p>मागील शैक्षणिक माहिती</p>
+                    </div>
+
+                </div>
+
+                <div class="card-grid academic-grid">
+
+                    <div class="form-group">
+                        <label for="lastExam">
+                            Last Exam Passed
+                            <span>शेवटची परीक्षा</span>
+                        </label>
+
+                        <input type="text" id="lastExam" name="last_exam" placeholder="e.g. 8th Standard">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="resultStatus">
+                            Result
+                            <span>निकाल</span>
+                        </label>
+
+                        <select id="resultStatus" name="result_status">
+
+                            <option value="">Select Result</option>
+                            <option value="Pass">Pass</option>
+                            <option value="Fail">Fail</option>
+
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="progress">
+                            Progress
+                            <span>प्रगती</span>
+                        </label>
+
+                        <select id="progress" name="progress">
+
+                            <option value="">Select Progress</option>
+                            <option value="Excellent (85%+)">Excellent (85%+)</option>
+                            <option value="Good (60–85%)">Good (60–85%)</option>
+                            <option value="Average (40–60%)">Average (40–60%)</option>
+                            <option value="Needs Improvement">Needs Improvement</option>
+
+                        </select>
+                    </div>
+
+
+                    <div class="form-group conduct-group">
+                        <label for="conduct">
+                            Conduct
+                            <span>वर्तन</span>
+                        </label>
+
+                        <textarea id="conduct" name="conduct" rows="3" maxlength="1000"
+                            placeholder="Enter brief conduct remarks if available"></textarea>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- =====================================================
+             FORM ACTIONS
+        ====================================================== -->
+        <div class="form-actions">
+
+            <div class="form-actions-info">
+
+                <i class="fa-solid fa-shield-halved"></i>
+
+                <span>
+                    Fields marked as required must be completed.
+                    Please verify all information before saving.
+                </span>
+
+            </div>
+
+            <div class="form-action-buttons">
+
+                <button type="reset" class="btn-reset" id="resetStudentBtn">
+
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Reset
+
+                </button>
+
+                <a href="{{ url_for('clerk_students') }}" class="btn-view">
+
+                    <i class="fa-solid fa-users"></i>
+                    View Students
+
+                </a>
+
+                <button type="submit" id="saveBtn" class="btn-save" aria-label="Save student record">
+                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                    Save Student
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<!-- =========================================================
+     FLATPICKR
+========================================================= -->
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 
+<!-- =========================================================
+     ADD STUDENT PAGE JAVASCRIPT
+     INLINE - NO EXTERNAL JS REQUIRED
+========================================================= -->
 
-<form method="POST" enctype="multipart/form-data">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-<!-- ================= HEADER ================= -->
-<div class="student-page-header">
-    <div class="header-content">
-        <h1>Student Registration</h1>
-        <span class="marathi-title">विद्यार्थी नोंदणी</span>
-
-        <p class="header-desc">
-            Fill student details as per school register. All TC data will be generated from this.
-        </p>
-    </div>
-</div>
-
-<!-- ================= NOTE ================= -->
-<div class="student-note">
-    <p>
-        कृपया माहिती अचूक भरा. हीच माहिती टीसी व इतर कागदपत्रांसाठी वापरली जाईल.
-    </p>
-</div>
-
-
-<!-- ================= 1. STUDENT IDENTITY ================= -->
-<div class="form-section">
-    <div class="section-title">
-        <h2>Student Identity</h2>
-        <p>विद्यार्थ्याची ओळख माहिती</p>
-    </div>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>School Register No <span>अंक क्रमांक</span></label>
-            <input type="text" name="school_register_no"
-                placeholder="Enter Register Number" required>
-        </div>
-
-        <div class="form-group">
-            <label>Full Name <span>पूर्ण नाव</span></label>
-            <input type="text" name="name" placeholder="Enter Full Name " required>
-        </div>
-
-        <div class="form-group">
-            <label>Father Name <span>वडिलांचे नाव</span></label>
-            <input type="text" name="father_name" placeholder="Enter Father Name " required>
-        </div>
-
-        <div class="form-group">
-            <label>Mother Name <span>आईचे नाव</span></label>
-            <input type="text" name="mother_name" placeholder="Enter Mother Name " required>
-        </div>
-        <div class="form-group">
-            <label>Student ID <span>विद्यार्थी आयडी</span></label>
-            <input type="text" name="student_uid"
-                placeholder="Enter Student ID">
-        </div>
-        <div class="form-group">
-            <label>Aadhaar / UID <span>आधार / UID</span></label>
-
-            <input 
-                type="text" 
-                name="aadhaar"
-                id="aadhaarInput"
-                placeholder="Enter 12-digit Aadhaar Number"
-                maxlength="12"
-                required
-                oninput="validateAadhaar(this)">
-        </div>
-        <div class="form-group">
-            <label>APAAR ID <span>अपार आयडी</span></label>
-            <input
-                type="text"
-                name="apaar_id"
-                placeholder="Enter APAAR ID"
-                maxlength="20">
-        </div>
-    </div>
-</div>
- 
-
-<!-- ================= 2. PERSONAL ================= -->
-<div class="form-section">
-    <div class="section-title">
-        <h2>Personal Details</h2>
-        <p>वैयक्तिक माहिती</p>
-    </div>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Date of Birth <span>जन्मतारीख</span></label>
-            <input type="text" name="dob" id="dobPicker" placeholder="Select Date of Birth" required readonly>
-        </div>
-
-        <div class="form-group">
-            <label>Birth Place <span>जन्मस्थान</span></label>
-            <input type="text" name="birth_place" placeholder="Enter Birth Place" required>
-        </div>
-
-        <div class="form-group">
-            <label>Nationality <span>राष्ट्रीयत्व</span></label>
-            <input type="text" name="nationality" placeholder="Enter Your Nationality" required>
-        </div>
-
-        <div class="form-group">
-            <label>Mother Tongue <span>मातृभाषा</span></label>
-            <input type="text" name="mother_tongue" placeholder="Enter your mother Tongue" required>
-        </div>
-
-        <div class="form-group">
-            <label>Religion <span>धर्म</span></label>
-            <input type="text" name="religion" placeholder="Enter your Religion " required>
-        </div>
-
-        <div class="form-group">
-            <label>Caste <span>जात</span></label>
-            <input type="text" name="caste" placeholder="Enter your caste" required>
-        </div>
-
-    </div>
-</div>
-
-
-<!-- ================= 3. ADDRESS ================= -->
-<div class="form-section">
-    <div class="section-title">
-        <h2>Address Details</h2>
-        <p>पत्ता माहिती</p>
-    </div>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Village / City <span>गाव / शहर</span></label>
-            <input type="text" name="city" placeholder="Enter your city " required>
-        </div>
-
-        <div class="form-group">
-            <label>Taluka <span>तालुका</span></label>
-            <input type="text" name="taluka" placeholder="Enter your taluka" required>
-        </div>
-
-        <div class="form-group">
-            <label>District <span>जिल्हा</span></label>
-            <input type="text" name="district" placeholder="Enter your district" required>
-        </div>
-
-        <div class="form-group">
-            <label>State <span>राज्य</span></label>
-            <input type="text" name="state" placeholder="Enter your state" required>
-        </div>
-
-    </div>
-</div>
-
-
-<!-- ================= 4. ADMISSION ================= -->
-
-<div class="form-section">
-    <div class="section-title">
-        <h2>Admission Details</h2>
-        <p>प्रवेश माहिती</p>
-    </div>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Admission No <span>प्रवेश क्रमांक</span></label>
-
-            <input type="text" value="{{ next_admission }}" readonly>
-
-            <!-- hidden field -->
-            <input type="hidden" name="admission_no" value="{{ next_admission }}">
-
-            <small>Auto generated (स्वयंचलित तयार)</small>
-        </div>
-
-        <div class="form-group">
-            <label>UDISE No <span>यूडायस क्रमांक</span></label>
-
-            <input 
-                type="text" 
-                value="{{ school_udise }}" 
-                readonly
-            >
-
-            <!-- hidden field for form submit -->
-            <input 
-                type="hidden" 
-                name="school_udise" 
-                value="{{ school_udise }}"
-            >
-        </div>
-        
-        <div class="form-group">
-            <label>Admission Date <span>प्रवेश दिनांक</span></label>
-            <input type="text" name="admission_date" id="admissionPicker" placeholder="Enter Admission Date "required readonly>
-        </div>
-
-        <div class="form-group">
-            <label>Class <span>इयत्ता</span></label>
-            <select name="class" required>
-                <option value="">Select Class</option>
-                <option>1</option><option>2</option><option>3</option>
-                <option>4</option><option>5</option><option>6</option>
-                <option>7</option><option>8</option><option>9</option><option>10</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Section <span>विभाग</span></label>
-            <select name="section" required>
-                <option value="">Select Section</option>
-                <option>A</option><option>B</option><option>C</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Last School <span>मागील शाळा</span></label>
-            <input type="text" name="previous_school" placeholder="Enter Your Last School Name" >
-        </div>
-
-    </div>
-</div>
-<!-- NOTE -->
- <div class="student-note">
-    <p>
-        * Fill previous school details only if student is coming from another school.<span>* विद्यार्थी इतर शाळेतून प्रवेश घेत असल्यासच मागील शाळेची माहिती भरावी</span>
-        
-    </p>
-</div>
-
-
-<!-- ================= 5. Previous ACADEMIC PROGRESS ================= -->
-<div class="form-section">
-    <div class="section-title">
-        <h2>Previous Academic Details</h2>
-        <p>मागील शैक्षणिक माहिती</p>
-    </div>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Last Exam Passed <span>शेवटची परीक्षा</span></label>
-            <input type="text" name="last_exam" placeholder="for e.g. 8th Standard and Leave blank if first admission">
-        </div>
-
-        <div class="form-group">
-            <label>Result <span>निकाल</span></label>
-            <select name="result_status" >
-                <option value="">Select Status</option>
-                <option>Pass</option>
-                <option>Fail</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Progress <span>प्रगती</span></label>
-            <select name="progress" >
-                <option value="">Select Academic Progress</option>
-                <option>Excellent (85%+)</option>
-                <option>Good (60–85%)</option>
-                <option>Average (40–60%)</option>
-                <option>Needs Improvement</option>
-            </select>
-        </div>
-
-    <div class="form-group">
-    <label>Conduct <span>वर्तन</span></label>
-    <textarea 
-    name="conduct"
-    rows="3"
-    placeholder="e.g. Well-behaved, disciplined, respectful towards teachers and students"></textarea>
-    </div>
-
-    </div>
-</div>
- 
-
-<!-- ================= 6. PARENT DETAILS ================= -->
-<div class="form-section">
-    <div class="section-title">
-        <h2>Parent Details</h2>
-        <p>पालक माहिती</p>
-    </div>
-
-    <div class="form-grid">
-
-        <!-- PRIMARY CONTACT -->
-       <div class="form-group">
-    <label>Primary Mobile <span>मुख्य मोबाईल</span></label>
-    <input 
-        type="tel"
-        name="primary_mobile"
-        placeholder="e.g. 9876543210"
-        maxlength="10"
-        pattern="[6-9]{1}[0-9]{9}"
-        inputmode="numeric"
-        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-        required
-    >
-</div>
-
-        <!-- ALTERNATE CONTACT -->
-        <div class="form-group">
-            <label>Alternate Mobile <span>पर्यायी मोबाईल</span></label>
-            <input 
-                type="tel" 
-                name="alternate_mobile" 
-                placeholder="Optional secondary contact number"
-                maxlength="10"
-                pattern="[6-9]{1}[0-9]{9}"
-                inputmode="numeric"
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-            >
-        </div>
-
-        <!-- EMAIL -->
-        <div class="form-group">
-            <label>Email Address <span>ईमेल पत्ता</span></label>
-
-            <input
-                type="email"
-                name="email"
-                placeholder="e.g. parent@gmail.com"
-                maxlength="255"
-            >
-        </div>
-
-        <!-- OCCUPATION -->
-        <div class="form-group">
-            <label>Parent Occupation <span>व्यवसाय</span></label>
-            <input 
-                type="text" 
-                name="occupation" 
-                placeholder="e.g. Farmer / Teacher / Business"
-            >
-        </div>
-
-        <!-- ANNUAL INCOME -->
-        <div class="form-group">
-            <label>Annual Income <span>वार्षिक उत्पन्न</span></label>
-            <input 
-                type="number" 
-                name="income" 
-                placeholder="e.g. 200000"
-                min="0"
-            >
-        </div>
-
-        <!-- GUARDIAN () -->
-        <div class="form-group">
-            <label>Guardian Name <span>संरक्षक (ऐच्छिक)</span></label>
-            <input 
-                type="text" 
-                name="guardian_name" 
-                placeholder="Only if different from parents"
-            >
-        </div>
-
-        <div class="form-group">
-            <label>Guardian Mobile <span>संरक्षक मोबाईल</span></label>
-            <input 
-                type="tel" 
-                name="guardian_mobile" 
-                placeholder="e.g. 9876543210"
-                maxlength="10"
-                pattern="[6-9]{1}[0-9]{9}"
-                inputmode="numeric"
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-             
-            >
-        </div>
-
-    </div>
-</div>
-
-
-<!-- ================= 7. PHOTO ================= -->
-<div class="form-section">
-    <div class="section-title">
-        <h2>Upload Photo</h2>
-        <p>फोटो अपलोड</p>
-    </div>
-
-    <div class="photo-upload-wrapper">
-
-        <!-- File Input -->
-        <input 
-            type="file" 
-            name="photo" 
-            accept="image/*"
-            onchange="previewImage(event)"  
-        >
-
-        <!-- Helper Text -->
-        <small style="color: #777;">
-            Upload passport size photo (JPG/PNG, max 2MB)
-        </small>
-
-        <!-- Image Preview -->
-        <div style="margin-top:10px;">
-            <img id="photoPreview" src="" alt="Preview" 
-                 style="max-width:150px; margin-top: -150px; margin-left:170px; display:none; border-radius:8px;">
-        </div>
-
-    </div>
-</div>
-
-<!-- ================= ACTION ================= -->
-<div class="form-actions">
-  <button type="submit" id="saveBtn" class="btn-save">💾 Save Student</button>
-    <button type="reset" class="btn-reset">🔄 Reset</button>
-   <a href="{{ url_for('clerk_students') }}" class="btn-reset">📋 View Students</a>
-</div>
-
- 
-</form>
-
- 
- 
 <script>
 
-/* ================= 1. IMAGE PREVIEW ================= */
-/* This shows image before uploading */
-function previewImage(event) {
-    const file = event.target.files[0];
+    document.addEventListener("DOMContentLoaded", function () {
 
-    if (!file) return;
-
-    // File size validation (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-        alert("File size must be less than 2MB");
-        event.target.value = "";
-        return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = function(){
-        const img = document.getElementById('photoPreview');
-        img.src = reader.result;
-        img.style.display = 'block';
-    }
-
-    reader.readAsDataURL(file);
-}
+        "use strict";
 
 
-/* ================= COMMON ELEMENTS ================= */
-const form = document.querySelector("form");
-const btn = document.getElementById("saveBtn");
+        /* =========================================================
+           ELEMENTS
+        ========================================================= */
+
+        const form = document.getElementById("studentForm");
+
+        const saveBtn = document.getElementById("saveBtn");
+
+        const resetBtn = document.getElementById("resetStudentBtn");
 
 
-/* ================= 2. AUTO SAVE FORM (NEW) ================= */
+        /* PHOTO */
 
-// Load saved data when page loads
-window.addEventListener("load", () => {
-    const savedData = JSON.parse(localStorage.getItem("studentForm_{{ school_udise }}"));
+        const photoInput =
+            document.getElementById("studentPhoto");
 
-    if (savedData) {
-        Object.keys(savedData).forEach(key => {
-            const field = form.elements[key];
-            if (field) {
-                field.value = savedData[key];
-            }
-        });
-    }
-});
+        const photoSelectBtn =
+            document.getElementById("photoSelectBtn");
 
-// Save data on every input
-form.addEventListener("input", () => {
-    const formData = {};
+        const photoRemoveBtn =
+            document.getElementById("photoRemoveBtn");
 
-    Array.from(form.elements).forEach(el => {
-        if (el.name && el.type !== "file") { // skip file input
-            formData[el.name] = el.value;
+        const photoPreview =
+            document.getElementById("photoPreview");
+
+        const photoPlaceholder =
+            document.getElementById("photoPlaceholder");
+
+        const photoFileName =
+            document.getElementById("photoFileName");
+
+
+        /* OTHER */
+
+        const aadhaarInput =
+            document.getElementById("aadhaarInput");
+
+        const primaryMobile =
+            document.getElementById("primaryMobile");
+
+        const alternateMobile =
+            document.getElementById("alternateMobile");
+
+        const guardianMobile =
+            document.getElementById("guardianMobile");
+
+        const emailInput =
+            document.getElementById("email");
+
+        const incomeInput =
+            document.getElementById("income");
+
+        const classInput =
+            document.getElementById("studentClass");
+
+        const sectionInput =
+            document.getElementById("section");
+
+        const dobInput =
+            document.getElementById("dobPicker");
+
+        const admissionDateInput =
+            document.getElementById("admissionPicker");
+
+
+        if (!form) {
+
+            console.error(
+                "Add Student form not found."
+            );
+
+            return;
         }
+
+
+        /* =========================================================
+           CONSTANTS
+        ========================================================= */
+
+        const MAX_PHOTO_SIZE =
+            2 * 1024 * 1024;
+
+        const ALLOWED_PHOTO_TYPES = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+
+        /* =========================================================
+           FLATPICKR - DATE OF BIRTH
+        ========================================================= */
+
+        if (
+            typeof flatpickr !== "undefined" &&
+            document.getElementById("dobPicker")
+        ) {
+
+            flatpickr("#dobPicker", {
+
+                dateFormat: "d-m-Y",
+
+                maxDate: "today",
+
+                allowInput: false,
+
+                disableMobile: true,
+
+                yearRange: [
+                    1950,
+                    new Date().getFullYear()
+                ]
+
+            });
+
+        }
+
+
+        /* =========================================================
+           FLATPICKR - ADMISSION DATE
+        ========================================================= */
+
+        if (
+            typeof flatpickr !== "undefined" &&
+            document.getElementById("admissionPicker")
+        ) {
+
+            flatpickr("#admissionPicker", {
+
+                dateFormat: "d-m-Y",
+
+                maxDate: "today",
+
+                allowInput: false,
+
+                disableMobile: true
+
+            });
+
+        }
+
+
+        /* =========================================================
+           NUMERIC INPUT SANITIZATION
+        ========================================================= */
+
+        const numericFields = [
+
+            aadhaarInput,
+
+            primaryMobile,
+
+            alternateMobile,
+
+            guardianMobile
+
+        ];
+
+
+        numericFields.forEach(function (field) {
+
+            if (!field) return;
+
+
+            field.addEventListener(
+                "input",
+                function () {
+
+                    this.value =
+                        this.value
+                            .replace(/\D/g, "");
+
+                }
+            );
+
+        });
+
+
+        /* =========================================================
+           AADHAAR VALIDATION
+        ========================================================= */
+
+        if (aadhaarInput) {
+
+            aadhaarInput.addEventListener(
+                "input",
+                function () {
+
+                    this.value =
+                        this.value
+                            .replace(/\D/g, "")
+                            .slice(0, 12);
+
+
+                    this.classList.remove(
+                        "input-error",
+                        "input-valid"
+                    );
+
+
+                    if (
+                        this.value.length > 0 &&
+                        this.value.length < 12
+                    ) {
+
+                        this.classList.add(
+                            "input-error"
+                        );
+
+                    }
+
+
+                    if (
+                        this.value.length === 12
+                    ) {
+
+                        this.classList.add(
+                            "input-valid"
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           MOBILE VALIDATION
+        ========================================================= */
+
+        function isValidMobile(value) {
+
+            return /^[6-9][0-9]{9}$/.test(
+                value
+            );
+
+        }
+
+
+        /* =========================================================
+           EMAIL VALIDATION
+        ========================================================= */
+
+        function isValidEmail(value) {
+
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                .test(value);
+
+        }
+
+
+        /* =========================================================
+           PHOTO SELECT BUTTON
+        ========================================================= */
+
+        if (
+            photoSelectBtn &&
+            photoInput
+        ) {
+
+            photoSelectBtn.addEventListener(
+                "click",
+                function () {
+
+                    photoInput.click();
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           PHOTO CHANGE
+        ========================================================= */
+
+        if (photoInput) {
+
+            photoInput.addEventListener(
+                "change",
+                function () {
+
+                    const file =
+                        this.files &&
+                        this.files[0];
+
+
+                    if (!file) {
+
+                        clearPhoto();
+
+                        return;
+                    }
+
+
+                    /* ---------------------------------------------
+                       FILE TYPE
+                    --------------------------------------------- */
+
+                    if (
+                        !ALLOWED_PHOTO_TYPES
+                            .includes(file.type)
+                    ) {
+
+                        showFlash(
+                            "Please select a JPG, PNG or WEBP image.",
+                            "danger"
+                        );
+
+                        this.value = "";
+
+                        clearPhoto();
+
+                        return;
+                    }
+
+
+                    /* ---------------------------------------------
+                       FILE SIZE
+                    --------------------------------------------- */
+
+                    if (
+                        file.size >
+                        MAX_PHOTO_SIZE
+                    ) {
+
+                        showFlash(
+                            "Student photo must be 2 MB or smaller.",
+                            "danger"
+                        );
+
+                        this.value = "";
+
+                        clearPhoto();
+
+                        return;
+                    }
+
+
+                    /* ---------------------------------------------
+                       PREVIEW
+                    --------------------------------------------- */
+
+                    const objectURL =
+                        URL.createObjectURL(file);
+
+
+                    photoPreview.onload =
+                        function () {
+
+                            URL.revokeObjectURL(
+                                objectURL
+                            );
+
+                        };
+
+
+                    photoPreview.src =
+                        objectURL;
+
+
+                    photoPreview.style.display =
+                        "block";
+
+
+                    if (photoPlaceholder) {
+
+                        photoPlaceholder.style.display =
+                            "none";
+
+                    }
+
+
+                    if (photoFileName) {
+
+                        photoFileName.textContent =
+                            file.name +
+                            " • " +
+                            formatFileSize(
+                                file.size
+                            );
+
+                    }
+
+
+                    if (photoRemoveBtn) {
+
+                        photoRemoveBtn.hidden =
+                            false;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           REMOVE PHOTO
+        ========================================================= */
+
+        if (photoRemoveBtn) {
+
+            photoRemoveBtn.addEventListener(
+                "click",
+                function () {
+
+                    if (photoInput) {
+
+                        photoInput.value = "";
+
+                    }
+
+
+                    clearPhoto();
+
+
+                    showFlash(
+                        "Profile photo removed.",
+                        "info"
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           CLEAR PHOTO
+        ========================================================= */
+
+        function clearPhoto() {
+
+            if (photoPreview) {
+
+                photoPreview.src = "";
+
+                photoPreview.style.display =
+                    "none";
+
+            }
+
+
+            if (photoPlaceholder) {
+
+                photoPlaceholder.style.display =
+                    "flex";
+
+            }
+
+
+            if (photoFileName) {
+
+                photoFileName.textContent =
+                    "JPG, PNG or WEBP";
+
+            }
+
+
+            if (photoRemoveBtn) {
+
+                photoRemoveBtn.hidden =
+                    true;
+
+            }
+
+        }
+
+
+        /* =========================================================
+           FILE SIZE FORMAT
+        ========================================================= */
+
+        function formatFileSize(bytes) {
+
+            if (!bytes) {
+
+                return "0 KB";
+
+            }
+
+
+            if (bytes < 1024) {
+
+                return bytes + " B";
+
+            }
+
+
+            if (bytes < 1024 * 1024) {
+
+                return (
+                    bytes / 1024
+                ).toFixed(1) + " KB";
+
+            }
+
+
+            return (
+                bytes / (1024 * 1024)
+            ).toFixed(1) + " MB";
+
+        }
+
+
+        /* =========================================================
+           FORM VALIDATION
+        ========================================================= */
+
+        form.addEventListener(
+            "submit",
+            function (event) {
+
+                clearValidation();
+
+
+                let firstInvalid =
+                    null;
+
+
+                /* ---------------------------------------------
+                   REQUIRED FIELDS
+                --------------------------------------------- */
+
+                const requiredFields =
+                    form.querySelectorAll(
+                        "[required]"
+                    );
+
+
+                requiredFields.forEach(
+                    function (field) {
+
+                        if (
+                            !field.value ||
+                            !field.value.trim()
+                        ) {
+
+                            markInvalid(
+                                field
+                            );
+
+
+                            if (!firstInvalid) {
+
+                                firstInvalid =
+                                    field;
+
+                            }
+
+                        }
+
+                    }
+                );
+
+
+                /* ---------------------------------------------
+                   AADHAAR
+                --------------------------------------------- */
+
+                if (
+                    aadhaarInput &&
+                    aadhaarInput.value &&
+                    aadhaarInput.value.length !== 12
+                ) {
+
+                    markInvalid(
+                        aadhaarInput
+                    );
+
+
+                    if (!firstInvalid) {
+
+                        firstInvalid =
+                            aadhaarInput;
+
+                    }
+
+                }
+
+                /* ---------------------------------------------
+                CLASS
+                --------------------------------------------- */
+
+                if (
+                    classInput &&
+                    !/^(10|[1-9])$/.test(classInput.value)
+                ) {
+                    markInvalid(classInput);
+
+                    if (!firstInvalid) {
+                        firstInvalid = classInput;
+                    }
+                }
+
+                /* ---------------------------------------------
+                   SECTION
+                --------------------------------------------- */
+
+                if (
+                    sectionInput &&
+                    !/^[A-F]$/.test(sectionInput.value)
+                ) {
+                    markInvalid(sectionInput);
+
+                    if (!firstInvalid) {
+                        firstInvalid = sectionInput;
+                    }
+                }
+
+
+                /* ---------------------------------------------
+                   PRIMARY MOBILE
+                --------------------------------------------- */
+
+                if (
+                    primaryMobile &&
+                    primaryMobile.value &&
+                    !isValidMobile(
+                        primaryMobile.value
+                    )
+                ) {
+
+                    markInvalid(
+                        primaryMobile
+                    );
+
+
+                    if (!firstInvalid) {
+
+                        firstInvalid =
+                            primaryMobile;
+
+                    }
+
+                }
+
+
+                /* ---------------------------------------------
+                   ALTERNATE MOBILE
+                --------------------------------------------- */
+
+                if (
+                    alternateMobile &&
+                    alternateMobile.value &&
+                    !isValidMobile(
+                        alternateMobile.value
+                    )
+                ) {
+
+                    markInvalid(
+                        alternateMobile
+                    );
+
+
+                    if (!firstInvalid) {
+
+                        firstInvalid =
+                            alternateMobile;
+
+                    }
+
+                }
+
+
+                /* ---------------------------------------------
+                   GUARDIAN MOBILE
+                --------------------------------------------- */
+
+                if (
+                    guardianMobile &&
+                    guardianMobile.value &&
+                    !isValidMobile(
+                        guardianMobile.value
+                    )
+                ) {
+
+                    markInvalid(
+                        guardianMobile
+                    );
+
+
+                    if (!firstInvalid) {
+
+                        firstInvalid =
+                            guardianMobile;
+
+                    }
+
+                }
+
+
+                /* ---------------------------------------------
+                   EMAIL
+                --------------------------------------------- */
+
+                if (
+                    emailInput &&
+                    emailInput.value &&
+                    !isValidEmail(
+                        emailInput.value
+                    )
+                ) {
+
+                    markInvalid(
+                        emailInput
+                    );
+
+
+                    if (!firstInvalid) {
+
+                        firstInvalid =
+                            emailInput;
+
+                    }
+
+                }
+
+                /* ---------------------------------------------
+                INCOME
+                --------------------------------------------- */
+
+                if (
+                    incomeInput &&
+                    incomeInput.value.trim() !== ""
+                ) {
+                    const incomeValue = incomeInput.value.trim();
+
+                    if (
+                        !/^\d+$/.test(incomeValue) ||
+                        Number(incomeValue) < 0
+                    ) {
+                        markInvalid(incomeInput);
+
+                        if (!firstInvalid) {
+                            firstInvalid = incomeInput;
+                        }
+                    }
+                }
+
+
+                /* ---------------------------------------------
+                   PHOTO
+                --------------------------------------------- */
+
+                if (
+                    photoInput &&
+                    photoInput.files &&
+                    photoInput.files[0]
+                ) {
+
+                    const file =
+                        photoInput.files[0];
+
+
+                    if (
+                        !ALLOWED_PHOTO_TYPES
+                            .includes(file.type)
+                    ) {
+
+                        showFlash(
+                            "Please select a JPG, PNG or WEBP image.",
+                            "danger"
+                        );
+
+                        event.preventDefault();
+
+                        return;
+
+                    }
+
+
+                    if (
+                        file.size >
+                        MAX_PHOTO_SIZE
+                    ) {
+
+                        showFlash(
+                            "Student photo must be 2 MB or smaller.",
+                            "danger"
+                        );
+
+                        event.preventDefault();
+
+                        return;
+
+                    }
+
+                }
+
+
+                /* ---------------------------------------------
+                   STOP SUBMIT
+                   IF INVALID
+                --------------------------------------------- */
+
+                if (firstInvalid) {
+
+                    event.preventDefault();
+
+
+                    showFlash(
+                        "Please complete the highlighted fields before saving.",
+                        "danger"
+                    );
+
+
+                    firstInvalid.scrollIntoView({
+
+                        behavior: "smooth",
+
+                        block: "center"
+
+                    });
+
+
+                    setTimeout(
+                        function () {
+
+                            firstInvalid.focus();
+
+                        },
+                        350
+                    );
+
+
+                    return;
+
+                }
+
+
+                /* ---------------------------------------------
+                   PREVENT DOUBLE CLICK
+                --------------------------------------------- */
+
+                if (saveBtn) {
+
+                    saveBtn.disabled =
+                        true;
+
+
+                    saveBtn.innerHTML =
+                        '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+                }
+
+            }
+        );
+
+
+        /* =========================================================
+           RESET BUTTON
+        ========================================================= */
+
+        if (resetBtn) {
+
+            resetBtn.addEventListener(
+                "click",
+                function (event) {
+
+                    const confirmed =
+                        window.confirm(
+                            "Are you sure you want to clear all entered student information?"
+                        );
+
+
+                    if (!confirmed) {
+
+                        event.preventDefault();
+
+                        return;
+
+                    }
+
+
+                    setTimeout(
+                        function () {
+
+                            clearValidation();
+
+                            clearPhoto();
+
+
+                            if (photoInput) {
+
+                                photoInput.value =
+                                    "";
+
+                            }
+
+
+                            if (saveBtn) {
+
+                                saveBtn.disabled =
+                                    false;
+
+
+                                saveBtn.innerHTML =
+                                    '<i class="fa-solid fa-user-plus"></i> Save Student';
+
+                            }
+
+                        },
+                        50
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           VALIDATION HELPERS
+        ========================================================= */
+
+        function markInvalid(field) {
+
+            if (!field) return;
+
+            field.classList.add(
+                "input-error"
+            );
+
+        }
+
+
+        function clearValidation() {
+
+            form.querySelectorAll(
+                ".input-error"
+            ).forEach(
+                function (field) {
+
+                    field.classList.remove(
+                        "input-error"
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           ERP FLASH MESSAGE
+        ========================================================= */
+
+        function showFlash(
+            message,
+            category
+        ) {
+
+            let wrapper =
+                document.getElementById(
+                    "globalFlashWrapper"
+                );
+
+
+            /*
+             * The base dashboard normally creates
+             * this wrapper only when Flask has a
+             * server-side flash message.
+             *
+             * If there isn't one, create it.
+             */
+
+            if (!wrapper) {
+
+                wrapper =
+                    document.createElement(
+                        "div"
+                    );
+
+                wrapper.id =
+                    "globalFlashWrapper";
+
+                wrapper.className =
+                    "flash-wrapper";
+
+                wrapper.setAttribute(
+                    "aria-live",
+                    "polite"
+                );
+
+                wrapper.setAttribute(
+                    "aria-atomic",
+                    "true"
+                );
+
+
+                const main =
+                    document.querySelector(
+                        ".main"
+                    );
+
+
+                if (main) {
+
+                    main.insertBefore(
+                        wrapper,
+                        main.firstChild
+                    );
+
+                } else {
+
+                    document.body.prepend(
+                        wrapper
+                    );
+
+                }
+
+            }
+
+
+            /* ---------------------------------------------
+               MESSAGE BOX
+            --------------------------------------------- */
+
+            const messageBox =
+                document.createElement(
+                    "div"
+                );
+
+            messageBox.className =
+                "flash-message flash-" +
+                category;
+
+            messageBox.setAttribute(
+                "role",
+                "alert"
+            );
+
+
+            /* ---------------------------------------------
+               ICON
+            --------------------------------------------- */
+
+            let icon =
+                "fa-circle-exclamation";
+
+
+            let title =
+                "Error";
+
+
+            if (
+                category ===
+                "success"
+            ) {
+
+                icon =
+                    "fa-circle-check";
+
+                title =
+                    "Success";
+
+            }
+
+
+            else if (
+                category ===
+                "warning"
+            ) {
+
+                icon =
+                    "fa-triangle-exclamation";
+
+                title =
+                    "Warning";
+
+            }
+
+
+            else if (
+                category ===
+                "info"
+            ) {
+
+                icon =
+                    "fa-circle-info";
+
+                title =
+                    "Information";
+
+            }
+
+
+            /* ---------------------------------------------
+               SAFE HTML
+            --------------------------------------------- */
+
+            const safeMessage =
+                escapeHtml(
+                    message
+                );
+
+
+            messageBox.innerHTML = `
+
+            <div
+                class="flash-icon"
+                aria-hidden="true"
+            >
+                <i
+                    class="fa-solid ${icon}"
+                ></i>
+            </div>
+
+
+            <div class="flash-content">
+
+                <div class="flash-title">
+                    ${title}
+                </div>
+
+                <div class="flash-text">
+                    ${safeMessage}
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="flash-close"
+                aria-label="Close notification"
+                title="Close"
+            >
+                <i
+                    class="fa-solid fa-xmark"
+                ></i>
+            </button>
+
+
+            <div class="flash-progress"></div>
+
+        `;
+
+
+            wrapper.appendChild(
+                messageBox
+            );
+
+
+            /* ---------------------------------------------
+               CLOSE BUTTON
+            --------------------------------------------- */
+
+            const closeBtn =
+                messageBox.querySelector(
+                    ".flash-close"
+                );
+
+
+            if (closeBtn) {
+
+                closeBtn.addEventListener(
+                    "click",
+                    function () {
+
+                        removeFlash(
+                            messageBox
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /* ---------------------------------------------
+               AUTO REMOVE
+            --------------------------------------------- */
+
+            setTimeout(
+                function () {
+
+                    removeFlash(
+                        messageBox
+                    );
+
+                },
+                5000
+            );
+
+        }
+
+
+        /* =========================================================
+           REMOVE FLASH
+        ========================================================= */
+
+        function removeFlash(
+            element
+        ) {
+
+            if (!element) return;
+
+
+            element.style.opacity =
+                "0";
+
+            element.style.transform =
+                "translateY(-5px)";
+
+
+            element.style.transition =
+                "opacity .2s ease, transform .2s ease";
+
+
+            setTimeout(
+                function () {
+
+                    if (
+                        element &&
+                        element.parentNode
+                    ) {
+
+                        element.remove();
+
+                    }
+
+                },
+                220
+            );
+
+        }
+
+
+        /* =========================================================
+           ESCAPE HTML
+        ========================================================= */
+
+        function escapeHtml(
+            value
+        ) {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.textContent =
+                value == null
+                    ? ""
+                    : String(value);
+
+
+            return div.innerHTML;
+
+        }
+
+
+        /* =========================================================
+           REMOVE SERVER-SIDE FLASH ON CLOSE
+           Optional helper for existing messages
+        ========================================================= */
+
+        document
+            .querySelectorAll(
+                "#globalFlashWrapper .flash-close"
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        function () {
+
+                            const message =
+                                button.closest(
+                                    ".flash-message"
+                                );
+
+
+                            if (message) {
+
+                                removeFlash(
+                                    message
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /* =========================================================
+           FINISHED
+        ========================================================= */
+
+        console.log(
+            "SPL ShalaSarthi Add Student initialized."
+        );
+
     });
 
-    localStorage.setItem("studentForm_{{ school_udise }}", JSON.stringify(formData));
-});
-
-
-/* ================= 3. FORM SUBMIT LOADING ================= */
-
-form.addEventListener("submit", function() {
- 
-
-    btn.innerText = "Saving...";
-    btn.disabled = true;
-    btn.style.opacity = "0.7";
-
-});
-
-
-/* ================= 4. RESET CONFIRMATION ================= */
-
-const resetBtn = document.querySelector("button[type='reset']");
-
-resetBtn.addEventListener("click", function(e){
-
-    const confirmReset = confirm("Are you sure you want to reset the form?");
-
-    if(!confirmReset){
-        e.preventDefault();
-    } else {
-        localStorage.removeItem("studentForm_{{ school_udise }}"); // also clear saved data
-    }
-
-});
-
-function validateAadhaar(input) {
-
-    // remove non-numbers
-    input.value = input.value.replace(/\D/g, '');
-
-    // validation
-    if (input.value.length === 12) {
-        input.style.border = "2px solid #16a34a"; // green
-    } else {
-        input.style.border = "2px solid #dc2626"; // red
-    }
-}
-
-// DOB PICKER
-flatpickr("#dobPicker", {
-    dateFormat: "d-m-Y",
-    maxDate: "today", // cannot select future DOB
-    yearRange: [1990, new Date().getFullYear()],
-    allowInput: false, // disable typing
-    disableMobile: true
-});
-
-// ADMISSION DATE
-flatpickr("#admissionPicker", {
-    dateFormat: "d-m-Y",
-    maxDate: "today",
-    allowInput: false,
-    disableMobile: true
-});
-
 </script>
-
 
 {% endblock %}

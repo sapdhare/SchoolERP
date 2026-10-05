@@ -4,14 +4,14 @@
 
 {% block content %}
 
- <!-- ================= HERO SECTION ================= -->
- 
+<!-- ================= HERO SECTION ================= -->
+
 
 <section class="hero" id="home">
 
     <!-- BACKGROUND IMAGE -->
     <div class="hero-bg">
-         
+
     </div>
 
     <!-- OVERLAY -->
@@ -23,7 +23,7 @@
         <div class="hero-left">
 
             <span class="hero-tag">
-                ✦ Smart School ERP Platform  
+                ✦ Smart School ERP Platform
             </span>
 
             <div class="hero-slider">
@@ -47,8 +47,8 @@
                 <div class="hero-slide">
 
                     <h1>
-                      Automate Administration.
-                      <span>Make Smarter Decisions.</span>
+                        Automate Administration.
+                        <span>Make Smarter Decisions.</span>
                     </h1>
 
 
@@ -63,10 +63,10 @@
                 <!-- SLIDE 3 -->
                 <div class="hero-slide">
 
-                     <h1>
-                       Digitize Every School Process.
-                       <span>Stay Future Ready.</span>
-                     </h1>
+                    <h1>
+                        Digitize Every School Process.
+                        <span>Stay Future Ready.</span>
+                    </h1>
 
                     <p>
                         Modernize your school with
@@ -101,7 +101,7 @@
 
                 <div class="award-content">
                     <h4>99.9%</h4>
-                   <span>Cloud Uptime</span>
+                    <span>Cloud Uptime</span>
                 </div>
             </div>
 
@@ -110,7 +110,7 @@
 
                 <div class="award-content">
                     <h4>Secure</h4>
-                   <span>Role Based Access</span>
+                    <span>Role Based Access</span>
                 </div>
             </div>
 
@@ -185,10 +185,7 @@
 
             <div class="core-content">
 
-                <img
-                    src="{{ url_for('static', filename='images/ecosystem_hero.png') }}"
-                    alt="ShalaSarthi"
-                >
+                <img src="{{ url_for('static', filename='images/ecosystem_hero.png') }}" alt="ShalaSarthi">
 
                 <!-- <h3>ShalaSarthi ERP</h3>
 
@@ -472,11 +469,7 @@
 
             <div class="image-glow"></div>
 
-            <img
-                src="{{ url_for('static', filename='images/hero.png') }}"
-                alt="Student"
-                class="student-img"
-            >
+            <img src="{{ url_for('static', filename='images/hero.png') }}" alt="Student" class="student-img">
 
             <!-- FLOATING CARDS -->
 
@@ -566,32 +559,30 @@
 
         <!-- SCREEN -->
 
-       <div class="preview-screen">
+        <div class="preview-screen">
 
-    <img
-        id="previewImage"
-        src="{{ url_for('static', filename='images/dashboard_preview.png') }}"
-        alt="ERP Preview">
+            <img id="previewImage" src="{{ url_for('static', filename='images/dashboard_preview.png') }}"
+                alt="ERP Preview">
 
-    <div class="preview-floating-card card-top">
-        <span id="badge1">
-            📊 Live Dashboard
-        </span>
-    </div>
+            <div class="preview-floating-card card-top">
+                <span id="badge1">
+                    📊 Live Dashboard
+                </span>
+            </div>
 
-    <div class="preview-floating-card card-left">
-        <span id="badge2">
-            ☁ Cloud Based
-        </span>
-    </div>
+            <div class="preview-floating-card card-left">
+                <span id="badge2">
+                    ☁ Cloud Based
+                </span>
+            </div>
 
-    <div class="preview-floating-card card-bottom">
-        <span id="badge3">
-            ⚡ Real Time Data
-        </span>
-    </div>
+            <div class="preview-floating-card card-bottom">
+                <span id="badge3">
+                    ⚡ Real Time Data
+                </span>
+            </div>
 
-</div>
+        </div>
 
     </div>
 
@@ -697,48 +688,58 @@
 
 </section>
 
-  <!-- // ================= PRICING SECTION =================    -->
+<!-- =========================================================
+     PRICING SECTION
+========================================================= -->
+
 <section class="pricing-section" id="plans">
 
     <div class="pricing-header">
 
         <span class="pricing-tag">
-            💎 Pricing Plans
+            Pricing Plans
         </span>
 
         <h2>
-            Choose The Perfect Plan
+            Choose The Right Plan
             <span>For Your School</span>
         </h2>
 
         <p>
-            Transparent pricing designed for schools of every size.
-            Scale your ERP as your institution grows.
+            Flexible plans designed for schools of different sizes.
+            Start with what you need and scale as your institution grows.
         </p>
 
     </div>
 
-    <!-- BILLING TOGGLE -->
 
-    <div class="billing-toggle">
+    <!-- =====================================================
+         BILLING TOGGLE
+    ====================================================== -->
 
-        <button class="billing-btn active"
-                onclick="toggleBilling('monthly',this)">
+    <div class="billing-toggle" role="group" aria-label="Billing cycle">
+
+        <button type="button" class="billing-btn active" data-cycle="monthly" onclick="toggleBilling('monthly', this)">
             Monthly
         </button>
 
-        <button class="billing-btn"
-                onclick="toggleBilling('yearly',this)">
+        <button type="button" class="billing-btn" data-cycle="yearly" onclick="toggleBilling('yearly', this)">
             Yearly
         </button>
 
     </div>
 
-    <!-- PRICING GRID -->
+
+    <!-- =====================================================
+         PRICING GRID
+    ====================================================== -->
 
     <div class="pricing-grid">
 
-        <!-- STARTER -->
+
+        <!-- =================================================
+             STARTER
+        ================================================== -->
 
         <div class="pricing-card">
 
@@ -749,18 +750,16 @@
             <div class="student-badge">
                 Up To 200 Students
             </div>
+
             <div class="student-note">
-            Perfect for new schools & small institutes
+                Essential tools for small institutions.
             </div>
+
 
             <div class="price-area">
 
-                <span class="amount"
-                      data-month="999"
-                      data-year="9999">
-
+                <span class="amount" data-month="999" data-year="9999">
                     ₹999
-
                 </span>
 
                 <span class="duration">
@@ -769,59 +768,69 @@
 
             </div>
 
+
             <div class="gst-note">
-                + GST Extra
+                Annual plan: ₹9,999/year
             </div>
+
 
             <ul class="feature-list">
 
                 <li>✔ Student Management</li>
-                <li>✔ Admission Register</li>
-                <li>✔ Student Profiles</li>
-                <li>✔ TC Generation</li>
+
+                <li>✔ TC Management</li>
+
                 <li>✔ Bonafide Certificates</li>
-                <li>✔ Basic Reports</li>
+
+                <li>✔ Import &amp; Export</li>
+
+                <li>✔ Up To 5 Staff</li>
+
+                <li>✔ 5GB Storage</li>
+
                 <li>✔ Email Support</li>
 
             </ul>
 
-            <button
-            class="plan-btn"
-            onclick="openPlanModal('Starter')">
 
-                Book Free Consultation
-
+            <button type="button" class="plan-btn" onclick="openPlanModal('Starter')">
+                Get Started
             </button>
 
         </div>
 
-        <!-- ESSENTIAL -->
+
+
+        <!-- =================================================
+             ESSENTIAL
+        ================================================== -->
 
         <div class="pricing-card featured">
 
             <div class="popular-tag">
-                MOST POPULAR
+                RECOMMENDED
             </div>
+
 
             <div class="plan-label">
                 Essential
             </div>
 
+
             <div class="student-badge">
                 Up To 500 Students
             </div>
+
+
             <div class="student-note">
-                Best for growing schools with daily operations
+                Complete tools for growing schools.
             </div>
+
 
             <div class="price-area">
 
-                <span class="amount"
-                      data-month="2499"
-                      data-year="24999">
-
-                    ₹2499
-
+                <span class="amount" data-month="2499" data-year="24999">
+                    ₹2,499
                 </span>
 
                 <span class="duration">
@@ -830,33 +839,48 @@
 
             </div>
 
+
             <div class="gst-note">
-                + GST Extra
+                Annual plan: ₹24,999/year
             </div>
+
 
             <ul class="feature-list">
 
-                <li>✔ Everything In Starter</li>
+                <li>✔ Everything in Starter</li>
+
                 <li>✔ Attendance Management</li>
-                <li>✔ Staff Management</li>
+
+                <li>✔ Fee Management</li>
+
+                <li>✔ Teacher Management</li>
+
+                <li>✔ Results Management</li>
+
+                <li>✔ Timetable</li>
+
                 <li>✔ Notice Board</li>
-                <li>✔ Dashboard Analytics</li>
-                <li>✔ Export Reports</li>
-                <li>✔ WhatsApp Support</li>
+
+                <li>✔ Up To 20 Staff</li>
+
+                <li>✔ 20GB Storage</li>
+
+                <li>✔ Priority Support</li>
 
             </ul>
 
-            <button
-            class="plan-btn"
-            onclick="openPlanModal('Essential')">
 
-                Schedule Demo
-
+            <button type="button" class="plan-btn" onclick="openPlanModal('Essential')">
+                Schedule a Demo
             </button>
 
         </div>
 
-        <!-- PROFESSIONAL -->
+
+
+        <!-- =================================================
+             PROFESSIONAL
+        ================================================== -->
 
         <div class="pricing-card">
 
@@ -864,21 +888,21 @@
                 Professional
             </div>
 
+
             <div class="student-badge">
-                Up To 1000 Students
+                Up To 1,000 Students
             </div>
+
+
             <div class="student-note">
-            Ideal for large schools needing full automation
+                Advanced operations for larger schools.
             </div>
+
 
             <div class="price-area">
 
-                <span class="amount"
-                      data-month="4999"
-                      data-year="49999">
-
-                    ₹4999
-
+                <span class="amount" data-month="4999" data-year="49999">
+                    ₹4,999
                 </span>
 
                 <span class="duration">
@@ -887,33 +911,44 @@
 
             </div>
 
+
             <div class="gst-note">
-                + GST Extra
+                Annual plan: ₹49,999/year
             </div>
+
 
             <ul class="feature-list">
 
-                <li>✔ Everything In Essential</li>
-                <li>✔ Fee Management</li>
-                <li>✔ Advanced Reports</li>
-                <li>✔ Student Promotion</li>
-                <li>✔ Custom Certificates</li>
+                <li>✔ Everything in Essential</li>
+
+                <li>✔ All Available ERP Modules</li>
+
+                <li>✔ Up To 1,000 Students</li>
+
+                <li>✔ Up To 50 Staff</li>
+
+                <li>✔ Up To 2,000 TC Records</li>
+
+                <li>✔ Up To 2,000 Bonafide Records</li>
+
+                <li>✔ 100GB Storage</li>
+
                 <li>✔ Priority Support</li>
-                <li>✔ Role Permissions</li>
 
             </ul>
 
-            <button
-            class="plan-btn"
-            onclick="openPlanModal('Professional')">
 
-                Book Demo
-
+            <button type="button" class="plan-btn" onclick="openPlanModal('Professional')">
+                Book a Demo
             </button>
 
         </div>
 
-        <!-- ENTERPRISE -->
+
+
+        <!-- =================================================
+             ENTERPRISE
+        ================================================== -->
 
         <div class="pricing-card">
 
@@ -921,73 +956,86 @@
                 Enterprise
             </div>
 
+
             <div class="student-badge">
-                1000+ Students
+                Custom Scale
             </div>
+
+
             <div class="student-note">
-            For groups, trusts & multi-campus institutions
+                Custom ERP solutions for institutions and school groups.
             </div>
+
 
             <div class="price-area">
 
                 <span class="custom-price">
-                    Custom Quote
+                    Custom Pricing
                 </span>
 
             </div>
 
+
             <div class="gst-note">
-                Contact Sales Team
+                Talk to our team
             </div>
+
 
             <ul class="feature-list">
 
-                <li>✔ Multi School ERP</li>
-                <li>✔ Branch Management</li>
-                <li>✔ Dedicated Manager</li>
-                <li>✔ API Integrations</li>
-                <li>✔ Custom Branding</li>
-                <li>✔ Training & Deployment</li>
-                <li>✔ Premium Support</li>
+                <li>✔ All Available ERP Modules</li>
+
+                <li>✔ Custom Student Capacity</li>
+
+                <li>✔ Custom Staff Capacity</li>
+
+                <li>✔ Unlimited Storage Options</li>
+
+                <li>✔ Dedicated Support</li>
+
+                <li>✔ Multi-School Requirements</li>
+
+                <li>✔ Custom Configuration</li>
+
+                <li>✔ Institutional Requirements</li>
 
             </ul>
 
-            <button
-            class="plan-btn"
-            onclick="openPlanModal('Enterprise')">
 
+            <button type="button" class="plan-btn" onclick="openPlanModal('Enterprise')">
                 Request Custom Quote
-
             </button>
 
         </div>
 
-        </div>
+    </div>
 
-        <div class="pricing-trust">
 
-        <div class="trust-item">
-            🚀 Free Setup
-        </div>
 
-        <div class="trust-item">
-            📦 Free Data Migration
-        </div>
+    <!-- =====================================================
+         PRICING TRUST / INFORMATION
+    ====================================================== -->
+
+    <div class="pricing-trust">
 
         <div class="trust-item">
-            🎓 Free Training
-        </div>
-
-        <div class="trust-item">
-            ☁ Secure Cloud Hosting
+            Secure School Data
         </div>
 
         <div class="trust-item">
-            💬 WhatsApp Support
+            Role-Based Access
         </div>
 
         <div class="trust-item">
-            ⚡ 99.9% Uptime
+            Cloud-Based ERP
+        </div>
+
+        <div class="trust-item">
+            Scalable Plans
+        </div>
+
+        <div class="trust-item">
+            Dedicated Support Options
         </div>
 
     </div>
@@ -1041,7 +1089,8 @@
 
                         <p>
 
-                            SPL 3rd Floor, Shri Prabhu Krupa, Dhanwantari nagar, Dastur Nagar Rd, Amravati, Maharashtra 444606
+                            SPL 3rd Floor, Shri Prabhu Krupa, Dhanwantari nagar, Dastur Nagar Rd, Amravati, Maharashtra
+                            444606
 
                         </p>
 
@@ -1093,16 +1142,13 @@
 
             <div class="contact-buttons">
 
-                <button
-                class="contact-demo-btn"
-                onclick="openPlanModal('Free Demo')">
+                <button class="contact-demo-btn" onclick="openPlanModal('Free Demo')">
 
                     Book Free Demo
 
                 </button>
 
-                <a href="tel:+918888244176"
-                   class="contact-call-btn">
+                <a href="tel:+918888244176" class="contact-call-btn">
 
                     Call Now
 
@@ -1110,7 +1156,7 @@
 
             </div>
 
-           <div class="contact-social">
+            <div class="contact-social">
 
                 <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
 
@@ -1142,99 +1188,97 @@
 
         <!-- RIGHT SIDE -->
 
-<div class="contact-right">
+        <div class="contact-right">
 
-    <!-- MAP CARD -->
+            <!-- MAP CARD -->
 
-    <a href="https://maps.app.goo.gl/BcWTZfQJDR88YVUA8"
-       target="_blank"
-       class="contact-map-card">
+            <a href="https://maps.app.goo.gl/BcWTZfQJDR88YVUA8" target="_blank" class="contact-map-card">
 
-        <div class="contact-map-content">
+                <div class="contact-map-content">
 
-            <span class="contact-map-badge">
+                    <span class="contact-map-badge">
 
-                SPL Office
+                        SPL Office
 
-            </span>
+                    </span>
 
-            <h3>
+                    <h3>
 
-                Visit Our Office
+                        Visit Our Office
 
-            </h3>
+                    </h3>
 
-            <p>
+                    <p>
 
-                SPL 3rd Floor, Dhanwantari Nagar,
-                Amravati, Maharashtra, India
+                        SPL 3rd Floor, Dhanwantari Nagar,
+                        Amravati, Maharashtra, India
 
-            </p>
+                    </p>
 
-            <span class="contact-map-link">
+                    <span class="contact-map-link">
 
-                Open In Google Maps
+                        Open In Google Maps
 
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
 
-            </span>
+                    </span>
+
+                </div>
+
+                <div class="contact-map-image">
+
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4581.207336815283!2d77.76483979999999!3d20.9089425!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bd6a54ddbe17d1f%3A0x121708717e71c25f!2sShri%20Prabhu%20Softlink%20Pvt%20Ltd!5e1!3m2!1sen!2sin!4v1779451794872!5m2!1sen!2sin"
+                        loading="lazy">
+                    </iframe>
+
+                </div>
+
+            </a>
+
+            <!-- QUICK INFO -->
+
+            <div class="contact-info-box">
+
+                <div class="contact-info-item">
+
+                    <i class="fa-solid fa-clock"></i>
+
+                    <span>
+
+                        Mon - Sat : 10 AM - 7 PM
+
+                    </span>
+
+                </div>
+
+                <div class="contact-info-item">
+
+                    <i class="fa-solid fa-location-dot"></i>
+
+                    <span>
+
+                        Maharashtra, India
+
+                    </span>
+
+                </div>
+
+                <div class="contact-info-item">
+
+                    <i class="fa-solid fa-headset"></i>
+
+                    <span>
+
+                        Dedicated ERP Support
+
+                    </span>
+
+                </div>
+
+            </div>
 
         </div>
-
-        <div class="contact-map-image">
-
-            <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4581.207336815283!2d77.76483979999999!3d20.9089425!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bd6a54ddbe17d1f%3A0x121708717e71c25f!2sShri%20Prabhu%20Softlink%20Pvt%20Ltd!5e1!3m2!1sen!2sin!4v1779451794872!5m2!1sen!2sin"
-            loading="lazy">
-            </iframe>
-
-        </div>
-
-    </a>
-
-    <!-- QUICK INFO -->
-
-    <div class="contact-info-box">
-
-        <div class="contact-info-item">
-
-            <i class="fa-solid fa-clock"></i>
-
-            <span>
-
-                Mon - Sat : 10 AM - 7 PM
-
-            </span>
-
-        </div>
-
-        <div class="contact-info-item">
-
-            <i class="fa-solid fa-location-dot"></i>
-
-            <span>
-
-                Maharashtra, India
-
-            </span>
-
-        </div>
-
-        <div class="contact-info-item">
-
-            <i class="fa-solid fa-headset"></i>
-
-            <span>
-
-                Dedicated ERP Support
-
-            </span>
-
-        </div>
-
-    </div>
-
-</div>
 
     </div>
 
@@ -1364,33 +1408,29 @@
 
         </div>
 
-       <!-- RIGHT -->
+        <!-- RIGHT -->
 
-<div class="faq-right">
+        <div class="faq-right">
 
-    <div class="faq-image-card">
+            <div class="faq-image-card">
 
-        <img
-        src="{{ url_for('static', filename='images/faq_section.png') }}"
-        alt="ShalaSarthi ERP">
+                <img src="{{ url_for('static', filename='images/faq_section.png') }}" alt="ShalaSarthi ERP">
 
-    </div>
+            </div>
 
-</div>
+        </div>
 
     </div>
 
 </section>
- 
-  <!-- ================= DEMO REQUEST MODAL =================     -->
 
-  <div class="plan-modal" id="planModal">
+<!-- ================= DEMO REQUEST MODAL =================     -->
+
+<div class="plan-modal" id="planModal">
 
     <div class="modal-box">
 
-        <span
-        class="close-modal"
-        onclick="closePlanModal()">
+        <span class="close-modal" onclick="closePlanModal()">
 
             &times;
 
@@ -1404,57 +1444,29 @@
 
         <form id="demoForm">
 
-            <input
-            type="text"
-            id="schoolName"
-            placeholder="School Name"
-            required>
+            <input type="text" id="schoolName" placeholder="School Name" required>
 
-            <input
-            type="text"
-            id="personName"
-            placeholder="Contact Person"
-            required>
+            <input type="text" id="personName" placeholder="Contact Person" required>
 
-            <input
-            type="tel"
-            id="mobile"
-            placeholder="Mobile Number"
-            required>
+            <input type="tel" id="mobile" placeholder="Mobile Number" required>
 
-            <input
-            type="email"
-            id="email"
-            placeholder="Email Address">
+            <input type="email" id="email" placeholder="Email Address">
 
-            <input
-            type="number"
-            id="students"
-            placeholder="Total Students">
+            <input type="number" id="students" placeholder="Total Students">
 
             <div class="selected-plan-box">
 
                 <label>Selected Plan</label>
 
-                <input
-                type="text"
-                id="selectedPlanDisplay"
-                readonly>
+                <input type="text" id="selectedPlanDisplay" readonly>
 
-                <input
-                type="hidden"
-                id="selectedPlan">
+                <input type="hidden" id="selectedPlan">
 
             </div>
 
-            <textarea
-            id="message"
-            placeholder="Additional Requirements (Optional)"
-            rows="4"></textarea>
+            <textarea id="message" placeholder="Additional Requirements (Optional)" rows="4"></textarea>
 
-            <button
-            type="submit"
-            class="submit-btn">
+            <button type="submit" class="submit-btn">
 
                 Submit Request
 
@@ -1468,209 +1480,281 @@
 
 <script>
 
-/* =========================================================
+    /* =========================================================
+       BILLING TOGGLE
+    ========================================================= */
+
+    /* =========================================================
    BILLING TOGGLE
 ========================================================= */
 
-function toggleBilling(type){
+    function toggleBilling(type, clickedButton) {
 
-    const buttons = document.querySelectorAll(".billing-btn");
+        /* -----------------------------------------
+           UPDATE BUTTON STATE
+        ----------------------------------------- */
 
-    buttons.forEach(btn =>
-        btn.classList.remove("active")
+        const buttons = document.querySelectorAll(".billing-btn");
+
+        buttons.forEach(button => {
+            button.classList.remove("active");
+        });
+
+        if (clickedButton) {
+            clickedButton.classList.add("active");
+        } else {
+
+            const activeButton =
+                document.querySelector(
+                    `.billing-btn[data-cycle="${type}"]`
+                );
+
+            if (activeButton) {
+                activeButton.classList.add("active");
+            }
+        }
+
+
+        /* -----------------------------------------
+           UPDATE ALL PLAN PRICES
+        ----------------------------------------- */
+
+        document.querySelectorAll(".amount").forEach(amount => {
+
+            const monthlyPrice =
+                parseFloat(amount.dataset.month || "0");
+
+            const yearlyPrice =
+                parseFloat(amount.dataset.year || "0");
+
+
+            /* -------------------------------------
+               MONTHLY
+            ------------------------------------- */
+
+            if (type === "monthly") {
+
+                amount.textContent =
+                    "₹" + monthlyPrice.toLocaleString("en-IN");
+
+                const duration =
+                    amount.parentElement.querySelector(".duration");
+
+                if (duration) {
+                    duration.textContent = "/month";
+                }
+
+
+                /* Update annual information */
+
+                const card =
+                    amount.closest(".pricing-card");
+
+                const note =
+                    card
+                        ? card.querySelector(".gst-note")
+                        : null;
+
+                if (note) {
+
+                    note.textContent =
+                        "Annual plan: ₹" +
+                        yearlyPrice.toLocaleString("en-IN") +
+                        "/year";
+                }
+
+            }
+
+
+            /* -------------------------------------
+               YEARLY
+            ------------------------------------- */
+
+            else {
+
+                amount.textContent =
+                    "₹" + yearlyPrice.toLocaleString("en-IN");
+
+                const duration =
+                    amount.parentElement.querySelector(".duration");
+
+                if (duration) {
+                    duration.textContent = "/year";
+                }
+
+
+                /* Update annual information */
+
+                const card =
+                    amount.closest(".pricing-card");
+
+                const note =
+                    card
+                        ? card.querySelector(".gst-note")
+                        : null;
+
+                if (note) {
+
+                    const effectiveMonthly =
+                        yearlyPrice / 12;
+
+                    note.textContent =
+                        "Effective ₹" +
+                        Math.round(effectiveMonthly)
+                            .toLocaleString("en-IN") +
+                        "/month when billed yearly";
+                }
+
+            }
+
+        });
+
+    }
+
+
+    /* =========================================================
+       OPEN DEMO MODAL
+    ========================================================= */
+
+    function openDemoModal() {
+
+        document
+            .getElementById("demoModal")
+            .classList.add("active");
+    }
+
+
+    /* =========================================================
+       CLOSE DEMO MODAL
+    ========================================================= */
+
+    function closeDemoModal() {
+
+        document
+            .getElementById("demoModal")
+            .classList.remove("active");
+    }
+
+
+    /* =========================================================
+       CLOSE MODAL ON ESC KEY
+    ========================================================= */
+
+    document.addEventListener(
+        "keydown",
+        function (e) {
+
+            if (e.key === "Escape") {
+
+                closeDemoModal();
+            }
+
+        }
     );
 
-    if(type === "monthly"){
 
-        buttons[0].classList.add("active");
+    /* =========================================================
+       CLOSE MODAL ON OUTSIDE CLICK
+    ========================================================= */
 
-    }else{
+    window.addEventListener(
+        "click",
+        function (e) {
 
-        buttons[1].classList.add("active");
-    }
+            const modal =
+                document.getElementById(
+                    "demoModal"
+                );
 
-    document.querySelectorAll(".amount")
-    .forEach(item => {
+            if (e.target === modal) {
 
-        const monthlyPrice = parseFloat(
-            item.dataset.month
-        );
+                closeDemoModal();
+            }
 
-        if(type === "monthly"){
-
-            item.innerText =
-                "₹" + monthlyPrice;
-
-            item.nextElementSibling.innerText =
-                "/month";
-
-        }else{
-
-            let yearlyPrice =
-                monthlyPrice * 12;
-
-            yearlyPrice =
-                yearlyPrice -
-                (yearlyPrice * 0.10);
-
-            yearlyPrice =
-                Math.round(yearlyPrice);
-
-            item.innerText =
-                "₹" + yearlyPrice;
-
-            item.nextElementSibling.innerText =
-                "/year";
         }
-
-    });
-
-}
+    );
 
 
-/* =========================================================
-   OPEN DEMO MODAL
-========================================================= */
-
-function openDemoModal(){
+    /* =========================================================
+       DEMO FORM SUBMIT
+    ========================================================= */
 
     document
-        .getElementById("demoModal")
-        .classList.add("active");
-}
+        .getElementById("demoForm")
+        .addEventListener(
+            "submit",
+            function (e) {
 
+                e.preventDefault();
 
-/* =========================================================
-   CLOSE DEMO MODAL
-========================================================= */
+                const school =
+                    document
+                        .getElementById("schoolName")
+                        .value
+                        .trim();
 
-function closeDemoModal(){
+                const person =
+                    document
+                        .getElementById("personName")
+                        .value
+                        .trim();
 
-    document
-        .getElementById("demoModal")
-        .classList.remove("active");
-}
+                const phone =
+                    document
+                        .getElementById("phoneNumber")
+                        .value
+                        .trim();
 
+                /* =========================
+                   PHONE VALIDATION
+                ========================= */
 
-/* =========================================================
-   CLOSE MODAL ON ESC KEY
-========================================================= */
+                const phoneRegex =
+                    /^[0-9]{10}$/;
 
-document.addEventListener(
-    "keydown",
-    function(e){
+                if (!phoneRegex.test(phone)) {
 
-        if(e.key === "Escape"){
+                    alert(
+                        "Enter valid 10 digit phone number"
+                    );
 
-            closeDemoModal();
-        }
+                    return;
+                }
 
-    }
-);
+                /* =========================
+                   WHATSAPP MESSAGE
+                ========================= */
 
+                const message =
 
-/* =========================================================
-   CLOSE MODAL ON OUTSIDE CLICK
-========================================================= */
-
-window.addEventListener(
-    "click",
-    function(e){
-
-        const modal =
-            document.getElementById(
-                "demoModal"
-            );
-
-        if(e.target === modal){
-
-            closeDemoModal();
-        }
-
-    }
-);
-
-
-/* =========================================================
-   DEMO FORM SUBMIT
-========================================================= */
-
-document
-.getElementById("demoForm")
-.addEventListener(
-    "submit",
-    function(e){
-
-        e.preventDefault();
-
-        const school =
-            document
-            .getElementById("schoolName")
-            .value
-            .trim();
-
-        const person =
-            document
-            .getElementById("personName")
-            .value
-            .trim();
-
-        const phone =
-            document
-            .getElementById("phoneNumber")
-            .value
-            .trim();
-
-        /* =========================
-           PHONE VALIDATION
-        ========================= */
-
-        const phoneRegex =
-            /^[0-9]{10}$/;
-
-        if(!phoneRegex.test(phone)){
-
-            alert(
-                "Enter valid 10 digit phone number"
-            );
-
-            return;
-        }
-
-        /* =========================
-           WHATSAPP MESSAGE
-        ========================= */
-
-        const message =
-
-`Hello, I want a live demo of ShalaSync ERP.
+                    `Hello, I want a live demo of ShalaSync ERP.
 
 School Name: ${school}
 Contact Person: ${person}
 Phone: ${phone}`;
 
-        const whatsappUrl =
+                const whatsappUrl =
 
-`https://wa.me/918308452931?text=${encodeURIComponent(message)}`;
+                    `https://wa.me/918308452931?text=${encodeURIComponent(message)}`;
 
-        window.open(
-            whatsappUrl,
-            "_blank"
+                window.open(
+                    whatsappUrl,
+                    "_blank"
+                );
+
+                /* =========================
+                   RESET FORM
+                ========================= */
+
+                document
+                    .getElementById("demoForm")
+                    .reset();
+
+                closeDemoModal();
+
+            }
         );
 
-        /* =========================
-           RESET FORM
-        ========================= */
-
-        document
-            .getElementById("demoForm")
-            .reset();
-
-        closeDemoModal();
-
-    }
-);
-
 </script>
- 
+
 {% endblock %}

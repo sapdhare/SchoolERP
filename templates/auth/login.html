@@ -4,109 +4,232 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 
+<!-- =====================================================
+     AUTH HEADER
+====================================================== -->
+
+<header class="auth-header">
+
+    <a href="/" class="auth-brand">
+
+        {% if global_settings.system_logo %}
+        <img src="{{ url_for(
+                    'static',
+                    filename=global_settings.system_logo
+                ) }}" alt="{{ global_settings.system_name or 'SPL ShalaSarthi' }}" class="auth-brand-logo">
+        {% endif %}
+
+        <div class="auth-brand-text">
+
+            <strong>
+                {{ global_settings.system_name or "SPL ShalaSarthi" }}
+            </strong>
+
+            <span>
+                School ERP
+            </span>
+
+        </div>
+
+    </a>
+
+
+    <a href="/" class="auth-back-link">
+
+        <i class="fa-solid fa-arrow-left"></i>
+
+        <span>Back to Website</span>
+
+    </a>
+
+</header>
+
+
 <section class="login-page">
 
     <div class="login-container">
 
-        <!-- LEFT SIDE -->
-  <div class="login-left">
+        <!-- =================================================
+             LEFT BRAND PANEL
+        ================================================== -->
 
-    <!-- TEXT -->
-    <div class="left-content">
-        <h2>
-        {{ global_settings.system_name or "SchoolSphere" }}
-        </h2>
-        <h1>Smart School ERP</h1>
-        <p>
-            Manage TC, marksheets and complete school operations with ease.
-        </p>
-    </div>
+        <div class="login-left">
 
-    <!-- SVG IMAGE -->
-    <img src="{{ url_for('static', filename='images/student_login.png') }}" class="student-svg" alt="School ERP Login">
+            <div class="left-content">
+                
+                <div class="login-brand-pill">
 
-    <!-- DOT PATTERN -->
-    <div class="dots1"></div>
-    <div class="dots2"></div>
+                    <i class="fa-solid fa-graduation-cap"></i>
 
-</div>
-        <!-- RIGHT SIDE -->
+                    {{ global_settings.system_name or "SPL ShalaSarthi" }}
+
+                </div>
+                <h1>Smart School ERP</h1>
+                <p>
+                    Manage students, certificates, attendance,
+                    marksheets and everyday school operations
+                    from one secure platform.
+                </p>
+            </div>
+
+            <!-- SVG IMAGE -->
+
+            <img src="{{ url_for('static', filename='images/student_login.png') }}" class="student-svg"
+                alt="School ERP Login">
+
+            <!-- DOT PATTERN -->
+
+            <div class="dots1"></div>
+            <div class="dots2"></div>
+
+        </div>
+
+
+        <!-- =================================================
+             LOGIN PANEL
+        ================================================== -->
         <div class="login-right">
 
             <div class="login-box">
 
-                <h2>Welcome Back 👋</h2>
+                <div class="login-heading">
+
+                    <span class="login-icon">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Welcome Back
+                        </h2>
+
                         <p class="login-sub">
-            Login to your school dashboard<br>
-            <span style="font-size:12px; color:#64748B;">
-                आपल्या शाळेच्या डॅशबोर्डमध्ये लॉगिन करा
-            </span>
-        </p>
+                            Sign in to your school dashboard
+                        </p>
 
-                <!-- ROLE TABS -->
-                <!-- <div class="login-tabs"  method="POST" action="/login">
-                    <button class="active" type="button" data-role="admin">Admin</button>
-                    <button type="button" data-role="teacher">Teacher</button>
-                    <button type="button" data-role="student">Student</button>
-                </div> -->
-
-               {% with messages = get_flashed_messages(with_categories=true) %} {% if
-                messages %} {% for category, message in messages %}
-        
-                    <div class="login-alert {{ category }}">
-                      <i class="fa-solid fa-circle-exclamation"></i>
-            
-                      <span>{{ message }}</span>
                     </div>
-            
-                {% endfor %} {% endif %} {% endwith %}
 
-                <!-- FORM -->
-                 <form class="login-form" method="POST" action="/login">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                </div>
+
+                <p class="login-sub-marathi">
+                    आपल्या शाळेच्या डॅशबोर्डमध्ये सुरक्षितपणे लॉगिन करा
+                </p>
 
 
-                    <!-- EMAIL -->
-                    <input 
-                        type="email" 
-                        name="email" 
-                        placeholder="Enter Email (ईमेल)" 
-                        autocomplete="email"
-                        maxlength="120"
-                        required
-                    >
 
-                    <!-- PASSWORD -->
-                    <div class="password-field">
+                <!-- =================================================
+                     FLASH MESSAGES
+                ================================================== -->
 
-                        <input 
-                            type="password"
-                            name="password"
-                            id="password"
-                            placeholder="Enter Password (पासवर्ड)"
-                            autocomplete="current-password"
-                            maxlength="100"
-                            required
-                        >
+                {% with messages = get_flashed_messages(
+                with_categories=true
+                ) %}
 
-                        <span
-                            class="toggle-password"
-                            onclick="togglePassword()">
+                {% if messages %}
 
-                            👁
+                <div class="login-alerts">
 
+                    {% for category, message in messages %}
+
+                    <div class="login-alert {{ category }}">
+
+                        <i class="
+                                        {% if category == 'success' %}
+                                            fa-solid fa-circle-check
+                                        {% elif category == 'warning' %}
+                                            fa-solid fa-triangle-exclamation
+                                        {% else %}
+                                            fa-solid fa-circle-exclamation
+                                        {% endif %}
+                                    "></i>
+
+                        <span>
+                            {{ message }}
                         </span>
 
                     </div>
 
-                    <button
-                        type="submit"
-                        class="btn-login"
-                        id="loginBtn"
-                    >
+                    {% endfor %}
+
+                </div>
+
+                {% endif %}
+
+                {% endwith %}
+
+
+                <!-- =================================================
+                     LOGIN FORM
+                ================================================== -->
+
+                <form class="login-form" method="POST" action="/login">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- EMAIL -->
+
+                    <div class="login-field">
+
+                        <label for="loginEmail">
+                            Email Address
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <i class="fa-regular fa-envelope"></i>
+
+                            <input type="email" id="loginEmail" name="email" placeholder="Enter your email"
+                                autocomplete="username" maxlength="120" required>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="login-field">
+
+                        <div class="field-label-row">
+
+                            <label for="password">
+                                Password
+                            </label>
+
+                        </div>
+
+                        <div class="input-wrapper password-wrapper">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            <input type="password" name="password" id="password" placeholder="Enter your password"
+                                autocomplete="current-password" maxlength="100" required>
+
+                            <button type="button" class="toggle-password" id="togglePassword"
+                                aria-label="Show password">
+
+                                <i class="fa-regular fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- LOGIN BUTTON -->
+
+                    <button type="submit" class="btn-login" id="loginBtn">
 
                         <span class="btn-text">
-                            Login
+
+                            <span>
+                                Sign In
+                            </span>
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
                         </span>
 
                         <span class="btn-loader"></span>
@@ -115,9 +238,34 @@
 
                 </form>
 
+                <!-- SECURITY NOTE -->
+
+                <div class="login-security-note">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    <span>
+                        Your login session is protected and encrypted.
+                    </span>
+
+                </div>
+
             </div>
 
         </div>
+
+    </div>
+
+    <!-- AUTH FOOTER -->
+
+    <div class="auth-footer">
+
+        © {{ current_year }}
+        {{ global_settings.system_name or "SPL ShalaSarthi ERP" }}
+
+        <span>•</span>
+
+        Secure ERP Access
 
     </div>
 
@@ -126,59 +274,76 @@
 <!-- JavaScript -->
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
 
-/* =========================================
-   PASSWORD TOGGLE
-========================================= */
+    /* =====================================================
+       PASSWORD TOGGLE
+    ====================================================== */
 
-function togglePassword(){
+    const passwordInput = document.getElementById("password");
+    const togglePasswordBtn = document.getElementById("togglePassword");
 
-    const passwordInput =
-        document.getElementById("password");
+    if (passwordInput && togglePasswordBtn) {
 
-    if(passwordInput.type === "password"){
+        togglePasswordBtn.addEventListener("click", function () {
 
-        passwordInput.type = "text";
+            const icon = this.querySelector("i");
 
-    }else{
+            const isPassword =
+                passwordInput.type === "password";
 
-        passwordInput.type = "password";
+            passwordInput.type =
+                isPassword ? "text" : "password";
+
+            icon.classList.toggle(
+                "fa-eye",
+                !isPassword
+            );
+
+            icon.classList.toggle(
+                "fa-eye-slash",
+                isPassword
+            );
+
+            this.setAttribute(
+                "aria-label",
+                isPassword
+                    ? "Hide password"
+                    : "Show password"
+            );
+
+        });
+
     }
 
-}
 
+    /* =====================================================
+       LOGIN LOADER
+    ====================================================== */
 
-/* =========================================
-   LOGIN LOADER
-========================================= */
+    const loginForm =
+        document.querySelector(".login-form");
 
-document.querySelector(".login-form")
-.addEventListener("submit", function(){
-
-    const btn =
+    const loginBtn =
         document.getElementById("loginBtn");
-     
 
-    btn.disabled = true;
-    btn.classList.add("loading");
+    if (loginForm && loginBtn) {
+
+        loginForm.addEventListener("submit", function () {
+
+            if (!loginForm.checkValidity()) {
+                return;
+            }
+
+            loginBtn.disabled = true;
+
+            loginBtn.classList.add("loading");
+
+        });
+
+    }
 
 });
-
 </script>
-
-<!-- // ROLE TAB SWITCH -->
-<!-- <script> 
-document.querySelectorAll(".login-tabs button").forEach(btn => {
-    btn.addEventListener("click", () => {
-
-        // active UI
-        document.querySelectorAll(".login-tabs button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-
-        // set role
-        document.getElementById("roleInput").value = btn.dataset.role;
-    });
-});
-</script> -->
 
 {% endblock %}

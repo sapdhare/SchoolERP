@@ -3,122 +3,566 @@
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Payment Successful</title>
+    <meta name="theme-color" content="#0ea5a4">
 
-<link rel="stylesheet"
-      href="{{ url_for(
-      'static',
-      filename='css/subscription/success.css'
-      ) }}">
+    <title>
+        Payment Successful | ShalaSarthi ERP
+    </title>
 
-<meta http-equiv="refresh"
-      content="5;url={{ url_for('clerk_dashboard') }}">
+    <link rel="stylesheet" href="{{ url_for(
+            'static',
+            filename='css/subscription/success.css'
+        ) }}">
 
 </head>
 
+
 <body>
 
-<div class="success-wrapper">
 
-    <div class="success-card">
+    <!-- =========================================================
+     PAGE BACKGROUND DECORATION
+========================================================= -->
 
-        <div class="success-icon">
+    <div class="page-decoration decoration-one"></div>
 
-            ✓
+    <div class="page-decoration decoration-two"></div>
 
-        </div>
+    <div class="page-decoration decoration-three"></div>
 
-        <h1>
-            Payment Successful
-        </h1>
 
-        <p class="success-subtitle">
+    <!-- =========================================================
+     FLYING BIRDS
+========================================================= -->
 
-            Your subscription has been activated successfully.
+    <div class="flying-birds" aria-hidden="true">
 
-        </p>
+        <!-- Bird group 1 -->
+        <svg class="bird bird-one" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
 
-        <div class="success-details">
+            <path d="M10 32
+               C24 16, 39 16, 57 31
+               C74 16, 91 16, 110 30" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
 
-            <div class="detail-row">
+        </svg>
 
-                <span>Plan</span>
 
-                <strong>
-                    {{ plan }}
-                </strong>
+        <!-- Bird group 2 -->
+        <svg class="bird bird-two" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
 
-            </div>
+            <path d="M10 32
+               C24 16, 39 16, 57 31
+               C74 16, 91 16, 110 30" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
 
-            <div class="detail-row">
+        </svg>
 
-                <span>Amount Paid</span>
 
-                <strong>
-                    ₹{{ amount }}
-                </strong>
+        <!-- Bird group 3 -->
+        <svg class="bird bird-three" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
 
-            </div>
+            <path d="M10 32
+               C24 16, 39 16, 57 31
+               C74 16, 91 16, 110 30" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
 
-            <div class="detail-row">
-
-                <span>Status</span>
-
-                <strong class="status-success">
-                    Active
-                </strong>
-
-            </div>
-
-        </div>
-
-        <div class="success-message">
-
-            Redirecting to Dashboard in
-            <span id="countdown">5</span>
-            seconds...
-
-        </div>
-
-        <a href="{{ url_for('clerk_dashboard') }}"
-           class="dashboard-btn">
-
-            Go To Dashboard
-
-        </a>
+        </svg>
 
     </div>
 
-</div>
 
-<script>
+    <!-- =========================================================
+     MAIN
+========================================================= -->
 
-let seconds = 5;
+    <main class="success-page">
 
-const counter =
-document.getElementById(
-    "countdown"
-);
 
-setInterval(() => {
+        <section class="success-card" aria-labelledby="success-title">
 
-    seconds--;
 
-    if(seconds >= 0){
+            <!-- =================================================
+             TOP BRAND
+        ================================================== -->
 
-        counter.innerText =
-        seconds;
+            <div class="success-brand">
 
-    }
+                <div class="brand-mark">
+                    S
+                </div>
 
-},1000);
+                <div class="brand-copy">
 
-</script>
+                    <strong>
+                        ShalaSarthi ERP
+                    </strong>
+
+                    <span>
+                        School Management & Automation Platform
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             SUCCESS VISUAL
+        ================================================== -->
+
+            <div class="success-visual">
+
+
+                <div class="success-glow"></div>
+
+
+                <div class="success-circle">
+
+                    <svg class="success-check" viewBox="0 0 52 52" aria-hidden="true">
+
+                        <circle cx="26" cy="26" r="23" fill="none" />
+
+                        <path d="M15 27.5
+                           L22.5 35
+                           L38 18" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"
+                            stroke-linejoin="round" />
+
+                    </svg>
+
+                </div>
+
+
+                <span class="spark spark-one"></span>
+                <span class="spark spark-two"></span>
+                <span class="spark spark-three"></span>
+                <span class="spark spark-four"></span>
+
+            </div>
+
+
+            <!-- =================================================
+             TITLE
+        ================================================== -->
+
+            <div class="success-heading">
+
+                <div class="success-eyebrow">
+                    PAYMENT VERIFIED
+                </div>
+
+                <h1 id="success-title">
+                    Payment Successful
+                </h1>
+
+                <p>
+                    Your subscription has been successfully
+                    verified and activated.
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+             STATUS BADGE
+        ================================================== -->
+
+            <div class="activation-badge">
+
+                <span class="badge-dot"></span>
+
+                Subscription Active
+
+            </div>
+
+
+            <!-- =================================================
+             PAYMENT SUMMARY
+        ================================================== -->
+
+            <div class="payment-summary">
+
+
+                <div class="summary-item">
+
+                    <span>
+                        PLAN
+                    </span>
+
+                    <strong>
+                        {{ payment.plan_name }}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <span>
+                        AMOUNT PAID
+                    </span>
+
+                    <strong>
+                        ₹{{ "%.2f"|format(payment.amount|float) }}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <span>
+                        STATUS
+                    </span>
+
+                    <strong class="paid">
+                        Paid
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <span>
+                        INVOICE
+                    </span>
+
+                    <strong>
+                        {{ payment.invoice_number }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             PAYMENT DETAILS
+        ================================================== -->
+
+            <div class="payment-details">
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Payment ID
+                    </span>
+
+                    <strong class="mono">
+                        {{ payment.payment_id }}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Order ID
+                    </span>
+
+                    <strong class="mono">
+                        {{ payment.order_id }}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Billing Cycle
+                    </span>
+
+                    <strong>
+
+                        {% if payment.billing_cycle == "yearly" %}
+                        Annual
+                        {% else %}
+                        Monthly
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Payment Gateway
+                    </span>
+
+                    <strong>
+                        {{ payment.payment_gateway or "Razorpay" }}
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =================================================
+             REDIRECT AREA
+        ================================================== -->
+
+            <div class="redirect-area">
+
+
+                <div class="redirect-copy">
+
+                    <span class="redirect-icon">
+                        →
+                    </span>
+
+                    <span>
+                        Taking you back to your dashboard in
+                    </span>
+
+                    <strong id="countdown">
+                        7
+                    </strong>
+
+                    <span>
+                        seconds
+                    </span>
+
+                </div>
+
+
+                <div class="progress-track">
+
+                    <div class="progress-bar" id="progressBar"></div>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =================================================
+             ACTIONS
+        ================================================== -->
+
+            <div class="success-actions">
+
+
+                <a href="{{ url_for(
+                    'view_invoice',
+                    payment_log_id=payment.id
+                ) }}" class="btn btn-secondary">
+
+                    <span>
+                        ▣
+                    </span>
+
+                    View Invoice
+
+                </a>
+
+
+                <a href="{{ url_for('clerk_dashboard') }}" class="btn btn-primary" id="dashboardButton">
+
+                    <span>
+                        →
+                    </span>
+
+                    Go to Dashboard
+
+                </a>
+
+
+            </div>
+
+
+            <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+            <div class="success-footer">
+
+                <span class="footer-check">
+                    ✓
+                </span>
+
+                <span>
+                    Secure payment verified successfully
+                </span>
+
+                <span class="footer-separator">
+                    •
+                </span>
+
+                <span>
+                    ShalaSarthi ERP
+                </span>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+    <script>
+
+        (function () {
+
+            "use strict";
+
+
+            /*
+             * =======================================================
+             * CONFIGURATION
+             * =======================================================
+             */
+
+            const REDIRECT_SECONDS = 7;
+
+            const dashboardUrl =
+                "{{ url_for('clerk_dashboard') }}";
+
+
+            /*
+             * =======================================================
+             * ELEMENTS
+             * =======================================================
+             */
+
+            const countdown =
+                document.getElementById("countdown");
+
+            const progressBar =
+                document.getElementById("progressBar");
+
+            const dashboardButton =
+                document.getElementById("dashboardButton");
+
+
+            /*
+             * =======================================================
+             * SAFETY CHECK
+             * =======================================================
+             */
+
+            if (
+                !countdown ||
+                !progressBar
+            ) {
+                return;
+            }
+
+
+            /*
+             * =======================================================
+             * COUNTDOWN
+             * =======================================================
+             */
+
+            let remaining =
+                REDIRECT_SECONDS;
+
+
+            /*
+             * Initial state
+             */
+
+            countdown.textContent =
+                remaining;
+
+            progressBar.style.width =
+                "0%";
+
+
+            /*
+             * =======================================================
+             * REDIRECT TIMER
+             * =======================================================
+             */
+
+            const timer =
+                setInterval(function () {
+
+                    remaining--;
+
+                    if (remaining >= 0) {
+
+                        countdown.textContent =
+                            remaining;
+
+                        const elapsed =
+                            REDIRECT_SECONDS - remaining;
+
+                        const progress =
+                            (
+                                elapsed /
+                                REDIRECT_SECONDS
+                            ) * 100;
+
+                        progressBar.style.width =
+                            progress + "%";
+
+                    }
+
+
+                    /*
+                     * Redirect
+                     */
+
+                    if (remaining <= 0) {
+
+                        clearInterval(timer);
+
+                        progressBar.style.width =
+                            "100%";
+
+                        window.location.replace(
+                            dashboardUrl
+                        );
+
+                    }
+
+                }, 1000);
+
+
+            /*
+             * =======================================================
+             * DASHBOARD BUTTON
+             * =======================================================
+             *
+             * Stop the automatic timer when the user manually
+             * navigates.
+             */
+
+            if (dashboardButton) {
+
+                dashboardButton.addEventListener(
+                    "click",
+                    function () {
+
+                        clearInterval(timer);
+
+                    }
+                );
+
+            }
+
+
+        })();
+
+    </script>
+
 
 </body>
+
 </html>

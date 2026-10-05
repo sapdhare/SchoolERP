@@ -51,7 +51,7 @@
                     date_to=date_to,
                     year=selected_year,
                     month=selected_month,
-                    class_name=selected_class,
+                    class=selected_class,
                     section=selected_section
                 ) }}" class="cr-btn cr-btn-primary" id="downloadAllBtn">
 
@@ -97,8 +97,8 @@
                 </h2>
 
                 <p>
-                    Select a date range or use year, month, class and
-                    section filters.
+                    Use a date range or year/month for time-based reports.
+                    Class and section can be used independently.
                 </p>
 
             </div>
@@ -115,6 +115,8 @@
 
 
         <form method="GET" action="{{ url_for('clerk_reports') }}" id="reportFilterForm" class="cr-filter-form">
+
+            <input type="hidden" name="tab" id="reportActiveTab" value="{{ selected_tab or 'overview' }}">
 
             <!-- DATE FROM -->
 
@@ -344,7 +346,7 @@
                 </strong>
 
                 <small>
-                    Matching current filters
+                    Active students by class / section
                 </small>
 
             </div>
@@ -371,7 +373,7 @@
                 </strong>
 
                 <small>
-                    Student records created
+                    Records created in selected period
                 </small>
 
             </div>
@@ -759,7 +761,7 @@
                     </h3>
 
                     <p>
-                        Active student records matching the selected filters.
+                        All active student records, optionally filtered by class and section.
                     </p>
 
                 </div>
@@ -793,7 +795,11 @@
 
             </div>
 
-
+            <div class="cr-table-limit-note">
+                <i class="fa-solid fa-circle-info"></i>
+                Showing up to 500 records on screen.
+                Use Excel export for the complete filtered student report.
+            </div>
             <div class="cr-table-wrap">
 
                 <table class="cr-table">
@@ -956,7 +962,11 @@
 
             </div>
 
-
+            <div class="cr-table-limit-note">
+                <i class="fa-solid fa-circle-info"></i>
+                Showing up to 500 records on screen.
+                Use Excel export for the complete admission report.
+            </div>
             <div class="cr-table-wrap">
 
                 <table class="cr-table">
@@ -1101,7 +1111,11 @@
 
             </div>
 
-
+            <div class="cr-table-limit-note">
+                <i class="fa-solid fa-circle-info"></i>
+                Showing up to 500 records on screen.
+                Use Excel export for the complete Bonafide report.
+            </div>
             <div class="cr-table-wrap">
 
                 <table class="cr-table">
@@ -1250,7 +1264,11 @@
 
             </div>
 
-
+            <div class="cr-table-limit-note">
+                <i class="fa-solid fa-circle-info"></i>
+                Showing up to 500 records on screen.
+                Use Excel export for the complete Bonafide report.
+            </div>
             <div class="cr-table-wrap">
 
                 <table class="cr-table">
@@ -1462,7 +1480,11 @@
 
             </div>
 
-
+            <div class="cr-table-limit-note">
+                <i class="fa-solid fa-circle-info"></i>
+                Showing up to 200 records on screen.
+                Use Excel export for the complete data-quality report.
+            </div>
             <div class="cr-table-wrap">
 
                 <table class="cr-table">
@@ -1745,6 +1767,16 @@
 
 
         function activateTab(tabName) {
+
+
+            const activeTabInput =
+                document.getElementById(
+                    "reportActiveTab"
+                );
+
+            if (activeTabInput) {
+                activeTabInput.value = tabName;
+            }
 
             tabs.forEach(function (tab) {
 
@@ -2349,8 +2381,146 @@
 
 
         /* =====================================================
-           FILTER VALIDATION
-        ====================================================== */
+           REPORT FILTER MODE
+           ===================================================== */
+
+        const dateFromInput =
+            document.getElementById("dateFrom");
+
+        const dateToInput =
+            document.getElementById("dateTo");
+
+        const yearInput =
+            document.getElementById("reportYear");
+
+        const monthInput =
+            document.getElementById("reportMonth");
+
+        const activeTabInput =
+            document.getElementById("reportActiveTab");
+
+
+        function syncReportFilterMode() {
+
+            const hasDateRange =
+                Boolean(
+                    dateFromInput?.value ||
+                    dateToInput?.value
+                );
+
+            /*
+             * Date range has priority.
+             *
+             * If Date From OR Date To is selected:
+             * disable Year and Month.
+             */
+
+            if (hasDateRange) {
+
+                if (yearInput) {
+
+                    yearInput.disabled = true;
+                    yearInput.title =
+                        "Year is disabled while a date range is selected.";
+                }
+
+                if (monthInput) {
+
+                    monthInput.disabled = true;
+                    monthInput.title =
+                        "Month is disabled while a date range is selected.";
+                }
+
+            } else {
+
+                if (yearInput) {
+
+                    yearInput.disabled = false;
+                    yearInput.title = "";
+                }
+
+                if (monthInput) {
+
+                    monthInput.disabled = false;
+                    monthInput.title = "";
+                }
+            }
+        }
+
+
+        /* =====================================================
+           DATE CHANGES
+           ===================================================== */
+
+        dateFromInput?.addEventListener(
+            "change",
+            syncReportFilterMode
+        );
+
+        dateToInput?.addEventListener(
+            "change",
+            syncReportFilterMode
+        );
+
+
+        /* =====================================================
+           YEAR CHANGE
+           ===================================================== */
+
+        yearInput?.addEventListener(
+            "change",
+            function () {
+
+                if (this.value) {
+
+                    if (dateFromInput) {
+                        dateFromInput.value = "";
+                    }
+
+                    if (dateToInput) {
+                        dateToInput.value = "";
+                    }
+                }
+
+                syncReportFilterMode();
+            }
+        );
+
+
+        /* =====================================================
+           MONTH CHANGE
+           ===================================================== */
+
+        monthInput?.addEventListener(
+            "change",
+            function () {
+
+                if (this.value) {
+
+                    if (dateFromInput) {
+                        dateFromInput.value = "";
+                    }
+
+                    if (dateToInput) {
+                        dateToInput.value = "";
+                    }
+                }
+
+                syncReportFilterMode();
+            }
+        );
+
+
+        /* =====================================================
+           INITIAL STATE
+           ===================================================== */
+
+        syncReportFilterMode();
+
+
+        /* =====================================================
+           FILTER FORM VALIDATION
+           ===================================================== */
 
         const filterForm =
             document.getElementById(
@@ -2364,20 +2534,16 @@
                 function (event) {
 
                     const from =
-                        document.getElementById(
-                            "dateFrom"
-                        )?.value;
+                        dateFromInput?.value || "";
 
                     const to =
-                        document.getElementById(
-                            "dateTo"
-                        )?.value;
+                        dateToInput?.value || "";
 
-                    if (
-                        from &&
-                        to &&
-                        from > to
-                    ) {
+                    /*
+                     * Final client-side protection.
+                     */
+
+                    if (from && to && from > to) {
 
                         event.preventDefault();
 
@@ -2386,9 +2552,20 @@
                         );
 
                         return;
-
                     }
 
+                    /*
+                     * Make sure active tab is submitted.
+                     */
+
+                    if (
+                        activeTabInput &&
+                        !activeTabInput.value
+                    ) {
+
+                        activeTabInput.value =
+                            "overview";
+                    }
 
                     const button =
                         document.getElementById(
@@ -2399,19 +2576,14 @@
 
                         button.disabled = true;
 
-                        button.innerHTML =
-                            `
-                        <i class="fa-solid fa-spinner fa-spin"></i>
-                        Loading Report...
-                        `;
-
+                        button.innerHTML = `
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Loading Report...
+                `;
                     }
-
                 }
             );
-
         }
-
 
         /* =====================================================
            DOWNLOAD BUTTON LOADING

@@ -1,6 +1,6 @@
 /* =========================================================
    SPL SHALASARTHI
-   ADD STUDENT — PREMIUM COMPACT UI
+   EDIT STUDENT
 ========================================================= */
 
 .student-page {
@@ -13,7 +13,7 @@
 
 
 /* =========================================================
-   HEADER
+   PAGE HEADER
 ========================================================= */
 
 .student-page-header {
@@ -30,7 +30,7 @@
 }
 
 .student-header-main {
-    display: flex;
+   display: flex;
     align-items: center;
     gap: 14px;
     min-width: 0;
@@ -59,7 +59,7 @@
 }
 
 .student-header-eyebrow {
-    margin-bottom: 3px;
+     margin-bottom: 3px;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: .12em;
@@ -67,7 +67,7 @@
 }
 
 .student-header-copy h1 {
-    margin: 0;
+     margin: 0;
     font-size: 24px;
     line-height: 1.15;
     font-weight: 800;
@@ -76,7 +76,7 @@
 }
 
 .student-header-subtitle {
-    margin: 3px 0 0;
+     margin: 3px 0 0;
     font-size: 12px;
     font-weight: 600;
     color: #0ea5a4;
@@ -84,7 +84,7 @@
 
 .student-header-description {
     margin: 5px 0 0;
-    max-width: 780px;
+    max-width: 690px;
     font-size: 12px;
     line-height: 1.45;
     color: #64748b;
@@ -108,8 +108,8 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #14b8a6;
-    box-shadow: 0 0 0 4px rgba(20, 184, 166, .10);
+    background: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, .12);
 }
 
 
@@ -141,6 +141,10 @@
     color: #0f766e;
 }
 
+.student-note-icon i {
+    font-size: 12px;
+}
+
 .student-note-content {
     min-width: 0;
 }
@@ -154,7 +158,7 @@
 }
 
 .student-note-content p {
-    margin: 0;
+     margin: 0;
     font-size: 11px;
     line-height: 1.5;
     color: #475569;
@@ -162,11 +166,11 @@
 
 
 /* =========================================================
-   TWO-COLUMN CARD LAYOUT
+   CARD GRID
 ========================================================= */
 
 .student-sections-grid {
-    display: grid;
+     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 16px;
     align-items: start;
@@ -179,14 +183,15 @@
     border-radius: 16px;
     background: rgba(255, 255, 255, .97);
     box-shadow: 0 8px 24px rgba(15, 23, 42, .045);
-    animation: studentCardIn .35s ease both;
+    animation: editCardIn .35s ease both;
 }
 
 .student-card-wide {
     grid-column: 1 / -1;
 }
 
-@keyframes studentCardIn {
+@keyframes editCardIn {
+
     from {
         opacity: 0;
         transform: translateY(8px);
@@ -213,7 +218,7 @@
 }
 
 .card-header-icon {
-    width: 34px;
+     width: 34px;
     height: 34px;
     flex: 0 0 34px;
     display: flex;
@@ -281,7 +286,6 @@
     font-weight: 500;
 }
 
-
 /* =========================================================
    INPUTS
 ========================================================= */
@@ -293,14 +297,16 @@
     box-sizing: border-box;
     border: 1px solid #dbe3ec;
     border-radius: 9px;
-    background: #f8fafc;
+    background: #ffffff;
     color: #0f172a;
     font-family: inherit;
     font-size: 12.5px;
+     
+    outline: none;
     transition:
-        border-color .2s ease,
-        box-shadow .2s ease,
-        background .2s ease;
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background .18s ease;
 }
 
 .form-group input,
@@ -313,135 +319,70 @@
     min-height: 76px;
     padding: 10px 11px;
     resize: vertical;
+     
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-    color: #a8b2c0;
-}
-
-.form-group input:hover,
-.form-group select:hover,
-.form-group textarea:hover {
-    border-color: #b9c6d5;
+   color: #a8b2c0;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    outline: none;
     border-color: #0ea5a4;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(14, 165, 164, .10);
+    box-shadow:
+        0 0 0 3px rgba(14, 165, 164, .10);
 }
 
-.form-group input.input-error,
-.form-group select.input-error,
-.form-group textarea.input-error {
-    border-color: #ef4444;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, .08);
-}
-
-.form-group input.input-valid {
-    border-color: #10b981;
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+    border-color: #b9c5d4;
 }
 
 
 /* =========================================================
-   INPUT WITH ICON
+   LOCKED FIELDS
 ========================================================= */
 
-.input-with-icon {
+.locked-field {
     position: relative;
 }
 
-.input-with-icon>i {
+.locked-field>i {
     position: absolute;
-    left: 11px;
+    z-index: 2;
     top: 50%;
+    left: 11px;
     transform: translateY(-50%);
-    z-index: 1;
     color: #94a3b8;
-    font-size: 12px;
-    pointer-events: none;
+    font-size: 10px;
 }
 
-.input-with-icon input {
-    padding-left: 32px;
+.locked-field input {
+    padding-left: 29px !important;
+    background: #f8fafc !important;
+    color: #64748b !important;
+    cursor: not-allowed;
 }
 
-
-/* =========================================================
-   READONLY FIELD
-========================================================= */
-
-.readonly-field {
-    min-height: 38px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 11px;
-    border: 1px solid #e2e8f0;
-    border-radius: 9px;
-    background: #f1f5f9;
-    color: #475569;
-    font-size: 11px;
-}
-
-.readonly-field i {
-    color: #0f766e;
-    font-size: 11px;
-}
-
-.readonly-field span {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.readonly-field small {
-    margin-left: auto;
-    padding: 2px 6px;
-    border-radius: 999px;
-    background: #dcfce7;
-    color: #15803d;
-    font-size: 8px;
-    font-weight: 800;
+.field-lock-note {
+    display: block;
+    margin-top: 4px;
+    color: #94a3b8;
+    font-size: 8.5px;
 }
 
 
 /* =========================================================
-   INLINE NOTE
-========================================================= */
-
-.card-inline-note {
-    display: flex;
-    align-items: flex-start;
-    gap: 7px;
-    margin-top: 12px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    background: #f8fafc;
-    color: #64748b;
-    font-size: 9.8px;
-    line-height: 1.45;
-}
-
-.card-inline-note i {
-    margin-top: 1px;
-    color: #0ea5a4;
-}
-
-
-/* =========================================================
-   PHOTO CARD
+   PHOTO
 ========================================================= */
 
 .photo-card {
     min-height: 70%;
 }
+
 
 .photo-layout {
     display: grid;
@@ -456,20 +397,23 @@
 }
 
 .photo-preview {
-    position: relative;
-    width: 142px;
-    height: 170px;
+    width: 130px;
+    height: 158px;
     overflow: hidden;
-    border: 1px dashed #b9deda;
-    border-radius: 13px;
-    background: linear-gradient(145deg, #f8fafc, #ecfeff);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+    background: #f8fafc;
 }
 
 .photo-preview img {
     width: 100%;
     height: 100%;
-    display: none;
     object-fit: cover;
+    display: block;
 }
 
 .photo-placeholder {
@@ -481,23 +425,20 @@
     justify-content: center;
     gap: 7px;
     color: #94a3b8;
+    background: #f8fafc;
+    font-size: 10px;
+}
+
+/* IMPORTANT:
+   Respect the HTML hidden attribute.
+*/
+.photo-placeholder[hidden] {
+    display: none !important;
 }
 
 .photo-placeholder i {
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: #e2e8f0;
-    color: #94a3b8;
-    font-size: 17px;
-}
-
-.photo-placeholder span {
-    font-size: 9px;
-    font-weight: 600;
+    font-size: 28px;
+    color: #cbd5e1;
 }
 
 .photo-upload-content {
@@ -505,23 +446,30 @@
 }
 
 .photo-select-btn {
+    width: 100%;
     height: 38px;
-    padding: 0 15px;
     border: 0;
     border-radius: 9px;
-    background: linear-gradient(135deg, #0ea5a4, #0f766e);
-    color: #fff;
+    background:
+        linear-gradient(135deg,
+            #0ea5a4,
+            #0f766e);
+    color: #ffffff;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 7px 16px rgba(14, 165, 164, .18);
-    transition: transform .2s ease, box-shadow .2s ease;
+    box-shadow:
+        0 7px 16px rgba(14, 165, 164, .18);
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
 }
 
 .photo-select-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 9px 20px rgba(14, 165, 164, .25);
+    box-shadow:
+        0 9px 20px rgba(14, 165, 164, .25);
 }
 
 .photo-file-name {
@@ -531,7 +479,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: #64748b;
-    font-size: 10px;
+    font-size: 9.5px;
 }
 
 .photo-rules {
@@ -550,8 +498,8 @@
 
 .photo-rules i {
     width: 18px;
-    color: #0f766e;
     text-align: center;
+    color: #0f766e;
 }
 
 .photo-remove-btn {
@@ -560,12 +508,28 @@
     padding: 0 10px;
     border: 1px solid #fecaca;
     border-radius: 8px;
-    background: #fff;
+    background: #ffffff;
     color: #dc2626;
     font-family: inherit;
     font-size: 9.5px;
     font-weight: 700;
     cursor: pointer;
+}
+
+
+/* =========================================================
+   VALIDATION
+========================================================= */
+
+.input-error {
+    border-color: #dc2626 !important;
+    background: #fff7f7 !important;
+    box-shadow:
+        0 0 0 3px rgba(220, 38, 38, .08) !important;
+}
+
+.input-valid {
+    border-color: #16a34a !important;
 }
 
 
@@ -582,8 +546,9 @@
     padding: 13px 15px;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
-    background: #fff;
-    box-shadow: 0 7px 20px rgba(15, 23, 42, .04);
+    background: #ffffff;
+    box-shadow:
+        0 7px 20px rgba(15, 23, 42, .04);
 }
 
 .form-actions-info {
@@ -593,11 +558,12 @@
     min-width: 0;
     color: #64748b;
     font-size: 11px;
+    line-height: 1.4;
 }
 
 .form-actions-info i {
-    color: #0f766e;
     flex: 0 0 auto;
+    color: #0f766e;
 }
 
 .form-action-buttons {
@@ -608,7 +574,6 @@
 }
 
 .btn-save,
-.btn-reset,
 .btn-view {
     height: 39px;
     display: inline-flex;
@@ -627,14 +592,19 @@
 
 .btn-save {
     border: 0;
-    background: linear-gradient(135deg, #0ea5a4, #0f766e);
-    color: #fff;
-    box-shadow: 0 8px 18px rgba(14, 165, 164, .20);
+    background:
+        linear-gradient(135deg,
+            #0ea5a4,
+            #0f766e);
+    color: #ffffff;
+    box-shadow:
+        0 8px 18px rgba(14, 165, 164, .20);
 }
 
 .btn-save:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgba(14, 165, 164, .28);
+    box-shadow:
+        0 10px 22px rgba(14, 165, 164, .28);
 }
 
 .btn-save:disabled {
@@ -643,14 +613,12 @@
     transform: none;
 }
 
-.btn-reset,
 .btn-view {
     border: 1px solid #dbe3ec;
-    background: #fff;
+    background: #ffffff;
     color: #475569;
 }
 
-.btn-reset:hover,
 .btn-view:hover {
     border-color: #0ea5a4;
     color: #0f766e;
@@ -665,7 +633,8 @@
 .flatpickr-calendar {
     border: 1px solid #dbe3ec;
     border-radius: 12px;
-    box-shadow: 0 18px 40px rgba(15, 23, 42, .14);
+    box-shadow:
+        0 18px 40px rgba(15, 23, 42, .14);
     font-family: Poppins, sans-serif;
 }
 
@@ -688,10 +657,6 @@
 
     .student-card-wide {
         grid-column: auto;
-    }
-
-    .photo-layout {
-        grid-template-columns: 130px minmax(0, 1fr);
     }
 
 }
@@ -847,16 +812,16 @@
         order: -1;
     }
 
-    .btn-reset,
     .btn-view,
     .btn-save {
         width: 100%;
     }
+
 }
 
 
 /* =========================================================
-   ACCESSIBILITY / REDUCED MOTION
+   REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion:reduce) {
