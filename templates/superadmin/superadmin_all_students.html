@@ -25,33 +25,38 @@
          PAGE HEADER
     ================================================= -->
 
-    <header class="sa2-page-header">
+    <section class="sa2-page-header">
 
         <!-- LEFT -->
         <div class="sa2-header-content">
 
-            <div class="sa2-title-row">
+            <!-- ICON -->
+            <div class="sa2-title-icon" aria-hidden="true">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <!-- TITLE -->
+            <div class="sa2-title-text">
 
-                <div class="sa2-title-icon" aria-hidden="true">
-                    <span>🎓</span>
-                </div>
-
-                <div class="sa2-title-text">
+                <div class="sa2-header-title-row">
 
                     <h1>
                         Student Management
                     </h1>
 
-                    <p>
-                        Manage students across all schools in one place
-                    </p>
+                    <!-- <span class="sa2-header-badge">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Access Control
+                    </span> -->
 
                 </div>
+
+                <p>
+                    Manage students across all schools in one place
+                </p>
 
             </div>
 
         </div>
-
 
         <!-- RIGHT -->
         <div class="sa2-header-meta">
@@ -60,7 +65,7 @@
 
                 <span class="sa2-chip-dot"></span>
 
-                <span>
+                <span class="sa2-add-user-text">
                     All Schools
                 </span>
 
@@ -68,413 +73,152 @@
 
         </div>
 
-    </header>
-
-</div>
+    </section>
 
 
-<!-- =====================================================
+    <!-- =====================================================
      ALL STUDENTS — ADMIN OVERVIEW STATS
 ====================================================== -->
 
-<section class="sa2-stats" aria-label="Student management overview">
+    <section class="sa2-stats" aria-label="Student management overview">
 
-    <!-- ================= TOTAL STUDENTS ================= -->
-    <article class="sa2-stat-card sa2-stat-green">
+        <!-- ================= TOTAL STUDENTS ================= -->
+        <article class="sa2-stat-card sa2-stat-green">
 
-        <div class="sa2-stat-content">
+            <div class="sa2-stat-content">
 
-            <span class="sa2-stat-label">
-                Total Students
-            </span>
+                <span class="sa2-stat-label">
+                    Total Students
+                </span>
 
-            <strong class="sa2-stat-value">
-                {{ total_students }}
-            </strong>
+                <strong class="sa2-stat-value">
+                    {{ total_students }}
+                </strong>
 
-            <span class="sa2-stat-helper">
-                Across all schools
-            </span>
+                <span class="sa2-stat-helper">
+                    Across all schools
+                </span>
 
-        </div>
+            </div>
 
-        <div class="sa2-stat-icon" aria-hidden="true">
-            🎓
-        </div>
+            <div class="sa2-stat-icon" aria-hidden="true">
+                🎓
+            </div>
 
-    </article>
-
-
-    <!-- ================= TOTAL SCHOOLS ================= -->
-    <article class="sa2-stat-card sa2-stat-blue">
-
-        <div class="sa2-stat-content">
-
-            <span class="sa2-stat-label">
-                Total Schools
-            </span>
-
-            <strong class="sa2-stat-value">
-                {{ total_schools }}
-            </strong>
-
-            <span class="sa2-stat-helper">
-                Registered schools
-            </span>
-
-        </div>
-
-        <div class="sa2-stat-icon" aria-hidden="true">
-            🏫
-        </div>
-
-    </article>
+        </article>
 
 
-    <!-- ================= ACTIVE SCHOOLS ================= -->
-    <article class="sa2-stat-card sa2-stat-purple">
+        <!-- ================= TOTAL SCHOOLS ================= -->
+        <article class="sa2-stat-card sa2-stat-blue">
 
-        <div class="sa2-stat-content">
+            <div class="sa2-stat-content">
 
-            <span class="sa2-stat-label">
-                Active Schools
-            </span>
+                <span class="sa2-stat-label">
+                    Total Schools
+                </span>
 
-            <strong class="sa2-stat-value">
-                {{ active_schools }}
-            </strong>
+                <strong class="sa2-stat-value">
+                    {{ total_schools }}
+                </strong>
 
-            <span class="sa2-stat-helper">
-                Currently active
-            </span>
+                <span class="sa2-stat-helper">
+                    Registered schools
+                </span>
 
-        </div>
+            </div>
 
-        <div class="sa2-stat-icon" aria-hidden="true">
-            ✓
-        </div>
+            <div class="sa2-stat-icon" aria-hidden="true">
+                🏫
+            </div>
 
-    </article>
-
-
-    <!-- ================= NEW LEADS ================= -->
-    <article class="sa2-stat-card sa2-stat-orange">
-
-        <div class="sa2-stat-content">
-
-            <span class="sa2-stat-label">
-                New Leads
-            </span>
-
-            <strong class="sa2-stat-value">
-                {{ new_leads_count }}
-            </strong>
-
-            <span class="sa2-stat-helper">
-                Need attention
-            </span>
-
-        </div>
-
-        <div class="sa2-stat-icon" aria-hidden="true">
-            ♢
-        </div>
-
-    </article>
-
-</section>
+        </article>
 
 
-<!-- =====================================================
+        <!-- ================= ACTIVE SCHOOLS ================= -->
+        <article class="sa2-stat-card sa2-stat-purple">
+
+            <div class="sa2-stat-content">
+
+                <span class="sa2-stat-label">
+                    Active Schools
+                </span>
+
+                <strong class="sa2-stat-value">
+                    {{ active_schools }}
+                </strong>
+
+                <span class="sa2-stat-helper">
+                    Currently active
+                </span>
+
+            </div>
+
+            <div class="sa2-stat-icon" aria-hidden="true">
+                ✓
+            </div>
+
+        </article>
+
+
+        <!-- ================= NEW LEADS ================= -->
+        <article class="sa2-stat-card sa2-stat-orange">
+
+            <div class="sa2-stat-content">
+
+                <span class="sa2-stat-label">
+                    New Leads
+                </span>
+
+                <strong class="sa2-stat-value">
+                    {{ new_leads_count }}
+                </strong>
+
+                <span class="sa2-stat-helper">
+                    Need attention
+                </span>
+
+            </div>
+
+            <div class="sa2-stat-icon" aria-hidden="true">
+                ♢
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- =====================================================
      ALL STUDENTS — SEARCH & FILTER
 ====================================================== -->
 
-<section class="sa2-filter-section">
+    <section class="sa2-filter-section">
 
-    <div class="sa2-filter-header">
+        <div class="sa2-filter-header">
 
-        <div class="sa2-filter-title">
+            <div class="sa2-filter-title">
 
-            <div class="sa2-filter-icon">
-                <i class="fa-solid fa-sliders"></i>
-            </div>
-
-            <div>
-                <h3>Find Students</h3>
-
-                <p>
-                    Search and filter student records by school or class.
-                </p>
-            </div>
-
-        </div>
-
-        {% if search or selected_school or selected_class %}
-
-        <div class="sa2-active-filter-badge">
-
-            <i class="fa-solid fa-filter"></i>
-
-            Filters Applied
-
-        </div>
-
-        {% endif %}
-
-    </div>
-
-
-    <!-- =================================================
-         FILTER FORM
-    ================================================== -->
-
-    <form method="GET" action="{{ url_for('superadmin_all_students') }}" class="sa2-search-form" id="studentFilterForm">
-
-        <!-- ================= SEARCH ================= -->
-
-        <div class="sa2-search-field sa2-search-main">
-
-            <label for="studentSearch">
-                Search Students
-            </label>
-
-            <div class="sa2-input-wrapper">
-
-                <i class="fa-solid fa-magnifying-glass"></i>
-
-                <input type="text" id="studentSearch" name="search" value="{{ search }}"
-                    placeholder="Name, admission number or mobile..." autocomplete="off">
-
-                {% if search %}
-
-                <button type="button" class="sa2-input-clear" onclick="clearStudentSearch()" aria-label="Clear search">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-
-                {% endif %}
-
-            </div>
-
-        </div>
-
-
-        <!-- ================= SCHOOL ================= -->
-
-        <div class="sa2-search-field">
-
-            <label for="schoolFilter">
-                School
-            </label>
-
-            <div class="sa2-select-wrapper">
-
-                <i class="fa-solid fa-school"></i>
-
-                <select name="school_id" id="schoolFilter">
-
-                    <option value="">
-                        All Schools
-                    </option>
-
-                    {% for sc in schools %}
-
-                    <option value="{{ sc.school_id }}" {% if selected_school is not none and
-                        selected_school|string==sc.school_id|string %} selected {% endif %}>
-                        {{ sc.name }}
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </div>
-
-        </div>
-
-
-        <!-- ================= CLASS ================= -->
-
-        <div class="sa2-search-field">
-
-            <label for="classFilter">
-                Class
-            </label>
-
-            <div class="sa2-select-wrapper">
-
-                <i class="fa-solid fa-layer-group"></i>
-
-                <select name="class" id="classFilter">
-
-                    <option value="">
-                        All Classes
-                    </option>
-
-                    {% for cls in classes %}
-
-                    <option value="{{ cls }}" {% if selected_class|string==cls|string %} selected {% endif %}>
-                        Class {{ cls }}
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </div>
-
-        </div>
-
-
-        <!-- ================= ACTIONS ================= -->
-
-        <div class="sa2-filter-actions">
-
-            <button type="submit" class="sa2-search-btn">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                Search
-            </button>
-
-
-            <a href="{{ url_for('superadmin_all_students') }}" class="sa2-clear-btn">
-                <i class="fa-solid fa-rotate-left"></i>
-                Clear
-            </a>
-
-        </div>
-
-    </form>
-
-
-    <!-- =================================================
-         FILTER RESULT INFORMATION
-    ================================================== -->
-
-    {% if search or selected_school or selected_class %}
-
-    <div class="sa2-filter-result">
-
-        <div class="sa2-result-left">
-
-            <i class="fa-solid fa-circle-info"></i>
-
-            <span>
-
-                Showing
-
-                <strong>
-                    {{ filtered_total }}
-                </strong>
-
-                student
-                {% if filtered_total != 1 %}
-                records
-                {% else %}
-                record
-                {% endif %}
-
-            </span>
-
-        </div>
-
-
-        <div class="sa2-result-tags">
-
-            {% if search %}
-
-            <span class="sa2-filter-tag">
-
-                Search:
-                <strong>{{ search }}</strong>
-
-            </span>
-
-            {% endif %}
-
-
-            {% if selected_school %}
-
-            <span class="sa2-filter-tag">
-
-                School:
-
-                <strong>
-
-                    {% for sc in schools %}
-
-                    {% if sc.school_id|string == selected_school|string %}
-                    {{ sc.name }}
-                    {% endif %}
-
-                    {% endfor %}
-
-                </strong>
-
-            </span>
-
-            {% endif %}
-
-
-            {% if selected_class %}
-
-            <span class="sa2-filter-tag">
-
-                Class:
-                <strong>{{ selected_class }}</strong>
-
-            </span>
-
-            {% endif %}
-
-        </div>
-
-    </div>
-
-    {% endif %}
-
-</section>
-
-<!-- =====================================================
-     ALL STUDENTS TABLE
-====================================================== -->
-
-<section class="sa2-table-section">
-
-    <div class="sa2-table-card">
-
-        <!-- ================= TABLE HEADER ================= -->
-
-        <div class="sa2-table-top">
-
-            <div class="sa2-table-heading">
-
-                <div class="sa2-table-icon">
-                    <i class="fa-solid fa-user-graduate"></i>
+                <div class="sa2-filter-icon">
+                    <i class="fa-solid fa-sliders"></i>
                 </div>
 
                 <div>
-                    <h3>Student Records</h3>
+                    <h3>Find Students</h3>
 
                     <p>
-                        {% if filtered_total %}
-                        {{ filtered_total }} student
-                        {% if filtered_total != 1 %}records{% else %}record{% endif %}
-                        found
-                        {% else %}
-                        No student records found
-                        {% endif %}
+                        Search and filter student records by school or class.
                     </p>
                 </div>
 
             </div>
 
-
             {% if search or selected_school or selected_class %}
 
-            <div class="sa2-table-filter-status">
+            <div class="sa2-active-filter-badge">
 
                 <i class="fa-solid fa-filter"></i>
 
-                Filtered Results
+                Filters Applied
 
             </div>
 
@@ -483,242 +227,503 @@
         </div>
 
 
-        <!-- ================= TABLE WRAPPER ================= -->
+        <!-- =================================================
+         FILTER FORM
+    ================================================== -->
 
-        <div class="sa2-table-scroll">
+        <form method="GET" action="{{ url_for('superadmin_all_students') }}" class="sa2-search-form"
+            id="studentFilterForm">
 
-            <table id="studentTable" class="sa2-student-table">
+            <!-- ================= SEARCH ================= -->
 
-                <thead>
+            <div class="sa2-search-field sa2-search-main">
 
-                    <tr>
+                <label for="studentSearch">
+                    Search Students
+                </label>
 
-                        <th class="student-name-col">
-                            Student
-                        </th>
+                <div class="sa2-input-wrapper">
 
-                        <th class="class-col">
-                            Class
-                        </th>
+                    <i class="fa-solid fa-magnifying-glass"></i>
 
-                        <th class="admission-col">
-                            Admission No.
-                        </th>
+                    <input type="text" id="studentSearch" name="search" value="{{ search }}"
+                        placeholder="Name, admission number or mobile..." autocomplete="off">
 
-                        <th class="mobile-col">
-                            Mobile
-                        </th>
+                    {% if search %}
 
-                        <th class="school-col">
-                            School
-                        </th>
+                    <button type="button" class="sa2-input-clear" onclick="clearStudentSearch()"
+                        aria-label="Clear search">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
 
-                        <th class="actions-col">
-                            Actions
-                        </th>
+                    {% endif %}
 
-                    </tr>
+                </div>
 
-                </thead>
+            </div>
 
 
-                <tbody>
+            <!-- ================= SCHOOL ================= -->
 
-                    {% for s in students %}
+            <div class="sa2-search-field">
 
-                    <tr>
+                <label for="schoolFilter">
+                    School
+                </label>
 
-                        <!-- ================= STUDENT ================= -->
+                <div class="sa2-select-wrapper">
 
-                        <td>
+                    <i class="fa-solid fa-school"></i>
 
-                            <div class="student-cell">
+                    <select name="school_id" id="schoolFilter">
 
-                                <div class="student-avatar">
+                        <option value="">
+                            All Schools
+                        </option>
 
-                                    {{ s.name[:1]|upper }}
+                        {% for sc in schools %}
 
-                                </div>
+                        <option value="{{ sc.school_id }}" {% if selected_school is not none and
+                            selected_school|string==sc.school_id|string %} selected {% endif %}>
+                            {{ sc.name }}
+                        </option>
 
-                                <div class="student-info">
+                        {% endfor %}
 
-                                    <span class="student-name">
-                                        {{ s.name }}
-                                    </span>
+                    </select>
 
-                                    <span class="student-label">
-                                        Student
-                                    </span>
+                </div>
 
-                                </div>
+            </div>
 
-                            </div>
 
-                        </td>
+            <!-- ================= CLASS ================= -->
 
+            <div class="sa2-search-field">
 
-                        <!-- ================= CLASS ================= -->
+                <label for="classFilter">
+                    Class
+                </label>
 
-                        <td>
+                <div class="sa2-select-wrapper">
 
-                            <span class="class-badge">
+                    <i class="fa-solid fa-layer-group"></i>
 
-                                <i class="fa-solid fa-layer-group"></i>
+                    <select name="class" id="classFilter">
 
-                                {{ s.class }}
+                        <option value="">
+                            All Classes
+                        </option>
 
-                            </span>
+                        {% for cls in classes %}
 
-                        </td>
+                        <option value="{{ cls }}" {% if selected_class|string==cls|string %} selected {% endif %}>
+                            Class {{ cls }}
+                        </option>
 
+                        {% endfor %}
 
-                        <!-- ================= ADMISSION ================= -->
+                    </select>
 
-                        <td>
+                </div>
 
-                            <span class="admission-badge">
+            </div>
 
-                                {{ s.admission_no }}
 
-                            </span>
+            <!-- ================= ACTIONS ================= -->
 
-                        </td>
+            <div class="sa2-filter-actions">
 
+                <button type="submit" class="sa2-search-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Search
+                </button>
 
-                        <!-- ================= MOBILE ================= -->
 
-                        <td>
+                <a href="{{ url_for('superadmin_all_students') }}" class="sa2-clear-btn">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Clear
+                </a>
 
-                            {% if s.primary_mobile %}
+            </div>
 
-                            <div class="mobile-cell">
+        </form>
 
-                                <span class="mobile-icon">
 
-                                    <i class="fa-solid fa-phone"></i>
+        <!-- =================================================
+         FILTER RESULT INFORMATION
+    ================================================== -->
 
-                                </span>
+        {% if search or selected_school or selected_class %}
 
-                                <span>
-                                    {{ s.primary_mobile }}
-                                </span>
+        <div class="sa2-filter-result">
 
-                            </div>
+            <div class="sa2-result-left">
 
-                            {% else %}
+                <i class="fa-solid fa-circle-info"></i>
 
-                            <span class="not-available">
-                                —
-                            </span>
+                <span>
 
-                            {% endif %}
+                    Showing
 
-                        </td>
+                    <strong>
+                        {{ filtered_total }}
+                    </strong>
 
-
-                        <!-- ================= SCHOOL ================= -->
-
-                        <td>
-
-                            <span class="school-badge" title="{{ s.school_name }}">
-
-                                <i class="fa-solid fa-school"></i>
-
-                                {{ s.school_name }}
-
-                            </span>
-
-                        </td>
-
-
-                        <!-- =========================================================
-     ACTIONS
-========================================================= -->
-
-                        <td>
-                            <div class="student-actions">
-
-                                <!-- VIEW -->
-                                <button type="button" class="student-action-btn view-btn" data-action="view"
-                                    data-student-id="{{ s.id }}" title="View student details">
-                                    <i class="fa-regular fa-eye"></i>
-                                    <span>View</span>
-                                </button>
-
-
-                                <!-- DELETE -->
-                                <button type="button" class="student-action-btn delete-btn" data-action="delete"
-                                    data-student-id="{{ s.id }}" data-student-name="{{ s.name|e }}"
-                                    data-school-id="{{ s.school_id }}" title="Delete student">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                    <span>Delete</span>
-                                </button>
-
-                            </div>
-                        </td>
-
-                    </tr>
-
-
+                    student
+                    {% if filtered_total != 1 %}
+                    records
                     {% else %}
+                    record
+                    {% endif %}
 
-                    <!-- ================= EMPTY STATE ================= -->
+                </span>
 
-                    <tr>
+            </div>
 
-                        <td colspan="6" class="student-empty-cell">
 
-                            <div class="student-empty-state">
+            <div class="sa2-result-tags">
 
-                                <div class="empty-icon">
+                {% if search %}
 
-                                    <i class="fa-solid fa-user-graduate"></i>
+                <span class="sa2-filter-tag">
 
-                                </div>
+                    Search:
+                    <strong>{{ search }}</strong>
 
-                                <h3>
-                                    No students found
-                                </h3>
+                </span>
 
-                                <p>
-                                    Try changing your search or filter criteria.
-                                </p>
+                {% endif %}
 
-                                <a href="{{ url_for('superadmin_all_students') }}" class="empty-clear-btn">
-                                    <i class="fa-solid fa-rotate-left"></i>
-                                    Clear Filters
-                                </a>
 
-                            </div>
+                {% if selected_school %}
 
-                        </td>
+                <span class="sa2-filter-tag">
 
-                    </tr>
+                    School:
 
-                    {% endfor %}
+                    <strong>
 
-                </tbody>
+                        {% for sc in schools %}
 
-            </table>
+                        {% if sc.school_id|string == selected_school|string %}
+                        {{ sc.name }}
+                        {% endif %}
+
+                        {% endfor %}
+
+                    </strong>
+
+                </span>
+
+                {% endif %}
+
+
+                {% if selected_class %}
+
+                <span class="sa2-filter-tag">
+
+                    Class:
+                    <strong>{{ selected_class }}</strong>
+
+                </span>
+
+                {% endif %}
+
+            </div>
 
         </div>
 
-    </div>
+        {% endif %}
 
-</section>
+    </section>
+
+    <!-- =====================================================
+     ALL STUDENTS TABLE
+====================================================== -->
+
+    <section class="sa2-table-section">
+
+        <div class="sa2-table-card">
+
+            <!-- ================= TABLE HEADER ================= -->
+
+            <div class="sa2-table-top">
+
+                <div class="sa2-table-heading">
+
+                    <div class="sa2-table-icon">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+
+                    <div>
+                        <h3>Student Records</h3>
+
+                        <p>
+                            {% if filtered_total %}
+                            {{ filtered_total }} student
+                            {% if filtered_total != 1 %}records{% else %}record{% endif %}
+                            found
+                            {% else %}
+                            No student records found
+                            {% endif %}
+                        </p>
+                    </div>
+
+                </div>
 
 
-<!-- =====================================================
+                {% if search or selected_school or selected_class %}
+
+                <div class="sa2-table-filter-status">
+
+                    <i class="fa-solid fa-filter"></i>
+
+                    Filtered Results
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- ================= TABLE WRAPPER ================= -->
+
+            <div class="sa2-table-scroll">
+
+                <table id="studentTable" class="sa2-student-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="student-name-col">
+                                Student
+                            </th>
+
+                            <th class="class-col">
+                                Class
+                            </th>
+
+                            <th class="admission-col">
+                                Admission No.
+                            </th>
+
+                            <th class="mobile-col">
+                                Mobile
+                            </th>
+
+                            <th class="school-col">
+                                School
+                            </th>
+
+                            <th class="actions-col">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for s in students %}
+
+                        <tr>
+
+                            <!-- ================= STUDENT ================= -->
+
+                            <td>
+
+                                <div class="student-cell">
+
+                                    <div class="student-avatar">
+
+                                        {{ s.name[:1]|upper }}
+
+                                    </div>
+
+                                    <div class="student-info">
+
+                                        <span class="student-name">
+                                            {{ s.name }}
+                                        </span>
+
+                                        <span class="student-label">
+                                            Student
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ================= CLASS ================= -->
+
+                            <td>
+
+                                <span class="class-badge">
+
+                                    <i class="fa-solid fa-layer-group"></i>
+
+                                    {{ s.class }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- ================= ADMISSION ================= -->
+
+                            <td>
+
+                                <span class="admission-badge">
+
+                                    {{ s.admission_no }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- ================= MOBILE ================= -->
+
+                            <td>
+
+                                {% if s.primary_mobile %}
+
+                                <div class="mobile-cell">
+
+                                    <span class="mobile-icon">
+
+                                        <i class="fa-solid fa-phone"></i>
+
+                                    </span>
+
+                                    <span>
+                                        {{ s.primary_mobile }}
+                                    </span>
+
+                                </div>
+
+                                {% else %}
+
+                                <span class="not-available">
+                                    —
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- ================= SCHOOL ================= -->
+
+                            <td>
+
+                                <span class="school-badge" title="{{ s.school_name }}">
+
+                                    <i class="fa-solid fa-school"></i>
+
+                                    {{ s.school_name }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =========================================================
+                            ACTIONS
+                        ========================================================= -->
+
+                            <td>
+                                <div class="student-actions">
+
+                                    <!-- VIEW -->
+                                    <button type="button" class="student-action-btn view-btn" data-action="view"
+                                        data-student-id="{{ s.id }}" title="View student details">
+                                        <i class="fa-regular fa-eye"></i>
+                                        <span>View</span>
+                                    </button>
+
+
+                                    <!-- DELETE -->
+                                    <button type="button" class="student-action-btn delete-btn" data-action="delete"
+                                        data-student-id="{{ s.id }}" data-student-name="{{ s.name|e }}"
+                                        data-school-id="{{ s.school_id }}" title="Delete student">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                        <span>Delete</span>
+                                    </button>
+
+                                </div>
+                            </td>
+
+                        </tr>
+
+
+                        {% else %}
+
+                        <!-- ================= EMPTY STATE ================= -->
+
+                        <tr>
+
+                            <td colspan="6" class="student-empty-cell">
+
+                                <div class="student-empty-state">
+
+                                    <div class="empty-icon">
+
+                                        <i class="fa-solid fa-user-graduate"></i>
+
+                                    </div>
+
+                                    <h3>
+                                        No students found
+                                    </h3>
+
+                                    <p>
+                                        Try changing your search or filter criteria.
+                                    </p>
+
+                                    <a href="{{ url_for('superadmin_all_students') }}" class="empty-clear-btn">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                        Clear Filters
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
      PAGINATION
 ====================================================== -->
 
-{% if total_pages > 1 %}
+    {% if total_pages > 1 %}
 
-<div class="sa2-pagination">
+    <div class="sa2-pagination">
 
-    {% if page > 1 %}
+        {% if page > 1 %}
 
-    <a href="{{ url_for(
+        <a href="{{ url_for(
             'superadmin_all_students',
             page=page - 1,
             search=search,
@@ -726,29 +731,29 @@
             **{'class': selected_class}
         ) }}" class="sa2-page-btn">
 
-        <i class="fa-solid fa-chevron-left"></i>
+            <i class="fa-solid fa-chevron-left"></i>
 
-        Previous
+            Previous
 
-    </a>
+        </a>
 
-    {% endif %}
-
-
-    <div class="sa2-page-info">
-
-        <span>Page</span>
-
-        <strong>{{ page }}</strong>
-
-        <span>of</span>
-
-        <strong>{{ total_pages }}</strong>
-
-    </div>
+        {% endif %}
 
 
-    {% if page < total_pages %} <a href="{{ url_for(
+        <div class="sa2-page-info">
+
+            <span>Page</span>
+
+            <strong>{{ page }}</strong>
+
+            <span>of</span>
+
+            <strong>{{ total_pages }}</strong>
+
+        </div>
+
+
+        {% if page < total_pages %} <a href="{{ url_for(
             'superadmin_all_students',
             page=page + 1,
             search=search,
@@ -756,19 +761,20 @@
             **{'class': selected_class}
         ) }}" class="sa2-page-btn">
 
-        Next
+            Next
 
-        <i class="fa-solid fa-chevron-right"></i>
+            <i class="fa-solid fa-chevron-right"></i>
 
-        </a>
+            </a>
 
-        {% endif %}
+            {% endif %}
+
+    </div>
+
+    {% endif %}
+
 
 </div>
-
-{% endif %}
-
-
 
 <!-- =====================================================
      STUDENT VIEW MODAL

@@ -55,6 +55,7 @@ from flask import (
     send_file,
     jsonify,
     make_response,
+    current_app,
 )
 
 from flask_bcrypt import Bcrypt
@@ -8525,16 +8526,32 @@ def superadmin_leads():
         plan_filter = (request.args.get("plan") or "").strip()
         source_filter = (request.args.get("source") or "").strip()
 
-        page = request.args.get("page", 1, type=int)
-        per_page = 5
+        page = request.args.get("page", 1, type=int) or 1
+
+        # Show more records per page.
+        per_page = 10
+
+        page = max(1, page)
 
         if page < 1:
             page = 1
 
-        valid_status = ["New", "Contacted", "Demo Scheduled", "Converted"]
+        valid_status = {
+            "New",
+            "Contacted",
+            "Demo Scheduled",
+            "Converted",
+        }
 
-        if status_filter and status_filter not in valid_status:
+        if status_filter not in valid_status:
             status_filter = ""
+
+        # Prevent invalid plan/source values from being treated as filters.
+        if plan_filter and len(plan_filter) > 150:
+            plan_filter = ""
+
+        if source_filter and len(source_filter) > 150:
+            source_filter = ""
 
         where_query = """
             WHERE 1=1
@@ -8641,38 +8658,30 @@ def superadmin_leads():
         # ================= KPI COUNTS =================
 
         cursor.execute("""
-            SELECT COUNT(*) AS total
+            SELECT
+                COUNT(*) AS total_leads,
+                COALESCE(SUM(CASE
+                    WHEN status = 'New' THEN 1 ELSE 0
+                END), 0) AS new_leads,
+                COALESCE(SUM(CASE
+                    WHEN status = 'Contacted' THEN 1 ELSE 0
+                END), 0) AS contacted_leads,
+                COALESCE(SUM(CASE
+                    WHEN status = 'Demo Scheduled' THEN 1 ELSE 0
+                END), 0) AS demo_leads,
+                COALESCE(SUM(CASE
+                    WHEN status = 'Converted' THEN 1 ELSE 0
+                END), 0) AS converted_leads
             FROM lead_requests
         """)
-        total_leads = cursor.fetchone()["total"] or 0
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM lead_requests
-            WHERE status = 'New'
-        """)
-        new_leads = cursor.fetchone()["total"] or 0
+        stats = cursor.fetchone()
 
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM lead_requests
-            WHERE status = 'Contacted'
-        """)
-        contacted_leads = cursor.fetchone()["total"] or 0
-
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM lead_requests
-            WHERE status = 'Demo Scheduled'
-        """)
-        demo_leads = cursor.fetchone()["total"] or 0
-
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM lead_requests
-            WHERE status = 'Converted'
-        """)
-        converted_leads = cursor.fetchone()["total"] or 0
+        total_leads = stats["total_leads"] or 0
+        new_leads = stats["new_leads"] or 0
+        contacted_leads = stats["contacted_leads"] or 0
+        demo_leads = stats["demo_leads"] or 0
+        converted_leads = stats["converted_leads"] or 0
 
         # ================= DROPDOWNS =================
 
@@ -8720,9 +8729,36 @@ def superadmin_leads():
         )
 
     except Exception as e:
-        print("❌ LEADS PAGE ERROR:", e)
+        app.logger.exception("Failed to load Superadmin Leads Management")
 
-        return f"Unable to load leads ❌ {str(e)}"
+        flash(
+            "We could not load the leads right now. "
+            "Please try again. If the problem continues, contact support.",
+            "error",
+        )
+
+        return render_template(
+            "superadmin/leads.html",
+            leads=[],
+            total_leads=0,
+            new_leads=0,
+            contacted_leads=0,
+            demo_leads=0,
+            converted_leads=0,
+            total_records=0,
+            page=1,
+            total_pages=1,
+            search=(request.args.get("search") or "").strip(),
+            status_filter="",
+            plan_filter="",
+            source_filter="",
+            available_plans=[],
+            available_sources=[],
+            new_leads_count=0,
+            role="admin",
+            school_name="Admin Panel",
+            active_page="leads",
+        ), 500
 
     finally:
         if cursor:
@@ -8752,90 +8788,188 @@ def superadmin_leads():
 @csrf.exempt
 @app.route("/submit-lead", methods=["POST"])
 def submit_lead():
-
     conn = None
     cursor = None
 
     try:
+        # -------------------------------------------------
+        # 1. Read JSON payload
+        # -------------------------------------------------
         data = request.get_json(silent=True)
 
-        if not data:
-            return jsonify({"success": False, "message": "Invalid request"}), 400
+        if not isinstance(data, dict):
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "Invalid request. Please refresh the page and try again.",
+                }
+            ), 400
 
-        lead_source = (data.get("lead_source") or "Website").strip()
+        lead_source = str(data.get("lead_source") or "Website").strip()
 
-        school_name = (data.get("school_name") or "").strip()
+        school_name = str(data.get("school_name") or "").strip()
 
-        contact_person = (data.get("contact_person") or "").strip()
+        contact_person = str(data.get("contact_person") or "").strip()
 
-        mobile = (data.get("mobile") or "").strip()
+        mobile = str(data.get("mobile") or "").strip()
 
-        email = (data.get("email") or "").strip().lower()
+        email = str(data.get("email") or "").strip().lower()
 
-        student_strength = (str(data.get("student_strength") or "")).strip()
+        selected_plan = str(data.get("selected_plan") or "Free Demo Plan").strip()
 
-        selected_plan = (data.get("selected_plan") or "").strip()
+        message = str(data.get("message") or "").strip()
 
-        message = (data.get("message") or "").strip()
+        raw_students = data.get("student_strength")
 
-        # ================= VALIDATION =================
+        if raw_students in (None, ""):
+            raw_students = data.get("students")
 
+        # -------------------------------------------------
+        # 2. Validate required fields
+        # -------------------------------------------------
         if not school_name:
-            return jsonify({"success": False, "message": "School name required"}), 400
+            return jsonify(
+                {"success": False, "message": "Please enter your school name."}
+            ), 400
 
         if len(school_name) > 150:
-            return jsonify({"success": False, "message": "School name too long"}), 400
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "School name cannot exceed 150 characters.",
+                }
+            ), 400
 
         if not contact_person:
             return jsonify(
-                {"success": False, "message": "Contact person required"}
+                {"success": False, "message": "Please enter the contact person's name."}
             ), 400
 
-        if len(contact_person) > 120:
+        if len(contact_person) > 100:
             return jsonify(
-                {"success": False, "message": "Contact person name too long"}
+                {
+                    "success": False,
+                    "message": "Contact person's name cannot exceed 100 characters.",
+                }
             ), 400
 
-        if not re.fullmatch(r"\d{10}", mobile):
+        # Indian mobile number: 10 digits beginning with 6–9.
+        if not re.fullmatch(r"[6-9]\d{9}", mobile):
             return jsonify(
-                {"success": False, "message": "Enter valid 10 digit mobile number"}
+                {
+                    "success": False,
+                    "message": "Please enter a valid 10-digit Indian mobile number.",
+                }
             ), 400
 
-        if email and not is_valid_email(email):
-            return jsonify({"success": False, "message": "Invalid email address"}), 400
+        if email:
+            if len(email) > 150 or not is_valid_email(email):
+                return jsonify(
+                    {"success": False, "message": "Please enter a valid email address."}
+                ), 400
 
-        if student_strength and not student_strength.isdigit():
+        # -------------------------------------------------
+        # 3. Validate student strength
+        # -------------------------------------------------
+        student_strength = None
+
+        if raw_students not in (None, ""):
+            try:
+                # Avoid accepting decimals, negative numbers or
+                # arbitrary strings from the browser.
+                student_text = str(raw_students).strip()
+
+                if not student_text.isdigit():
+                    raise ValueError
+
+                student_strength = int(student_text)
+
+                if not 1 <= student_strength <= 1_000_000:
+                    raise ValueError
+
+            except (TypeError, ValueError):
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": "Please enter a valid total student count.",
+                    }
+                ), 400
+
+        # -------------------------------------------------
+        # 4. Validate optional fields
+        # -------------------------------------------------
+        if len(lead_source) > 100:
+            lead_source = lead_source[:100]
+
+        if len(selected_plan) > 100:
+            selected_plan = selected_plan[:100]
+
+        if len(message) > 1500:
             return jsonify(
-                {"success": False, "message": "Student strength must be numeric"}
+                {
+                    "success": False,
+                    "message": "Your requirements must not exceed 1,500 characters.",
+                }
             ), 400
 
-        if message and len(message) > 1000:
-            return jsonify({"success": False, "message": "Message too long"}), 400
-
+        # -------------------------------------------------
+        # 5. Connect to database
+        # -------------------------------------------------
         conn = get_connection()
+
+        if conn is None:
+            current_app.logger.error(
+                "Demo lead submission failed: database connection unavailable."
+            )
+
+            return jsonify(
+                {
+                    "success": False,
+                    "message": (
+                        "We couldn't process your request right now. "
+                        "Please try again shortly."
+                    ),
+                }
+            ), 503
+
         cursor = conn.cursor(dictionary=True)
 
-        # ================= DUPLICATE CHECK =================
-
+        # -------------------------------------------------
+        # 6. Check for an existing lead
+        # -------------------------------------------------
+        # This preserves your existing policy: one lead per
+        # mobile number across the lead_requests table.
         cursor.execute(
             """
             SELECT id
             FROM lead_requests
             WHERE mobile = %s
             LIMIT 1
-        """,
+            """,
             (mobile,),
         )
 
-        if cursor.fetchone():
-            return jsonify({"success": False, "message": "Lead already exists"}), 409
+        existing_lead = cursor.fetchone()
 
-        # ================= INSERT =================
+        if existing_lead:
+            return jsonify(
+                {
+                    "success": False,
+                    "message": (
+                        "A demo request with this mobile number "
+                        "has already been submitted. Our team can "
+                        "follow up on your existing request."
+                    ),
+                    "duplicate": True,
+                }
+            ), 409
 
+        # -------------------------------------------------
+        # 7. Insert lead
+        # -------------------------------------------------
         cursor.execute(
             """
-            INSERT INTO lead_requests
-            (
+            INSERT INTO lead_requests (
                 lead_source,
                 school_name,
                 contact_person,
@@ -8846,42 +8980,59 @@ def submit_lead():
                 message,
                 status
             )
-            VALUES
-            (
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                'New'
+            VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, 'New'
             )
-        """,
+            """,
             (
                 lead_source,
                 school_name,
                 contact_person,
                 mobile,
-                email,
+                email or None,
                 student_strength,
-                selected_plan,
-                message,
+                selected_plan or "Free Demo Plan",
+                message or None,
             ),
         )
 
+        lead_id = cursor.lastrowid
+
+        # -------------------------------------------------
+        # 8. Commit before returning success
+        # -------------------------------------------------
         conn.commit()
 
-        return jsonify({"success": True, "message": "Lead saved successfully"}), 201
+        current_app.logger.info("Demo lead created successfully. Lead ID: %s", lead_id)
 
-    except Exception as e:
+        # The frontend displays its own success confirmation.
+        # Do not use flash() or alert() for this AJAX request.
+        return jsonify(
+            {
+                "success": True,
+                "message": (
+                    "Thank you! Your free demo request has been received. "
+                    "Our ShalaSarthi team will contact you shortly."
+                ),
+                "lead_id": lead_id,
+            }
+        ), 201
+
+    except Exception:
         if conn:
             conn.rollback()
 
-        print("❌ LEAD SAVE ERROR:", e)
+        current_app.logger.exception("Error while saving a public demo lead.")
 
-        return jsonify({"success": False, "message": "Something went wrong"}), 500
+        return jsonify(
+            {
+                "success": False,
+                "message": (
+                    "We couldn't submit your demo request right now. "
+                    "Please try again shortly."
+                ),
+            }
+        ), 500
 
     finally:
         if cursor:
@@ -8892,177 +9043,202 @@ def submit_lead():
 
 
 # =========================================================
-# 📞 SUPER ADMIN - MARK LEAD AS CONTACTED
+# SUPERADMIN — SHARED LEAD STATUS TRANSITION
 #
-# PURPOSE:
-# Lead has been contacted by phone / WhatsApp.
-#
-# FLOW:
-# New
-#   ↓
-# Contacted
-#
-# USED BY:
-# Super Admin Lead Management
+# Allowed transitions:
+# New -> Contacted
+# Contacted -> Demo Scheduled
+# Demo Scheduled -> Converted
 # =========================================================
 
 
+def _transition_lead_status(lead_id, expected_status, new_status, success_message):
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Atomic update: only update if the current status matches.
+        cursor.execute(
+            """
+            UPDATE lead_requests
+            SET status = %s
+            WHERE id = %s
+              AND status = %s
+            """,
+            (
+                new_status,
+                lead_id,
+                expected_status,
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            # Distinguish a missing lead from an invalid transition.
+            cursor.execute(
+                """
+                SELECT id, status
+                FROM lead_requests
+                WHERE id = %s
+                """,
+                (lead_id,),
+            )
+
+            existing_lead = cursor.fetchone()
+
+            conn.rollback()
+
+            if not existing_lead:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": (
+                            "This lead could not be found. It may have been deleted."
+                        ),
+                    }
+                ), 404
+
+            current_status = existing_lead["status"] or "Unknown"
+
+            return jsonify(
+                {
+                    "success": False,
+                    "message": (
+                        f"This action is not allowed for the current "
+                        f"lead status '{current_status}'. "
+                        "Refresh the page and try again."
+                    ),
+                    "current_status": current_status,
+                }
+            ), 409
+
+        conn.commit()
+
+        app.logger.info(
+            "Lead %s status changed from %s to %s",
+            lead_id,
+            expected_status,
+            new_status,
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "message": success_message,
+                "lead_id": lead_id,
+                "status": new_status,
+            }
+        ), 200
+
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                app.logger.exception(
+                    "Rollback failed for lead %s",
+                    lead_id,
+                )
+
+        app.logger.exception(
+            "Failed to update lead %s from %s to %s",
+            lead_id,
+            expected_status,
+            new_status,
+        )
+
+        return jsonify(
+            {
+                "success": False,
+                "message": (
+                    "We could not update this lead right now. Please try again."
+                ),
+            }
+        ), 500
+
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                app.logger.exception("Failed to close lead cursor")
+
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                app.logger.exception("Failed to close lead connection")
+
+
+# =========================================================
+# 1. MARK LEAD AS CONTACTED
+#
+# New -> Contacted
+# =========================================================
+
+
+@app.route(
+    "/superadmin/lead/contacted/<int:lead_id>",
+    methods=["POST"],
+)
 @csrf.exempt
-@app.route("/superadmin/lead/contacted/<int:lead_id>", methods=["POST"])
 @admin_required
 def mark_lead_contacted(lead_id):
 
-    conn = None
-    cursor = None
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-
-            UPDATE lead_requests
-
-            SET status = 'Contacted'
-
-            WHERE id = %s
-
-        """,
-            (lead_id,),
-        )
-
-        conn.commit()
-
-        return jsonify({"success": True, "message": "Lead marked as Contacted"})
-
-    except Exception as e:
-        print("❌ CONTACTED STATUS ERROR:", e)
-
-        return jsonify({"success": False, "message": "Failed to update lead"}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
+    return _transition_lead_status(
+        lead_id=lead_id,
+        expected_status="New",
+        new_status="Contacted",
+        success_message="Lead marked as contacted successfully.",
+    )
 
 
 # =========================================================
-# 📅 SUPER ADMIN - SCHEDULE DEMO
+# 2. SCHEDULE DEMO
 #
-# PURPOSE:
-# Demo date/time has been confirmed with school.
-#
-# FLOW:
-# Contacted
-#    ↓
-# Demo Scheduled
-#
-# USED BY:
-# Super Admin Lead Management
+# Contacted -> Demo Scheduled
 # =========================================================
 
 
+@app.route(
+    "/superadmin/lead/demo/<int:lead_id>",
+    methods=["POST"],
+)
 @csrf.exempt
-@app.route("/superadmin/lead/demo/<int:lead_id>", methods=["POST"])
 @admin_required
 def schedule_demo(lead_id):
 
-    conn = None
-    cursor = None
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-
-            UPDATE lead_requests
-
-            SET status = 'Demo Scheduled'
-
-            WHERE id = %s
-
-        """,
-            (lead_id,),
-        )
-
-        conn.commit()
-
-        return jsonify({"success": True, "message": "Demo Scheduled Successfully"})
-
-    except Exception as e:
-        print("❌ DEMO STATUS ERROR:", e)
-
-        return jsonify({"success": False, "message": "Failed to schedule demo"}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
+    return _transition_lead_status(
+        lead_id=lead_id,
+        expected_status="Contacted",
+        new_status="Demo Scheduled",
+        success_message="Lead marked as demo scheduled successfully.",
+    )
 
 
 # =========================================================
-# 🏫 SUPER ADMIN - CONVERT LEAD
+# 3. CONVERT LEAD
 #
-# PURPOSE:
-# Lead purchased ERP
-#
-# FLOW:
-# Demo Scheduled
-#      ↓
-# Converted
-#
-# USED BY:
-# Lead Management
+# Demo Scheduled -> Converted
 # =========================================================
 
 
+@app.route(
+    "/superadmin/lead/converted/<int:lead_id>",
+    methods=["POST"],
+)
 @csrf.exempt
-@app.route("/superadmin/lead/converted/<int:lead_id>", methods=["POST"])
 @admin_required
 def convert_lead(lead_id):
 
-    conn = None
-    cursor = None
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-
-            UPDATE lead_requests
-
-            SET status='Converted'
-
-            WHERE id=%s
-
-        """,
-            (lead_id,),
-        )
-
-        conn.commit()
-
-        return jsonify({"success": True, "message": "Lead Converted Successfully"})
-
-    except Exception as e:
-        print("❌ CONVERT ERROR:", e)
-
-        return jsonify({"success": False, "message": "Failed to convert lead"}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
+    return _transition_lead_status(
+        lead_id=lead_id,
+        expected_status="Demo Scheduled",
+        new_status="Converted",
+        success_message="Lead converted successfully.",
+    )
 
 
 # =========================================================
@@ -20875,6 +21051,7 @@ def payment_failed():
 # CLERK REPORTS
 # ==========================================================
 
+
 @app.route("/clerk/reports")
 @login_required
 def clerk_reports():
@@ -20883,25 +21060,18 @@ def clerk_reports():
     cursor = None
 
     try:
-
         # ==================================================
         # ACCESS CONTROL
         # ==================================================
 
         if session.get("clerk_role") != "clerk":
-            flash(
-                "You are not authorized to access school reports.",
-                "danger"
-            )
+            flash("You are not authorized to access school reports.", "danger")
             return redirect(url_for("clerk_dashboard"))
 
         school_id = session.get("clerk_school_id")
 
         if not school_id:
-            flash(
-                "Your school session has expired. Please log in again.",
-                "warning"
-            )
+            flash("Your school session has expired. Please log in again.", "warning")
             return redirect(url_for("login"))
 
         # ==================================================
@@ -20911,10 +21081,7 @@ def clerk_reports():
         school = get_school_details(school_id)
 
         if not school:
-            flash(
-                "School information could not be found.",
-                "danger"
-            )
+            flash("School information could not be found.", "danger")
             return redirect(url_for("login"))
 
         # ==================================================
@@ -20952,53 +21119,27 @@ def clerk_reports():
         parsed_to = None
 
         if date_from:
-
             try:
-                parsed_from = datetime.strptime(
-                    date_from,
-                    "%Y-%m-%d"
-                ).date()
+                parsed_from = datetime.strptime(date_from, "%Y-%m-%d").date()
 
             except ValueError:
+                flash("Invalid Date From value.", "warning")
 
-                flash(
-                    "Invalid Date From value.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         if date_to:
-
             try:
-                parsed_to = datetime.strptime(
-                    date_to,
-                    "%Y-%m-%d"
-                ).date()
+                parsed_to = datetime.strptime(date_to, "%Y-%m-%d").date()
 
             except ValueError:
+                flash("Invalid Date To value.", "warning")
 
-                flash(
-                    "Invalid Date To value.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         if parsed_from and parsed_to and parsed_from > parsed_to:
+            flash("Date From cannot be later than Date To.", "warning")
 
-            flash(
-                "Date From cannot be later than Date To.",
-                "warning"
-            )
-
-            return redirect(
-                url_for("clerk_reports")
-            )
+            return redirect(url_for("clerk_reports"))
 
         # ==================================================
         # VALIDATE YEAR
@@ -21007,24 +21148,16 @@ def clerk_reports():
         year_value = None
 
         if selected_year:
-
             try:
-
                 year_value = int(selected_year)
 
                 if not (1900 <= year_value <= 2100):
                     raise ValueError
 
             except (ValueError, TypeError):
+                flash("Invalid report year.", "warning")
 
-                flash(
-                    "Invalid report year.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         # ==================================================
         # VALIDATE MONTH
@@ -21033,24 +21166,16 @@ def clerk_reports():
         month_value = None
 
         if selected_month:
-
             try:
-
                 month_value = int(selected_month)
 
                 if not (1 <= month_value <= 12):
                     raise ValueError
 
             except (ValueError, TypeError):
+                flash("Invalid report month.", "warning")
 
-                flash(
-                    "Invalid report month.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         # ==================================================
         # DATE RANGE HAS PRIORITY
@@ -21060,7 +21185,6 @@ def clerk_reports():
         # ==================================================
 
         if parsed_from or parsed_to:
-
             selected_year = ""
             selected_month = ""
 
@@ -21072,17 +21196,11 @@ def clerk_reports():
         # ==================================================
 
         if len(selected_class) > 100:
-            flash(
-                "Invalid class filter.",
-                "warning"
-            )
+            flash("Invalid class filter.", "warning")
             return redirect(url_for("clerk_reports"))
 
         if len(selected_section) > 100:
-            flash(
-                "Invalid section filter.",
-                "warning"
-            )
+            flash("Invalid section filter.", "warning")
             return redirect(url_for("clerk_reports"))
 
         # ==================================================
@@ -21092,16 +21210,12 @@ def clerk_reports():
         conn = get_connection()
 
         if not conn:
-
             flash(
-                "Database connection is currently unavailable. "
-                "Please try again.",
-                "danger"
+                "Database connection is currently unavailable. Please try again.",
+                "danger",
             )
 
-            return redirect(
-                url_for("clerk_dashboard")
-            )
+            return redirect(url_for("clerk_dashboard"))
 
         cursor = conn.cursor(dictionary=True)
 
@@ -21152,11 +21266,7 @@ def clerk_reports():
             (school_id,),
         )
 
-        classes = [
-            row["class_name"]
-            for row in cursor.fetchall()
-            if row["class_name"]
-        ]
+        classes = [row["class_name"] for row in cursor.fetchall() if row["class_name"]]
 
         # ==================================================
         # SECTION OPTIONS
@@ -21180,9 +21290,7 @@ def clerk_reports():
         )
 
         sections = [
-            row["section_name"]
-            for row in cursor.fetchall()
-            if row["section_name"]
+            row["section_name"] for row in cursor.fetchall() if row["section_name"]
         ]
 
         months = [
@@ -21216,33 +21324,19 @@ def clerk_reports():
             "s.is_deleted = 0",
         ]
 
-        student_base_params = [
-            school_id
-        ]
+        student_base_params = [school_id]
 
         if selected_class:
+            student_base_where.append("TRIM(s.class) = %s")
 
-            student_base_where.append(
-                "TRIM(s.class) = %s"
-            )
-
-            student_base_params.append(
-                selected_class
-            )
+            student_base_params.append(selected_class)
 
         if selected_section:
+            student_base_where.append("TRIM(s.section) = %s")
 
-            student_base_where.append(
-                "TRIM(s.section) = %s"
-            )
+            student_base_params.append(selected_section)
 
-            student_base_params.append(
-                selected_section
-            )
-
-        student_base_where_sql = " AND ".join(
-            student_base_where
-        )
+        student_base_where_sql = " AND ".join(student_base_where)
 
         # ==================================================
         # ACTIVE STUDENTS
@@ -21265,9 +21359,7 @@ def clerk_reports():
             tuple(student_base_params),
         )
 
-        active_students = (
-            cursor.fetchone()["total"] or 0
-        )
+        active_students = cursor.fetchone()["total"] or 0
 
         # ==================================================
         # ADMISSION FILTER
@@ -21276,57 +21368,31 @@ def clerk_reports():
         # selected reporting period.
         # ==================================================
 
-        admission_where = list(
-            student_base_where
-        )
+        admission_where = list(student_base_where)
 
-        admission_params = list(
-            student_base_params
-        )
+        admission_params = list(student_base_params)
 
         if parsed_from:
+            admission_where.append("DATE(s.created_at) >= %s")
 
-            admission_where.append(
-                "DATE(s.created_at) >= %s"
-            )
-
-            admission_params.append(
-                parsed_from
-            )
+            admission_params.append(parsed_from)
 
         if parsed_to:
+            admission_where.append("DATE(s.created_at) <= %s")
 
-            admission_where.append(
-                "DATE(s.created_at) <= %s"
-            )
-
-            admission_params.append(
-                parsed_to
-            )
+            admission_params.append(parsed_to)
 
         if year_value is not None:
+            admission_where.append("YEAR(s.created_at) = %s")
 
-            admission_where.append(
-                "YEAR(s.created_at) = %s"
-            )
-
-            admission_params.append(
-                year_value
-            )
+            admission_params.append(year_value)
 
         if month_value is not None:
+            admission_where.append("MONTH(s.created_at) = %s")
 
-            admission_where.append(
-                "MONTH(s.created_at) = %s"
-            )
+            admission_params.append(month_value)
 
-            admission_params.append(
-                month_value
-            )
-
-        admission_where_sql = " AND ".join(
-            admission_where
-        )
+        admission_where_sql = " AND ".join(admission_where)
 
         # ==================================================
         # ADMISSIONS COUNT
@@ -21343,9 +21409,7 @@ def clerk_reports():
             tuple(admission_params),
         )
 
-        admissions = (
-            cursor.fetchone()["total"] or 0
-        )
+        admissions = cursor.fetchone()["total"] or 0
 
         # ==================================================
         # TC FILTER
@@ -21357,73 +21421,39 @@ def clerk_reports():
             "st.is_deleted = 0",
         ]
 
-        tc_params = [
-            school_id
-        ]
+        tc_params = [school_id]
 
         if parsed_from:
+            tc_where.append("DATE(tc.tc_date) >= %s")
 
-            tc_where.append(
-                "DATE(tc.tc_date) >= %s"
-            )
-
-            tc_params.append(
-                parsed_from
-            )
+            tc_params.append(parsed_from)
 
         if parsed_to:
+            tc_where.append("DATE(tc.tc_date) <= %s")
 
-            tc_where.append(
-                "DATE(tc.tc_date) <= %s"
-            )
-
-            tc_params.append(
-                parsed_to
-            )
+            tc_params.append(parsed_to)
 
         if year_value is not None:
+            tc_where.append("YEAR(tc.tc_date) = %s")
 
-            tc_where.append(
-                "YEAR(tc.tc_date) = %s"
-            )
-
-            tc_params.append(
-                year_value
-            )
+            tc_params.append(year_value)
 
         if month_value is not None:
+            tc_where.append("MONTH(tc.tc_date) = %s")
 
-            tc_where.append(
-                "MONTH(tc.tc_date) = %s"
-            )
-
-            tc_params.append(
-                month_value
-            )
+            tc_params.append(month_value)
 
         if selected_class:
+            tc_where.append("TRIM(st.class) = %s")
 
-            tc_where.append(
-                "TRIM(st.class) = %s"
-            )
-
-            tc_params.append(
-                selected_class
-            )
+            tc_params.append(selected_class)
 
         if selected_section:
+            tc_where.append("TRIM(st.section) = %s")
 
-            tc_where.append(
-                "TRIM(st.section) = %s"
-            )
+            tc_params.append(selected_section)
 
-            tc_params.append(
-                selected_section
-            )
-
-        tc_where_sql = " AND ".join(
-            tc_where
-        )
+        tc_where_sql = " AND ".join(tc_where)
 
         # ==================================================
         # TC COUNT
@@ -21444,9 +21474,7 @@ def clerk_reports():
             tuple(tc_params),
         )
 
-        tc_count = (
-            cursor.fetchone()["total"] or 0
-        )
+        tc_count = cursor.fetchone()["total"] or 0
 
         # ==================================================
         # BONAFIDE FILTER
@@ -21458,73 +21486,39 @@ def clerk_reports():
             "st.is_deleted = 0",
         ]
 
-        bon_params = [
-            school_id
-        ]
+        bon_params = [school_id]
 
         if parsed_from:
+            bon_where.append("DATE(b.date) >= %s")
 
-            bon_where.append(
-                "DATE(b.date) >= %s"
-            )
-
-            bon_params.append(
-                parsed_from
-            )
+            bon_params.append(parsed_from)
 
         if parsed_to:
+            bon_where.append("DATE(b.date) <= %s")
 
-            bon_where.append(
-                "DATE(b.date) <= %s"
-            )
-
-            bon_params.append(
-                parsed_to
-            )
+            bon_params.append(parsed_to)
 
         if year_value is not None:
+            bon_where.append("YEAR(b.date) = %s")
 
-            bon_where.append(
-                "YEAR(b.date) = %s"
-            )
-
-            bon_params.append(
-                year_value
-            )
+            bon_params.append(year_value)
 
         if month_value is not None:
+            bon_where.append("MONTH(b.date) = %s")
 
-            bon_where.append(
-                "MONTH(b.date) = %s"
-            )
-
-            bon_params.append(
-                month_value
-            )
+            bon_params.append(month_value)
 
         if selected_class:
+            bon_where.append("TRIM(st.class) = %s")
 
-            bon_where.append(
-                "TRIM(st.class) = %s"
-            )
-
-            bon_params.append(
-                selected_class
-            )
+            bon_params.append(selected_class)
 
         if selected_section:
+            bon_where.append("TRIM(st.section) = %s")
 
-            bon_where.append(
-                "TRIM(st.section) = %s"
-            )
+            bon_params.append(selected_section)
 
-            bon_params.append(
-                selected_section
-            )
-
-        bon_where_sql = " AND ".join(
-            bon_where
-        )
+        bon_where_sql = " AND ".join(bon_where)
 
         # ==================================================
         # BONAFIDE COUNT
@@ -21545,9 +21539,7 @@ def clerk_reports():
             tuple(bon_params),
         )
 
-        bonafide_count = (
-            cursor.fetchone()["total"] or 0
-        )
+        bonafide_count = cursor.fetchone()["total"] or 0
 
         # ==================================================
         # TC TABLE
@@ -21590,16 +21582,10 @@ def clerk_reports():
         tc_rows = cursor.fetchall()
 
         for row in tc_rows:
-
-            tc_date_value = (
-                row["tc_date"]
-                or row["created_at"]
-            )
+            tc_date_value = row["tc_date"] or row["created_at"]
 
             row["tc_date_display"] = (
-                tc_date_value.strftime("%d %b %Y")
-                if tc_date_value
-                else None
+                tc_date_value.strftime("%d %b %Y") if tc_date_value else None
             )
 
         # ==================================================
@@ -21641,14 +21627,9 @@ def clerk_reports():
         bonafide_rows = cursor.fetchall()
 
         for row in bonafide_rows:
-
             row["bonafide_date_display"] = (
-                row["date"].strftime("%d %b %Y")
-                if row["date"]
-                else None
+                row["date"].strftime("%d %b %Y") if row["date"] else None
             )
-
-       
 
         # ==================================================
         # STUDENT TABLE
@@ -21658,9 +21639,7 @@ def clerk_reports():
         # ==================================================
 
         student_where_sql = student_base_where_sql
-        student_params = list(
-            student_base_params
-        )
+        student_params = list(student_base_params)
 
         cursor.execute(
             f"""
@@ -21691,11 +21670,8 @@ def clerk_reports():
         student_rows = cursor.fetchall()
 
         for row in student_rows:
-
             row["admission_date_display"] = (
-                row["admission_date"].strftime(
-                    "%d %b %Y"
-                )
+                row["admission_date"].strftime("%d %b %Y")
                 if row["admission_date"]
                 else None
             )
@@ -21736,16 +21712,10 @@ def clerk_reports():
         admission_rows = cursor.fetchall()
 
         for row in admission_rows:
-
-            admission_date_value = (
-                row["admission_date"]
-                or row["created_at"]
-            )
+            admission_date_value = row["admission_date"] or row["created_at"]
 
             row["admission_date_display"] = (
-                admission_date_value.strftime(
-                    "%d %b %Y"
-                )
+                admission_date_value.strftime("%d %b %Y")
                 if admission_date_value
                 else None
             )
@@ -21792,14 +21762,10 @@ def clerk_reports():
 
         admission_chart_rows = cursor.fetchall()
 
-        admission_chart_labels = [
-            row["month_label"]
-            for row in admission_chart_rows
-        ]
+        admission_chart_labels = [row["month_label"] for row in admission_chart_rows]
 
         admission_chart_values = [
-            int(row["total"] or 0)
-            for row in admission_chart_rows
+            int(row["total"] or 0) for row in admission_chart_rows
         ]
 
         # ==================================================
@@ -21832,15 +21798,11 @@ def clerk_reports():
         class_rows = cursor.fetchall()
 
         class_chart_labels = [
-            row["class_name"]
-            for row in class_rows
-            if row["class_name"]
+            row["class_name"] for row in class_rows if row["class_name"]
         ]
 
         class_chart_values = [
-            int(row["total"] or 0)
-            for row in class_rows
-            if row["class_name"]
+            int(row["total"] or 0) for row in class_rows if row["class_name"]
         ]
 
         # ==================================================
@@ -21897,9 +21859,7 @@ def clerk_reports():
         quality_conditions = []
 
         for field_name, label in required_fields:
-
             if field_name in string_fields:
-
                 quality_conditions.append(
                     f"""
                     (
@@ -21910,16 +21870,13 @@ def clerk_reports():
                 )
 
             else:
-
                 quality_conditions.append(
                     f"""
                     s.{field_name} IS NULL
                     """
                 )
 
-        quality_where_sql = " OR ".join(
-            quality_conditions
-        )
+        quality_where_sql = " OR ".join(quality_conditions)
 
         # ==================================================
         # QUALITY RECORD COUNT
@@ -21940,9 +21897,7 @@ def clerk_reports():
             tuple(student_base_params),
         )
 
-        records_with_issues = (
-            cursor.fetchone()["total"] or 0
-        )
+        records_with_issues = cursor.fetchone()["total"] or 0
 
         # ==================================================
         # MISSING FIELD COUNT
@@ -21951,9 +21906,7 @@ def clerk_reports():
         missing_sum_parts = []
 
         for field_name, label in required_fields:
-
             if field_name in string_fields:
-
                 condition = f"""
                     (
                         s.{field_name} IS NULL
@@ -21962,7 +21915,6 @@ def clerk_reports():
                 """
 
             else:
-
                 condition = f"""
                     s.{field_name} IS NULL
                 """
@@ -21977,9 +21929,7 @@ def clerk_reports():
                 """
             )
 
-        missing_sum_sql = " + ".join(
-            missing_sum_parts
-        )
+        missing_sum_sql = " + ".join(missing_sum_parts)
 
         cursor.execute(
             f"""
@@ -21998,9 +21948,7 @@ def clerk_reports():
             tuple(student_base_params),
         )
 
-        missing_fields = (
-            cursor.fetchone()["total_missing"] or 0
-        )
+        missing_fields = cursor.fetchone()["total_missing"] or 0
 
         # ==================================================
         # QUALITY DETAILS
@@ -22012,9 +21960,7 @@ def clerk_reports():
         missing_case_parts = []
 
         for field_name, label in required_fields:
-
             if field_name in string_fields:
-
                 condition = f"""
                     (
                         s.{field_name} IS NULL
@@ -22023,7 +21969,6 @@ def clerk_reports():
                 """
 
             else:
-
                 condition = f"""
                     s.{field_name} IS NULL
                 """
@@ -22038,9 +21983,7 @@ def clerk_reports():
                 """
             )
 
-        missing_case_sql = ", ".join(
-            missing_case_parts
-        )
+        missing_case_sql = ", ".join(missing_case_parts)
 
         cursor.execute(
             f"""
@@ -22076,49 +22019,29 @@ def clerk_reports():
         quality_rows = cursor.fetchall()
 
         for row in quality_rows:
-
-            raw_missing = (
-                row.get("missing_fields")
-                or ""
-            )
+            raw_missing = row.get("missing_fields") or ""
 
             row["missing_fields"] = [
-                value.strip()
-                for value in raw_missing.split(",")
-                if value.strip()
+                value.strip() for value in raw_missing.split(",") if value.strip()
             ]
 
         # ==================================================
         # COMPLETENESS
         # ==================================================
 
-        total_required_slots = (
-            int(active_students)
-            * len(required_fields)
-        )
+        total_required_slots = int(active_students) * len(required_fields)
 
         if total_required_slots > 0:
-
             completion_percent = round(
-                (
-                    (
-                        total_required_slots
-                        - int(missing_fields)
-                    )
-                    / total_required_slots
-                )
+                ((total_required_slots - int(missing_fields)) / total_required_slots)
                 * 100,
                 1,
             )
 
         else:
-
             completion_percent = 100.0
 
-        completion_percent = max(
-            0,
-            min(100, completion_percent)
-        )
+        completion_percent = max(0, min(100, completion_percent))
 
         # ==================================================
         # REPORT TOTAL
@@ -22128,10 +22051,7 @@ def clerk_reports():
         # ==================================================
 
         total_report_records = (
-            int(active_students)
-            + int(admissions)
-            + int(tc_count)
-            + int(bonafide_count)
+            int(active_students) + int(admissions) + int(tc_count) + int(bonafide_count)
         )
 
         # ==================================================
@@ -22141,50 +22061,31 @@ def clerk_reports():
         filter_parts = []
 
         if parsed_from:
-
-            filter_parts.append(
-                f"From {date_from}"
-            )
+            filter_parts.append(f"From {date_from}")
 
         if parsed_to:
-
-            filter_parts.append(
-                f"to {date_to}"
-            )
+            filter_parts.append(f"to {date_to}")
 
         if selected_year:
-
-            filter_parts.append(
-                f"Year {selected_year}"
-            )
+            filter_parts.append(f"Year {selected_year}")
 
         if selected_month:
-
             month_name = next(
                 (
                     item["label"]
                     for item in months
-                    if str(item["value"])
-                    == str(selected_month)
+                    if str(item["value"]) == str(selected_month)
                 ),
                 selected_month,
             )
 
-            filter_parts.append(
-                month_name
-            )
+            filter_parts.append(month_name)
 
         if selected_class:
-
-            filter_parts.append(
-                f"Class {selected_class}"
-            )
+            filter_parts.append(f"Class {selected_class}")
 
         if selected_section:
-
-            filter_parts.append(
-                f"Section {selected_section}"
-            )
+            filter_parts.append(f"Section {selected_section}")
 
         filter_description = (
             " • ".join(filter_parts)
@@ -22197,33 +22098,17 @@ def clerk_reports():
         # ==================================================
 
         summary = {
-            "active_students": int(
-                active_students
-            ),
-            "admissions": int(
-                admissions
-            ),
-            "tc_count": int(
-                tc_count
-            ),
-            "bonafide_count": int(
-                bonafide_count
-            ),
-            "quality_issues": int(
-                records_with_issues
-            ),
+            "active_students": int(active_students),
+            "admissions": int(admissions),
+            "tc_count": int(tc_count),
+            "bonafide_count": int(bonafide_count),
+            "quality_issues": int(records_with_issues),
         }
 
         quality = {
-            "students_checked": int(
-                active_students
-            ),
-            "records_with_issues": int(
-                records_with_issues
-            ),
-            "missing_fields": int(
-                missing_fields
-            ),
+            "students_checked": int(active_students),
+            "records_with_issues": int(records_with_issues),
+            "missing_fields": int(missing_fields),
             "completion_percent": completion_percent,
         }
 
@@ -22233,100 +22118,62 @@ def clerk_reports():
 
         return render_template(
             "reports/clerk_reports.html",
-
             role="clerk",
             active_page="reports",
-
-            school_name=school.get(
-                "school_name",
-                "School"
-            ),
-
+            school_name=school.get("school_name", "School"),
             summary=summary,
             quality=quality,
-
             student_rows=student_rows,
             admission_rows=admission_rows,
             tc_rows=tc_rows,
             bonafide_rows=bonafide_rows,
             quality_rows=quality_rows,
-
-            admission_chart_labels=(
-                admission_chart_labels
-            ),
-            admission_chart_values=(
-                admission_chart_values
-            ),
-
-            class_chart_labels=(
-                class_chart_labels
-            ),
-            class_chart_values=(
-                class_chart_values
-            ),
-
-            total_report_records=(
-                total_report_records
-            ),
-
-            filter_description=(
-                filter_description
-            ),
-
+            admission_chart_labels=(admission_chart_labels),
+            admission_chart_values=(admission_chart_values),
+            class_chart_labels=(class_chart_labels),
+            class_chart_values=(class_chart_values),
+            total_report_records=(total_report_records),
+            filter_description=(filter_description),
             date_from=date_from,
             date_to=date_to,
-
             selected_year=selected_year,
             selected_month=selected_month,
-
             selected_class=selected_class,
             selected_section=selected_section,
-
             selected_tab=selected_tab,
-
             years=years,
             months=months,
-
             classes=classes,
             sections=sections,
         )
 
     except Exception:
-
         if "logger" in globals():
-            logger.exception(
-                "CLERK REPORTS PAGE ERROR"
-            )
+            logger.exception("CLERK REPORTS PAGE ERROR")
         else:
-            print(
-                "CLERK REPORTS PAGE ERROR"
-            )
+            print("CLERK REPORTS PAGE ERROR")
 
         flash(
             "Reports could not be loaded right now. "
             "Please refresh the page and try again.",
-            "danger"
+            "danger",
         )
 
-        return redirect(
-            url_for("clerk_dashboard")
-        )
+        return redirect(url_for("clerk_dashboard"))
 
     finally:
-
         if cursor:
-
             try:
                 cursor.close()
             except Exception:
                 pass
 
         if conn:
-
             try:
                 conn.close()
             except Exception:
                 pass
+
 
 # ==========================================================
 # CLERK REPORT EXPORT
@@ -22379,29 +22226,17 @@ def clerk_reports_export():
         # FILTERS
         # ==================================================
 
-        date_from = request.args.get(
-            "date_from", ""
-        ).strip()
+        date_from = request.args.get("date_from", "").strip()
 
-        date_to = request.args.get(
-            "date_to", ""
-        ).strip()
+        date_to = request.args.get("date_to", "").strip()
 
-        year = request.args.get(
-            "year", ""
-        ).strip()
+        year = request.args.get("year", "").strip()
 
-        month = request.args.get(
-            "month", ""
-        ).strip()
+        month = request.args.get("month", "").strip()
 
-        class_name = request.args.get(
-            "class", ""
-        ).strip()
+        class_name = request.args.get("class", "").strip()
 
-        section = request.args.get(
-            "section", ""
-        ).strip()
+        section = request.args.get("section", "").strip()
 
         # ==================================================
         # VALIDATE DATE RANGE
@@ -22411,57 +22246,28 @@ def clerk_reports_export():
         parsed_to = None
 
         if date_from:
-
             try:
-
-                parsed_from = datetime.strptime(
-                    date_from,
-                    "%Y-%m-%d"
-                ).date()
+                parsed_from = datetime.strptime(date_from, "%Y-%m-%d").date()
 
             except ValueError:
+                flash("Invalid Date From value.", "warning")
 
-                flash(
-                    "Invalid Date From value.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         if date_to:
-
             try:
-
-                parsed_to = datetime.strptime(
-                    date_to,
-                    "%Y-%m-%d"
-                ).date()
+                parsed_to = datetime.strptime(date_to, "%Y-%m-%d").date()
 
             except ValueError:
+                flash("Invalid Date To value.", "warning")
 
-                flash(
-                    "Invalid Date To value.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         if parsed_from and parsed_to:
-
             if parsed_from > parsed_to:
+                flash("Date From cannot be later than Date To.", "warning")
 
-                flash(
-                    "Date From cannot be later than Date To.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         # ==================================================
         # VALIDATE YEAR
@@ -22470,24 +22276,16 @@ def clerk_reports_export():
         year_int = None
 
         if year:
-
             try:
-
                 year_int = int(year)
 
                 if not (1900 <= year_int <= 2100):
                     raise ValueError
 
             except (ValueError, TypeError):
+                flash("Invalid report year.", "warning")
 
-                flash(
-                    "Invalid report year.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         # ==================================================
         # VALIDATE MONTH
@@ -22496,24 +22294,16 @@ def clerk_reports_export():
         month_int = None
 
         if month:
-
             try:
-
                 month_int = int(month)
 
                 if not (1 <= month_int <= 12):
                     raise ValueError
 
             except (ValueError, TypeError):
+                flash("Invalid report month.", "warning")
 
-                flash(
-                    "Invalid report month.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("clerk_reports")
-                )
+                return redirect(url_for("clerk_reports"))
 
         # ==================================================
         # DATE RANGE HAS PRIORITY
@@ -22523,7 +22313,6 @@ def clerk_reports_export():
         # ==================================================
 
         if parsed_from or parsed_to:
-
             year = ""
             month = ""
 
@@ -22535,26 +22324,14 @@ def clerk_reports_export():
         # ==================================================
 
         if len(class_name) > 100:
+            flash("Invalid class filter.", "warning")
 
-            flash(
-                "Invalid class filter.",
-                "warning"
-            )
-
-            return redirect(
-                url_for("clerk_reports")
-            )
+            return redirect(url_for("clerk_reports"))
 
         if len(section) > 100:
+            flash("Invalid section filter.", "warning")
 
-            flash(
-                "Invalid section filter.",
-                "warning"
-            )
-
-            return redirect(
-                url_for("clerk_reports")
-            )
+            return redirect(url_for("clerk_reports"))
 
         # ==================================================
         # DATABASE
@@ -22563,19 +22340,11 @@ def clerk_reports_export():
         conn = get_connection()
 
         if not conn:
+            flash("Database connection is currently unavailable.", "danger")
 
-            flash(
-                "Database connection is currently unavailable.",
-                "danger"
-            )
+            return redirect(url_for("clerk_reports"))
 
-            return redirect(
-                url_for("clerk_reports")
-            )
-
-        cursor = conn.cursor(
-            dictionary=True
-        )
+        cursor = conn.cursor(dictionary=True)
 
         # ==================================================
         # ACTIVE STUDENT FILTER
@@ -22591,33 +22360,19 @@ def clerk_reports_export():
             "s.is_deleted = 0",
         ]
 
-        student_params = [
-            school_id
-        ]
+        student_params = [school_id]
 
         if class_name:
+            student_where.append("TRIM(s.class) = %s")
 
-            student_where.append(
-                "TRIM(s.class) = %s"
-            )
-
-            student_params.append(
-                class_name
-            )
+            student_params.append(class_name)
 
         if section:
+            student_where.append("TRIM(s.section) = %s")
 
-            student_where.append(
-                "TRIM(s.section) = %s"
-            )
+            student_params.append(section)
 
-            student_params.append(
-                section
-            )
-
-        student_where_sql = " AND ".join(
-            student_where
-        )
+        student_where_sql = " AND ".join(student_where)
 
         # ==================================================
         # ADMISSION EXPORT FILTER
@@ -22625,57 +22380,31 @@ def clerk_reports_export():
         # Admissions are based on created_at.
         # ==================================================
 
-        admission_where = list(
-            student_where
-        )
+        admission_where = list(student_where)
 
-        admission_params = list(
-            student_params
-        )
+        admission_params = list(student_params)
 
         if parsed_from:
+            admission_where.append("DATE(s.created_at) >= %s")
 
-            admission_where.append(
-                "DATE(s.created_at) >= %s"
-            )
-
-            admission_params.append(
-                parsed_from
-            )
+            admission_params.append(parsed_from)
 
         if parsed_to:
+            admission_where.append("DATE(s.created_at) <= %s")
 
-            admission_where.append(
-                "DATE(s.created_at) <= %s"
-            )
-
-            admission_params.append(
-                parsed_to
-            )
+            admission_params.append(parsed_to)
 
         if year_int is not None:
+            admission_where.append("YEAR(s.created_at) = %s")
 
-            admission_where.append(
-                "YEAR(s.created_at) = %s"
-            )
-
-            admission_params.append(
-                year_int
-            )
+            admission_params.append(year_int)
 
         if month_int is not None:
+            admission_where.append("MONTH(s.created_at) = %s")
 
-            admission_where.append(
-                "MONTH(s.created_at) = %s"
-            )
+            admission_params.append(month_int)
 
-            admission_params.append(
-                month_int
-            )
-
-        admission_where_sql = " AND ".join(
-            admission_where
-        )
+        admission_where_sql = " AND ".join(admission_where)
 
         # ==================================================
         # EXCEL DATASETS

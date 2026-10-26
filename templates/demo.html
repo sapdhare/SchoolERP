@@ -1,560 +1,411 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- ==================================================
-     DEMO HERO SECTION
-================================================== -->
 
-<section class="demo-hero-section">
 
-    <div class="demo-hero-bg"></div>
+<!-- =========================================================
+     SPL SHALASARTHI — PREMIUM DEMO HERO
+========================================================== -->
+
+<section class="demo-hero-section" id="demo-hero">
+
+    <!-- Background decoration -->
+    <div class="demo-hero-bg" aria-hidden="true"></div>
+    <div class="demo-hero-orb" aria-hidden="true"></div>
 
     <div class="demo-hero-container">
 
-        <!-- LEFT -->
+        <!-- ================================================
+             LEFT: HERO CONTENT
+        ================================================= -->
 
         <div class="demo-hero-content">
 
             <!-- Breadcrumb -->
-
-            <div class="demo-breadcrumb">
+            <nav class="demo-breadcrumb" aria-label="Breadcrumb">
 
                 <a href="/">Home</a>
 
-                <span>/</span>
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
 
-                <span>Book Demo</span>
+                <span aria-current="page">Book a Demo</span>
 
-            </div>
+            </nav>
 
             <!-- Badge -->
-
             <div class="demo-hero-badge">
 
-                🚀 Experience ShalaSarthi ERP Live
+                <span class="demo-badge-icon" aria-hidden="true">
+                    <i class="fa-solid fa-sparkles"></i>
+                </span>
+
+                <span>EXPERIENCE SHALASARTHI ERP</span>
+
+                <span class="demo-live-dot" aria-hidden="true"></span>
 
             </div>
 
             <!-- Heading -->
+            <h1 class="demo-hero-title">
 
-            <h1>
+                <span class="demo-title-marathi">
+                    शाळेचे संपूर्ण
+                    <span class="demo-title-highlight">
+                        व्यवस्थापन
+                    </span>
+                </span>
 
-                शाळेचे संपूर्ण व्यवस्थापन
-                <span>आता प्रत्यक्ष पाहा!</span>
+                <span class="demo-title-accent">
+                    आता प्रत्यक्ष पाहा!
+                </span>
 
             </h1>
 
-            <p>
+            <!-- English supporting heading -->
+            <h2 class="demo-hero-subheading">
+                See how your school can work smarter.
+            </h2>
 
-                Discover how admissions, attendance,
-                certificates, fee management and reports
-                work together in one powerful ERP platform.
-
-                <strong>
-                    Free Demo • Free Setup • Free Training
-                </strong>
-
+            <!-- Description -->
+            <p class="demo-hero-description">
+                Explore how admissions, student records, attendance,
+                certificates, fee management and reports work together
+                in one simple, powerful school ERP platform.
             </p>
 
-            <!-- Buttons -->
+            <!-- Marathi description -->
+            <p class="demo-hero-marathi">
+                प्रवेश प्रक्रिया, विद्यार्थी नोंदी, उपस्थिती,
+                प्रमाणपत्रे आणि फी व्यवस्थापन — सर्व काही
+                एकाच ठिकाणी, सोप्या पद्धतीने.
+            </p>
 
+            <!-- Benefits -->
+            <div class="demo-hero-benefits">
+
+                <span>
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    Free Demo
+                </span>
+
+                <span>
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    Free Setup
+                </span>
+
+                <span>
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    Guided Training
+                </span>
+
+            </div>
+
+            <!-- CTA buttons -->
             <div class="demo-hero-buttons">
 
-                <button
-                    onclick="scrollToDemoForm()"
-                    class="demo-primary-btn">
+                <button type="button" class="demo-primary-btn" onclick="scrollToDemoForm()">
 
-                    Book Free Demo
+                    <span>Book Your Free Demo</span>
+
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
 
                 </button>
 
-                <a href="tel:8888244176"
-                   class="demo-secondary-btn">
+                <a href="tel:+918308452931" class="demo-secondary-btn">
 
-                    Talk To ERP Expert
+                    <span class="demo-secondary-icon" aria-hidden="true">
+                        <i class="fa-solid fa-phone"></i>
+                    </span>
+
+                    <span class="demo-secondary-text">
+                        <small>Have questions?</small>
+                        <strong>Talk to Our ERP Expert</strong>
+                    </span>
 
                 </a>
 
             </div>
 
+            <!-- Trust note -->
+            <div class="demo-hero-trust">
+
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+
+                <span>
+                    Discover the right ERP solution for your school.
+                </span>
+
+            </div>
+
         </div>
 
-        <!-- RIGHT -->
 
-        <div class="demo-hero-image">
+        <!-- ================================================
+             RIGHT: DASHBOARD PREVIEW
+        ================================================= -->
 
+        <div class="demo-hero-visual">
+
+            <div class="demo-visual-glow" aria-hidden="true"></div>
+
+            <!-- Floating label -->
+            <div class="demo-floating-label">
+
+                <span class="demo-floating-icon" aria-hidden="true">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </span>
+
+                <span class="demo-floating-copy">
+                    <strong>Everything in one place</strong>
+                    <small>One connected school platform</small>
+                </span>
+
+                <span class="demo-floating-status" aria-label="Integrated platform">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                </span>
+
+            </div>
+
+            <!-- Dashboard card -->
             <div class="demo-dashboard-card">
 
-                <img
-                src="{{ url_for('static', filename='images/dashboard_preview.png') }}"
-                alt="ShalaSarthi ERP Dashboard">
+                <div class="demo-dashboard-topbar">
+
+                    <div class="demo-dashboard-brand">
+
+                        <span class="demo-dashboard-brand-icon">
+                            <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                        </span>
+
+                        <span>
+                            <strong>ShalaSarthi</strong>
+                            <small>School ERP Dashboard</small>
+                        </span>
+
+                    </div>
+
+                    <div class="demo-dashboard-window-controls" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                </div>
+
+                <div class="demo-dashboard-image-wrap">
+
+                    <img src="{{ url_for('static', filename='images/dashboard_preview.png') }}"
+                        alt="ShalaSarthi school ERP dashboard preview" class="demo-dashboard-image"
+                        fetchpriority="high">
+
+                </div>
+
+                <div class="demo-dashboard-caption">
+
+                    <span class="demo-caption-indicator" aria-hidden="true"></span>
+
+                    <span>
+                        Smarter management. Simpler workflows.
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- Bottom feature chips -->
+            <div class="demo-feature-chips">
+
+                <div class="demo-feature-chip">
+                    <span class="demo-chip-icon demo-chip-teal">
+                        <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+                    </span>
+                    <span>Students</span>
+                </div>
+
+                <div class="demo-feature-chip">
+                    <span class="demo-chip-icon demo-chip-blue">
+                        <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                    </span>
+                    <span>Attendance</span>
+                </div>
+
+                <div class="demo-feature-chip">
+                    <span class="demo-chip-icon demo-chip-purple">
+                        <i class="fa-solid fa-file-certificate" aria-hidden="true"></i>
+                    </span>
+                    <span>Certificates</span>
+                </div>
 
             </div>
 
         </div>
 
     </div>
+
+    <!-- Bottom transition -->
+    <div class="demo-hero-bottom-line" aria-hidden="true"></div>
 
 </section>
 
-<section class="demo-connect">
 
-    <div class="demo-connect-header">
+<!-- =========================================================
+     DEMO PAGE — CONNECTED SCHOOL ECOSYSTEM
+========================================================= -->
 
-        <span class="demo-connect-badge">
+<section class="demo-connect" id="demo-connect">
 
-            🔗 Connected School Ecosystem
+    <div class="demo-connect-container">
 
-        </span>
+        <!-- SECTION HEADER -->
+        <header class="demo-connect-header">
 
-        <h2>
+            <span class="demo-connect-badge">
+                <i class="fa-solid fa-link" aria-hidden="true"></i>
+                Connected School Ecosystem
+            </span>
 
-            One Platform.
-            <span>Every Department Connected.</span>
+            <h2>
+                One Platform.
+                <span>Every Department Connected.</span>
+            </h2>
 
-        </h2>
+            <p class="demo-connect-description">
+                Students, teachers, parents, administration, academics
+                and school operations stay connected through one
+                centralized ERP platform.
+            </p>
 
-        <p>
+            <p class="demo-connect-marathi" lang="mr">
+                शाळेतील प्रत्येक विभाग आता एका स्मार्ट ERP
+                प्रणालीद्वारे एकमेकांशी जोडला जातो.
+            </p>
 
-            Students, Teachers, Parents, Administration,
-            Academics and Operations stay connected through
-            one centralized ERP.
+        </header>
 
-        </p>
+        <!-- CONNECTED SCHOOL NETWORK -->
+        <div class="school-network" aria-label="School departments connected through ShalaSarthi ERP">
 
-        <p class="marathi">
+            <!-- Animated connections -->
+            <svg class="network-lines" viewBox="0 0 1000 850" preserveAspectRatio="none" aria-hidden="true">
 
-            शाळेतील प्रत्येक विभाग आता एका Smart ERP
-            प्रणालीद्वारे जोडला जातो.
+                <line x1="500" y1="95" x2="500" y2="320"></line>
 
-        </p>
+                <line x1="265" y1="160" x2="450" y2="340"></line>
+                <line x1="735" y1="160" x2="550" y2="340"></line>
 
-    </div>
+                <line x1="145" y1="305" x2="430" y2="390"></line>
+                <line x1="205" y1="445" x2="430" y2="430"></line>
 
-    <div class="school-network">
+                <line x1="255" y1="650" x2="440" y2="510"></line>
+                <line x1="365" y1="770" x2="470" y2="560"></line>
 
-   <svg class="network-lines"
-     viewBox="0 0 1000 850"
-     preserveAspectRatio="none">
+                <line x1="855" y1="305" x2="570" y2="390"></line>
+                <line x1="795" y1="445" x2="570" y2="430"></line>
 
-    <!-- Students -->
-    <line x1="500" y1="95"
-          x2="500" y2="320"/>
+                <line x1="745" y1="650" x2="560" y2="510"></line>
+                <line x1="635" y1="770" x2="530" y2="560"></line>
 
-    <!-- Teachers -->
-    <line x1="265" y1="160"
-          x2="450" y2="340"/>
+                <line x1="500" y1="835" x2="500" y2="560"></line>
 
-    <!-- Parents -->
-    <line x1="735" y1="160"
-          x2="550" y2="340"/>
+            </svg>
 
-    <!-- Admission -->
-    <line x1="145" y1="305"
-          x2="430" y2="390"/>
+            <!-- CENTRAL MOBILE DASHBOARD -->
+            <div class="network-center">
 
-    <!-- Attendance -->
-    <line x1="205" y1="445"
-          x2="430" y2="430"/>
+                <div class="network-center-glow" aria-hidden="true"></div>
 
-    <!-- Library -->
-    <line x1="255" y1="650"
-          x2="440" y2="510"/>
+                <img src="{{ url_for('static', filename='images/connect_demo.png') }}"
+                    alt="ShalaSarthi ERP mobile dashboard connecting school departments" loading="lazy"
+                    decoding="async">
 
-    <!-- Transport -->
-    <line x1="365" y1="770"
-          x2="470" y2="560"/>
+            </div>
 
-    <!-- Fees -->
-    <line x1="855" y1="305"
-          x2="570" y2="390"/>
+            <!-- TOP NODE -->
+            <div class="node student">
+                <span aria-hidden="true">🎓</span>
+                <span>Students</span>
+            </div>
 
-    <!-- Exams -->
-    <line x1="795" y1="445"
-          x2="570" y2="430"/>
+            <!-- UPPER NODES -->
+            <div class="node teacher">
+                <span aria-hidden="true">👩‍🏫</span>
+                <span>Teachers</span>
+            </div>
 
-    <!-- Results -->
-    <line x1="745" y1="650"
-          x2="560" y2="510"/>
+            <div class="node parent">
+                <span aria-hidden="true">👨‍👩‍👧</span>
+                <span>Parents</span>
+            </div>
 
-    <!-- Timetable -->
-    <line x1="635" y1="770"
-          x2="530" y2="560"/>
+            <!-- CENTRAL ADMIN NODE -->
+            <div class="node admin">
+                <span aria-hidden="true">🏢</span>
+                <span>Administration</span>
+            </div>
 
-    <!-- Digital Content -->
-    <line x1="500" y1="835"
-          x2="500" y2="560"/>
+            <!-- LEFT NODES -->
+            <div class="node admission">
+                <span aria-hidden="true">📝</span>
+                <span>Admission</span>
+            </div>
 
-</svg>
+            <div class="node attendance">
+                <span aria-hidden="true">📅</span>
+                <span>Attendance</span>
+            </div>
 
-        <!-- CENTER -->
+            <div class="node library">
+                <span aria-hidden="true">📚</span>
+                <span>Library</span>
+            </div>
 
-        <div class="network-center">
+            <div class="node transport">
+                <span aria-hidden="true">🚌</span>
+                <span>Transport</span>
+            </div>
 
-            <img
-            src="{{ url_for('static',
-            filename='images/connect_demo.png') }}"
-            alt="ERP Mobile App">
+            <!-- RIGHT NODES -->
+            <div class="node fees">
+                <span aria-hidden="true">💰</span>
+                <span>Fees</span>
+            </div>
+
+            <div class="node exams">
+                <span aria-hidden="true">🧾</span>
+                <span>Exams</span>
+            </div>
+
+            <div class="node results">
+                <span aria-hidden="true">📊</span>
+                <span>Results</span>
+            </div>
+
+            <div class="node timetable">
+                <span aria-hidden="true">🕒</span>
+                <span>Timetable</span>
+            </div>
+
+            <!-- BOTTOM NODE -->
+            <div class="node content">
+                <span aria-hidden="true">💻</span>
+                <span>Digital Content</span>
+            </div>
 
         </div>
 
-        <!-- NODES -->
+        <!-- SECTION FOOTER -->
+        <div class="demo-connect-footer">
 
-        <div class="node student">
-            🎓 Students
-        </div>
+            <span class="demo-connect-footer-icon" aria-hidden="true">
+                <i class="fa-solid fa-circle-check"></i>
+            </span>
 
-        <div class="node teacher">
-            👩‍🏫 Teachers
-        </div>
-
-        <div class="node parent">
-            👨‍👩‍👧 Parents
-        </div>
-
-        <div class="node admin">
-            🏢 Admin
-        </div>
-
-        <div class="node admissionn">
-            📝 Admission
-        </div>
-
-        <div class="node attendancee">
-            📅 Attendance
-        </div>
-
-        <div class="node library">
-            📚 Library
-        </div>
-
-        <div class="node transport">
-            🚌 Transport
-        </div>
-
-        <div class="node feess">
-            💰 Fees
-        </div>
-
-        <div class="node examss">
-            🧾 Exams
-        </div>
-
-        <div class="node resultss">
-            📊 Results
-        </div>
-
-        <div class="node timetable">
-            🕒 Timetable
-        </div>
-
-        <div class="node content">
-            💻 Digital Content
-        </div>
-
-    </div>
-
-</section>
-
-<section class="demo-day">
-
-    <div class="demo-day-header">
-
-        <span class="demo-day-badge">
-            ⚡ Smart Daily Workflow
-        </span>
-
-        <h2>
-
-            A Day In School
-            <span>With ShalaSarthi</span>
-
-        </h2>
-
-        <p>
-
-            Every school activity gets automatically updated
-            throughout the day.
-
-        </p>
-
-        <p class="marathi">
-
-            सकाळपासून दिवसाच्या शेवटपर्यंत,
-            प्रत्येक प्रक्रिया Smart ERP द्वारे
-            स्वयंचलित केली जाते.
-
-        </p>
-
-    </div>
-
-    <div class="timeline-wrapper">
-
-        <div class="timeline-line"></div>
-
-        <!-- STEP 1 -->
-
-        <div class="timeline-step left">
-
-            <div class="timeline-card">
-
-                <span class="timeline-time">
-                    8:00 AM
+            <p>
+                <strong>One ERP. One connected school.</strong>
+                <span lang="mr">
+                    संपूर्ण शाळेचे व्यवस्थापन एकाच ठिकाणी.
                 </span>
-
-                <h4>
-                    📅 Attendance Marked
-                </h4>
-
-                <p>
-                    Students attendance updated instantly.
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- STEP 2 -->
-
-        <div class="timeline-step right">
-
-            <div class="timeline-card">
-
-                <span class="timeline-time">
-                    10:00 AM
-                </span>
-
-                <h4>
-                    💰 Fee Collection Updated
-                </h4>
-
-                <p>
-                    Receipts generated automatically.
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- STEP 3 -->
-
-        <div class="timeline-step left">
-
-            <div class="timeline-card">
-
-                <span class="timeline-time">
-                    12:00 PM
-                </span>
-
-                <h4>
-                    📄 Certificates Generated
-                </h4>
-
-                <p>
-                    TC & Bonafide ready within seconds.
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- STEP 4 -->
-
-        <div class="timeline-step right">
-
-            <div class="timeline-card">
-
-                <span class="timeline-time">
-                    2:00 PM
-                </span>
-
-                <h4>
-                    📲 Parent Notifications Sent
-                </h4>
-
-                <p>
-                    SMS and alerts delivered instantly.
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- STEP 5 -->
-
-        <div class="timeline-step left">
-
-            <div class="timeline-card">
-
-                <span class="timeline-time">
-                    4:00 PM
-                </span>
-
-                <h4>
-                    📊 Reports Generated
-                </h4>
-
-                <p>
-                    Management reports ready automatically.
-                </p>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-<!-- ==================================
-     WHY SCHOOLS SWITCH
-================================== -->
-
-<section class="demo-switch">
-
-    <div class="demo-switch-header">
-
-        <span class="demo-switch-badge">
-
-            🚀 School Transformation
-
-        </span>
-
-        <h2>
-
-            Why Schools Switch
-            <span>To ShalaSarthi</span>
-
-        </h2>
-
-        <p>
-
-            Schools don't switch software for more features.
-            They switch because they want less paperwork,
-            faster administration and better control.
-
-        </p>
-
-        <p class="demo-switch-marathi">
-
-            शाळा फक्त नवीन सॉफ्टवेअर घेत नाहीत,
-            तर अधिक कार्यक्षम आणि डिजिटल व्यवस्थापनाकडे वाटचाल करतात.
-
-        </p>
-
-    </div>
-
-    <div class="demo-switch-wrapper">
-
-        <!-- BEFORE -->
-
-        <div class="switch-card before-card">
-
-            <div class="switch-title">
-
-                ❌ Before ShalaSarthi
-
-            </div>
-
-            <ul>
-
-                <li>Manual Attendance Registers</li>
-
-                <li>Paper-Based Fee Tracking</li>
-
-                <li>Slow Certificate Generation</li>
-
-                <li>Multiple Excel Files</li>
-
-                <li>Delayed Parent Communication</li>
-
-                <li>Scattered School Records</li>
-
-            </ul>
-
-        </div>
-
-        <!-- CENTER -->
-
-        <div class="switch-center">
-
-            <div class="switch-circle">
-
-                <span>ShalaSarthi</span>
-
-            </div>
-
-            <div class="switch-arrow">
-
-                ➜
-
-            </div>
-
-        </div>
-
-        <!-- AFTER -->
-
-        <div class="switch-card after-card">
-
-            <div class="switch-title">
-
-                ✅ After ShalaSarthi
-
-            </div>
-
-            <ul>
-
-                <li>Instant Attendance Updates</li>
-
-                <li>Automatic Fee Reports</li>
-
-                <li>One-Click Certificates</li>
-
-                <li>Centralized School Data</li>
-
-                <li>Real-Time Parent Notifications</li>
-
-                <li>Secure Cloud Access Anywhere</li>
-
-            </ul>
-
-        </div>
-
-    </div>
-
-    <!-- STATS -->
-
-    <div class="switch-stats">
-
-        <div class="switch-stat">
-
-            <h3>80%</h3>
-
-            <p>Less Paperwork</p>
-
-        </div>
-
-        <div class="switch-stat">
-
-            <h3>70%</h3>
-
-            <p>Faster Administration</p>
-
-        </div>
-
-        <div class="switch-stat">
-
-            <h3>90%</h3>
-
-            <p>Data Accuracy</p>
-
-        </div>
-
-        <div class="switch-stat">
-
-            <h3>24/7</h3>
-
-            <p>Cloud Access</p>
+            </p>
 
         </div>
 
@@ -563,467 +414,1213 @@
 </section>
 
 
-<section class="demo-booking">
+<!-- =========================================================
+     DEMO PAGE — TIMELINE
+========================================================= -->
+<section class="demo-day" id="demo-day">
+
+    <div class="demo-day-container">
+
+        <!-- SECTION HEADER -->
+        <header class="demo-day-header">
+
+            <span class="demo-day-badge">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                Smart Daily Workflow
+            </span>
+
+            <h2>
+                A Day in School
+                <span>with ShalaSarthi</span>
+            </h2>
+
+            <p class="demo-day-description">
+                From attendance to daily reports, manage school activities
+                through one connected ERP platform.
+            </p>
+
+            <p class="demo-day-marathi" lang="mr">
+                सकाळच्या उपस्थितीपासून दिवसाच्या अहवालापर्यंत,
+                प्रत्येक प्रक्रिया एकाच Smart ERP प्रणालीद्वारे व्यवस्थापित करा.
+            </p>
+
+        </header>
+
+        <!-- TIMELINE -->
+        <div class="timeline-wrapper">
+
+            <div class="timeline-line" aria-hidden="true">
+                <span class="timeline-line-progress"></span>
+            </div>
+
+            <!-- STEP 1 -->
+            <article class="timeline-step left">
+
+                <span class="timeline-dot" aria-hidden="true"></span>
+
+                <div class="timeline-card">
+
+                    <div class="timeline-card-top">
+                        <span class="timeline-icon attendance-icon">
+                            <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+                        </span>
+
+                        <span class="timeline-time">
+                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                            8:00 AM
+                        </span>
+                    </div>
+
+                    <h3>Attendance Marked</h3>
+
+                    <p>
+                        Record student attendance and keep classroom
+                        records organised.
+                    </p>
+
+                    <span class="timeline-card-caption">
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
+                        Attendance management
+                    </span>
+
+                </div>
+            </article>
+
+            <!-- STEP 2 -->
+            <article class="timeline-step right">
+
+                <span class="timeline-dot" aria-hidden="true"></span>
+
+                <div class="timeline-card">
+
+                    <div class="timeline-card-top">
+                        <span class="timeline-icon fees-icon">
+                            <i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i>
+                        </span>
+
+                        <span class="timeline-time">
+                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                            10:00 AM
+                        </span>
+                    </div>
+
+                    <h3>Fee Collection Updated</h3>
+
+                    <p>
+                        Record fee payments and generate receipts
+                        through the fee management module.
+                    </p>
+
+                    <span class="timeline-card-caption">
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
+                        Fee management
+                    </span>
+
+                </div>
+            </article>
+
+            <!-- STEP 3 -->
+            <article class="timeline-step left">
+
+                <span class="timeline-dot" aria-hidden="true"></span>
+
+                <div class="timeline-card">
+
+                    <div class="timeline-card-top">
+                        <span class="timeline-icon certificate-icon">
+                            <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+                        </span>
+
+                        <span class="timeline-time">
+                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                            12:00 PM
+                        </span>
+                    </div>
+
+                    <h3>Certificates Generated</h3>
+
+                    <p>
+                        Prepare Transfer Certificates and Bonafide
+                        Certificates with an organised workflow.
+                    </p>
+
+                    <span class="timeline-card-caption">
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
+                        Certificate management
+                    </span>
+
+                </div>
+            </article>
+
+            <!-- STEP 4 -->
+            <article class="timeline-step right">
+
+                <span class="timeline-dot" aria-hidden="true"></span>
+
+                <div class="timeline-card">
+
+                    <div class="timeline-card-top">
+                        <span class="timeline-icon notification-icon">
+                            <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                        </span>
+
+                        <span class="timeline-time">
+                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                            2:00 PM
+                        </span>
+                    </div>
+
+                    <h3>Parent Notifications</h3>
+
+                    <p>
+                        Keep parents informed through the communication
+                        channels available in your ERP setup.
+                    </p>
+
+                    <span class="timeline-card-caption">
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
+                        Parent communication
+                    </span>
+
+                </div>
+            </article>
+
+            <!-- STEP 5 -->
+            <article class="timeline-step left">
+
+                <span class="timeline-dot" aria-hidden="true"></span>
+
+                <div class="timeline-card">
+
+                    <div class="timeline-card-top">
+                        <span class="timeline-icon reports-icon">
+                            <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
+                        </span>
+
+                        <span class="timeline-time">
+                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                            4:00 PM
+                        </span>
+                    </div>
+
+                    <h3>Daily Reports</h3>
+
+                    <p>
+                        Review available school records and prepare
+                        reports for administrative follow-up.
+                    </p>
+
+                    <span class="timeline-card-caption">
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
+                        Reporting and review
+                    </span>
+
+                </div>
+            </article>
+
+        </div>
+
+        <!-- SECTION FOOTER -->
+        <div class="demo-day-footer">
+            <span class="demo-day-footer-icon">
+                <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            </span>
+
+            <p>
+                <strong>One connected platform.</strong>
+                Less manual work. Better school coordination.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ==========================================
+     WHY SCHOOLS SWITCH — SHALASARTHI
+========================================== -->
+
+<section class="demo-switch" id="why-shalasarthi">
+
+    <div class="demo-switch-container">
+
+        <!-- SECTION HEADER -->
+        <header class="demo-switch-header">
+
+            <span class="demo-switch-badge">
+                <span class="switch-badge-icon" aria-hidden="true">↗</span>
+                School Transformation
+            </span>
+
+            <h2>
+                Why Schools Switch
+                <span>To ShalaSarthi</span>
+            </h2>
+
+            <p class="demo-switch-description">
+                Schools need more than software features.
+                They need less paperwork, faster administration,
+                and better control over everyday operations.
+            </p>
+
+            <p class="demo-switch-marathi" lang="mr">
+                शाळांना कमी कागदपत्रे, जलद प्रशासकीय कामकाज
+                आणि अधिक कार्यक्षम डिजिटल व्यवस्थापनाची गरज आहे.
+            </p>
+
+        </header>
+
+
+        <!-- BEFORE / TRANSFORMATION / AFTER -->
+        <div class="demo-switch-wrapper">
+
+            <!-- BEFORE -->
+            <article class="switch-card before-card">
+
+                <div class="switch-card-heading">
+
+                    <span class="switch-heading-icon before-icon" aria-hidden="true">
+                        <i class="fa-solid fa-xmark"></i>
+                    </span>
+
+                    <div>
+                        <h3 class="switch-title">Before ShalaSarthi</h3>
+                        <p class="switch-card-subtitle">
+                            Traditional manual processes
+                        </p>
+                    </div>
+
+                </div>
+
+                <ul class="switch-list">
+
+                    <li>
+                        <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+                        <span>Manual attendance registers</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>
+                        <span>Paper-based fee tracking</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-file-circle-exclamation" aria-hidden="true"></i>
+                        <span>Time-consuming certificate preparation</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-file-excel" aria-hidden="true"></i>
+                        <span>Scattered spreadsheets and records</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                        <span>Delayed parent communication</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
+                        <span>Disconnected school information</span>
+                    </li>
+
+                </ul>
+
+            </article>
+
+
+            <!-- CENTRAL TRANSFORMATION -->
+            <div class="switch-center" aria-label="Transform school operations with ShalaSarthi">
+
+                <div class="switch-circle">
+
+                    <span class="switch-circle-mark" aria-hidden="true">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </span>
+
+                    <span class="switch-circle-name">
+                        ShalaSarthi
+                    </span>
+
+                    <span class="switch-circle-caption">
+                        Smart School ERP
+                    </span>
+
+                </div>
+
+                <div class="switch-arrow" aria-hidden="true">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+                <p class="switch-center-label">
+                    Smarter school management
+                </p>
+
+            </div>
+
+
+            <!-- AFTER -->
+            <article class="switch-card after-card">
+
+                <div class="switch-card-heading">
+
+                    <span class="switch-heading-icon after-icon" aria-hidden="true">
+                        <i class="fa-solid fa-check"></i>
+                    </span>
+
+                    <div>
+                        <h3 class="switch-title">With ShalaSarthi</h3>
+                        <p class="switch-card-subtitle">
+                            Connected digital workflows
+                        </p>
+                    </div>
+
+                </div>
+
+                <ul class="switch-list">
+
+                    <li>
+                        <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                        <span>Streamlined attendance management</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                        <span>Organized fee records and reports</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
+                        <span>Convenient certificate generation</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-database" aria-hidden="true"></i>
+                        <span>Centralized school records</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                        <span>Timely parent notifications</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-cloud" aria-hidden="true"></i>
+                        <span>Convenient access to school information</span>
+                    </li>
+
+                </ul>
+
+            </article>
+
+        </div>
+
+
+        <!-- BENEFIT HIGHLIGHTS -->
+        <div class="switch-stats" aria-label="School management benefits">
+
+            <article class="switch-stat">
+
+                <span class="switch-stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-file-lines"></i>
+                </span>
+
+                <h3>Less</h3>
+                <p>Manual Paperwork</p>
+
+            </article>
+
+            <article class="switch-stat">
+
+                <span class="switch-stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </span>
+
+                <h3>Faster</h3>
+                <p>Administrative Workflows</p>
+
+            </article>
+
+            <article class="switch-stat">
+
+                <span class="switch-stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-layer-group"></i>
+                </span>
+
+                <h3>Unified</h3>
+                <p>School Records</p>
+
+            </article>
+
+            <article class="switch-stat">
+
+                <span class="switch-stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-cloud"></i>
+                </span>
+
+                <h3>Flexible</h3>
+                <p>Information Access</p>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     BOOK A DEMO — SHALASARTHI
+========================================================= -->
+
+<section class="demo-booking" id="demo-form-section">
 
     <div class="demo-booking-container">
 
-        <!-- LEFT -->
+        <!-- ================= LEFT: DEMO FORM ================= -->
 
-<div class="demo-form-card">
+        <div class="demo-form-card">
 
-    <div class="demo-form-header">
+            <div class="demo-form-header">
 
-        <span>
-            📅 Schedule Demo
-        </span>
+                <span class="demo-form-badge">
+                    <i class="fa-regular fa-calendar-check"></i>
+                    Schedule a Demo
+                </span>
 
-        <h2>
-            Book Your Free Demo
-        </h2>
+                <h2>
+                    Book Your
+                    <span>Free Demo</span>
+                </h2>
 
-        <p>
+                <p>
+                    Tell us a little about your school.
+                    Our team will contact you to arrange a
+                    personalized ShalaSarthi ERP walkthrough.
+                </p>
 
-            Fill in your details and our ERP expert
-            will contact you shortly.
+                <div class="demo-header-trust">
+                    <span>
+                        <i class="fa-solid fa-circle-check"></i>
+                        Personalized walkthrough
+                    </span>
 
-        </p>
+                    <span>
+                        <i class="fa-solid fa-circle-check"></i>
+                        No obligation
+                    </span>
+                </div>
 
-    </div>
+            </div>
 
-    <form id="demoForm" class="demo-lead-form">
 
-    <input
-        type="text"
-        id="school_name"
-        name="school_name"
-        placeholder="School Name"
-        required>
+            <!-- Accessible form feedback -->
 
-    <input
-        type="text"
-        id="contact_person"
-        name="contact_person"
-        placeholder="Contact Person"
-        required>
+            <div id="demoFormMessage" class="demo-form-message" role="status" aria-live="polite" hidden>
+            </div>
 
-    <input
-        type="tel"
-        id="mobile"
-        name="mobile"
-        placeholder="Mobile Number"
-        required>
 
-    <input
-        type="email"
-        id="email"
-        name="email"
-        placeholder="Email Address">
+            <!-- FORM -->
 
-    <input
-        type="number"
-        id="student_strength"
-        name="student_strength"
-        placeholder="Total Students">
+            <form id="demoForm" class="demo-lead-form" method="POST" action="/submit-lead" novalidate>
 
-    <!-- AUTO PLAN -->
+                <!-- Include the CSRF token if Flask-WTF CSRF protection is enabled -->
 
-    <div class="demo-plan-display">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label>
+                <input type="hidden" id="selected_plan" name="selected_plan" value="Free Demo Plan">
 
-            Selected Plan
+                <div class="demo-form-grid">
 
-        </label>
+                    <!-- School Name -->
 
-        <div class="demo-plan-box">
+                    <div class="demo-field">
 
-            Free Demo Plan
+                        <label for="school_name">
+                            School Name
+                            <span class="required-mark">*</span>
+                        </label>
+
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-school"></i>
+
+                            <input type="text" id="school_name" name="school_name" placeholder="Enter school name"
+                                autocomplete="organization" maxlength="150" required>
+                        </div>
+
+                    </div>
+
+
+                    <!-- Contact Person -->
+
+                    <div class="demo-field">
+
+                        <label for="contact_person">
+                            Contact Person
+                            <span class="required-mark">*</span>
+                        </label>
+
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-user"></i>
+
+                            <input type="text" id="contact_person" name="contact_person"
+                                placeholder="Principal or administrator" autocomplete="name" maxlength="100" required>
+                        </div>
+
+                    </div>
+
+
+                    <!-- Mobile Number -->
+
+                    <div class="demo-field">
+
+                        <label for="mobile">
+                            Mobile Number
+                            <span class="required-mark">*</span>
+                        </label>
+
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-phone"></i>
+
+                            <input type="tel" id="mobile" name="mobile" placeholder="Enter contact number"
+                                autocomplete="tel" inputmode="tel" maxlength="20" pattern="[0-9+() .-]{10,20}"
+                                title="Enter a valid contact number." required>
+                        </div>
+
+                    </div>
+
+
+                    <!-- Email -->
+
+                    <div class="demo-field">
+
+                        <label for="email">
+                            Email Address
+                            <span class="optional-label">Optional</span>
+                        </label>
+
+                        <div class="demo-input-wrap">
+                            <i class="fa-regular fa-envelope"></i>
+
+                            <input type="email" id="email" name="email" placeholder="name@school.com"
+                                autocomplete="email" maxlength="150">
+                        </div>
+
+                    </div>
+
+
+                    <!-- Student Strength -->
+
+                    <div class="demo-field">
+
+                        <label for="student_strength">
+                            Total Students
+                            <span class="optional-label">Optional</span>
+                        </label>
+
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-users"></i>
+
+                            <input type="number" id="student_strength" name="student_strength"
+                                placeholder="Approximate student count" min="1" max="1000000" step="1"
+                                inputmode="numeric">
+                        </div>
+
+                    </div>
+
+
+                    <!-- Selected Plan -->
+
+                    <div class="demo-field">
+
+                        <label for="selectedPlanDisplay">
+                            Selected Plan
+                        </label>
+
+                        <div class="demo-plan-box" id="selectedPlanDisplay">
+
+                            <span class="demo-plan-icon">
+                                <i class="fa-solid fa-gift"></i>
+                            </span>
+
+                            <span class="demo-plan-details">
+                                <strong>Free Demo Plan</strong>
+                                <small>Explore ShalaSarthi ERP</small>
+                            </span>
+
+                            <i class="fa-solid fa-circle-check demo-plan-check"></i>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Requirements -->
+
+                    <div class="demo-field demo-field-full">
+
+                        <label for="message">
+                            What would you like to explore?
+                            <span class="optional-label">Optional</span>
+                        </label>
+
+                        <textarea id="message" name="message" rows="4" maxlength="1500"
+                            placeholder="For example: student management, fees, attendance, TC, bonafide certificates..."></textarea>
+
+                        <div class="demo-textarea-footer">
+                            <span>
+                                Tell us which modules matter most to your school.
+                            </span>
+
+                            <span id="demoMessageCount">0 / 1500</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Submit -->
+
+                <button type="submit" class="demo-submit-btn" id="demoSubmitBtn">
+
+                    <span class="demo-submit-content">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Request Your Free Demo</span>
+                    </span>
+
+                    <i class="fa-solid fa-arrow-right demo-submit-arrow"></i>
+
+                    <span class="demo-submit-spinner" aria-hidden="true"></span>
+
+                </button>
+
+
+                <p class="demo-form-privacy">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Your details will be used to respond to your demo request.
+                </p>
+
+            </form>
 
         </div>
 
-    </div>
 
-    <textarea
-        id="message"
-        name="message"
-        placeholder="Additional Requirements (Optional)">
-    </textarea>
+        <!-- ================= RIGHT: INFORMATION PANEL ================= -->
 
-    <button
-        type="submit"
-        class="demo-submit-btn">
+        <aside class="demo-info-side" aria-label="What happens next">
 
-        🚀 Submit Request
-
-    </button>
-
-</form>
-
-</div>
-
-        <!-- RIGHT -->
-
-        <div class="demo-info-side">
+            <!-- Intro card -->
 
             <div class="slot-card">
 
+                <div class="slot-card-top">
+
+                    <span class="slot-card-icon">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </span>
+
+                    <span class="slot-card-label">
+                        YOUR DEMO JOURNEY
+                    </span>
+
+                </div>
+
                 <h3>
-
-                    🚀 Book Your Slot
-
+                    See ShalaSarthi
+                    <span>in action.</span>
                 </h3>
 
                 <p>
-
-                    Experience ShalaSarthi ERP with a
-                    personalized live demo.
-
+                    Discover how a connected school ERP can simplify
+                    everyday administration, student records and
+                    communication.
                 </p>
 
+                <div class="slot-card-bottom">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Tailored to your school's needs</span>
+                </div>
+
+                <div class="slot-decoration"></div>
+
             </div>
 
-            <!-- GOOGLE -->
 
-            <div class="meeting-card">
+            <!-- Meeting options -->
 
-                <div class="meeting-icon">
+            <div class="demo-meeting-options">
 
-                    <i class="fa-brands fa-google"></i>
+                <h3 class="demo-side-heading">
+                    <span class="demo-side-heading-icon">
+                        <i class="fa-solid fa-video"></i>
+                    </span>
+
+                    Online walkthrough
+                </h3>
+
+                <p class="demo-side-description">
+                    The meeting platform will be confirmed by our team.
+                </p>
+
+
+                <div class="meeting-card">
+
+                    <div class="meeting-icon google-icon">
+                        <i class="fa-brands fa-google"></i>
+                    </div>
+
+                    <div class="meeting-content">
+                        <h4>Google Meet</h4>
+                        <p>Live ERP walkthrough</p>
+                    </div>
+
+                    <span class="meeting-card-arrow">
+                        <i class="fa-solid fa-check"></i>
+                    </span>
 
                 </div>
+
+
+                <div class="meeting-card">
+
+                    <div class="meeting-icon zoom-icon">
+                        <i class="fa-solid fa-video"></i>
+                    </div>
+
+                    <div class="meeting-content">
+                        <h4>Zoom Meeting</h4>
+                        <p>Personalized demo session</p>
+                    </div>
+
+                    <span class="meeting-card-arrow">
+                        <i class="fa-solid fa-check"></i>
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- Process -->
+
+            <div class="demo-process-card">
+
+                <div class="demo-process-heading">
+                    <h3>What happens next?</h3>
+                    <p>A simple four-step process.</p>
+                </div>
+
+
+                <div class="demo-process">
+
+                    <div class="process-item">
+
+                        <span class="process-number">
+                            01
+                        </span>
+
+                        <div class="process-copy">
+                            <h4>Submit your request</h4>
+                            <p>Share your school details.</p>
+                        </div>
+
+                        <i class="fa-solid fa-check process-check"></i>
+
+                    </div>
+
+
+                    <div class="process-item">
+
+                        <span class="process-number">
+                            02
+                        </span>
+
+                        <div class="process-copy">
+                            <h4>Our team contacts you</h4>
+                            <p>Discuss your requirements.</p>
+                        </div>
+
+                        <i class="fa-solid fa-phone process-end-icon"></i>
+
+                    </div>
+
+
+                    <div class="process-item">
+
+                        <span class="process-number">
+                            03
+                        </span>
+
+                        <div class="process-copy">
+                            <h4>Schedule your session</h4>
+                            <p>Confirm a suitable time.</p>
+                        </div>
+
+                        <i class="fa-regular fa-calendar-check process-end-icon"></i>
+
+                    </div>
+
+
+                    <div class="process-item">
+
+                        <span class="process-number">
+                            04
+                        </span>
+
+                        <div class="process-copy">
+                            <h4>Explore the ERP</h4>
+                            <p>See relevant features in action.</p>
+                        </div>
+
+                        <i class="fa-solid fa-laptop process-end-icon"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Support note -->
+
+            <div class="demo-help-note">
+
+                <span class="demo-help-icon">
+                    <i class="fa-regular fa-circle-question"></i>
+                </span>
 
                 <div>
-
-                    <h4>
-                        Google Meet
-                    </h4>
+                    <h4>Have specific requirements?</h4>
 
                     <p>
-
-                        Live ERP Walkthrough
-
+                        Add them to the form so our team can prepare
+                        a more relevant walkthrough.
                     </p>
-
                 </div>
 
             </div>
 
-            <!-- ZOOM -->
-
-            <div class="meeting-card">
-
-                <div class="meeting-icon">
-
-                    <i class="fa-solid fa-video"></i>
-
-                </div>
-
-                <div>
-
-                    <h4>
-                        Zoom Meeting
-                    </h4>
-
-                    <p>
-
-                        Personalized Demo Session
-
-                    </p>
-
-                </div>
-
-            </div>
-
-            <!-- STEPS -->
-
-            <div class="demo-process">
-
-                <div class="process-item">
-
-                    <span>1</span>
-
-                    Submit Request
-
-                </div>
-
-                <div class="process-item">
-
-                    <span>2</span>
-
-                    Team Contacts You
-
-                </div>
-
-                <div class="process-item">
-
-                    <span>3</span>
-
-                    Meeting Scheduled
-
-                </div>
-
-                <div class="process-item">
-
-                    <span>4</span>
-
-                    Live ERP Demo
-
-                </div>
-
-            </div>
-
-        </div>
+        </aside>
 
     </div>
 
 </section>
 
-<!-- ==================================
-     DEMO FAQ SECTION
-================================== -->
+<!-- ==========================================
+     SHALASARTHI — DEMO FAQ SECTION
+=========================================== -->
 
-<section class="demo-faq">
+<section class="demo-faq" id="demo-faq">
 
-    <div class="demo-faq-header">
+    <div class="demo-faq-inner">
 
-        <span class="demo-faq-badge">
+        <!-- SECTION HEADER -->
+        <header class="demo-faq-header">
 
-            ❓ Demo FAQ
+            <span class="demo-faq-badge">
+                <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+                <span>Demo FAQ</span>
+            </span>
 
-        </span>
+            <h2>
+                Frequently Asked
+                <span>Questions</span>
+            </h2>
 
-        <h2>
+            <p class="demo-faq-description">
+                Everything you need to know before booking your
+                ShalaSarthi ERP demo.
+            </p>
 
-            Frequently Asked
-            <span>Questions</span>
+            <p class="demo-faq-marathi" lang="mr">
+                डेमो बुक करण्यापूर्वी तुम्हाला आवश्यक असलेली
+                सर्व माहिती येथे मिळेल.
+            </p>
 
-        </h2>
+        </header>
 
-        <p>
 
-            Everything you need to know before booking your
-            ShalaSarthi ERP demo.
+        <!-- FAQ LIST -->
+        <div class="demo-faq-container">
 
-        </p>
+            <!-- FAQ 1 -->
+            <article class="faq-item">
 
-        <p class="faq-marathi">
+                <h3 class="faq-heading">
+                    <button class="faq-question" type="button" id="faq-question-1" aria-expanded="false"
+                        aria-controls="faq-answer-1">
+                        <span class="faq-question-text">
+                            Is the demo completely free?
+                        </span>
 
-            डेमो बुक करण्यापूर्वी तुम्हाला आवश्यक असलेली
-            सर्व माहिती येथे मिळेल.
+                        <span class="faq-toggle" aria-hidden="true">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </button>
+                </h3>
 
-        </p>
+                <div class="faq-answer" id="faq-answer-1" role="region" aria-labelledby="faq-question-1"
+                    aria-hidden="true">
+                    <div class="faq-answer-inner">
+                        <p>
+                            Yes. The ShalaSarthi ERP demo is free.
+                            Our team will walk you through the relevant
+                            modules so you can understand how the system
+                            can support your school's daily operations.
+                        </p>
+                    </div>
+                </div>
 
-    </div>
+            </article>
 
-    <div class="demo-faq-container">
 
-        <!-- FAQ 1 -->
+            <!-- FAQ 2 -->
+            <article class="faq-item">
 
-        <div class="faq-item">
+                <h3 class="faq-heading">
+                    <button class="faq-question" type="button" id="faq-question-2" aria-expanded="false"
+                        aria-controls="faq-answer-2">
+                        <span class="faq-question-text">
+                            How long does the demo session take?
+                        </span>
 
-            <button class="faq-question">
+                        <span class="faq-toggle" aria-hidden="true">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </button>
+                </h3>
 
-                Is the demo completely free?
+                <div class="faq-answer" id="faq-answer-2" role="region" aria-labelledby="faq-question-2"
+                    aria-hidden="true">
+                    <div class="faq-answer-inner">
+                        <p>
+                            A typical session takes around 20–30 minutes.
+                            The duration may vary depending on your
+                            school's requirements and the modules
+                            you would like to explore.
+                        </p>
+                    </div>
+                </div>
 
-                <i class="fa-solid fa-plus"></i>
+            </article>
 
-            </button>
 
-            <div class="faq-answer">
+            <!-- FAQ 3 -->
+            <article class="faq-item">
 
-                <p>
+                <h3 class="faq-heading">
+                    <button class="faq-question" type="button" id="faq-question-3" aria-expanded="false"
+                        aria-controls="faq-answer-3">
+                        <span class="faq-question-text">
+                            How many students are allowed in the demo?
+                        </span>
 
-                    Yes. ShalaSarthi ERP demo is completely
-                    free and includes a guided walkthrough
-                    of all major ERP modules.
+                        <span class="faq-toggle" aria-hidden="true">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </button>
+                </h3>
 
-                </p>
+                <div class="faq-answer" id="faq-answer-3" role="region" aria-labelledby="faq-question-3"
+                    aria-hidden="true">
+                    <div class="faq-answer-inner">
+                        <p>
+                            The current demo environment allows up to
+                            <strong>5 student records</strong> for testing.
+                            Additional entries may be restricted by
+                            the demo configuration.
+                        </p>
+                    </div>
+                </div>
 
-            </div>
+            </article>
+
+
+            <!-- FAQ 4 -->
+            <article class="faq-item">
+
+                <h3 class="faq-heading">
+                    <button class="faq-question" type="button" id="faq-question-4" aria-expanded="false"
+                        aria-controls="faq-answer-4">
+                        <span class="faq-question-text">
+                            Will I get access to all ERP modules?
+                        </span>
+
+                        <span class="faq-toggle" aria-hidden="true">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </button>
+                </h3>
+
+                <div class="faq-answer" id="faq-answer-4" role="region" aria-labelledby="faq-question-4"
+                    aria-hidden="true">
+                    <div class="faq-answer-inner">
+                        <p>
+                            The demo covers the major modules relevant
+                            to your school, such as admissions, attendance,
+                            fees, certificates, staff management and reports.
+                            Available functionality depends on the
+                            demo environment and configuration.
+                        </p>
+                    </div>
+                </div>
+
+            </article>
+
+
+            <!-- FAQ 5 -->
+            <article class="faq-item">
+
+                <h3 class="faq-heading">
+                    <button class="faq-question" type="button" id="faq-question-5" aria-expanded="false"
+                        aria-controls="faq-answer-5">
+                        <span class="faq-question-text">
+                            Is installation required before the demo?
+                        </span>
+
+                        <span class="faq-toggle" aria-hidden="true">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </button>
+                </h3>
+
+                <div class="faq-answer" id="faq-answer-5" role="region" aria-labelledby="faq-question-5"
+                    aria-hidden="true">
+                    <div class="faq-answer-inner">
+                        <p>
+                            No installation is required for the online
+                            walkthrough. You can join the scheduled
+                            session using the meeting details shared
+                            by our team.
+                        </p>
+                    </div>
+                </div>
+
+            </article>
+
+
+            <!-- FAQ 6 -->
+            <article class="faq-item">
+
+                <h3 class="faq-heading">
+                    <button class="faq-question" type="button" id="faq-question-6" aria-expanded="false"
+                        aria-controls="faq-answer-6">
+                        <span class="faq-question-text">
+                            What happens after the demo?
+                        </span>
+
+                        <span class="faq-toggle" aria-hidden="true">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </button>
+                </h3>
+
+                <div class="faq-answer" id="faq-answer-6" role="region" aria-labelledby="faq-question-6"
+                    aria-hidden="true">
+                    <div class="faq-answer-inner">
+                        <p>
+                            Our team can discuss your school's
+                            requirements, answer your questions and
+                            explain the available subscription plans
+                            and next steps.
+                        </p>
+                    </div>
+                </div>
+
+            </article>
+
+
+            <!-- FAQ 7 -->
+            <article class="faq-item">
+
+                <h3 class="faq-heading">
+                    <button class="faq-question" type="button" id="faq-question-7" aria-expanded="false"
+                        aria-controls="faq-answer-7">
+                        <span class="faq-question-text">
+                            Can multiple staff members attend?
+                        </span>
+
+                        <span class="faq-toggle" aria-hidden="true">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </button>
+                </h3>
+
+                <div class="faq-answer" id="faq-answer-7" role="region" aria-labelledby="faq-question-7"
+                    aria-hidden="true">
+                    <div class="faq-answer-inner">
+                        <p>
+                            Yes. The principal, teachers, administrative
+                            staff and other relevant team members can
+                            attend the same session, subject to the
+                            meeting arrangements.
+                        </p>
+                    </div>
+                </div>
+
+            </article>
+
+
+            <!-- FAQ 8 -->
+            <article class="faq-item">
+
+                <h3 class="faq-heading">
+                    <button class="faq-question" type="button" id="faq-question-8" aria-expanded="false"
+                        aria-controls="faq-answer-8">
+                        <span class="faq-question-text">
+                            How is my information used?
+                        </span>
+
+                        <span class="faq-toggle" aria-hidden="true">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </button>
+                </h3>
+
+                <div class="faq-answer" id="faq-answer-8" role="region" aria-labelledby="faq-question-8"
+                    aria-hidden="true">
+                    <div class="faq-answer-inner">
+                        <p>
+                            The information you submit through the demo
+                            request form is used to respond to your
+                            enquiry and coordinate the demo. Please
+                            review your school's applicable privacy
+                            information for further details.
+                        </p>
+                    </div>
+                </div>
+
+            </article>
 
         </div>
 
-        <!-- FAQ 2 -->
 
-        <div class="faq-item">
+        <!-- BOTTOM CALL TO ACTION -->
+        <div class="demo-faq-cta">
 
-            <button class="faq-question">
+            <div class="demo-faq-cta-content">
+                <span class="demo-faq-cta-icon" aria-hidden="true">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </span>
 
-                How long does the demo session take?
-
-                <i class="fa-solid fa-plus"></i>
-
-            </button>
-
-            <div class="faq-answer">
-
-                <p>
-
-                    A typical demo lasts between
-                    20–30 minutes depending on your
-                    school's requirements.
-
-                </p>
-
+                <div>
+                    <h3>Still have questions?</h3>
+                    <p>
+                        Book a free demo to explore ShalaSarthi ERP
+                        with our team.
+                    </p>
+                </div>
             </div>
 
-        </div>
-
-        <!-- FAQ 3 -->
-
-        <div class="faq-item">
-
-            <button class="faq-question">
-
-                How many students are allowed in the demo?
-
-                <i class="fa-solid fa-plus"></i>
-
-            </button>
-
-            <div class="faq-answer">
-
-                <p>
-
-                    The demo environment allows up to
-                    <strong>5 student records</strong>
-                    for testing purposes. After reaching
-                    the limit, additional entries are restricted.
-
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- FAQ 4 -->
-
-        <div class="faq-item">
-
-            <button class="faq-question">
-
-                Will I get access to all ERP modules?
-
-                <i class="fa-solid fa-plus"></i>
-
-            </button>
-
-            <div class="faq-answer">
-
-                <p>
-
-                    Yes. Admissions, Attendance,
-                    Fees, Certificates, Reports,
-                    Staff Management and other
-                    major modules are included.
-
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- FAQ 5 -->
-
-        <div class="faq-item">
-
-            <button class="faq-question">
-
-                Is installation required before the demo?
-
-                <i class="fa-solid fa-plus"></i>
-
-            </button>
-
-            <div class="faq-answer">
-
-                <p>
-
-                    No installation is required.
-                    The demo is conducted online
-                    through Google Meet or Zoom.
-
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- FAQ 6 -->
-
-        <div class="faq-item">
-
-            <button class="faq-question">
-
-                What happens after the demo?
-
-                <i class="fa-solid fa-plus"></i>
-
-            </button>
-
-            <div class="faq-answer">
-
-                <p>
-
-                    Our ERP expert will discuss your
-                    requirements and help you choose
-                    the most suitable plan.
-
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- FAQ 7 -->
-
-        <div class="faq-item">
-
-            <button class="faq-question">
-
-                Can multiple staff members attend?
-
-                <i class="fa-solid fa-plus"></i>
-
-            </button>
-
-            <div class="faq-answer">
-
-                <p>
-
-                    Yes. Principals, Teachers,
-                    Accountants and Management
-                    members can join the same session.
-
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- FAQ 8 -->
-
-        <div class="faq-item">
-
-            <button class="faq-question">
-
-                Is my information safe?
-
-                <i class="fa-solid fa-plus"></i>
-
-            </button>
-
-            <div class="faq-answer">
-
-                <p>
-
-                    Absolutely. Your information is used
-                    only for demo scheduling and support.
-                    We never sell or share your data.
-
-                </p>
-
-            </div>
+            <a href="#demoForm" class="demo-faq-cta-button"
+                onclick="if (typeof window.scrollToDemoForm === 'function') { event.preventDefault(); window.scrollToDemoForm(); }">
+                Book a Demo
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
 
         </div>
 
@@ -1034,117 +1631,498 @@
 
 
 <script>
+    /* =========================================================
+       DEMO PAGE — HERO SCROLL ACTION
+       Used by the "Book Free Demo" hero button.
+    ========================================================= */
 
-const demoForm =
-document.getElementById("demoForm");
+    (function () {
+        "use strict";
 
-if(demoForm){
+        window.scrollToDemoForm = function () {
+            const formSection = document.getElementById("demoForm");
 
-demoForm.addEventListener(
-"submit",
-
-async function(e){
-
-    e.preventDefault();
-
-    try{
-
-        const response =
-        await fetch(
-
-            "/submit-lead",
-
-            {
-
-                method:"POST",
-
-                headers:{
-                    "Content-Type":
-                    "application/json"
-                },
-
-                body:JSON.stringify({
-
-                    lead_source:
-                    "Demo Page",
-
-                    school_name:
-                    document.getElementById(
-                    "school_name"
-                    ).value,
-
-                    contact_person:
-                    document.getElementById(
-                    "contact_person"
-                    ).value,
-
-                    mobile:
-                    document.getElementById(
-                    "mobile"
-                    ).value,
-
-                    email:
-                    document.getElementById(
-                    "email"
-                    ).value,
-
-                    student_strength:
-                    document.getElementById(
-                    "student_strength"
-                    ).value,
-
-                    selected_plan:
-                    "Free Demo Plan",
-
-                    message:
-                    document.getElementById(
-                    "message"
-                    ).value
-
-                })
-
+            if (!formSection) {
+                console.warn(
+                    "Demo form section #demo-form-section was not found."
+                );
+                return;
             }
 
-        );
+            const reduceMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
 
-        const result =
-        await response.json();
+            formSection.scrollIntoView({
+                behavior: reduceMotion ? "auto" : "smooth",
+                block: "start"
+            });
+        };
+    })();
+</script>
 
-        if(result.success){
+<script>
+    (() => {
+        "use strict";
 
-            alert(
-                "Demo request submitted successfully."
-            );
+        const demoForm = document.getElementById("demoForm");
 
-            demoForm.reset();
-
+        if (!demoForm || demoForm.dataset.handlerAttached === "true") {
+            return;
         }
 
-        else{
+        demoForm.dataset.handlerAttached = "true";
 
-            alert(
-                result.message ||
-                "Failed to submit request."
+        const submitButton = document.getElementById("demoSubmitBtn");
+        const messageBox = document.getElementById("demoFormMessage");
+        const messageField = document.getElementById("message");
+        const messageCounter = document.getElementById("demoMessageCount");
+
+        const originalButtonText = submitButton
+            ? submitButton.querySelector(".demo-submit-content span").textContent
+            : "Request Your Free Demo";
+
+
+        /* ---------------------------------------------------------
+           FORM FEEDBACK
+        --------------------------------------------------------- */
+
+        function showFormMessage(message, type) {
+            if (!messageBox) {
+                return;
+            }
+
+            messageBox.textContent = message;
+            messageBox.classList.remove("is-success", "is-error");
+            messageBox.classList.add(
+                type === "success" ? "is-success" : "is-error"
             );
 
+            messageBox.hidden = false;
         }
 
-    }
 
-    catch(error){
+        function clearFormMessage() {
+            if (!messageBox) {
+                return;
+            }
 
-        console.error(error);
+            messageBox.hidden = true;
+            messageBox.textContent = "";
+            messageBox.classList.remove("is-success", "is-error");
+        }
 
-        alert(
-            "Something went wrong."
+
+        /* ---------------------------------------------------------
+           CHARACTER COUNTER
+        --------------------------------------------------------- */
+
+        function updateMessageCounter() {
+            if (!messageField || !messageCounter) {
+                return;
+            }
+
+            messageCounter.textContent =
+                `${messageField.value.length} / 1500`;
+        }
+
+        if (messageField) {
+            messageField.addEventListener("input", updateMessageCounter);
+        }
+
+
+        /* ---------------------------------------------------------
+           FIELD HELPERS
+        --------------------------------------------------------- */
+
+        function getValue(fieldName) {
+            const field = demoForm.elements.namedItem(fieldName);
+
+            return field && typeof field.value === "string"
+                ? field.value.trim()
+                : "";
+        }
+
+
+        function validateForm() {
+            const schoolName = getValue("school_name");
+            const contactPerson = getValue("contact_person");
+            const mobile = getValue("mobile");
+            const email = getValue("email");
+            const studentStrength = getValue("student_strength");
+
+            if (!schoolName) {
+                showFormMessage(
+                    "Please enter your school name.",
+                    "error"
+                );
+
+                demoForm.elements.namedItem("school_name").focus();
+                return false;
+            }
+
+            if (!contactPerson) {
+                showFormMessage(
+                    "Please enter the contact person's name.",
+                    "error"
+                );
+
+                demoForm.elements.namedItem("contact_person").focus();
+                return false;
+            }
+
+            if (!mobile) {
+                showFormMessage(
+                    "Please enter a contact mobile number.",
+                    "error"
+                );
+
+                demoForm.elements.namedItem("mobile").focus();
+                return false;
+            }
+
+            /*
+             * Accept digits, spaces, +, parentheses, periods and hyphens.
+             * Require at least 10 digits.
+             */
+            const mobileDigits = mobile.replace(/\D/g, "");
+
+            if (
+                !/^[0-9+().\s-]{10,20}$/.test(mobile) ||
+                mobileDigits.length < 10 ||
+                mobileDigits.length > 15
+            ) {
+                showFormMessage(
+                    "Please enter a valid mobile or contact number.",
+                    "error"
+                );
+
+                demoForm.elements.namedItem("mobile").focus();
+                return false;
+            }
+
+            if (email) {
+                const emailField = demoForm.elements.namedItem("email");
+
+                if (!emailField.checkValidity()) {
+                    showFormMessage(
+                        "Please enter a valid email address.",
+                        "error"
+                    );
+
+                    emailField.focus();
+                    return false;
+                }
+            }
+
+            if (studentStrength) {
+                const count = Number(studentStrength);
+
+                if (
+                    !Number.isInteger(count) ||
+                    count < 1 ||
+                    count > 1000000
+                ) {
+                    showFormMessage(
+                        "Please enter a valid total student count.",
+                        "error"
+                    );
+
+                    demoForm.elements.namedItem("student_strength").focus();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+
+        /* ---------------------------------------------------------
+           BUTTON STATE
+        --------------------------------------------------------- */
+
+        function setSubmitting(isSubmitting) {
+            if (!submitButton) {
+                return;
+            }
+
+            submitButton.disabled = isSubmitting;
+            submitButton.classList.toggle("is-loading", isSubmitting);
+
+            if (isSubmitting) {
+                submitButton.setAttribute("aria-busy", "true");
+
+                const text = submitButton.querySelector(
+                    ".demo-submit-content span"
+                );
+
+                if (text) {
+                    text.textContent = "Submitting Request...";
+                }
+            } else {
+                submitButton.removeAttribute("aria-busy");
+
+                const text = submitButton.querySelector(
+                    ".demo-submit-content span"
+                );
+
+                if (text) {
+                    text.textContent = originalButtonText;
+                }
+            }
+        }
+
+
+        /* ---------------------------------------------------------
+           SUBMIT LEAD
+        --------------------------------------------------------- */
+
+        demoForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            clearFormMessage();
+
+            if (!validateForm()) {
+                return;
+            }
+
+            const submitUrl = demoForm.getAttribute("action") || "/submit-lead";
+
+            const csrfToken =
+                demoForm.querySelector('[name="csrf_token"]')?.value || "";
+
+            const payload = {
+                lead_source: "Demo Page",
+
+                school_name: getValue("school_name"),
+                contact_person: getValue("contact_person"),
+                mobile: getValue("mobile"),
+                email: getValue("email"),
+
+                student_strength: getValue("student_strength"),
+
+                selected_plan: getValue("selected_plan") || "Free Demo Plan",
+
+                message: getValue("message")
+            };
+
+            setSubmitting(true);
+
+            try {
+                const headers = {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                };
+
+                /*
+                 * Flask-WTF CSRF protection:
+                 * send the token if the backend requires it.
+                 */
+                if (csrfToken) {
+                    headers["X-CSRFToken"] = csrfToken;
+                }
+
+                const response = await fetch(submitUrl, {
+                    method: "POST",
+                    headers: headers,
+                    credentials: "same-origin",
+                    body: JSON.stringify(payload)
+                });
+
+                let result;
+
+                try {
+                    result = await response.json();
+                } catch {
+                    throw new Error(
+                        "The server returned an unexpected response. Please try again."
+                    );
+                }
+
+                if (!response.ok || !result || result.success !== true) {
+                    throw new Error(
+                        result?.message ||
+                        "We could not submit your request. Please try again."
+                    );
+                }
+
+                demoForm.reset();
+
+                if (messageCounter) {
+                    messageCounter.textContent = "0 / 1500";
+                }
+
+                /*
+                 * The selected plan is fixed for this form,
+                 * so restore it after reset.
+                 */
+                const planField = document.getElementById("selected_plan");
+
+                if (planField) {
+                    planField.value = "Free Demo Plan";
+                }
+
+                showFormMessage(
+                    result.message ||
+                    "Thank you! Your demo request has been submitted successfully. Our team will contact you shortly.",
+                    "success"
+                );
+
+            } catch (error) {
+                console.error("Demo lead submission failed:", error);
+
+                showFormMessage(
+                    error.message ||
+                    "Something went wrong while submitting your request. Please try again.",
+                    "error"
+                );
+
+            } finally {
+                setSubmitting(false);
+            }
+        });
+
+
+        /* ---------------------------------------------------------
+           HERO BUTTON SCROLL SUPPORT
+        --------------------------------------------------------- */
+
+        window.scrollToDemoForm = function () {
+            const section = document.getElementById("demo-form-section");
+
+            if (!section) {
+                return;
+            }
+
+            const reduceMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            section.scrollIntoView({
+                behavior: reduceMotion ? "auto" : "smooth",
+                block: "start"
+            });
+
+            /*
+             * Focus the form heading area without forcing
+             * the mobile keyboard to open.
+             */
+            const heading = section.querySelector(".demo-form-header h2");
+
+            if (heading) {
+                heading.setAttribute("tabindex", "-1");
+
+                window.setTimeout(() => {
+                    heading.focus({ preventScroll: true });
+                }, reduceMotion ? 0 : 350);
+            }
+        };
+
+    })();
+</script>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const section = document.querySelector(".demo-day");
+
+        if (!section) return;
+
+        const steps = section.querySelectorAll(".timeline-step");
+
+        // Keep all cards visible when animations are disabled
+        // or when IntersectionObserver is unavailable.
+        if (
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+            !("IntersectionObserver" in window)
+        ) {
+            return;
+        }
+
+        section.classList.add("workflow-reveal-enabled");
+
+        const observer = new IntersectionObserver(
+            function (entries, currentObserver) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return;
+
+                    entry.target.classList.add("is-visible");
+                    currentObserver.unobserve(entry.target);
+                });
+            },
+            {
+                threshold: 0.12,
+                rootMargin: "0px 0px -35px 0px"
+            }
         );
 
+        steps.forEach(function (step) {
+            observer.observe(step);
+        });
+    });
+
+    /* ==========================================
+   SHALASARTHI — FAQ ACCORDION
+========================================== */
+
+(() => {
+    "use strict";
+
+    const faqSection = document.getElementById("demo-faq");
+
+    if (!faqSection || faqSection.dataset.initialized === "true") {
+        return;
     }
 
-});
+    faqSection.dataset.initialized = "true";
 
-}
+    const faqItems = Array.from(
+        faqSection.querySelectorAll(".faq-item")
+    );
 
+    function setFaqState(item, shouldOpen) {
+        const button = item.querySelector(".faq-question");
+        const answer = item.querySelector(".faq-answer");
+
+        if (!button || !answer) {
+            return;
+        }
+
+        item.classList.toggle("active", shouldOpen);
+
+        button.setAttribute(
+            "aria-expanded",
+            String(shouldOpen)
+        );
+
+        answer.setAttribute(
+            "aria-hidden",
+            String(!shouldOpen)
+        );
+    }
+
+    faqItems.forEach((item) => {
+        const button = item.querySelector(".faq-question");
+
+        if (!button) {
+            return;
+        }
+
+        button.addEventListener("click", () => {
+            const shouldOpen = !item.classList.contains("active");
+
+            // Keep the accordion compact: only one answer open.
+            faqItems.forEach((otherItem) => {
+                if (otherItem !== item) {
+                    setFaqState(otherItem, false);
+                }
+            });
+
+            setFaqState(item, shouldOpen);
+        });
+    });
+})();
 </script>
 
 

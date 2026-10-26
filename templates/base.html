@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>{{ global_settings.system_name or "ShalaSarthi ERP" }}</title>
@@ -14,14 +15,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
 
-      <!-- DEMO CSS -->
+    <!-- DEMO CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/demo.css') }}">
 
 
     <!-- favicorn -->
     {% if global_settings.favicon %}
-    <link rel="icon"
-        type="image/png"
+    <link rel="icon" type="image/png"
         href="{{ url_for('static', filename=global_settings.favicon) }}?v={{ global_settings.updated_at.timestamp() if global_settings.updated_at else 1 }}">
     {% endif %}
 
@@ -31,405 +31,316 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-      rel="stylesheet">
+        rel="stylesheet">
 
 
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 </head>
 
 <body class="{% if request.endpoint == 'login' or request.endpoint == 'superadmin_login' %}auth-page-body{% endif %}">
 
-<header class="navbar" id="navbar">
 
-    <!-- =========================
-         LOGO
-    ========================== -->
-
-    <div class="logo-area">
-
-        {% if global_settings.system_logo %}
-        <img
-            src="{{ url_for('static',
-            filename=global_settings.system_logo) }}"
-            class="navbar-logo"
-            alt="ShalaSarthi Logo">
-        {% endif %}
-
-        <span class="brand-text">
-            {{ global_settings.system_name or "ShalaSarthi ERP" }}
-        </span>
-
-    </div>
-
-    <!-- =========================
-         DESKTOP NAVIGATION
-    ========================== -->
-
-    <nav class="nav-links desktop-nav">
-
-        <a href="/">Home</a>
-
-        <a href="/#features">
-            Features
-        </a>
-
-        <a href="/#plans">
-            Plans
-        </a>
-
-        <a href="{{ url_for('demo') }}">
-            Demo
-        </a>
-
-        <a href="/#how">
-            How It Works
-        </a>
-
-        <a href="/#faq">
-            FAQ
-        </a>
-
-        <a href="/#contact">
-            Contact
-        </a>
-
-        <div class="nav-buttons">
-
-            <button
-                class="nav-demo-btn"
-                onclick="openPlanModal('Free Demo')">
-
-                Book Demo
-
-            </button>
-
-            <a href="/login"
-               class="nav-login-btn">
-
-                Login
-
-            </a>
-
-        </div>
-
-    </nav>
-
-    <!-- =========================
-         MOBILE SIDEBAR
-    ========================== -->
-
-    <nav class="mobile-nav-links"
-         id="navLinks">
-
-        <div class="mobile-menu-header">
-
-            <div class="sidebar-brand">
-
-                {% if global_settings.system_logo %}
-                <img
-                    src="{{ url_for('static',
-                    filename=global_settings.system_logo) }}"
-                    class="sidebar-logo"
-                    alt="Logo">
-                {% endif %}
-
-                <div class="sidebar-text">
-
-                    <h4>
-                        {{ global_settings.system_name or "ShalaSarthi ERP" }}
-                    </h4>
-
-                </div>
-
-            </div>
-
-            <div class="close-menu"
-                 id="closeMenu">
-
-                <span></span>
-                <span></span>
-
-            </div>
-
-        </div>
-
-        <!-- MOBILE LINKS -->
-
-        <a href="/">
-            Home
-        </a>
-
-        <a href="/#features">
-            Features
-        </a>
-
-        <a href="/#plans">
-            Plans
-        </a>
-
-        <a href="/#contact">
-            Contact
-        </a>
-
-        <!-- MOBILE BUTTONS -->
-
-        <div class="nav-buttons">
-
-            <button
-                class="mob-nav-demo-btn"
-                onclick="openPlanModal('Free Demo')">
-
-                Book Demo
-
-            </button>
-
-            <a href="/login"
-               class="mob-nav-login-btn">
-
-                Login
-
-            </a>
-
-        </div>
-
-    </nav>
-
-    <!-- =========================
-         MOBILE OVERLAY
-    ========================== -->
-
-    <div class="mobile-overlay"
-         id="mobileOverlay"></div>
-
-    <!-- =========================
-         MOBILE HAMBURGER
-    ========================== -->
-
-    <div class="menu-toggle"
-        id="menuToggle">
-
-        <span></span>
-        <span></span>
-        <span></span>
-
-    </div>
-
-</header>
-
-<!-- ================= PAGE CONTENT ================= -->
-{% block content %}{% endblock %}
-
-<!-- ==================================
-     PREMIUM FOOTER
-================================== -->
-
-<footer class="footer">
-
-    <div class="footer-glow"></div>
-
-    <div class="footer-container">
+    <header class="navbar" id="navbar">
 
         <!-- BRAND -->
+        <a href="/" class="logo-area" aria-label="SPL ShalaSarthi Home">
+            {% if global_settings.system_logo %}
+            <img src="{{ url_for('static', filename=global_settings.system_logo) }}" class="navbar-logo"
+                alt="SPL ShalaSarthi Logo">
+            {% endif %}
 
-        <div class="footer-brand">
+            <span class="brand-text">
+                {{ global_settings.system_name or "SPL ShalaSarthi" }}
+            </span>
+        </a>
 
-            <div class="footer-logo-box">
+        <!-- DESKTOP NAVIGATION -->
+        <nav class="nav-links desktop-nav" aria-label="Main navigation">
 
-               {% if global_settings.system_logo %}
-                <img
-                src="{{ url_for('static', filename=global_settings.system_logo) }}"
-                alt="{{ global_settings.system_name or 'ShalaSarthi ERP' }}">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/#features" class="nav-link">Features</a>
+            <a href="/#plans" class="nav-link">Plans</a>
+            <a href="{{ url_for('demo') }}" class="nav-link">Demo</a>
+            <a href="/#how" class="nav-link">How It Works</a>
+            <a href="/#faq" class="nav-link">FAQ</a>
+            <a href="/#contact" class="nav-link">Contact</a>
+
+            <div class="nav-buttons">
+                <button type="button" class="nav-demo-btn" onclick="openPlanModal('Free Demo')">
+                    Book Demo
+                </button>
+
+                <a href="/login" class="nav-login-btn">
+                    Login
+                </a>
+            </div>
+
+        </nav>
+
+        <!-- MOBILE / TABLET DRAWER -->
+        <nav class="mobile-nav-links" id="navLinks" aria-label="Mobile navigation" aria-hidden="true">
+
+            <div class="mobile-menu-header">
+
+                <a href="/" class="sidebar-brand" aria-label="SPL ShalaSarthi Home">
+
+                    {% if global_settings.system_logo %}
+                    <img src="{{ url_for('static', filename=global_settings.system_logo) }}" class="sidebar-logo"
+                        alt="SPL ShalaSarthi Logo">
+                    {% endif %}
+
+                    <span class="sidebar-text">
+                        <span class="sidebar-brand-name">
+                            {{ global_settings.system_name or "SPL ShalaSarthi" }}
+                        </span>
+                        <span class="sidebar-brand-caption">
+                            School Management ERP
+                        </span>
+                    </span>
+                </a>
+
+                <button type="button" class="close-menu" id="closeMenu" aria-label="Close navigation menu">
+                    <span></span>
+                    <span></span>
+                </button>
+
+            </div>
+
+            <div class="mobile-menu-links">
+                <a href="/" class="mobile-nav-link">Home</a>
+                <a href="/#features" class="mobile-nav-link">Features</a>
+                <a href="/#plans" class="mobile-nav-link">Plans</a>
+                <a href="{{ url_for('demo') }}" class="mobile-nav-link">Demo</a>
+                <a href="/#how" class="mobile-nav-link">How It Works</a>
+                <a href="/#faq" class="mobile-nav-link">FAQ</a>
+                <a href="/#contact" class="mobile-nav-link">Contact</a>
+            </div>
+
+            <div class="nav-buttons mobile-nav-buttons">
+                <button type="button" class="mob-nav-demo-btn" onclick="openPlanModal('Free Demo')">
+                    Book a Free Demo
+                </button>
+
+                <a href="/login" class="mob-nav-login-btn">
+                    Sign In
+                </a>
+            </div>
+
+            <p class="mobile-nav-caption">
+                Simple. Secure. Smarter school management.
+            </p>
+
+        </nav>
+
+        <!-- DRAWER OVERLAY -->
+        <div class="mobile-overlay" id="mobileOverlay" aria-hidden="true">
+        </div>
+
+        <!-- HAMBURGER -->
+        <button type="button" class="menu-toggle" id="menuToggle" aria-label="Open navigation menu"
+            aria-controls="navLinks" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+    </header>
+
+    <!-- PAGE CONTENT -->
+    {% block content %}{% endblock %}
+
+    <footer class="footer" id="site-footer">
+        <div class="footer-glow" aria-hidden="true"></div>
+        <div class="footer-container">
+
+            <!-- BRAND -->
+            <div class="footer-brand">
+
+                <a href="#home" class="footer-logo-box" aria-label="SPL ShalaSarthi home">
+
+                    {% if global_settings.system_logo %}
+                    <img src="{{ url_for('static', filename=global_settings.system_logo) }}"
+                        alt="{{ global_settings.system_name or 'SPL ShalaSarthi' }}" loading="lazy">
+                    {% else %}
+                    <span class="footer-logo-fallback" aria-hidden="true">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </span>
+                    {% endif %}
+
+                    <span class="footer-brand-name">
+                        {{ global_settings.system_name or "SPL ShalaSarthi" }}
+                    </span>
+                </a>
+
+                <p class="footer-description">
+                    A modern school ERP platform designed to simplify
+                    admissions, student records, certificates, attendance,
+                    fee management and everyday school administration.
+                </p>
+
+                <div class="footer-social" aria-label="Social media links">
+
+                    <!-- Replace the # placeholders with verified profile URLs. -->
+                    <a href="#" class="footer-social-link" aria-label="Facebook" title="Facebook">
+                        <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                    </a>
+
+                    <a href="#" class="footer-social-link" aria-label="Instagram" title="Instagram">
+                        <i class="fab fa-instagram" aria-hidden="true"></i>
+                    </a>
+
+                    <a href="https://in.linkedin.com/company/shriprabhusoftlink" class="footer-social-link"
+                        aria-label="LinkedIn" title="LinkedIn" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+                    </a>
+
+                    <a href="#" class="footer-social-link" aria-label="YouTube" title="YouTube">
+                        <i class="fab fa-youtube" aria-hidden="true"></i>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- QUICK LINKS -->
+            <nav class="footer-column" aria-label="Quick links">
+
+                <h4 class="footer-heading">Quick Links</h4>
+
+                <a href="#home">Home</a>
+                <a href="#features">Features</a>
+                <a href="#plans">Pricing &amp; Plans</a>
+                <a href="#how">How It Works</a>
+                <a href="#faq">Frequently Asked Questions</a>
+                <a href="#contact">Contact Us</a>
+            </nav>
+
+            <!-- MODULES -->
+            <div class="footer-column">
+
+                <h4 class="footer-heading">ERP Modules</h4>
+
+                <a href="#features">Admissions</a>
+                <a href="#features">Student Management</a>
+                <a href="#features">Certificates</a>
+                <a href="#features">Attendance Management</a>
+                <a href="#features">Fee Management</a>
+                <a href="#features">Reports &amp; Analytics</a>
+            </div>
+
+            <!-- CONTACT -->
+            <div class="footer-column footer-contact">
+
+                <h4 class="footer-heading">Get In Touch</h4>
+
+                <a class="footer-contact-item footer-address" href="https://maps.app.goo.gl/BcWTZfQJDR88YVUA8"
+                    target="_blank" rel="noopener noreferrer">
+
+                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+
+                    <span>
+                        SPL 3rd Floor, Shri Prabhu Krupa,
+                        Dhanwantari Nagar, Dastur Nagar Road,
+                        Amravati, Maharashtra 444606
+                    </span>
+                </a>
+
+                {% set footer_phone = global_settings.support_phone or "+91 8888244176" %}
+                {% set footer_phone_digits = footer_phone|replace("+", "")|replace(" ", "")|replace("-",
+                "")|replace("(", "")|replace(")", "") %}
+
+                <a class="footer-contact-item" href="tel:{{ footer_phone_digits }}">
+
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i>
+
+                    <span>{{ footer_phone }}</span>
+                </a>
+
+                <a class="footer-contact-item"
+                    href="mailto:{{ global_settings.support_email or 'support@shalasarthi.com' }}">
+
+                    <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+
+                    <span>
+                        {{ global_settings.support_email or "support@shalasarthi.com" }}
+                    </span>
+                </a>
+
+                <a href="{{ url_for('demo') }}" class="footer-demo-btn">
+
+                    <span>Book a Free Demo</span>
+
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- FOOTER BOTTOM -->
+        <div class="footer-bottom">
+
+            <div class="footer-bottom-left">
+                <p>
+                    {{ global_settings.footer_text
+                    or ('© ' ~ current_year ~ ' SPL ShalaSarthi. All rights reserved.') }}
+                </p>
+            </div>
+
+            <div class="footer-bottom-center">
+
+                <span>Developed by</span>
+
+                {% if global_settings.website_url %}
+                <a href="{{ global_settings.website_url }}" target="_blank" rel="noopener noreferrer">
+                    {{ global_settings.powered_by or "Shri Prabhu SoftLink Pvt Ltd" }}
+                </a>
+                {% else %}
+                <span class="footer-developer-name">
+                    {{ global_settings.powered_by or "Shri Prabhu SoftLink Pvt Ltd" }}
+                </span>
                 {% endif %}
 
-                <h3>{{ global_settings.system_name or "ShalaSarthi ERP" }}</h3>
-
             </div>
 
-            <p>
+            <div class="footer-bottom-right">
 
-                Modern School ERP platform designed to simplify
-                admissions, attendance, certificates, fee management,
-                analytics and administration.
+                <span class="footer-version">
+                    ERP v{{ global_settings.erp_version or "2.0" }}
+                </span>
 
-            </p>
+                <a href="/privacy-policy">Privacy Policy</a>
 
-            <div class="footer-social">
+                <a href="/terms-and-conditions">Terms &amp; Conditions</a>
 
-                <a href="https://in.linkedin.com/company/shriprabhusoftlink">
-                    <i class="fab fa-facebook-f"></i>
-                </a>
-
-                <a href="https://in.linkedin.com/company/shriprabhusoftlink">
-                    <i class="fab fa-instagram"></i>
-                </a>
-
-                <a href="https://in.linkedin.com/company/shriprabhusoftlink">
-                    <i class="fab fa-linkedin-in"></i>
-                </a>
-
-                <a href="https://in.linkedin.com/company/shriprabhusoftlink">
-                    <i class="fab fa-youtube"></i>
+                <a href="https://wa.me/{{ footer_phone_digits }}" target="_blank" rel="noopener noreferrer">
+                    WhatsApp Support
                 </a>
 
             </div>
 
         </div>
+    </footer>
 
-        <!-- QUICK LINKS -->
+    <!-- JS -->
+    <script>
+        function toggleMenu() {
+            document.getElementById("navLinks").classList.toggle("active");
+        }
+    </script>
 
-        <div class="footer-column">
+    <!-- ================= GLOBAL CSRF TOKEN ================= -->
+    <script>
 
-            <h4>Quick Links</h4>
+        // GLOBAL CSRF TOKEN
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute('content');
 
-            <a href="#home">Home</a>
+    </script>
 
-            <a href="#features">Features</a>
-
-            <a href="#plans">Pricing</a>
-
-            <a href="#how">How It Works</a>
-
-            <a href="#contact">Contact</a>
-
-        </div>
-
-        <!-- PRODUCT -->
-
-        <div class="footer-column">
-
-            <h4>Modules</h4>
-
-            <a href="#">Admissions</a>
-
-            <a href="#">Student Management</a>
-
-            <a href="#">Certificates</a>
-
-            <a href="#">Fee Management</a>
-
-            <a href="#">Reports & Analytics</a>
-
-        </div>
-
-        <!-- CONTACT -->
-
-        <div class="footer-column">
-
-            <h4>Contact</h4>
-
-            <p>
-                📍 SPL 3rd Floor,Shri Prabhu Krupa,Dhanwantari nagar, Dastur Nagar Rd, Amravati, Maharashtra 444606
-            </p>
-
-            <p>
-                📞 {{ global_settings.support_phone or "+91 8888244176" }}
-            </p>
-
-            <p>
-                ✉ {{ global_settings.support_email or "support@schoolsphere.com" }}
-            </p>
-
-            <a href="{{ url_for('demo') }}"
-            class="footer-demo-btn">
-
-                Book Free Demo
-
-            </a>
-
-        </div>
-
-    </div>
-
- <!-- FOOTER BOTTOM -->
-
-<div class="footer-bottom">
-
-    <!-- LEFT -->
-
-    <div class="footer-bottom-left">
-
-        <p>
-
-            {{ global_settings.footer_text
-               or ('© ' ~ current_year ~ ' ShalaSarthi ERP. All Rights Reserved.') }}
-
-        </p>
-
-    </div>
-
-    <!-- CENTER -->
-
-    <div class="footer-bottom-center">
-
-        <span>Developed By</span>
-
-        {% if global_settings.website_url %}
-
-            <a href="{{ global_settings.website_url }}"
-               target="_blank">
-
-                {{ global_settings.powered_by or "Shri Prabhu SoftLink Pvt Ltd" }}
-
-            </a>
-
-        {% else %}
-
-
-        {% endif %}
-
-    </div>
-
-    <!-- RIGHT -->
-
-    <div class="footer-bottom-right">
-
-        <span class="footer-version">
-
-            ERP v{{ global_settings.erp_version or "1.0" }}
-
-        </span>
-
-        <a href="/privacy-policy">
-            Privacy Policy
-        </a>
-
-        <a href="/terms-and-conditions">
-            Terms & Conditions
-        </a>
-
-        <a href="https://wa.me/{{ (global_settings.support_phone or '918888244176')|replace('+','')|replace(' ','')|replace('-','') }}"
-           target="_blank">
-
-            WhatsApp Support
-
-        </a>
-
-    </div>
-
-</div>
-
-</footer>
-
-<!-- JS -->
-<script>
-function toggleMenu() {
-    document.getElementById("navLinks").classList.toggle("active");
-}
-</script>
-
-<!-- ================= GLOBAL CSRF TOKEN ================= -->
-<script>
-
-    // GLOBAL CSRF TOKEN
-    const csrfToken = document
-        .querySelector('meta[name="csrf-token"]')
-        .getAttribute('content');
-
-</script>
-
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
+
 </html>

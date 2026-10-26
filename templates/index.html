@@ -37,8 +37,9 @@
                     </h1>
 
                     <p>
-                        Manage admissions, attendance,fees and certificates from one smart
-                        ERP. — संपूर्ण शाळा व्यवस्थापन एका डिजिटल प्लॅटफॉर्मवर.
+                        Manage admissions, attendance, fees, and certificates
+                        in one smart ERP — संपूर्ण शाळा व्यवस्थापन
+                        एका डिजिटल प्लॅटफॉर्मवर.
                     </p>
 
                 </div>
@@ -138,118 +139,137 @@
 
 </section>
 
-<!-- // ================= ERP ECOSYSTEM SECTION ================= -->
+<!-- =========================================================
+     ERP ECOSYSTEM SECTION
+========================================================= -->
 
 <section class="erp-ecosystem" id="features">
 
-    <div class="section-header">
+    <!-- SECTION HEADER -->
+    <div class="ecosystem-header">
 
-        <span class="section-tag">
-            🚀 ERP Ecosystem
+        <span class="ecosystem-tag">
+            <i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i>
+            <span>ERP Ecosystem</span>
         </span>
 
-        <h2>
+        <h2 class="ecosystem-title">
             Everything Your School Needs
             <span>In One Smart ERP</span>
         </h2>
 
-        <p>
+        <p class="ecosystem-description">
             From admissions to certificates, ShalaSarthi connects
-            every school operation into a single digital platform.
+            every school operation into one simple, organized
+            digital platform.
         </p>
 
     </div>
 
+    <!-- ORBIT LAYOUT -->
     <div class="orbit-wrapper">
 
-        <div class="connection-lines">
-
-            <span class="line line-1"></span>
-            <span class="line line-2"></span>
-            <span class="line line-3"></span>
-            <span class="line line-4"></span>
-
-            <span class="line line-5"></span>
-            <span class="line line-6"></span>
-            <span class="line line-7"></span>
-            <span class="line line-8"></span>
-
+        <!-- CONNECTION LINES -->
+        <div class="connection-lines" aria-hidden="true">
+            <span class="line line-1"><span class="data-particle"></span></span>
+            <span class="line line-2"><span class="data-particle"></span></span>
+            <span class="line line-3"><span class="data-particle"></span></span>
+            <span class="line line-4"><span class="data-particle"></span></span>
+            <span class="line line-5"><span class="data-particle"></span></span>
+            <span class="line line-6"><span class="data-particle"></span></span>
+            <span class="line line-7"><span class="data-particle"></span></span>
+            <span class="line line-8"><span class="data-particle"></span></span>
         </div>
+        <!-- CENTER BRAND HUB -->
+        <div class="erp-core" aria-label="ShalaSarthi ERP platform">
 
-        <!-- CENTER HUB -->
-
-        <div class="erp-core">
-
-            <div class="core-ring ring-1"></div>
-            <div class="core-ring ring-2"></div>
+            <div class="core-ring ring-1" aria-hidden="true"></div>
+            <div class="core-ring ring-2" aria-hidden="true"></div>
 
             <div class="core-content">
-
-                <img src="{{ url_for('static', filename='images/ecosystem_hero.png') }}" alt="ShalaSarthi">
-
-                <!-- <h3>ShalaSarthi ERP</h3>
-
-                <span>
-                    School Management Platform
-                </span> -->
-
+                <img src="{{ url_for('static', filename='images/ecosystem_hero.png') }}" alt="ShalaSarthi ERP logo"
+                    loading="lazy" decoding="async">
             </div>
 
         </div>
 
-        <!-- MODULES -->
-
-        <div class="orbit-card admission">
-            <div class="orbit-icon">🎓</div>
-            <h4>Admissions</h4>
+        <!-- ADMISSIONS -->
+        <article class="orbit-card admission" data-tilt>
+            <div class="orbit-icon icon-admission" aria-hidden="true">
+                <i class="fa-solid fa-user-graduate"></i>
+            </div>
+            <h3>Admissions</h3>
             <p>Digital Student Onboarding</p>
-        </div>
+        </article>
 
-        <div class="orbit-card attendance">
-            <div class="orbit-icon">📅</div>
-            <h4>Attendance</h4>
+        <!-- ATTENDANCE -->
+        <article class="orbit-card attendance" data-tilt>
+            <div class="orbit-icon icon-attendance" aria-hidden="true">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <h3>Attendance</h3>
             <p>Real-Time Tracking</p>
-        </div>
+        </article>
 
-        <div class="orbit-card fees">
-            <div class="orbit-icon">💰</div>
-            <h4>Fee Management</h4>
-            <p>Receipts & Collections</p>
-        </div>
+        <!-- FEE MANAGEMENT -->
+        <article class="orbit-card fees" data-tilt>
+            <div class="orbit-icon icon-fees" aria-hidden="true">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <h3>Fee Management</h3>
+            <p>Receipts &amp; Collections</p>
+        </article>
 
-        <div class="orbit-card students">
-            <div class="orbit-icon">👨‍🎓</div>
-            <h4>Students</h4>
+        <!-- STUDENTS -->
+        <article class="orbit-card students" data-tilt>
+            <div class="orbit-icon icon-students" aria-hidden="true">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <h3>Students</h3>
             <p>Complete Student Records</p>
-        </div>
+        </article>
 
-        <div class="orbit-card tc">
-            <div class="orbit-icon">📜</div>
-            <h4>TC & Bonafide</h4>
+        <!-- TC & BONAFIDE -->
+        <article class="orbit-card tc" data-tilt>
+            <div class="orbit-icon icon-certificates" aria-hidden="true">
+                <i class="fa-solid fa-file-circle-check"></i>
+            </div>
+            <h3>TC &amp; Bonafide</h3>
             <p>Instant Certificates</p>
-        </div>
+        </article>
 
-        <div class="orbit-card reports">
-            <div class="orbit-icon">📊</div>
-            <h4>Reports</h4>
+        <!-- REPORTS -->
+        <article class="orbit-card reports" data-tilt>
+            <div class="orbit-icon icon-reports" aria-hidden="true">
+                <i class="fa-solid fa-chart-column"></i>
+            </div>
+            <h3>Reports</h3>
             <p>Smart Analytics</p>
-        </div>
+        </article>
 
-        <div class="orbit-card staff">
-            <div class="orbit-icon">👩‍🏫</div>
-            <h4>Staff</h4>
+        <!-- STAFF -->
+        <article class="orbit-card staff" data-tilt>
+            <div class="orbit-icon icon-staff" aria-hidden="true">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+            <h3>Staff</h3>
             <p>Teacher Management</p>
-        </div>
+        </article>
 
-        <div class="orbit-card notices">
-            <div class="orbit-icon">📢</div>
-            <h4>Notices</h4>
+        <!-- NOTICES -->
+        <article class="orbit-card notices" data-tilt>
+            <div class="orbit-icon icon-notices" aria-hidden="true">
+                <i class="fa-solid fa-bullhorn"></i>
+            </div>
+            <h3>Notices</h3>
             <p>School Communication</p>
-        </div>
+        </article>
 
     </div>
 
 </section>
+
+
 
 <!-- // ================= TRANSFORMATION SECTION =================  -->
 <section class="transformation" id="transformation">
@@ -361,140 +381,162 @@
     </div>
 
 </section>
-<!-- ==================================
- WHY SHALASARTHI SECTION
-================================== -->
+
+<!-- =========================================
+     WHY SHALASARTHI SECTION
+========================================= -->
 
 <section class="why-shalasarthi" id="why-shalasarthi">
 
     <div class="why-container">
 
         <!-- LEFT CONTENT -->
-
         <div class="why-left">
 
-            <span class="section-tag">
-                ⭐ Why Schools Choose Us
+            <span class="why-section-tag">
+                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                <span>Why Schools Choose Us</span>
             </span>
 
-            <h2>
-                Built For Modern Schools.
-                <span>Designed For Growth.</span>
+            <h2 class="why-title">
+                Built for Modern Schools.
+                <span>Designed for Growth.</span>
             </h2>
 
             <p class="why-desc">
-                ShalaSarthi simplifies school administration,
-                automates repetitive work and helps institutions
-                manage students, staff, fees and certificates
-                from a single intelligent platform.
+                ShalaSarthi simplifies school administration, automates
+                repetitive work, and helps institutions manage students,
+                staff, fees, and certificates from one intelligent platform.
             </p>
 
+            <!-- FEATURE CARDS -->
             <div class="why-features">
 
-                <div class="why-card">
+                <article class="why-card">
 
-                    <div class="why-icon">
+                    <div class="why-icon" aria-hidden="true">
                         <i class="fa-solid fa-bolt"></i>
                     </div>
 
-                    <div>
-                        <h4>Smart Automation</h4>
-
+                    <div class="why-card-content">
+                        <h3>Smart Automation</h3>
                         <p>
-                            Automate admissions, attendance,
-                            certificates and daily operations.
+                            Simplify admissions, attendance, certificates,
+                            and everyday school operations.
                         </p>
                     </div>
 
-                </div>
+                </article>
 
-                <div class="why-card">
+                <article class="why-card">
 
-                    <div class="why-icon">
+                    <div class="why-icon" aria-hidden="true">
                         <i class="fa-solid fa-cloud"></i>
                     </div>
 
-                    <div>
-                        <h4>Cloud Accessibility</h4>
-
+                    <div class="why-card-content">
+                        <h3>Cloud Accessibility</h3>
                         <p>
-                            Access school records securely
-                            from anywhere at any time.
+                            Access school records securely from
+                            anywhere, whenever you need them.
                         </p>
                     </div>
 
-                </div>
+                </article>
 
-                <div class="why-card">
+                <article class="why-card">
 
-                    <div class="why-icon">
+                    <div class="why-icon" aria-hidden="true">
                         <i class="fa-solid fa-file-circle-check"></i>
                     </div>
 
-                    <div>
-                        <h4>Instant Certificates</h4>
-
+                    <div class="why-card-content">
+                        <h3>Instant Certificates</h3>
                         <p>
-                            Generate TC, Bonafide and
-                            certificates within seconds.
+                            Generate Transfer Certificates, Bonafide
+                            certificates, and other documents efficiently.
                         </p>
                     </div>
 
-                </div>
+                </article>
 
-                <div class="why-card">
+                <article class="why-card">
 
-                    <div class="why-icon">
+                    <div class="why-icon" aria-hidden="true">
                         <i class="fa-solid fa-chart-line"></i>
                     </div>
 
-                    <div>
-                        <h4>Management Insights</h4>
-
+                    <div class="why-card-content">
+                        <h3>Management Insights</h3>
                         <p>
-                            Powerful reports and analytics
-                            for better school decisions.
+                            Make informed decisions with organized
+                            reports and meaningful school data.
                         </p>
                     </div>
 
-                </div>
+                </article>
 
             </div>
 
         </div>
 
-        <!-- RIGHT IMAGE -->
 
+        <!-- RIGHT VISUAL -->
         <div class="why-right">
 
-            <div class="image-glow"></div>
+            <div class="why-visual-panel" aria-hidden="true"></div>
+            <div class="image-glow" aria-hidden="true"></div>
 
-            <img src="{{ url_for('static', filename='images/hero.png') }}" alt="Student" class="student-img">
+            <img src="{{ url_for('static', filename='images/hero.png') }}"
+                alt="Student representing the ShalaSarthi school management platform" class="student-img" loading="lazy"
+                decoding="async">
 
-            <!-- FLOATING CARDS -->
-
+            <!-- BOARD READY -->
             <div class="floating-card card-1">
-                🏫
-                <h5>Board Ready</h5>
+
+                <div class="floating-card-icon" aria-hidden="true">
+                    <i class="fa-solid fa-school"></i>
+                </div>
+
+                <h3>Board Ready</h3>
                 <span>State • CBSE • ICSE</span>
+
             </div>
 
+            <!-- CLOUD READY -->
             <div class="floating-card card-2">
-                ☁️
-                <h5>Cloud Ready</h5>
-                <span>24×7 Secure Access</span>
+
+                <div class="floating-card-icon" aria-hidden="true">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+
+                <h3>Cloud Ready</h3>
+                <span>Accessible School Records</span>
+
             </div>
 
+            <!-- PROTECTED RECORDS -->
             <div class="floating-card card-3">
-                🔒
-                <h5>Protected Records</h5>
-                <span>Role Based Security</span>
+
+                <div class="floating-card-icon" aria-hidden="true">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+
+                <h3>Protected Records</h3>
+                <span>Role-Based Access</span>
+
             </div>
 
+            <!-- INSTANT DOCUMENTS -->
             <div class="floating-card card-4">
-                📜
-                <h5>Instant Documents</h5>
-                <span>TC & Bonafide</span>
+
+                <div class="floating-card-icon" aria-hidden="true">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                </div>
+
+                <h3>Instant Documents</h3>
+                <span>TC &amp; Bonafide</span>
+
             </div>
 
         </div>
@@ -503,14 +545,18 @@
 
 </section>
 
-<!-- // ================= ERP PREVIEW SECTION =================   -->
+<!-- =========================================================
+     ERP PREVIEW SECTION
+========================================================= -->
 
 <section class="erp-preview" id="erp-preview">
 
+    <!-- SECTION HEADER -->
     <div class="preview-header">
 
         <span class="preview-tag">
-            🚀 Product Preview
+            <i class="fa-solid fa-rocket" aria-hidden="true"></i>
+            <span>Product Preview</span>
         </span>
 
         <h2>
@@ -525,160 +571,135 @@
 
     </div>
 
+    <!-- PREVIEW LAYOUT -->
     <div class="preview-wrapper">
 
-        <!-- LEFT MENU -->
+        <!-- LEFT MODULE NAVIGATION -->
+        <nav class="preview-sidebar" aria-label="ERP preview modules">
 
-        <div class="preview-sidebar">
+            <button type="button" class="preview-tab active" data-tab="dashboard" aria-pressed="true">
 
-            <div class="preview-tab active" data-tab="dashboard">
-                📊 Dashboard
+                <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                <span>Dashboard</span>
+
+            </button>
+
+            <button type="button" class="preview-tab" data-tab="students" aria-pressed="false">
+
+                <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+                <span>Students</span>
+
+            </button>
+
+            <button type="button" class="preview-tab" data-tab="fees" aria-pressed="false">
+
+                <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+                <span>Fees</span>
+
+            </button>
+
+            <button type="button" class="preview-tab" data-tab="certificates" aria-pressed="false">
+
+                <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
+                <span>Certificates</span>
+
+            </button>
+
+            <button type="button" class="preview-tab" data-tab="reports" aria-pressed="false">
+
+                <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                <span>Reports</span>
+
+            </button>
+
+            <button type="button" class="preview-tab" data-tab="staff" aria-pressed="false">
+
+                <i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+                <span>Staff</span>
+
+            </button>
+
+        </nav>
+
+        <!-- RIGHT SCREEN AREA -->
+        <div class="preview-stage">
+
+            <div class="preview-screen">
+
+                <!-- SCREEN TOP BAR -->
+                <div class="preview-screen-topbar">
+
+                    <div class="preview-window-dots" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <span class="preview-window-label">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        ShalaSarthi ERP
+                    </span>
+
+                    <span class="preview-live-status">
+                        <span class="preview-status-dot"></span>
+                        Product Preview
+                    </span>
+
+                </div>
+
+                <!-- IMAGE FRAME -->
+                <div class="preview-image-frame">
+
+                    <img id="previewImage" src="{{ url_for('static', filename='images/dashboard_preview.png') }}"
+                        alt="ShalaSarthi ERP dashboard preview" loading="lazy" decoding="async">
+
+                    <!-- Image loading / fallback overlay -->
+                    <div class="preview-image-fallback" hidden>
+                        <i class="fa-regular fa-image" aria-hidden="true"></i>
+                        <p>Preview image is temporarily unavailable.</p>
+                    </div>
+
+                </div>
+
             </div>
 
-            <div class="preview-tab" data-tab="students">
-                👨‍🎓 Students
-            </div>
-
-            <div class="preview-tab" data-tab="fees">
-                💰 Fees
-            </div>
-
-            <div class="preview-tab" data-tab="certificates">
-                📜 Certificates
-            </div>
-
-            <div class="preview-tab" data-tab="reports">
-                📈 Reports
-            </div>
-
-            <div class="preview-tab" data-tab="staff">
-                👩‍🏫 Staff
-            </div>
-
-        </div>
-
-        <!-- SCREEN -->
-
-        <div class="preview-screen">
-
-            <img id="previewImage" src="{{ url_for('static', filename='images/dashboard_preview.png') }}"
-                alt="ERP Preview">
-
+            <!-- FLOATING BADGES -->
             <div class="preview-floating-card card-top">
-                <span id="badge1">
-                    📊 Live Dashboard
+
+                <span class="preview-floating-icon">
+                    <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
                 </span>
+
+                <span class="preview-floating-copy">
+                    <strong id="badge1">Live Dashboard</strong>
+                    <small id="badge1Sub">School Overview</small>
+                </span>
+
             </div>
 
             <div class="preview-floating-card card-left">
-                <span id="badge2">
-                    ☁ Cloud Based
+
+                <span class="preview-floating-icon">
+                    <i class="fa-solid fa-cloud" aria-hidden="true"></i>
                 </span>
+
+                <span class="preview-floating-copy">
+                    <strong id="badge2">Cloud Based</strong>
+                    <small id="badge2Sub">Access From Anywhere</small>
+                </span>
+
             </div>
 
             <div class="preview-floating-card card-bottom">
-                <span id="badge3">
-                    ⚡ Real Time Data
+
+                <span class="preview-floating-icon">
+                    <i class="fa-solid fa-bolt" aria-hidden="true"></i>
                 </span>
-            </div>
 
-        </div>
-
-    </div>
-
-</section>
-
-<!-- // ================= HOW IT WORKS SECTION =================    -->
-<section class="how-works" id="how">
-
-    <div class="section-header">
-
-        <span class="section-tag">
-            ⚙ How ShalaSarthi Works
-        </span>
-
-        <h2>
-            Start Today.
-            <span>Go Digital Tomorrow.</span>
-        </h2>
-
-        <p>
-            A simple onboarding process designed for schools.
-        </p>
-
-    </div>
-
-    <div class="workflow">
-
-        <div class="workflow-line"></div>
-
-        <div class="workflow-step">
-
-            <div class="step-icon">🏫</div>
-
-            <div class="step-card">
-
-                <span class="step-no">01</span>
-
-                <h3>School Registration</h3>
-
-                <p>
-                    Register your school and activate ERP access.
-                </p>
-
-            </div>
-
-        </div>
-
-        <div class="workflow-step">
-
-            <div class="step-icon">📂</div>
-
-            <div class="step-card">
-
-                <span class="step-no">02</span>
-
-                <h3>Data Setup</h3>
-
-                <p>
-                    Import student, staff and school records.
-                </p>
-
-            </div>
-
-        </div>
-
-        <div class="workflow-step">
-
-            <div class="step-icon">🎓</div>
-
-            <div class="step-card">
-
-                <span class="step-no">03</span>
-
-                <h3>Staff Training</h3>
-
-                <p>
-                    Train administrators and teachers.
-                </p>
-
-            </div>
-
-        </div>
-
-        <div class="workflow-step">
-
-            <div class="step-icon">🚀</div>
-
-            <div class="step-card">
-
-                <span class="step-no">04</span>
-
-                <h3>Go Live</h3>
-
-                <p>
-                    Start attendance, certificates and reporting.
-                </p>
+                <span class="preview-floating-copy">
+                    <strong id="badge3">Connected Modules</strong>
+                    <small id="badge3Sub">One Unified Platform</small>
+                </span>
 
             </div>
 
@@ -689,539 +710,846 @@
 </section>
 
 <!-- =========================================================
-     PRICING SECTION
+     HOW SHALASARTHI WORKS
 ========================================================= -->
 
-<section class="pricing-section" id="plans">
+<section class="how-works" id="how">
 
-    <div class="pricing-header">
+    <!-- SECTION HEADER -->
+    <div class="section-header how-header">
 
-        <span class="pricing-tag">
-            Pricing Plans
+        <span class="section-tag how-tag">
+            <i class="fa-solid fa-gears" aria-hidden="true"></i>
+            <span>How ShalaSarthi Works</span>
         </span>
 
         <h2>
-            Choose The Right Plan
-            <span>For Your School</span>
+            Start Today.
+            <span>Go Digital Tomorrow.</span>
         </h2>
 
         <p>
-            Flexible plans designed for schools of different sizes.
-            Start with what you need and scale as your institution grows.
+            A simple, guided onboarding process designed to help
+            schools move towards smarter digital management.
         </p>
 
     </div>
 
+    <!-- WORKFLOW TIMELINE -->
+    <div class="workflow" aria-label="School onboarding process">
 
-    <!-- =====================================================
-         BILLING TOGGLE
-    ====================================================== -->
+        <!-- Animated vertical connector -->
+        <div class="workflow-line" aria-hidden="true"></div>
 
-    <div class="billing-toggle" role="group" aria-label="Billing cycle">
+        <!-- STEP 01 -->
+        <article class="workflow-step">
 
-        <button type="button" class="billing-btn active" data-cycle="monthly" onclick="toggleBilling('monthly', this)">
-            Monthly
-        </button>
-
-        <button type="button" class="billing-btn" data-cycle="yearly" onclick="toggleBilling('yearly', this)">
-            Yearly
-        </button>
-
-    </div>
-
-
-    <!-- =====================================================
-         PRICING GRID
-    ====================================================== -->
-
-    <div class="pricing-grid">
-
-
-        <!-- =================================================
-             STARTER
-        ================================================== -->
-
-        <div class="pricing-card">
-
-            <div class="plan-label">
-                Starter
+            <div class="step-icon" aria-hidden="true">
+                <i class="fa-solid fa-school"></i>
             </div>
 
-            <div class="student-badge">
-                Up To 200 Students
-            </div>
+            <div class="step-card">
 
-            <div class="student-note">
-                Essential tools for small institutions.
-            </div>
+                <span class="step-kicker">STEP 01</span>
 
+                <span class="step-no" aria-hidden="true">01</span>
 
-            <div class="price-area">
+                <h3>School Registration</h3>
 
-                <span class="amount" data-month="999" data-year="9999">
-                    ₹999
-                </span>
+                <p>
+                    Register your school, provide the required
+                    details, and activate your ERP access.
+                </p>
 
-                <span class="duration">
-                    /month
-                </span>
+                <div class="step-meta">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Get started</span>
+                </div>
 
             </div>
 
+        </article>
 
-            <div class="gst-note">
-                Annual plan: ₹9,999/year
+        <!-- STEP 02 -->
+        <article class="workflow-step">
+
+            <div class="step-icon" aria-hidden="true">
+                <i class="fa-solid fa-database"></i>
             </div>
 
+            <div class="step-card">
 
-            <ul class="feature-list">
+                <span class="step-kicker">STEP 02</span>
 
-                <li>✔ Student Management</li>
+                <span class="step-no" aria-hidden="true">02</span>
 
-                <li>✔ TC Management</li>
+                <h3>Data Setup</h3>
 
-                <li>✔ Bonafide Certificates</li>
+                <p>
+                    Organize student, staff, and school records
+                    for a smooth transition to digital operations.
+                </p>
 
-                <li>✔ Import &amp; Export</li>
-
-                <li>✔ Up To 5 Staff</li>
-
-                <li>✔ 5GB Storage</li>
-
-                <li>✔ Email Support</li>
-
-            </ul>
-
-
-            <button type="button" class="plan-btn" onclick="openPlanModal('Starter')">
-                Get Started
-            </button>
-
-        </div>
-
-
-
-        <!-- =================================================
-             ESSENTIAL
-        ================================================== -->
-
-        <div class="pricing-card featured">
-
-            <div class="popular-tag">
-                RECOMMENDED
-            </div>
-
-
-            <div class="plan-label">
-                Essential
-            </div>
-
-
-            <div class="student-badge">
-                Up To 500 Students
-            </div>
-
-
-            <div class="student-note">
-                Complete tools for growing schools.
-            </div>
-
-
-            <div class="price-area">
-
-                <span class="amount" data-month="2499" data-year="24999">
-                    ₹2,499
-                </span>
-
-                <span class="duration">
-                    /month
-                </span>
+                <div class="step-meta">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Organize records</span>
+                </div>
 
             </div>
 
+        </article>
 
-            <div class="gst-note">
-                Annual plan: ₹24,999/year
+        <!-- STEP 03 -->
+        <article class="workflow-step">
+
+            <div class="step-icon" aria-hidden="true">
+                <i class="fa-solid fa-chalkboard-user"></i>
             </div>
 
+            <div class="step-card">
 
-            <ul class="feature-list">
+                <span class="step-kicker">STEP 03</span>
 
-                <li>✔ Everything in Starter</li>
+                <span class="step-no" aria-hidden="true">03</span>
 
-                <li>✔ Attendance Management</li>
+                <h3>Staff Training</h3>
 
-                <li>✔ Fee Management</li>
+                <p>
+                    Help administrators and staff understand
+                    the system and its everyday workflows.
+                </p>
 
-                <li>✔ Teacher Management</li>
-
-                <li>✔ Results Management</li>
-
-                <li>✔ Timetable</li>
-
-                <li>✔ Notice Board</li>
-
-                <li>✔ Up To 20 Staff</li>
-
-                <li>✔ 20GB Storage</li>
-
-                <li>✔ Priority Support</li>
-
-            </ul>
-
-
-            <button type="button" class="plan-btn" onclick="openPlanModal('Essential')">
-                Schedule a Demo
-            </button>
-
-        </div>
-
-
-
-        <!-- =================================================
-             PROFESSIONAL
-        ================================================== -->
-
-        <div class="pricing-card">
-
-            <div class="plan-label">
-                Professional
-            </div>
-
-
-            <div class="student-badge">
-                Up To 1,000 Students
-            </div>
-
-
-            <div class="student-note">
-                Advanced operations for larger schools.
-            </div>
-
-
-            <div class="price-area">
-
-                <span class="amount" data-month="4999" data-year="49999">
-                    ₹4,999
-                </span>
-
-                <span class="duration">
-                    /month
-                </span>
+                <div class="step-meta">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Prepare your team</span>
+                </div>
 
             </div>
 
+        </article>
 
-            <div class="gst-note">
-                Annual plan: ₹49,999/year
+        <!-- STEP 04 -->
+        <article class="workflow-step">
+
+            <div class="step-icon" aria-hidden="true">
+                <i class="fa-solid fa-rocket"></i>
             </div>
 
+            <div class="step-card">
 
-            <ul class="feature-list">
+                <span class="step-kicker">STEP 04</span>
 
-                <li>✔ Everything in Essential</li>
+                <span class="step-no" aria-hidden="true">04</span>
 
-                <li>✔ All Available ERP Modules</li>
+                <h3>Go Live</h3>
 
-                <li>✔ Up To 1,000 Students</li>
+                <p>
+                    Begin managing supported school operations,
+                    including student records and certificates.
+                </p>
 
-                <li>✔ Up To 50 Staff</li>
-
-                <li>✔ Up To 2,000 TC Records</li>
-
-                <li>✔ Up To 2,000 Bonafide Records</li>
-
-                <li>✔ 100GB Storage</li>
-
-                <li>✔ Priority Support</li>
-
-            </ul>
-
-
-            <button type="button" class="plan-btn" onclick="openPlanModal('Professional')">
-                Book a Demo
-            </button>
-
-        </div>
-
-
-
-        <!-- =================================================
-             ENTERPRISE
-        ================================================== -->
-
-        <div class="pricing-card">
-
-            <div class="plan-label">
-                Enterprise
-            </div>
-
-
-            <div class="student-badge">
-                Custom Scale
-            </div>
-
-
-            <div class="student-note">
-                Custom ERP solutions for institutions and school groups.
-            </div>
-
-
-            <div class="price-area">
-
-                <span class="custom-price">
-                    Custom Pricing
-                </span>
+                <div class="step-meta">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Start using your ERP</span>
+                </div>
 
             </div>
 
-
-            <div class="gst-note">
-                Talk to our team
-            </div>
-
-
-            <ul class="feature-list">
-
-                <li>✔ All Available ERP Modules</li>
-
-                <li>✔ Custom Student Capacity</li>
-
-                <li>✔ Custom Staff Capacity</li>
-
-                <li>✔ Unlimited Storage Options</li>
-
-                <li>✔ Dedicated Support</li>
-
-                <li>✔ Multi-School Requirements</li>
-
-                <li>✔ Custom Configuration</li>
-
-                <li>✔ Institutional Requirements</li>
-
-            </ul>
-
-
-            <button type="button" class="plan-btn" onclick="openPlanModal('Enterprise')">
-                Request Custom Quote
-            </button>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =====================================================
-         PRICING TRUST / INFORMATION
-    ====================================================== -->
-
-    <div class="pricing-trust">
-
-        <div class="trust-item">
-            Secure School Data
-        </div>
-
-        <div class="trust-item">
-            Role-Based Access
-        </div>
-
-        <div class="trust-item">
-            Cloud-Based ERP
-        </div>
-
-        <div class="trust-item">
-            Scalable Plans
-        </div>
-
-        <div class="trust-item">
-            Dedicated Support Options
-        </div>
+        </article>
 
     </div>
 
 </section>
 
-<!-- ==================================
-     FINAL CTA SECTION
-================================== -->
+<!-- =========================================================
+     SHALASARTHI — PRICING SECTION
+========================================================= -->
+
+<section class="pricing-section" id="plans">
+
+    <div class="pricing-container">
+
+        <!-- HEADER -->
+        <header class="pricing-header">
+
+            <span class="pricing-tag">
+                <i class="fa-solid fa-tags" aria-hidden="true"></i>
+                Pricing Plans
+            </span>
+
+            <h2>
+                Choose The Right Plan
+                <span>For Your School</span>
+            </h2>
+
+            <p>
+                Flexible plans designed for schools of different sizes.
+                Start with what you need and scale as your institution grows.
+            </p>
+
+        </header>
+
+
+        <!-- BILLING TOGGLE -->
+        <div class="billing-area">
+
+            <div class="billing-toggle" role="group" aria-label="Choose subscription billing cycle">
+
+                <button type="button" class="billing-btn active" data-cycle="monthly" aria-pressed="true"
+                    onclick="toggleBilling('monthly', this)">
+                    Monthly
+                </button>
+
+                <button type="button" class="billing-btn" aria-pressed="false" data-cycle="yearly"
+                    onclick="toggleBilling('yearly', this)">
+                    Yearly
+                </button>
+
+            </div>
+
+            <p class="billing-hint">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                Choose the billing cycle that suits your school.
+            </p>
+
+        </div>
+
+
+        <!-- PRICING GRID -->
+        <div class="pricing-grid">
+
+
+            <!-- STARTER -->
+            <article class="pricing-card" data-plan="Starter">
+
+                <div class="plan-heading">
+                    <h3 class="plan-label">Starter</h3>
+
+                    <span class="student-badge">
+                        <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+                        Up to 200 Students
+                    </span>
+                </div>
+
+                <p class="student-note">
+                    Essential tools for small institutions.
+                </p>
+
+
+                <div class="price-area">
+
+                    <div class="price-line">
+                        <span class="amount" data-month="999" data-year="9999">
+                            ₹999
+                        </span>
+                    </div>
+
+                    <span class="duration">per month</span>
+
+                </div>
+
+                <p class="gst-note" data-annual-note="Annual plan: ₹9,999/year">
+                    Annual plan: ₹9,999/year
+                </p>
+
+
+                <div class="feature-heading">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    What's included
+                </div>
+
+                <ul class="feature-list">
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Student Management</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>TC Management</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Bonafide Certificates</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Import &amp; Export</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Up to 5 Staff</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>5 GB Storage</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Email Support</span>
+                    </li>
+
+                </ul>
+
+
+                <div class="plan-action">
+
+                    <button type="button" class="plan-btn" onclick="openPlanModal('Starter')">
+
+                        Get Started
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+
+                    </button>
+
+                </div>
+
+            </article>
+
+
+
+            <!-- ESSENTIAL -->
+            <article class="pricing-card featured" data-plan="Essential">
+
+                <div class="popular-tag">
+                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                    Recommended
+                </div>
+
+                <div class="plan-heading">
+                    <h3 class="plan-label">Essential</h3>
+
+                    <span class="student-badge">
+                        <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+                        Up to 500 Students
+                    </span>
+                </div>
+
+                <p class="student-note">
+                    Complete tools for growing schools.
+                </p>
+
+
+                <div class="price-area">
+
+                    <div class="price-line">
+                        <span class="amount" data-month="2499" data-year="24999">
+                            ₹2,499
+                        </span>
+                    </div>
+
+                    <span class="duration">per month</span>
+
+                </div>
+
+                <p class="gst-note" data-annual-note="Annual plan: ₹24,999/year">
+                    Annual plan: ₹24,999/year
+                </p>
+
+
+                <div class="feature-heading">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    What's included
+                </div>
+
+                <ul class="feature-list">
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Everything in Starter</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Attendance Management</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Fee Management</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Teacher Management</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Results Management</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Timetable</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Notice Board</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Up to 20 Staff</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>20 GB Storage</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Priority Support</span>
+                    </li>
+
+                </ul>
+
+
+                <div class="plan-action">
+
+                    <button type="button" class="plan-btn" onclick="openPlanModal('Essential')">
+
+                        Schedule a Demo
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+
+                    </button>
+
+                </div>
+
+            </article>
+
+
+
+            <!-- PROFESSIONAL -->
+            <article class="pricing-card" data-plan="Professional">
+
+                <div class="plan-heading">
+                    <h3 class="plan-label">Professional</h3>
+
+                    <span class="student-badge">
+                        <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+                        Up to 1,000 Students
+                    </span>
+                </div>
+
+                <p class="student-note">
+                    Advanced operations for larger schools.
+                </p>
+
+
+                <div class="price-area">
+
+                    <div class="price-line">
+                        <span class="amount" data-month="4999" data-year="49999">
+                            ₹4,999
+                        </span>
+                    </div>
+
+                    <span class="duration">per month</span>
+
+                </div>
+
+                <p class="gst-note" data-annual-note="Annual plan: ₹49,999/year">
+                    Annual plan: ₹49,999/year
+                </p>
+
+
+                <div class="feature-heading">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    What's included
+                </div>
+
+                <ul class="feature-list">
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Everything in Essential</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>All Available ERP Modules</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Up to 1,000 Students</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Up to 50 Staff</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Up to 2,000 TC Records</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Up to 2,000 Bonafide Records</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>100 GB Storage</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Priority Support</span>
+                    </li>
+
+                </ul>
+
+
+                <div class="plan-action">
+
+                    <button type="button" class="plan-btn" onclick="openPlanModal('Professional')">
+
+                        Book a Demo
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+
+                    </button>
+
+                </div>
+
+            </article>
+
+
+
+            <!-- ENTERPRISE -->
+            <article class="pricing-card enterprise-card" data-plan="Enterprise">
+
+                <div class="plan-heading">
+                    <h3 class="plan-label">Enterprise</h3>
+
+                    <span class="student-badge">
+                        <i class="fa-solid fa-building" aria-hidden="true"></i>
+                        Custom Scale
+                    </span>
+                </div>
+
+                <p class="student-note">
+                    Custom ERP solutions for institutions and school groups.
+                </p>
+
+
+                <div class="price-area">
+
+                    <div class="price-line">
+                        <span class="custom-price">
+                            Custom Pricing
+                        </span>
+                    </div>
+
+                    <span class="duration">
+                        Tailored to your requirements
+                    </span>
+
+                </div>
+
+                <p class="gst-note">
+                    Talk to our team about your requirements.
+                </p>
+
+
+                <div class="feature-heading">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    Enterprise capabilities
+                </div>
+
+                <ul class="feature-list">
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>All Available ERP Modules</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Custom Student Capacity</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Custom Staff Capacity</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Unlimited Storage Options</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Dedicated Support</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Multi-School Requirements</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Custom Configuration</span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>Institutional Requirements</span>
+                    </li>
+
+                </ul>
+
+
+                <div class="plan-action">
+
+                    <button type="button" class="plan-btn" onclick="openPlanModal('Enterprise')">
+
+                        Request Custom Quote
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+
+                    </button>
+
+                </div>
+
+            </article>
+
+        </div>
+
+
+        <!-- TRUST ITEMS -->
+        <div class="pricing-trust" aria-label="Platform benefits">
+
+            <div class="trust-item">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                <span>Secure School Data</span>
+            </div>
+
+            <div class="trust-item">
+                <i class="fa-solid fa-user-lock" aria-hidden="true"></i>
+                <span>Role-Based Access</span>
+            </div>
+
+            <div class="trust-item">
+                <i class="fa-solid fa-cloud" aria-hidden="true"></i>
+                <span>Cloud-Based ERP</span>
+            </div>
+
+            <div class="trust-item">
+                <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                <span>Scalable Plans</span>
+            </div>
+
+            <div class="trust-item">
+                <i class="fa-solid fa-headset" aria-hidden="true"></i>
+                <span>Dedicated Support Options</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+<!-- =========================================================
+     FINAL CONTACT / CTA SECTION
+========================================================= -->
 
 <section class="contact-cta" id="contact">
 
-    <div class="contact-bg"></div>
+    <div class="contact-bg contact-bg-one" aria-hidden="true"></div>
+    <div class="contact-bg contact-bg-two" aria-hidden="true"></div>
 
     <div class="contact-wrapper">
 
-        <!-- LEFT -->
+        <!-- LEFT: CONTACT INFORMATION -->
 
         <div class="contact-left">
 
             <span class="contact-tag">
-                📞 Get In Touch
+                <i class="fa-solid fa-phone-volume" aria-hidden="true"></i>
+                Get in Touch
             </span>
 
             <h2>
-
-                Ready To Transform
+                Ready to Transform
                 <span>Your School Digitally?</span>
-
             </h2>
 
-            <p>
-
-                Join schools that are simplifying admissions,
-                student records, certificates, attendance and
-                administration through ShalaSarthi ERP.
-
+            <p class="contact-description">
+                Simplify student records, admissions, certificates,
+                attendance and everyday school administration with
+                ShalaSarthi ERP. Our team can help you get started.
             </p>
+
+            <!-- CONTACT DETAILS -->
 
             <div class="contact-info">
 
                 <div class="contact-item">
 
-                    <div class="contact-icon">
-                        📍
+                    <div class="contact-icon" aria-hidden="true">
+                        <i class="fa-solid fa-location-dot"></i>
                     </div>
 
-                    <div>
-
-                        <h4>Office Address</h4>
+                    <div class="contact-item-content">
+                        <h3>Office Address</h3>
 
                         <p>
-
-                            SPL 3rd Floor, Shri Prabhu Krupa, Dhanwantari nagar, Dastur Nagar Rd, Amravati, Maharashtra
-                            444606
-
+                            SPL, 3rd Floor, Shri Prabhu Krupa,
+                            Dhanwantari Nagar, Dastur Nagar Road,
+                            Amravati, Maharashtra 444606.
                         </p>
-
                     </div>
 
                 </div>
 
                 <div class="contact-item">
 
-                    <div class="contact-icon">
-                        📞
+                    <div class="contact-icon" aria-hidden="true">
+                        <i class="fa-solid fa-phone"></i>
                     </div>
 
-                    <div>
-
-                        <h4>Phone Number</h4>
+                    <div class="contact-item-content">
+                        <h3>Phone Number</h3>
 
                         <p>
-
-                            +91 8888244176
-
+                            <a href="tel:+918888244176">
+                                +91 88882 44176
+                            </a>
                         </p>
-
                     </div>
 
                 </div>
 
                 <div class="contact-item">
 
-                    <div class="contact-icon">
-                        ✉️
+                    <div class="contact-icon" aria-hidden="true">
+                        <i class="fa-solid fa-envelope"></i>
                     </div>
 
-                    <div>
-
-                        <h4>Email Address</h4>
+                    <div class="contact-item-content">
+                        <h3>Email Address</h3>
 
                         <p>
-
-                            support@shalasarthi.com
-
+                            <a href="mailto:support@shalasarthi.com">
+                                support@shalasarthi.com
+                            </a>
                         </p>
-
                     </div>
 
                 </div>
 
             </div>
 
+            <!-- PRIMARY ACTIONS -->
+
             <div class="contact-buttons">
 
-                <button class="contact-demo-btn" onclick="openPlanModal('Free Demo')">
+                <button type="button" class="contact-demo-btn" onclick="openPlanModal('Free Demo')">
 
-                    Book Free Demo
+                    <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+
+                    <span>Book a Free Demo</span>
+
+                    <i class="fa-solid fa-arrow-right contact-btn-arrow" aria-hidden="true"></i>
 
                 </button>
 
                 <a href="tel:+918888244176" class="contact-call-btn">
 
-                    Call Now
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                    <span>Call Our Team</span>
 
                 </a>
 
             </div>
 
-            <div class="contact-social">
+            <!-- SOCIAL LINKS
+                 Replace the placeholder href values with the
+                 official URLs before publishing.
+            -->
 
-                <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
+            <div class="contact-social-wrap">
 
-                    <i class="fab fa-facebook-f"></i>
+                <span class="contact-social-label">
+                    Connect with us
+                </span>
 
-                </a>
+                <div class="contact-social">
 
-                <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
+                    <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank"
+                        rel="noopener noreferrer" aria-label="Visit Shri Prabhu Softlink on LinkedIn" title="LinkedIn">
 
-                    <i class="fab fa-instagram"></i>
+                        <i class="fa-brands fa-linkedin-in" aria-hidden="true"></i>
+                    </a>
 
-                </a>
+                    <a href="YOUR_OFFICIAL_FACEBOOK_URL" target="_blank" rel="noopener noreferrer"
+                        aria-label="Visit us on Facebook" title="Facebook">
 
-                <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
+                        <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
+                    </a>
 
-                    <i class="fab fa-linkedin-in"></i>
+                    <a href="YOUR_OFFICIAL_INSTAGRAM_URL" target="_blank" rel="noopener noreferrer"
+                        aria-label="Visit us on Instagram" title="Instagram">
 
-                </a>
+                        <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                    </a>
 
-                <a href="https://in.linkedin.com/company/shriprabhusoftlink" target="_blank">
+                    <a href="YOUR_OFFICIAL_YOUTUBE_URL" target="_blank" rel="noopener noreferrer"
+                        aria-label="Visit us on YouTube" title="YouTube">
 
-                    <i class="fab fa-youtube"></i>
+                        <i class="fa-brands fa-youtube" aria-hidden="true"></i>
+                    </a>
 
-                </a>
+                </div>
 
             </div>
 
         </div>
 
-        <!-- RIGHT SIDE -->
+
+        <!-- RIGHT: OFFICE AND MAP -->
 
         <div class="contact-right">
 
-            <!-- MAP CARD -->
+            <!-- OFFICE MAP CARD -->
 
-            <a href="https://maps.app.goo.gl/BcWTZfQJDR88YVUA8" target="_blank" class="contact-map-card">
+            <div class="contact-map-card">
 
                 <div class="contact-map-content">
 
                     <span class="contact-map-badge">
-
+                        <i class="fa-solid fa-building" aria-hidden="true"></i>
                         SPL Office
-
                     </span>
 
-                    <h3>
-
-                        Visit Our Office
-
-                    </h3>
+                    <h3>Visit Our Office</h3>
 
                     <p>
-
-                        SPL 3rd Floor, Dhanwantari Nagar,
-                        Amravati, Maharashtra, India
-
+                        Shri Prabhu Softlink Pvt. Ltd.,
+                        Dhanwantari Nagar, Amravati,
+                        Maharashtra, India.
                     </p>
 
-                    <span class="contact-map-link">
+                    <a href="https://maps.app.goo.gl/BcWTZfQJDR88YVUA8" target="_blank" rel="noopener noreferrer"
+                        class="contact-map-link">
 
-                        Open In Google Maps
+                        <span>Open in Google Maps</span>
 
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
 
-                    </span>
+                    </a>
 
                 </div>
 
@@ -1229,50 +1557,69 @@
 
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4581.207336815283!2d77.76483979999999!3d20.9089425!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bd6a54ddbe17d1f%3A0x121708717e71c25f!2sShri%20Prabhu%20Softlink%20Pvt%20Ltd!5e1!3m2!1sen!2sin!4v1779451794872!5m2!1sen!2sin"
-                        loading="lazy">
+                        title="Shri Prabhu Softlink office location" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade" allowfullscreen>
                     </iframe>
 
                 </div>
 
-            </a>
+                <div class="contact-map-footer">
+                    <span class="contact-map-status">
+                        <span class="contact-status-dot"></span>
+                        Find our office
+                    </span>
 
-            <!-- QUICK INFO -->
+                    <span class="contact-map-footer-text">
+                        Amravati, Maharashtra
+                    </span>
+                </div>
+
+            </div>
+
+
+            <!-- QUICK INFORMATION -->
 
             <div class="contact-info-box">
 
                 <div class="contact-info-item">
 
-                    <i class="fa-solid fa-clock"></i>
+                    <div class="contact-info-item-icon">
+                        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                    </div>
 
-                    <span>
-
-                        Mon - Sat : 10 AM - 7 PM
-
-                    </span>
-
-                </div>
-
-                <div class="contact-info-item">
-
-                    <i class="fa-solid fa-location-dot"></i>
-
-                    <span>
-
-                        Maharashtra, India
-
-                    </span>
+                    <div class="contact-info-item-content">
+                        <h3>Office Hours</h3>
+                        <p>Mon – Sat</p>
+                        <span>10 AM – 7 PM</span>
+                    </div>
 
                 </div>
 
                 <div class="contact-info-item">
 
-                    <i class="fa-solid fa-headset"></i>
+                    <div class="contact-info-item-icon">
+                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                    </div>
 
-                    <span>
+                    <div class="contact-info-item-content">
+                        <h3>Our Location</h3>
+                        <p>Amravati</p>
+                        <span>Maharashtra, India</span>
+                    </div>
 
-                        Dedicated ERP Support
+                </div>
 
-                    </span>
+                <div class="contact-info-item">
+
+                    <div class="contact-info-item-icon">
+                        <i class="fa-solid fa-headset" aria-hidden="true"></i>
+                    </div>
+
+                    <div class="contact-info-item-content">
+                        <h3>ERP Assistance</h3>
+                        <p>School ERP Support</p>
+                        <span>Contact our team</span>
+                    </div>
 
                 </div>
 
@@ -1284,477 +1631,1040 @@
 
 </section>
 
-<!-- ==================================
-     FAQ SECTION
-================================== -->
+<!-- =========================================
+     FAQ SECTION — SPL SHALASARTHI
+========================================= -->
 
-<section class="faq-section" id="faq">
-
+<section class="faq-section" id="faq" aria-labelledby="faq-title">
     <div class="faq-container">
 
-        <!-- LEFT -->
-
+        <!-- LEFT: FAQ CONTENT -->
         <div class="faq-left">
 
             <span class="faq-tag">
-
-                ❓ Frequently Asked Questions
-
+                <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+                Frequently Asked Questions
             </span>
 
-            <h2>
-
-                Everything You Need To Know
+            <h2 id="faq-title">
+                Everything You Need to Know
                 <span>About ShalaSarthi ERP</span>
-
             </h2>
 
-            <!-- FAQ ITEM -->
+            <p class="faq-intro">
+                Find answers to common questions about getting started,
+                managing school records, and using ShalaSarthi ERP.
+            </p>
 
-            <div class="faq-item active">
+            <div class="faq-list">
 
-                <button class="faq-question">
+                <!-- FAQ 1 -->
+                <article class="faq-item active">
+                    <h3 class="faq-heading">
+                        <button type="button" class="faq-question" id="faq-question-1" aria-expanded="true"
+                            aria-controls="faq-answer-1">
 
-                    Is ShalaSarthi suitable for small schools?
+                            <span class="faq-question-text">
+                                Is ShalaSarthi suitable for small schools?
+                            </span>
 
-                    <span>+</span>
+                            <span class="faq-icon" aria-hidden="true">−</span>
+                        </button>
+                    </h3>
 
-                </button>
+                    <div class="faq-answer" id="faq-answer-1" role="region" aria-labelledby="faq-question-1">
 
-                <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            Yes. ShalaSarthi offers subscription plans for
+                            schools of different sizes, with available
+                            features and capacity depending on the selected plan.
+                        </div>
+                    </div>
+                </article>
 
-                    Yes. ShalaSarthi is designed for schools of all sizes,
-                    from small institutions to multi-campus organizations.
+                <!-- FAQ 2 -->
+                <article class="faq-item">
+                    <h3 class="faq-heading">
+                        <button type="button" class="faq-question" id="faq-question-2" aria-expanded="false"
+                            aria-controls="faq-answer-2">
 
-                </div>
+                            <span class="faq-question-text">
+                                How long does implementation take?
+                            </span>
+
+                            <span class="faq-icon" aria-hidden="true">+</span>
+                        </button>
+                    </h3>
+
+                    <div class="faq-answer" id="faq-answer-2" role="region" aria-labelledby="faq-question-2" inert>
+
+                        <div class="faq-answer-inner">
+                            The timeline depends on your school's requirements,
+                            data readiness, and configuration needs. Our team
+                            can discuss the expected onboarding schedule during
+                            your demo or consultation.
+                        </div>
+                    </div>
+                </article>
+
+                <!-- FAQ 3 -->
+                <article class="faq-item">
+                    <h3 class="faq-heading">
+                        <button type="button" class="faq-question" id="faq-question-3" aria-expanded="false"
+                            aria-controls="faq-answer-3">
+
+                            <span class="faq-question-text">
+                                Can we import existing student records?
+                            </span>
+
+                            <span class="faq-icon" aria-hidden="true">+</span>
+                        </button>
+                    </h3>
+
+                    <div class="faq-answer" id="faq-answer-3" role="region" aria-labelledby="faq-question-3" inert>
+
+                        <div class="faq-answer-inner">
+                            Existing records may be imported depending on their
+                            format, data quality, and migration requirements.
+                            Contact our team to discuss your school's data
+                            and the available migration options.
+                        </div>
+                    </div>
+                </article>
+
+                <!-- FAQ 4 -->
+                <article class="faq-item">
+                    <h3 class="faq-heading">
+                        <button type="button" class="faq-question" id="faq-question-4" aria-expanded="false"
+                            aria-controls="faq-answer-4">
+
+                            <span class="faq-question-text">
+                                Is training available for school staff?
+                            </span>
+
+                            <span class="faq-icon" aria-hidden="true">+</span>
+                        </button>
+                    </h3>
+
+                    <div class="faq-answer" id="faq-answer-4" role="region" aria-labelledby="faq-question-4" inert>
+
+                        <div class="faq-answer-inner">
+                            Our team can explain the onboarding and training
+                            options available for your selected plan, helping
+                            your staff understand the relevant workflows.
+                        </div>
+                    </div>
+                </article>
+
+                <!-- FAQ 5 -->
+                <article class="faq-item">
+                    <h3 class="faq-heading">
+                        <button type="button" class="faq-question" id="faq-question-5" aria-expanded="false"
+                            aria-controls="faq-answer-5">
+
+                            <span class="faq-question-text">
+                                How does ShalaSarthi help protect school data?
+                            </span>
+
+                            <span class="faq-icon" aria-hidden="true">+</span>
+                        </button>
+                    </h3>
+
+                    <div class="faq-answer" id="faq-answer-5" role="region" aria-labelledby="faq-question-5" inert>
+
+                        <div class="faq-answer-inner">
+                            ShalaSarthi is designed with role-based access
+                            controls and school-specific data access.
+                            Data protection also depends on secure deployment,
+                            account management, and the backup arrangements
+                            configured for the service.
+                        </div>
+                    </div>
+                </article>
 
             </div>
 
-            <div class="faq-item">
-
-                <button class="faq-question">
-
-                    How long does implementation take?
-
-                    <span>+</span>
-
-                </button>
-
-                <div class="faq-answer">
-
-                    Most schools are fully onboarded within
-                    3–7 business days including training.
-
+            <!-- SUPPORT CTA -->
+            <div class="faq-support">
+                <div class="faq-support-icon" aria-hidden="true">
+                    <i class="fa-solid fa-headset"></i>
                 </div>
 
-            </div>
-
-            <div class="faq-item">
-
-                <button class="faq-question">
-
-                    Can we import existing student records?
-
-                    <span>+</span>
-
-                </button>
-
-                <div class="faq-answer">
-
-                    Yes. We provide free migration support for
-                    student, staff and academic records.
-
+                <div class="faq-support-copy">
+                    <strong>Still have questions?</strong>
+                    <span>Talk to our team about your school's requirements.</span>
                 </div>
 
-            </div>
-
-            <div class="faq-item">
-
-                <button class="faq-question">
-
-                    Do you provide training?
-
-                    <span>+</span>
-
-                </button>
-
-                <div class="faq-answer">
-
-                    Absolutely. Every plan includes staff training
-                    and onboarding support.
-
-                </div>
-
-            </div>
-
-            <div class="faq-item">
-
-                <button class="faq-question">
-
-                    Is my data secure?
-
-                    <span>+</span>
-
-                </button>
-
-                <div class="faq-answer">
-
-                    Yes. We use secure cloud infrastructure,
-                    backups and role-based access controls.
-
-                </div>
-
+                <a href="#contact" class="faq-support-link">
+                    Contact Us
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
             </div>
 
         </div>
 
-        <!-- RIGHT -->
-
-        <div class="faq-right">
+        <!-- RIGHT: ERP ILLUSTRATION -->
+        <aside class="faq-right" aria-label="ShalaSarthi ERP illustration">
 
             <div class="faq-image-card">
+                <div class="faq-image-glow" aria-hidden="true"></div>
 
-                <img src="{{ url_for('static', filename='images/faq_section.png') }}" alt="ShalaSarthi ERP">
+                <div class="faq-image-label">
+                    <span class="faq-image-label-dot"></span>
+                    Built for Modern Schools
+                </div>
 
+                <img src="{{ url_for('static', filename='images/faq_section.png') }}"
+                    alt="Illustration of a student using a laptop alongside a school ERP dashboard" loading="lazy"
+                    decoding="async" width="800" height="800">
+
+                <div class="faq-image-caption">
+                    <span class="faq-caption-icon" aria-hidden="true">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </span>
+
+                    <div>
+                        <strong>One platform for school operations</strong>
+                        <span>Manage records and everyday workflows in one place.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-trust-note">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                <span>Designed to simplify everyday school administration</span>
+            </div>
+
+        </aside>
+
+    </div>
+</section>
+
+
+<!-- =====================================================
+     PREMIUM SPL SHALASARTHI DEMO MODAL
+====================================================== -->
+
+<div class="plan-modal" id="planModal" aria-hidden="true" role="dialog" aria-modal="true"
+    aria-labelledby="demoModalTitle" aria-describedby="demoModalDescription">
+    <div class="modal-box">
+
+        <!-- Decorative background -->
+        <div class="demo-modal-glow" aria-hidden="true"></div>
+
+        <!-- Close -->
+        <button type="button" class="close-modal" onclick="closePlanModal()" aria-label="Close demo request form">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+
+        <!-- Header -->
+        <div class="demo-modal-header">
+
+            <div class="demo-modal-icon" aria-hidden="true">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+
+            <div class="demo-modal-heading">
+                <span class="demo-eyebrow">
+                    LET'S GET STARTED
+                </span>
+
+                <h2 id="demoModalTitle">
+                    Book a Free Demo
+                </h2>
+
+                <p id="demoModalDescription">
+                    Tell us about your school. Our ERP team will help you
+                    explore the right solution for your institution.
+                </p>
             </div>
 
         </div>
 
-    </div>
+        <!-- Trust indicator -->
+        <div class="demo-trust-strip">
 
-</section>
+            <span>
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                Personalized walkthrough
+            </span>
 
-<!-- ================= DEMO REQUEST MODAL =================     -->
+            <span>
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                No obligation
+            </span>
 
-<div class="plan-modal" id="planModal">
+        </div>
 
-    <div class="modal-box">
+        <!-- Form -->
+        <form id="demoForm" class="demo-form" method="POST" action="{{ url_for('submit_lead') }}" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <span class="close-modal" onclick="closePlanModal()">
+            <div class="demo-form-section">
 
-            &times;
+                <div class="demo-section-heading">
+                    <span class="demo-section-number">01</span>
 
-        </span>
+                    <div>
+                        <h3>School Information</h3>
+                        <p>Help us understand your institution.</p>
+                    </div>
+                </div>
 
-        <h2>Book Free Demo</h2>
+                <div class="demo-form-grid">
 
-        <p>
-            Fill details and our ERP expert will contact you.
-        </p>
+                    <!-- School name -->
+                    <div class="demo-field demo-field-full">
 
-        <form id="demoForm">
+                        <label for="schoolName">
+                            School Name
+                            <span class="required-mark">*</span>
+                        </label>
 
-            <input type="text" id="schoolName" placeholder="School Name" required>
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-school demo-input-icon" aria-hidden="true"></i>
 
-            <input type="text" id="personName" placeholder="Contact Person" required>
+                            <input type="text" id="schoolName" name="school_name" placeholder="Enter your school name"
+                                autocomplete="organization" maxlength="150" required>
+                        </div>
 
-            <input type="tel" id="mobile" placeholder="Mobile Number" required>
+                    </div>
 
-            <input type="email" id="email" placeholder="Email Address">
+                    <!-- Contact person -->
+                    <div class="demo-field">
 
-            <input type="number" id="students" placeholder="Total Students">
+                        <label for="personName">
+                            Contact Person
+                            <span class="required-mark">*</span>
+                        </label>
 
-            <div class="selected-plan-box">
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-user demo-input-icon" aria-hidden="true"></i>
 
-                <label>Selected Plan</label>
+                            <input type="text" id="personName" name="contact_person" placeholder="Full name"
+                                autocomplete="name" maxlength="100" required>
+                        </div>
 
-                <input type="text" id="selectedPlanDisplay" readonly>
+                    </div>
 
-                <input type="hidden" id="selectedPlan">
+                    <!-- Mobile -->
+                    <div class="demo-field">
+
+                        <label for="mobile">
+                            Mobile Number
+                            <span class="required-mark">*</span>
+                        </label>
+
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-phone demo-input-icon" aria-hidden="true"></i>
+
+                            <input type="tel" id="mobile" name="mobile" placeholder="10-digit mobile number"
+                                autocomplete="tel-national" inputmode="numeric" maxlength="10" pattern="[0-9]{10}"
+                                required>
+                        </div>
+
+                    </div>
+
+                    <!-- Email -->
+                    <div class="demo-field">
+
+                        <label for="email">
+                            Email Address
+                            <span class="optional-label">Optional</span>
+                        </label>
+
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-envelope demo-input-icon" aria-hidden="true"></i>
+
+                            <input type="email" id="email" name="email" placeholder="you@school.com"
+                                autocomplete="email" maxlength="150">
+                        </div>
+
+                    </div>
+
+                    <!-- Student count -->
+                    <div class="demo-field">
+
+                        <label for="students">
+                            Total Students
+                            <span class="optional-label">Optional</span>
+                        </label>
+
+                        <div class="demo-input-wrap">
+                            <i class="fa-solid fa-users demo-input-icon" aria-hidden="true"></i>
+
+                            <input type="number" id="students" name="students" placeholder="e.g. 500" min="1"
+                                max="1000000" step="1" inputmode="numeric">
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
-            <textarea id="message" placeholder="Additional Requirements (Optional)" rows="4"></textarea>
+            <!-- Selected plan -->
+            <div class="demo-selected-plan">
 
-            <button type="submit" class="submit-btn">
+                <div class="demo-plan-icon" aria-hidden="true">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
 
-                Submit Request
+                <div class="demo-plan-content">
 
+                    <label for="selectedPlanDisplay">
+                        SELECTED PLAN
+                    </label>
+
+                    <input type="text" id="selectedPlanDisplay" name="selected_plan_display" value="Free Demo Plan"
+                        readonly aria-readonly="true">
+
+                    <input type="hidden" id="selectedPlan" name="selected_plan" value="Free Demo Plan">
+
+                </div>
+
+                <span class="demo-plan-badge">
+                    FREE
+                </span>
+
+            </div>
+
+            <!-- Requirements -->
+            <div class="demo-field demo-requirements">
+
+                <label for="message">
+                    What would you like to explore?
+                    <span class="optional-label">Optional</span>
+                </label>
+
+                <textarea id="message" name="message" rows="3" maxlength="1500"
+                    placeholder="For example: student management, attendance, fees, certificates..."></textarea>
+
+                <div class="demo-textarea-footer">
+                    <span>
+                        Tell us which features matter most to your school.
+                    </span>
+
+                    <span id="demoMessageCount">0 / 1500</span>
+                </div>
+
+            </div>
+
+            <!-- Error/status message -->
+            <div class="demo-form-message" id="demoFormMessage" role="status" aria-live="polite" hidden></div>
+
+            <!-- Submit -->
+            <button type="submit" class="submit-btn" id="demoSubmitBtn">
+                <span class="demo-submit-content">
+                    <span>Request My Free Demo</span>
+
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </span>
+
+                <span class="demo-submit-loading" aria-hidden="true">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    Submitting your request...
+                </span>
             </button>
+
+            <p class="demo-form-privacy">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                Your information is used to respond to your demo request.
+            </p>
 
         </form>
 
     </div>
+</div>
+<!-- ==========================================
+     DEMO REQUEST SUCCESS POPUP
+========================================== -->
 
+<div class="demo-success-popup" id="successPopup" role="dialog" aria-modal="true" aria-labelledby="successPopupTitle"
+    aria-describedby="successPopupMessage" aria-hidden="true">
+    <div class="demo-success-card">
+
+        <button type="button" class="demo-success-close" onclick="closeSuccessPopup()"
+            aria-label="Close success message">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="demo-success-icon">
+            <i class="fa-solid fa-check"></i>
+        </div>
+
+        <span class="demo-success-eyebrow">REQUEST RECEIVED</span>
+
+        <h2 id="successPopupTitle">
+            Thank You!
+        </h2>
+
+        <p id="successPopupMessage">
+            Your demo request has been submitted successfully.
+            Our team will contact you shortly.
+        </p>
+
+        <button type="button" class="demo-success-button" onclick="closeSuccessPopup()">
+            Done <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+    </div>
 </div>
 
+
+
+
 <script>
+    (() => {
+        "use strict";
 
-    /* =========================================================
-       BILLING TOGGLE
-    ========================================================= */
+        /* =========================================================
+          1. BILLING TOGGLE
+          Monthly/yearly pricing with safe initialization.
+       ========================================================= */
 
-    /* =========================================================
-   BILLING TOGGLE
-========================================================= */
-
-    function toggleBilling(type, clickedButton) {
-
-        /* -----------------------------------------
-           UPDATE BUTTON STATE
-        ----------------------------------------- */
-
-        const buttons = document.querySelectorAll(".billing-btn");
-
-        buttons.forEach(button => {
-            button.classList.remove("active");
-        });
-
-        if (clickedButton) {
-            clickedButton.classList.add("active");
-        } else {
-
-            const activeButton =
-                document.querySelector(
-                    `.billing-btn[data-cycle="${type}"]`
-                );
-
-            if (activeButton) {
-                activeButton.classList.add("active");
-            }
+        function formatINR(value) {
+            return Number(value).toLocaleString("en-IN", {
+                maximumFractionDigits: 2
+            });
         }
 
-
-        /* -----------------------------------------
-           UPDATE ALL PLAN PRICES
-        ----------------------------------------- */
-
-        document.querySelectorAll(".amount").forEach(amount => {
-
-            const monthlyPrice =
-                parseFloat(amount.dataset.month || "0");
-
-            const yearlyPrice =
-                parseFloat(amount.dataset.year || "0");
-
-
-            /* -------------------------------------
-               MONTHLY
-            ------------------------------------- */
-
-            if (type === "monthly") {
-
-                amount.textContent =
-                    "₹" + monthlyPrice.toLocaleString("en-IN");
-
-                const duration =
-                    amount.parentElement.querySelector(".duration");
-
-                if (duration) {
-                    duration.textContent = "/month";
-                }
-
-
-                /* Update annual information */
-
-                const card =
-                    amount.closest(".pricing-card");
-
-                const note =
-                    card
-                        ? card.querySelector(".gst-note")
-                        : null;
-
-                if (note) {
-
-                    note.textContent =
-                        "Annual plan: ₹" +
-                        yearlyPrice.toLocaleString("en-IN") +
-                        "/year";
-                }
-
+        function toggleBilling(type, clickedButton = null) {
+            if (!["monthly", "yearly"].includes(type)) {
+                return;
             }
 
+            const pricingSection = document.querySelector("#plans");
 
-            /* -------------------------------------
-               YEARLY
-            ------------------------------------- */
+            if (!pricingSection) {
+                console.warn("Pricing section #plans was not found.");
+                return;
+            }
 
-            else {
+            const buttons = pricingSection.querySelectorAll(".billing-btn");
 
-                amount.textContent =
-                    "₹" + yearlyPrice.toLocaleString("en-IN");
+            buttons.forEach((button) => {
+                const isActive = button.dataset.cycle === type;
 
-                const duration =
-                    amount.parentElement.querySelector(".duration");
+                button.classList.toggle("active", isActive);
+                button.setAttribute("aria-pressed", String(isActive));
+            });
 
-                if (duration) {
-                    duration.textContent = "/year";
+            /*
+               Retain compatibility with existing inline onclick handlers.
+               The data-cycle attribute remains the source of truth.
+            */
+
+            if (
+                clickedButton &&
+                clickedButton.dataset.cycle === type
+            ) {
+                clickedButton.classList.add("active");
+            }
+
+            /*
+               Update all prices inside the pricing section.
+               Enterprise custom pricing remains unchanged because it
+               does not have an .amount element.
+            */
+
+            pricingSection.querySelectorAll(".pricing-card").forEach((card) => {
+                const amount = card.querySelector(".amount");
+                const duration = card.querySelector(".duration");
+                const note = card.querySelector(".gst-note");
+
+                if (!amount) {
+                    return;
                 }
 
+                const monthlyPrice = Number(amount.dataset.month);
+                const yearlyPrice = Number(amount.dataset.year);
 
-                /* Update annual information */
-
-                const card =
-                    amount.closest(".pricing-card");
-
-                const note =
-                    card
-                        ? card.querySelector(".gst-note")
-                        : null;
-
-                if (note) {
-
-                    const effectiveMonthly =
-                        yearlyPrice / 12;
-
-                    note.textContent =
-                        "Effective ₹" +
-                        Math.round(effectiveMonthly)
-                            .toLocaleString("en-IN") +
-                        "/month when billed yearly";
-                }
-
-            }
-
-        });
-
-    }
-
-
-    /* =========================================================
-       OPEN DEMO MODAL
-    ========================================================= */
-
-    function openDemoModal() {
-
-        document
-            .getElementById("demoModal")
-            .classList.add("active");
-    }
-
-
-    /* =========================================================
-       CLOSE DEMO MODAL
-    ========================================================= */
-
-    function closeDemoModal() {
-
-        document
-            .getElementById("demoModal")
-            .classList.remove("active");
-    }
-
-
-    /* =========================================================
-       CLOSE MODAL ON ESC KEY
-    ========================================================= */
-
-    document.addEventListener(
-        "keydown",
-        function (e) {
-
-            if (e.key === "Escape") {
-
-                closeDemoModal();
-            }
-
-        }
-    );
-
-
-    /* =========================================================
-       CLOSE MODAL ON OUTSIDE CLICK
-    ========================================================= */
-
-    window.addEventListener(
-        "click",
-        function (e) {
-
-            const modal =
-                document.getElementById(
-                    "demoModal"
-                );
-
-            if (e.target === modal) {
-
-                closeDemoModal();
-            }
-
-        }
-    );
-
-
-    /* =========================================================
-       DEMO FORM SUBMIT
-    ========================================================= */
-
-    document
-        .getElementById("demoForm")
-        .addEventListener(
-            "submit",
-            function (e) {
-
-                e.preventDefault();
-
-                const school =
-                    document
-                        .getElementById("schoolName")
-                        .value
-                        .trim();
-
-                const person =
-                    document
-                        .getElementById("personName")
-                        .value
-                        .trim();
-
-                const phone =
-                    document
-                        .getElementById("phoneNumber")
-                        .value
-                        .trim();
-
-                /* =========================
-                   PHONE VALIDATION
-                ========================= */
-
-                const phoneRegex =
-                    /^[0-9]{10}$/;
-
-                if (!phoneRegex.test(phone)) {
-
-                    alert(
-                        "Enter valid 10 digit phone number"
+                if (
+                    !Number.isFinite(monthlyPrice) ||
+                    !Number.isFinite(yearlyPrice)
+                ) {
+                    console.warn(
+                        "Invalid pricing data for card:",
+                        card.querySelector(".plan-label")?.textContent.trim()
                     );
 
                     return;
                 }
 
-                /* =========================
-                   WHATSAPP MESSAGE
-                ========================= */
+                const selectedPrice =
+                    type === "monthly" ? monthlyPrice : yearlyPrice;
 
-                const message =
+                amount.textContent = "₹" + formatINR(selectedPrice);
 
-                    `Hello, I want a live demo of ShalaSync ERP.
+                if (duration) {
+                    duration.textContent =
+                        type === "monthly" ? "/month" : "/year";
+                }
 
-School Name: ${school}
-Contact Person: ${person}
-Phone: ${phone}`;
+                if (note) {
+                    if (type === "monthly") {
+                        note.textContent =
+                            "Annual plan: ₹" +
+                            formatINR(yearlyPrice) +
+                            "/year";
+                    } else {
+                        const effectiveMonthly = yearlyPrice / 12;
 
-                const whatsappUrl =
+                        note.textContent =
+                            "Effective ₹" +
+                            formatINR(effectiveMonthly) +
+                            "/month when billed yearly";
+                    }
+                }
+            });
+        }
 
-                    `https://wa.me/918308452931?text=${encodeURIComponent(message)}`;
+        /*
+           Preserve the global function required by existing HTML:
+           onclick="toggleBilling('monthly', this)"
+        */
 
-                window.open(
-                    whatsappUrl,
-                    "_blank"
+        window.toggleBilling = toggleBilling;
+
+        /*
+           Initialize immediately if the DOM is already ready;
+           otherwise wait for DOMContentLoaded.
+           This avoids the late-loaded-script initialization problem.
+        */
+
+        function initializeBillingToggle() {
+            const pricingSection = document.querySelector("#plans");
+
+            if (!pricingSection) {
+                return;
+            }
+
+            const activeButton =
+                pricingSection.querySelector(".billing-btn.active") ||
+                pricingSection.querySelector(
+                    '.billing-btn[data-cycle="monthly"]'
                 );
 
-                /* =========================
-                   RESET FORM
-                ========================= */
+            if (activeButton) {
+                toggleBilling(
+                    activeButton.dataset.cycle || "monthly",
+                    activeButton
+                );
+            }
+        }
 
-                document
-                    .getElementById("demoForm")
-                    .reset();
+        if (document.readyState === "loading") {
+            document.addEventListener(
+                "DOMContentLoaded",
+                initializeBillingToggle,
+                { once: true }
+            );
+        } else {
+            initializeBillingToggle();
+        }
 
-                closeDemoModal();
 
+    })();
+
+
+</script>
+
+
+<script>
+    /* =========================================================
+       ERP ECOSYSTEM — POINTER INTERACTION
+       - Desktop mouse tilt
+       - Smooth reset on pointer leave
+       - Disabled for touch and reduced-motion users
+    ========================================================= */
+
+    (function () {
+        "use strict";
+
+        function initEcosystemCards() {
+            const section = document.querySelector(".erp-ecosystem");
+
+            if (!section) return;
+
+            const cards = section.querySelectorAll("[data-tilt]");
+
+            if (!cards.length) return;
+
+            const reducedMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            );
+
+            const finePointer = window.matchMedia(
+                "(hover: hover) and (pointer: fine)"
+            );
+
+            if (!finePointer.matches || reducedMotion.matches) {
+                return;
+            }
+
+            cards.forEach(function (card) {
+                let frameId = null;
+
+                function resetCard() {
+                    if (frameId) {
+                        cancelAnimationFrame(frameId);
+                        frameId = null;
+                    }
+
+                    card.style.setProperty("--tilt-x", "0deg");
+                    card.style.setProperty("--tilt-y", "0deg");
+                    card.style.setProperty("--lift-y", "0px");
+                }
+
+                card.addEventListener("pointermove", function (event) {
+                    if (event.pointerType !== "mouse") return;
+
+                    const rect = card.getBoundingClientRect();
+
+                    if (!rect.width || !rect.height) return;
+
+                    const pointerX =
+                        (event.clientX - rect.left) / rect.width;
+
+                    const pointerY =
+                        (event.clientY - rect.top) / rect.height;
+
+                    /*
+                      Small rotations create a subtle depth effect.
+                      Keep the range limited to avoid a distracting UI.
+                    */
+                    const rotateY = (pointerX - 0.5) * 7;
+                    const rotateX = (0.5 - pointerY) * 7;
+
+                    if (frameId) {
+                        cancelAnimationFrame(frameId);
+                    }
+
+                    frameId = requestAnimationFrame(function () {
+                        card.style.setProperty(
+                            "--tilt-x",
+                            rotateX.toFixed(2) + "deg"
+                        );
+
+                        card.style.setProperty(
+                            "--tilt-y",
+                            rotateY.toFixed(2) + "deg"
+                        );
+
+                        card.style.setProperty("--lift-y", "-4px");
+
+                        frameId = null;
+                    });
+                });
+
+                card.addEventListener("pointerleave", resetCard);
+
+                card.addEventListener("pointercancel", resetCard);
+
+                card.addEventListener("blur", resetCard);
+            });
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener(
+                "DOMContentLoaded",
+                initEcosystemCards,
+                { once: true }
+            );
+        } else {
+            initEcosystemCards();
+        }
+    })();
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const ecosystem = document.querySelector(".erp-ecosystem");
+
+        if (!ecosystem || !("IntersectionObserver" in window)) {
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    ecosystem.classList.toggle(
+                        "ecosystem-in-view",
+                        entry.isIntersecting
+                    );
+                });
+            },
+            {
+                threshold: 0.05
             }
         );
 
+        observer.observe(ecosystem);
+    });
+</script>
+
+
+
+<script>
+
+    /* =========================================================
+   ERP PREVIEW — MODULE SWITCHING
+========================================================= */
+
+    (() => {
+        "use strict";
+
+        function initERPPreview() {
+            const section = document.querySelector("#erp-preview");
+
+            if (!section) return;
+
+            const image = section.querySelector("#previewImage");
+            const tabs = section.querySelectorAll(".preview-tab");
+
+            const badge1 = section.querySelector("#badge1");
+            const badge2 = section.querySelector("#badge2");
+            const badge3 = section.querySelector("#badge3");
+
+            const badge1Sub = section.querySelector("#badge1Sub");
+            const badge2Sub = section.querySelector("#badge2Sub");
+            const badge3Sub = section.querySelector("#badge3Sub");
+
+            const fallback = section.querySelector(".preview-image-fallback");
+
+            if (
+                !image ||
+                !tabs.length ||
+                !badge1 ||
+                !badge2 ||
+                !badge3 ||
+                !badge1Sub ||
+                !badge2Sub ||
+                !badge3Sub
+            ) {
+                return;
+            }
+
+            /*
+             * IMPORTANT:
+             * Change these paths only after confirming the images exist.
+             * Until then, the existing dashboard preview remains the
+             * default image.
+             */
+            const previewData = {
+                dashboard: {
+                    image: "{{ url_for('static', filename='images/dashboard_preview.png') }}",
+                    alt: "ShalaSarthi ERP dashboard preview",
+                    badges: [
+                        ["Live Dashboard", "School Overview"],
+                        ["Cloud Based", "Access From Anywhere"],
+                        ["Connected Modules", "One Unified Platform"]
+                    ]
+                },
+
+                students: {
+                    image: "{{ url_for('static', filename='images/student_preview.png') }}",
+                    alt: "ShalaSarthi student management preview",
+                    badges: [
+                        ["Student Records", "Organized Information"],
+                        ["Quick Access", "Student Profiles"],
+                        ["Simplified Workflow", "Student Management"]
+                    ]
+                },
+
+                fees: {
+                    image: "{{ url_for('static', filename='images/fees_preview.png') }}",
+                    alt: "ShalaSarthi fee management preview",
+                    badges: [
+                        ["Fee Management", "Track Collections"],
+                        ["Clear Records", "Fee Transactions"],
+                        ["Easy Monitoring", "Payment Overview"]
+                    ]
+                },
+
+                certificates: {
+                    image: "{{ url_for('static', filename='images/certificate_preview.png') }}",
+                    alt: "ShalaSarthi certificate management preview",
+                    badges: [
+                        ["Certificate Tools", "TC & Bonafide"],
+                        ["Organized Records", "Student Documents"],
+                        ["Faster Processing", "Certificate Workflow"]
+                    ]
+                },
+
+                reports: {
+                    image: "{{ url_for('static', filename='images/reports_preview.png') }}",
+                    alt: "ShalaSarthi reports and analytics preview",
+                    badges: [
+                        ["Reports", "School Overview"],
+                        ["Data Insights", "Organized Information"],
+                        ["Better Visibility", "Management Reports"]
+                    ]
+                },
+
+                staff: {
+                    image: "{{ url_for('static', filename='images/staff_preview.png') }}",
+                    alt: "ShalaSarthi staff management preview",
+                    badges: [
+                        ["Staff Management", "Staff Records"],
+                        ["Centralized Data", "Organized Profiles"],
+                        ["Simpler Administration", "Staff Operations"]
+                    ]
+                }
+            };
+
+            const fallbackImage = previewData.dashboard.image;
+
+            function setBadgeText(element, value) {
+                element.textContent = value;
+            }
+
+            function setBadgeIcon(index, iconClass) {
+                const icon = section.querySelector(
+                    `.card-${index} .preview-floating-icon i`
+                );
+
+                if (icon) {
+                    icon.className = iconClass;
+                }
+            }
+
+            const badgeIcons = {
+                dashboard: [
+                    "fa-solid fa-chart-column",
+                    "fa-solid fa-cloud",
+                    "fa-solid fa-bolt"
+                ],
+                students: [
+                    "fa-solid fa-users",
+                    "fa-solid fa-user-check",
+                    "fa-solid fa-folder-open"
+                ],
+                fees: [
+                    "fa-solid fa-wallet",
+                    "fa-solid fa-receipt",
+                    "fa-solid fa-chart-line"
+                ],
+                certificates: [
+                    "fa-solid fa-file-circle-check",
+                    "fa-solid fa-folder-open",
+                    "fa-solid fa-bolt"
+                ],
+                reports: [
+                    "fa-solid fa-chart-line",
+                    "fa-solid fa-magnifying-glass-chart",
+                    "fa-solid fa-chart-pie"
+                ],
+                staff: [
+                    "fa-solid fa-chalkboard-user",
+                    "fa-solid fa-users",
+                    "fa-solid fa-clipboard-check"
+                ]
+            };
+
+            function showFallback() {
+                if (fallback) {
+                    fallback.hidden = false;
+                }
+            }
+
+            function hideFallback() {
+                if (fallback) {
+                    fallback.hidden = true;
+                }
+            }
+
+            function updatePreview(tab) {
+                const key = tab.dataset.tab;
+                const data = previewData[key];
+
+                if (!data) return;
+
+                tabs.forEach((item) => {
+                    const active = item === tab;
+
+                    item.classList.toggle("active", active);
+                    item.setAttribute("aria-pressed", String(active));
+                });
+
+                /*
+                 * Update image and badges together.
+                 * The image load handler verifies that the selected file exists.
+                 */
+                image.classList.add("is-changing");
+                hideFallback();
+
+                const nextImage = new Image();
+
+                nextImage.onload = () => {
+                    image.src = data.image;
+                    image.alt = data.alt;
+
+                    image.classList.remove("is-changing");
+                    hideFallback();
+                };
+
+                nextImage.onerror = () => {
+                    image.classList.remove("is-changing");
+
+                    /*
+                     * If a non-dashboard preview does not exist yet,
+                     * retain the dashboard screenshot rather than
+                     * leaving a broken image visible.
+                     */
+                    if (key !== "dashboard") {
+                        const dashboard = previewData.dashboard;
+                        image.src = fallbackImage;
+                        image.alt = dashboard.alt;
+                    }
+
+                    showFallback();
+                };
+
+                nextImage.src = data.image;
+
+                const badges = data.badges;
+
+                setBadgeText(badge1, badges[0][0]);
+                setBadgeText(badge1Sub, badges[0][1]);
+
+                setBadgeText(badge2, badges[1][0]);
+                setBadgeText(badge2Sub, badges[1][1]);
+
+                setBadgeText(badge3, badges[2][0]);
+                setBadgeText(badge3Sub, badges[2][1]);
+
+                const icons = badgeIcons[key] || badgeIcons.dashboard;
+
+                setBadgeIcon(1, icons[0]);
+                setBadgeIcon(2, icons[1]);
+                setBadgeIcon(3, icons[2]);
+            }
+
+            tabs.forEach((tab) => {
+                tab.addEventListener("click", () => {
+                    updatePreview(tab);
+                });
+            });
+
+            /*
+             * Initial selection.
+             * This also works if the section is added after DOMContentLoaded.
+             */
+            const initialTab =
+                section.querySelector('.preview-tab[data-tab="dashboard"]') ||
+                tabs[0];
+
+            updatePreview(initialTab);
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initERPPreview, {
+                once: true
+            });
+        } else {
+            initERPPreview();
+        }
+    })();
 </script>
 
 {% endblock %}
