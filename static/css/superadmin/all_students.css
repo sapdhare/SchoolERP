@@ -137,6 +137,7 @@
 
     letter-spacing: -0.55px;
 }
+
 /* =========================================================
    HEADER BADGE
 ========================================================= */
@@ -177,7 +178,7 @@
 
 .sa2-title-text p {
 
-   margin: 0;
+    margin: 0;
 
     color: #64748b;
 
@@ -270,13 +271,7 @@
     ============================================== */
 
     .sa2-all-student-wrapper {
-
-        width: 100%;
-
-        padding:
-            18px 16px 32px;
-
-        margin: 0;
+        padding: 14px 14px 22px;
 
     }
 
@@ -287,21 +282,16 @@
 
     .sa2-page-header {
 
-        width: 100%;
-
-        display: flex;
-
+        align-items: stretch;
         flex-direction: column;
 
-        align-items: stretch;
+        gap: 17px;
 
-        justify-content: flex-start;
+        padding: 18px;
 
-        gap: 14px;
+        margin-bottom: 18px;
 
-        margin-bottom: 20px;
-
-        padding: 0;
+        border-radius: 16px;
 
     }
 
@@ -312,13 +302,10 @@
 
     .sa2-title-row {
 
-        width: 100%;
-
-        display: flex;
-
-        align-items: center;
-
+        align-items: flex-start;
         gap: 12px;
+
+        width: 100%;
 
     }
 
@@ -329,14 +316,13 @@
 
     .sa2-title-icon {
 
-        width: 44px;
-        height: 44px;
+        width: 45px;
+        height: 45px;
 
-        flex: 0 0 44px;
+        flex-basis: 45px;
 
-        border-radius: 13px;
-
-        font-size: 21px;
+        border-radius: 12px;
+        font-size: 17px;
 
     }
 
@@ -347,9 +333,7 @@
 
     .sa2-title-text {
 
-        min-width: 0;
-
-        flex: 1;
+        gap: 7px;
 
     }
 
@@ -357,25 +341,16 @@
     .sa2-title-text h1 {
 
         font-size: 23px;
-
-        line-height: 1.25;
-
-        letter-spacing: -0.3px;
-
-        white-space: normal;
+        letter-spacing: -0.5px;
 
     }
 
 
     .sa2-title-text p {
 
-        margin-top: 5px;
-
-        font-size: 13px;
-
-        line-height: 1.45;
-
-        max-width: 100%;
+        max-width: none;
+        font-size: 12.5px;
+        line-height: 1.55;
 
     }
 
@@ -422,51 +397,59 @@
 @media (max-width: 480px) {
 
     .sa2-all-student-wrapper {
-
-        padding:
-            15px 13px 28px;
+        padding: 14px 14px 22px;
 
     }
 
 
     .sa2-page-header {
 
-        margin-bottom: 17px;
+       padding: 15px;
+        gap: 15px;
+
+        margin-bottom: 16px;
+
+        border-radius: 14px;
 
     }
 
 
     .sa2-title-row {
 
-        gap: 10px;
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 7px;
 
     }
 
 
     .sa2-title-icon {
 
-        width: 40px;
-        height: 40px;
+         width: 39px;
+        height: 39px;
 
-        flex-basis: 40px;
+        flex-basis: 39px;
 
         border-radius: 11px;
-
-        font-size: 19px;
-
+        font-size: 15px;
     }
 
 
     .sa2-title-text h1 {
 
-        font-size: 20px;
+         font-size: 20px;
+        line-height: 1.25;
+
+        letter-spacing: -0.35px;
 
     }
 
 
     .sa2-title-text p {
 
-        font-size: 12px;
+       font-size: 11.5px;
+        line-height: 1.55;
 
     }
 

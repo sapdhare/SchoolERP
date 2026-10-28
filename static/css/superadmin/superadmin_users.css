@@ -14,9 +14,15 @@
     box-sizing: border-box;
 }
 
-.su-header {
+/* =========================================================
+USERS MANAGEMENT HEADER
+Desktop / Tablet / Mobile
+========================================================= */
 
+.su-header {
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 
     display: flex;
     align-items: center;
@@ -25,45 +31,39 @@
     gap: 24px;
 
     padding: 22px 24px;
-
-    margin-bottom: 24px;
+    margin: 0 0 22px;
 
     background: #ffffff;
 
-    border: 1px solid #e8edf3;
-
+    border: 1px solid #e5eaf2;
     border-radius: 18px;
 
-    box-shadow:
-        0 4px 18px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.045);
 
-    box-sizing: border-box;
+    font-family: inherit;
+
 }
 
-
 /* =========================================================
-   HEADER CONTENT
+HEADER CONTENT
 ========================================================= */
 
 .su-header-content {
-
-    min-width: 0;
-
     display: flex;
     align-items: center;
 
-    gap: 16px;
+    flex: 1 1 auto;
+    min-width: 0;
 
-    flex: 1;
+    gap: 15px;
+
 }
 
-
 /* =========================================================
-   HEADER ICON
+PAGE ICON
 ========================================================= */
 
 .su-header-icon {
-
     width: 52px;
     height: 52px;
 
@@ -73,259 +73,230 @@
     align-items: center;
     justify-content: center;
 
-    border-radius: 14px;
-
-    background: linear-gradient(135deg,
-            #eff6ff 0%,
-            #eef2ff 100%);
-
-    border: 1px solid #dbeafe;
-
     color: #4f46e5;
+
+    background: linear-gradient(145deg,
+            #eef2ff 0%,
+            #f5f3ff 100%);
+
+    border: 1px solid #e0e7ff;
+    border-radius: 15px;
 
     font-size: 20px;
 
-    box-sizing: border-box;
 }
 
-
 .su-header-icon i {
-
     line-height: 1;
 }
 
-
 /* =========================================================
-   HEADER TEXT
+HEADER TEXT
 ========================================================= */
 
 .su-header-text {
-
-    min-width: 0;
-
     display: flex;
     flex-direction: column;
 
-    gap: 5px;
+    flex: 1 1 auto;
+    min-width: 0;
+
+    gap: 7px;
+
 }
 
-
 /* =========================================================
-   TITLE ROW
+TITLE ROW
 ========================================================= */
 
 .su-header-title-row {
-
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
 
-    gap: 11px;
+    gap: 9px 12px;
 
     min-width: 0;
+
 }
 
-
 /* =========================================================
-   TITLE
+PAGE TITLE
 ========================================================= */
 
 .su-header h1 {
-
     margin: 0;
 
-    color: #0f172a;
+    color: #111827;
 
-    font-size: 28px;
-
-    line-height: 1.2;
-
+    font-size: clamp(23px, 2vw, 28px);
     font-weight: 800;
 
-    letter-spacing: -0.55px;
+    line-height: 1.2;
+    letter-spacing: -0.7px;
+
+    overflow-wrap: anywhere;
+
 }
 
-
 /* =========================================================
-   HEADER BADGE
+ACCESS CONTROL BADGE
 ========================================================= */
 
 .su-header-badge {
-
     display: inline-flex;
     align-items: center;
+    justify-content: center;
 
     gap: 6px;
 
-    padding: 5px 9px;
+    padding: 6px 10px;
 
+    color: #5145cd;
+
+    background: #f5f3ff;
+
+    border: 1px solid #e7e3ff;
     border-radius: 999px;
 
-    background: #f8fafc;
-
-    border: 1px solid #e2e8f0;
-
-    color: #64748b;
-
     font-size: 11px;
-
-    line-height: 1;
-
     font-weight: 700;
+    line-height: 1.2;
 
     white-space: nowrap;
+
 }
 
-
 .su-header-badge i {
-
     color: #6366f1;
-
     font-size: 10px;
 }
 
-
 /* =========================================================
-   DESCRIPTION
+DESCRIPTION
 ========================================================= */
 
-.su-header p {
+.su-header-text p {
+    max-width: 650px;
 
     margin: 0;
 
     color: #64748b;
 
-    font-size: 14px;
-
-    line-height: 1.5;
-
+    font-size: 13px;
     font-weight: 500;
 
-    max-width: 620px;
+    line-height: 1.6;
+
 }
 
-
 /* =========================================================
-   HEADER ACTIONS
+HEADER ACTIONS
 ========================================================= */
 
 .su-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 
     flex: 0 0 auto;
 
-    display: flex;
-    align-items: center;
 }
 
-
 /* =========================================================
-   ADD USER BUTTON
+ADD USER BUTTON
 ========================================================= */
 
 .su-add-user-btn {
-
-    height: 46px;
+    min-height: 46px;
 
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    gap: 9px;
+    gap: 10px;
 
-    padding: 0 16px 0 8px;
-
-    border: 0;
-
-    border-radius: 12px;
-
-    background: linear-gradient(135deg,
-            #4f46e5 0%,
-            #6366f1 100%);
+    padding: 7px 17px 7px 8px;
 
     color: #ffffff;
 
+    background: linear-gradient(135deg,
+            #5145ed 0%,
+            #665cf5 100%);
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
     font-family: inherit;
-
     font-size: 13px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.1px;
-
-    cursor: pointer;
+    font-weight: 750;
+    line-height: 1.2;
 
     white-space: nowrap;
 
-    box-shadow:
-        0 6px 16px rgba(79, 70, 229, 0.20);
+    cursor: pointer;
+
+    box-shadow: 0 5px 13px rgba(79, 70, 229, 0.18);
 
     transition:
-        transform 0.2s ease,
+        background 0.2s ease,
         box-shadow 0.2s ease,
-        filter 0.2s ease;
+        transform 0.2s ease;
+
 }
 
+.su-add-user-btn {
+    background: linear-gradient(135deg,
+            #4338ca 0%,
+            #5b50e8 100%);
 
-.su-add-user-btn:hover {
+    box-shadow: 0 8px 18px rgba(79, 70, 229, 0.25);
 
     transform: translateY(-1px);
 
-    box-shadow:
-        0 9px 22px rgba(79, 70, 229, 0.26);
-
-    filter: brightness(1.02);
 }
 
-
-.su-add-user-btn:active {
-
+.su-add-user-btn {
     transform: translateY(0);
-
-    box-shadow:
-        0 4px 12px rgba(79, 70, 229, 0.18);
+    box-shadow: 0 3px 8px rgba(79, 70, 229, 0.16);
 }
 
+.su-add-user-btn {
+    outline: 3px solid rgba(99, 102, 241, 0.35);
+    outline-offset: 3px;
+}
 
 /* =========================================================
-   ADD USER ICON
+BUTTON ICON
 ========================================================= */
 
 .su-add-user-icon {
+    width: 31px;
+    height: 31px;
 
-    width: 30px;
-    height: 30px;
+    flex: 0 0 31px;
 
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 
+    color: #ffffff;
+
+    background: rgba(255, 255, 255, 0.15);
+
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 9px;
-
-    background: rgba(255, 255, 255, 0.16);
-
-    border: 1px solid rgba(255,
-            255,
-            255,
-            0.18);
 
     font-size: 12px;
 
-    flex: 0 0 30px;
 }
-
 
 .su-add-user-icon i {
-
     line-height: 1;
 }
 
-
-/* =========================================================
-   BUTTON TEXT
-========================================================= */
-
 .su-add-user-text {
-
-    line-height: 1;
+    line-height: 1.2;
 }
 
 /* =========================================================
@@ -335,366 +306,277 @@
 
 @media (max-width: 768px) {
 
+    .su-wrapper {
+        padding: 14px 14px 22px;
+    }
+
     /* =====================================================
        HEADER
     ===================================================== */
 
     .su-header {
-
-        display: flex;
-
+        align-items: stretch;
         flex-direction: column;
 
-        align-items: stretch;
+        gap: 17px;
 
-        gap: 16px;
-
-        padding: 17px;
+        padding: 18px;
 
         margin-bottom: 18px;
 
         border-radius: 16px;
-
     }
-
-
-    /* =====================================================
-       HEADER CONTENT
-    ===================================================== */
 
     .su-header-content {
-
-        width: 100%;
-
-        display: flex;
-
         align-items: flex-start;
-
         gap: 12px;
 
+        width: 100%;
     }
-
-
-    /* =====================================================
-       HEADER ICON
-    ===================================================== */
 
     .su-header-icon {
+        width: 45px;
+        height: 45px;
 
-        width: 44px;
-        height: 44px;
-
-        flex: 0 0 44px;
+        flex-basis: 45px;
 
         border-radius: 12px;
-
         font-size: 17px;
-
     }
-
-
-    /* =====================================================
-       HEADER TEXT
-    ===================================================== */
 
     .su-header-text {
-
-        flex: 1;
-
-        min-width: 0;
-
-        gap: 6px;
-
+        gap: 7px;
     }
-
-
-    /* =====================================================
-       TITLE ROW
-    ===================================================== */
 
     .su-header-title-row {
-
-        display: flex;
-
-        align-items: flex-start;
-
-        flex-wrap: wrap;
-
-        gap: 7px 8px;
-
+        align-items: center;
+        gap: 8px 10px;
     }
-
-
-    /* =====================================================
-       TITLE
-    ===================================================== */
 
     .su-header h1 {
-
-        font-size: 21px;
-
-        line-height: 1.25;
-
-        letter-spacing: -0.35px;
-
+        font-size: 23px;
+        letter-spacing: -0.5px;
     }
-
-
-    /* =====================================================
-       BADGE
-    ===================================================== */
 
     .su-header-badge {
-
-        padding: 4px 7px;
-
-        font-size: 9px;
-
-        gap: 4px;
-
+        padding: 5px 8px;
+        font-size: 10px;
     }
 
-
-    .su-header-badge i {
-
-        font-size: 8px;
-
-    }
-
-
-    /* =====================================================
-       DESCRIPTION
-    ===================================================== */
-
-    .su-header p {
-
-        font-size: 12px;
-
-        line-height: 1.5;
-
+    .su-header-text p {
         max-width: none;
-
+        font-size: 12.5px;
+        line-height: 1.55;
     }
-
-
-    /* =====================================================
-       ACTION AREA
-    ===================================================== */
 
     .su-header-actions {
-
         width: 100%;
-
-        display: block;
-
     }
-
-
-    /* =====================================================
-       ADD USER BUTTON
-    ===================================================== */
 
     .su-add-user-btn {
-
         width: 100%;
+        min-height: 45px;
 
-        height: 44px;
+        padding: 7px 12px;
 
-        padding: 0 12px;
+        gap: 9px;
 
         border-radius: 11px;
-
-        gap: 8px;
-
-        font-size: 12.5px;
-
+        font-size: 13px;
     }
-
-
-    /* =====================================================
-       BUTTON ICON
-    ===================================================== */
 
     .su-add-user-icon {
+        width: 29px;
+        height: 29px;
 
-        width: 28px;
-        height: 28px;
-
-        flex: 0 0 28px;
-
-        border-radius: 8px;
-
-        font-size: 11px;
-
+        flex-basis: 29px;
     }
-
 }
 
 /* =========================================================
-   EXTRA SMALL MOBILE
+SMALL MOBILE — 480px
 ========================================================= */
 
 @media (max-width: 480px) {
 
     .su-header {
-
         padding: 15px;
+        gap: 15px;
 
-        border-radius: 15px;
+        margin-bottom: 16px;
 
-        gap: 14px;
-
+        border-radius: 14px;
     }
-
 
     .su-header-content {
-
+        align-items: flex-start;
         gap: 10px;
-
     }
-
 
     .su-header-icon {
+        width: 39px;
+        height: 39px;
 
-        width: 40px;
-        height: 40px;
-
-        flex-basis: 40px;
+        flex-basis: 39px;
 
         border-radius: 11px;
-
         font-size: 15px;
-
     }
 
+    .su-header-text {
+        gap: 8px;
+    }
+
+    .su-header-title-row {
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 7px;
+    }
 
     .su-header h1 {
+        font-size: 20px;
+        line-height: 1.25;
 
-        font-size: 19px;
-
-        letter-spacing: -0.25px;
-
+        letter-spacing: -0.35px;
     }
-
-
-    .su-header p {
-
-        font-size: 11.5px;
-
-        line-height: 1.45;
-
-    }
-
 
     .su-header-badge {
+        gap: 5px;
 
-        font-size: 8.5px;
+        padding: 5px 8px;
 
-        padding: 4px 6px;
-
+        font-size: 9px;
     }
 
+    .su-header-badge i {
+        font-size: 9px;
+    }
+
+    .su-header-text p {
+        font-size: 11.5px;
+        line-height: 1.55;
+    }
+
+    .su-header-actions {
+        width: 100%;
+    }
 
     .su-add-user-btn {
+        width: 100%;
+        min-height: 43px;
 
-        height: 42px;
+        gap: 8px;
+
+        padding: 6px 10px;
+
+        border-radius: 10px;
 
         font-size: 12px;
+    }
 
+    .su-add-user-icon {
+        width: 28px;
+        height: 28px;
+
+        flex-basis: 28px;
+
+        border-radius: 8px;
+        font-size: 11px;
     }
 
 }
 
+/* =========================================================
+REDUCED MOTION ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .su-add-user-btn {
+        transition: none;
+    }
+
+    .su-add-user-btn:hover,
+    .su-add-user-btn:active {
+        transform: none;
+    }
+
+}
 
 /* =========================================================
-   USERS KPI CARDS
+   USERS MANAGEMENT KPI CARDS
+   Clean, professional dashboard design
 ========================================================= */
 
 .su-stats-grid {
-
     width: 100%;
-
     display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 18px;
-
-    margin-bottom: 24px;
-
-}
-
-
-/* =========================================================
-   BASE STAT CARD
-========================================================= */
-
-.su-stat-card {
-
-    position: relative;
-
-    min-width: 0;
-
-    min-height: 104px;
-
-    padding: 18px 19px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 14px;
-
-    border-radius: 18px;
-
-    overflow: hidden;
-
-    border: 1px solid rgba(255, 255, 255, 0.75);
-
-    box-shadow:
-        0 8px 24px rgba(15, 23, 42, 0.06);
-
-    transition:
-        transform .22s ease,
-        box-shadow .22s ease;
-
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0 0 24px;
     box-sizing: border-box;
 }
 
 
 /* =========================================================
-   HOVER
+   BASE CARD
 ========================================================= */
 
-.su-stat-card:hover {
+.su-stat-card {
+    --stat-color: #0d9488;
+    --stat-soft: #ecfdf5;
 
-    transform: translateY(-3px);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 
-    box-shadow:
-        0 12px 28px rgba(15, 23, 42, 0.09);
+    min-width: 0;
+    min-height: 142px;
 
+    padding: 19px 20px 18px;
+
+    background: #ffffff;
+    border: 1px solid #e5ebf3;
+    border-radius: 16px;
+
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.035);
+
+    overflow: hidden;
+    box-sizing: border-box;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 
 /* =========================================================
-   CONTENT
+   HOVER EFFECT
 ========================================================= */
 
-.su-stat-content {
+.su-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--stat-color);
+
+    box-shadow:
+        0 8px 22px rgba(15, 23, 42, 0.07);
+}
+
+
+/* =========================================================
+   TOP ROW
+========================================================= */
+
+.su-stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 
     min-width: 0;
-
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: center;
-
-    gap: 6px;
-
 }
 
 
@@ -703,165 +585,163 @@
 ========================================================= */
 
 .su-stat-label {
-
     display: block;
+    min-width: 0;
 
-    color: #475569;
+    color: #64748b;
 
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 700;
 
-    line-height: 1.2;
+    letter-spacing: 0.15px;
 
-    font-weight: 600;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
+    overflow-wrap: anywhere;
 }
 
 
 /* =========================================================
-   VALUE
-========================================================= */
-
-.su-stat-value {
-
-    display: block;
-
-    color: #0f172a;
-
-    font-size: 28px;
-
-    line-height: 1;
-
-    font-weight: 800;
-
-    letter-spacing: -0.5px;
-
-}
-
-
-/* =========================================================
-   ICON CONTAINER
+   ICON
 ========================================================= */
 
 .su-stat-icon {
-
-    width: 46px;
-
-    height: 46px;
-
-    flex: 0 0 46px;
-
-    display: flex;
-
+    display: inline-flex;
     align-items: center;
-
     justify-content: center;
 
-    border-radius: 14px;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+
+    border-radius: 12px;
+
+    background: var(--stat-soft);
+    color: var(--stat-color);
 
     font-size: 17px;
 
-    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(226, 232, 240, 0.8);
 
-    border: 1px solid rgba(255, 255, 255, 0.72);
-
-    box-shadow:
-        0 5px 14px rgba(15, 23, 42, 0.05);
-
+    box-sizing: border-box;
 }
 
 
 /* =========================================================
-   TOTAL USERS
+   BOTTOM ROW
+========================================================= */
+
+.su-stat-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 7px;
+    min-width: 0;
+    margin-top: 15px;
+}
+
+
+/* =========================================================
+   KPI VALUE
+========================================================= */
+
+.su-stat-value {
+    display: block;
+
+    color: #172554;
+
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 800;
+
+    letter-spacing: -0.8px;
+    font-variant-numeric: tabular-nums;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   CAPTION
+========================================================= */
+
+.su-stat-caption {
+    display: block;
+    max-width: 100%;
+
+    color: #94a3b8;
+
+    font-size: 10.5px;
+    line-height: 1.5;
+    font-weight: 500;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   BOTTOM ACCENT
+========================================================= */
+
+.su-stat-accent {
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+
+    width: 34px;
+    height: 3px;
+
+    border-radius: 5px 5px 0 0;
+
+    background: var(--stat-color);
+
+    transition: width 0.2s ease;
+}
+
+.su-stat-card:hover .su-stat-accent {
+    width: calc(100% - 40px);
+}
+
+
+/* =========================================================
+   TOTAL USERS — TEAL
 ========================================================= */
 
 .su-stat-card.total-users {
-
-    background:
-        linear-gradient(135deg,
-            #ecfdf5 0%,
-            #d1fae5 55%,
-            #bbf7d0 100%);
-
-}
-
-
-.su-stat-card.total-users .su-stat-icon {
-
-    color: #059669;
-
+    --stat-color: #0d9488;
+    --stat-soft: #e6f8f5;
 }
 
 
 /* =========================================================
-   ACTIVE USERS
+   ACTIVE USERS — GREEN
 ========================================================= */
 
 .su-stat-card.active-users {
-
-    background:
-        linear-gradient(135deg,
-            #ecfdf5 0%,
-            #ccfbf1 55%,
-            #a7f3d0 100%);
-
-}
-
-
-.su-stat-card.active-users .su-stat-icon {
-
-    color: #0f766e;
-
+    --stat-color: #16a34a;
+    --stat-soft: #ecfdf3;
 }
 
 
 /* =========================================================
-   CLERK USERS
+   CLERK ACCOUNTS — BLUE
 ========================================================= */
 
 .su-stat-card.clerk-users {
-
-    background:
-        linear-gradient(135deg,
-            #ecfeff 0%,
-            #cffafe 55%,
-            #bae6fd 100%);
-
-}
-
-
-.su-stat-card.clerk-users .su-stat-icon {
-
-    color: #0284c7;
-
+    --stat-color: #0284c7;
+    --stat-soft: #eff8ff;
 }
 
 
 /* =========================================================
-   ADMIN USERS
+   ADMIN ACCOUNTS — VIOLET
 ========================================================= */
 
 .su-stat-card.admin-users {
-
-    background:
-        linear-gradient(135deg,
-            #f5f3ff 0%,
-            #ede9fe 55%,
-            #ddd6fe 100%);
-
+    --stat-color: #7c3aed;
+    --stat-soft: #f5f0ff;
 }
 
-
-.su-stat-card.admin-users .su-stat-icon {
-
-    color: #7c3aed;
-
-}
 
 /* =========================================================
    USERS KPI CARDS
@@ -993,189 +873,217 @@
     }
 
 }
+/* =========================================================
+   EXTRA SMALL MOBILE
+========================================================= */
+
+@media (max-width: 360px) {
+    .su-stats-grid {
+        gap: 8px;
+    }
+
+    .su-stat-card {
+        min-height: 112px;
+        padding: 11px 10px 13px;
+    }
+
+    .su-stat-label {
+        font-size: 10px;
+    }
+
+    .su-stat-icon {
+        width: 29px;
+        height: 29px;
+        flex-basis: 29px;
+        font-size: 12px;
+    }
+
+    .su-stat-value {
+        font-size: 22px;
+    }
+
+    .su-stat-caption {
+        font-size: 9px;
+    }
+
+    .su-stat-accent {
+        left: 10px;
+    }
+
+    .su-stat-card:hover .su-stat-accent {
+        width: calc(100% - 20px);
+    }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .su-stat-card,
+    .su-stat-accent {
+        transition: none;
+    }
+
+    .su-stat-card:hover {
+        transform: none;
+    }
+}
 
 
 
 /* =========================================================
-   USERS FILTER TOOLBAR
+   USERS FILTER TOOLBAR — MODERN SINGLE ROW
 ========================================================= */
 
 .su-filter-box {
-
     width: 100%;
-
     display: grid;
 
     grid-template-columns:
-        minmax(260px, 1.6fr) minmax(145px, .85fr) minmax(145px, .85fr) minmax(175px, 1fr) auto;
+        minmax(200px, 1.7fr)
+        minmax(125px, 0.9fr)
+        minmax(125px, 0.9fr)
+        minmax(150px, 1.1fr)
+        minmax(125px, 0.85fr)
+        82px;
 
     align-items: center;
-
     gap: 10px;
 
-    padding: 14px;
+    padding: 12px;
 
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 
     background: #ffffff;
 
-    border: 1px solid #e5eaf0;
-
-    border-radius: 17px;
+    border: 1px solid #e5eaf1;
+    border-radius: 16px;
 
     box-shadow:
-        0 6px 22px rgba(15, 23, 42, .045);
+        0 5px 18px rgba(15, 23, 42, 0.035);
 
     box-sizing: border-box;
 }
 
 
 /* =========================================================
-   SEARCH
+   SEARCH INPUT
 ========================================================= */
 
 .su-filter-search {
-
-    height: 44px;
-
     display: flex;
-
     align-items: center;
-
     gap: 10px;
 
+    width: 100%;
     min-width: 0;
+    height: 43px;
 
-    padding: 0 13px;
+    padding: 0 12px;
 
     background: #f8fafc;
 
-    border: 1px solid #dfe6ee;
-
-    border-radius: 11px;
-
-    transition:
-        border-color .2s ease,
-        box-shadow .2s ease,
-        background .2s ease;
+    border: 1px solid #dfe6ef;
+    border-radius: 10px;
 
     box-sizing: border-box;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-
 .su-filter-search i {
-
     flex: 0 0 auto;
 
     color: #94a3b8;
-
     font-size: 13px;
-
 }
 
-
 .su-filter-search input {
-
     width: 100%;
-
     min-width: 0;
-
     height: 100%;
 
     padding: 0;
 
     border: 0;
-
     outline: 0;
 
     background: transparent;
 
-    color: #0f172a;
+    color: #1e293b;
 
     font-family: inherit;
-
-    font-size: 13px;
-
+    font-size: 12.5px;
     font-weight: 500;
 
+    box-shadow: none;
 }
-
 
 .su-filter-search input::placeholder {
-
     color: #94a3b8;
-
+    opacity: 1;
 }
 
-
 .su-filter-search:focus-within {
-
     background: #ffffff;
-
-    border-color: #0ea5a4;
+    border-color: #0d9488;
 
     box-shadow:
-        0 0 0 3px rgba(14, 165, 164, .10);
-
+        0 0 0 3px rgba(13, 148, 136, 0.09);
 }
 
 
 /* =========================================================
-   FILTER CONTROL
+   FILTER CONTROLS
 ========================================================= */
 
 .su-filter-control {
-
-    height: 44px;
-
-    min-width: 0;
-
     display: flex;
-
     align-items: center;
+    gap: 8px;
 
-    gap: 9px;
+    width: 100%;
+    min-width: 0;
+    height: 43px;
 
-    padding: 0 11px;
+    padding: 0 10px;
 
     background: #f8fafc;
 
-    border: 1px solid #dfe6ee;
-
-    border-radius: 11px;
+    border: 1px solid #dfe6ef;
+    border-radius: 10px;
 
     box-sizing: border-box;
 
     transition:
-        border-color .2s ease,
-        box-shadow .2s ease,
-        background .2s ease;
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-
 .su-filter-control i {
-
     flex: 0 0 auto;
 
     color: #64748b;
-
     font-size: 12px;
-
 }
 
-
 .su-filter-control select {
+    display: block;
 
     width: 100%;
-
     min-width: 0;
-
     height: 100%;
 
     padding: 0;
+    margin: 0;
 
     border: 0;
-
     outline: 0;
 
     background: transparent;
@@ -1183,319 +1091,247 @@
     color: #334155;
 
     font-family: inherit;
-
-    font-size: 12.5px;
-
+    font-size: 12px;
     font-weight: 600;
 
     cursor: pointer;
-
 }
 
-
 .su-filter-control:focus-within {
-
     background: #ffffff;
-
-    border-color: #0ea5a4;
+    border-color: #0d9488;
 
     box-shadow:
-        0 0 0 3px rgba(14, 165, 164, .10);
-
+        0 0 0 3px rgba(13, 148, 136, 0.09);
 }
 
 
 /* =========================================================
-   CLEAR BUTTON
+   CLEAR FILTER BUTTON
 ========================================================= */
 
 .su-clear-btn {
-
-    height: 44px;
-
     display: inline-flex;
-
     align-items: center;
-
     justify-content: center;
-
     gap: 7px;
 
-    padding: 0 15px;
+    width: 100%;
+    min-width: 0;
+    height: 43px;
 
-    border-radius: 11px;
+    padding: 0 10px;
 
     background: #f1f5f9;
 
     border: 1px solid #e2e8f0;
+    border-radius: 10px;
 
     color: #475569;
 
     text-decoration: none;
-
-    font-size: 12.5px;
-
-    font-weight: 700;
-
     white-space: nowrap;
 
-    transition:
-        background .2s ease,
-        color .2s ease,
-        border-color .2s ease,
-        transform .2s ease;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
 
     box-sizing: border-box;
-}
 
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
 
 .su-clear-btn i {
-
     font-size: 11px;
-
 }
 
-
 .su-clear-btn:hover {
-
     background: #e2e8f0;
-
-    color: #0f172a;
-
     border-color: #cbd5e1;
+    color: #0f172a;
+}
 
-    transform: translateY(-1px);
-
+.su-clear-btn:focus-visible {
+    outline: 2px solid #0d9488;
+    outline-offset: 2px;
 }
 
 
 /* =========================================================
-   RESULT COUNT
+   FILTER RESULT COUNT
+   Keep your existing result-count HTML.
 ========================================================= */
 
 .su-filter-result {
-
     display: flex;
-
     align-items: center;
+    flex-wrap: wrap;
 
-    min-height: 34px;
+    min-height: 32px;
 
-    margin-bottom: 15px;
-
+    margin-bottom: 12px;
     padding: 0 4px;
 
     color: #64748b;
 
-    font-size: 12.5px;
-
+    font-size: 12px;
     font-weight: 500;
-
 }
 
-
 .su-filter-result strong {
-
     margin: 0 3px;
 
     color: #0f172a;
-
     font-weight: 800;
-
 }
 
+
 /* =========================================================
-   USERS FILTER TOOLBAR
-   MOBILE — 768px
+   TABLET — 768px
 ========================================================= */
 
 @media (max-width: 768px) {
-
     .su-filter-box {
-
-        display: grid;
-
         grid-template-columns:
-            repeat(2, minmax(0, 1fr));
+            minmax(0, 1fr)
+            minmax(0, 1fr);
 
-        gap: 9px;
+        gap: 10px;
+        padding: 12px;
 
-        padding: 11px;
-
-        margin-bottom: 6px;
-
-        border-radius: 15px;
-
+        border-radius: 14px;
     }
 
-
-    /* =====================================================
-       SEARCH
-    ===================================================== */
-
+    /* Search spans the entire first row */
     .su-filter-search {
-
         grid-column: 1 / -1;
-
-        width: 100%;
-
         height: 43px;
-
-        border-radius: 11px;
-
     }
-
 
     .su-filter-search input {
-
         font-size: 12.5px;
-
     }
-
-
-    /* =====================================================
-       CONTROLS
-    ===================================================== */
 
     .su-filter-control {
-
-        width: 100%;
-
         height: 42px;
-
-        border-radius: 10px;
-
         padding: 0 10px;
-
     }
-
-
-    .su-filter-control i {
-
-        font-size: 11px;
-
-    }
-
 
     .su-filter-control select {
-
-        font-size: 11.5px;
-
+        font-size: 12px;
     }
 
-
-    /* =====================================================
-       CLEAR
-    ===================================================== */
+    /* Sort and Clear occupy the final row */
+    .su-filter-box > .su-filter-control:last-of-type {
+        grid-column: 1;
+    }
 
     .su-clear-btn {
-
-        grid-column: 1 / -1;
-
-        width: 100%;
-
-        height: 41px;
-
-        border-radius: 10px;
-
+        grid-column: 2;
+        height: 42px;
         font-size: 12px;
-
     }
-
-
-    /* =====================================================
-       RESULT COUNT
-    ===================================================== */
 
     .su-filter-result {
-
-        min-height: 30px;
-
-        margin-bottom: 12px;
-
-        padding: 0 2px;
-
+        margin-bottom: 10px;
         font-size: 11.5px;
-
     }
-
 }
 
+
 /* =========================================================
-   USERS FILTER TOOLBAR
    SMALL MOBILE — 480px
 ========================================================= */
 
 @media (max-width: 480px) {
-
     .su-filter-box {
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr);
 
         gap: 8px;
-
         padding: 9px;
 
-        border-radius: 14px;
-
+        border-radius: 12px;
     }
-
 
     .su-filter-search {
-
         height: 41px;
-
+        padding: 0 10px;
+        gap: 8px;
     }
 
+    .su-filter-search i {
+        font-size: 12px;
+    }
 
     .su-filter-search input {
-
-        font-size: 12px;
-
+        font-size: 11.5px;
     }
-
 
     .su-filter-control {
-
         height: 40px;
-
-        padding: 0 8px;
-
-        gap: 7px;
-
+        gap: 6px;
+        padding: 0 7px;
+        border-radius: 9px;
     }
-
 
     .su-filter-control i {
-
         font-size: 10px;
-
     }
-
 
     .su-filter-control select {
-
         font-size: 10.5px;
-
     }
-
 
     .su-clear-btn {
-
         height: 40px;
-
-        font-size: 11.5px;
-
-    }
-
-
-    .su-filter-result {
+        gap: 6px;
+        padding: 0 6px;
 
         font-size: 11px;
-
+        border-radius: 9px;
     }
 
+    .su-clear-btn i {
+        font-size: 10px;
+    }
+
+    .su-filter-result {
+        min-height: 28px;
+        margin-bottom: 8px;
+        padding: 0 2px;
+        font-size: 10.5px;
+    }
 }
 
 
+/* =========================================================
+   EXTRA SMALL SCREENS — 360px
+========================================================= */
+
+@media (max-width: 360px) {
+    .su-filter-box {
+        gap: 7px;
+        padding: 8px;
+    }
+
+    .su-filter-control {
+        gap: 5px;
+        padding: 0 6px;
+    }
+
+    .su-filter-control select {
+        font-size: 10px;
+    }
+
+    .su-clear-btn {
+        font-size: 10.5px;
+    }
+}
 
 
 

@@ -2,9 +2,11 @@
 
 import os
 import re
+import uuid
 import time
 import random
 import smtplib
+import shutil
 import subprocess
 import math
 import io
@@ -15,9 +17,12 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import Response
 import urllib.request
 import logging
+from urllib.parse import urlsplit
 
 from io import BytesIO
 from datetime import datetime, date, timedelta
+from pathlib import Path
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 from functools import wraps
 from flask import abort
@@ -55,13 +60,14 @@ from flask import (
     send_file,
     jsonify,
     make_response,
+    abort,
     current_app,
 )
 
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail, Message
 from flask_wtf.csrf import CSRFProtect
-
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from werkzeug.utils import secure_filename
@@ -683,65 +689,91 @@ def send_email(
 
 
 # =========================================================
-# MAINTENANCE MODE CHECK
-# Runs before every request
+# GLOBAL MAINTENANCE MODE ENFORCEMENT
+# Superadmin access remains available.
+# Regular ERP access is blocked during maintenance.
 # =========================================================
 
 
 @app.before_request
 def check_maintenance_mode():
 
+    # -----------------------------------------------------
+    # 1. ALLOW STATIC FILES
+    # -----------------------------------------------------
+
+    if request.endpoint == "static":
+        return None
+
+    # -----------------------------------------------------
+    # 2. ALLOW SUPERADMIN ROUTES
+    #
+    # Authentication and authorization must still be
+    # handled by the existing route decorators.
+    # -----------------------------------------------------
+
+    if request.path == "/superadmin" or request.path.startswith("/superadmin/"):
+        return None
+
+    # -----------------------------------------------------
+    # 3. ALLOW MAINTENANCE SCREEN
+    # -----------------------------------------------------
+
+    if request.endpoint == "maintenance_page":
+        return None
+
+    # -----------------------------------------------------
+    # 4. ALLOW REQUIRED PUBLIC ROUTES
+    # -----------------------------------------------------
+
+    allowed_paths = {
+        "/",
+        "/login",
+        "/logout",
+        "/maintenance",
+    }
+
+    if request.path in allowed_paths:
+        return None
+
+    # -----------------------------------------------------
+    # 5. CHECK MAINTENANCE STATUS
+    # -----------------------------------------------------
+
     conn = None
     cursor = None
 
     try:
-        # Static files
-        if request.path.startswith("/static/"):
-            return
-
-        # Public routes
-        allowed_paths = ["/login", "/logout", "//login", "//logout"]
-
-        if request.path in allowed_paths:
-            return
-
-        # Super Admin always allowed
-        if request.path.startswith("/superadmin"):
-            if session.get("admin_logged_in") is True:
-                return
-
         conn = get_connection()
 
-        if not conn:
-            return
+        if conn is None:
+            app.logger.error("Maintenance check failed: database unavailable.")
+            return None
 
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT
-                maintenance_mode,
-                maintenance_message
+            SELECT maintenance_mode, maintenance_message
             FROM system_settings
             WHERE id = 1
+            LIMIT 1
         """)
 
         row = cursor.fetchone()
 
         if not row:
-            return
+            return None
 
-        maintenance_mode = (row[0] or "").strip().upper()
+        maintenance_mode = (row[0] or "OFF").strip().upper()
 
-        maintenance_message = row[1] or "ERP system is currently under maintenance."
+        maintenance_message = (
+            row[1]
+            or "The ERP system is currently under maintenance. Please try again later."
+        )
 
-        if maintenance_mode == "ON":
-            return (
-                render_template("maintenance.html", message=maintenance_message),
-                503,
-            )
-
-    except Exception as e:
-        print("❌ MAINTENANCE CHECK ERROR:", e)
+    except Exception:
+        app.logger.exception("Error while checking maintenance mode.")
+        return None
 
     finally:
         if cursor:
@@ -749,6 +781,36 @@ def check_maintenance_mode():
 
         if conn:
             conn.close()
+
+    # -----------------------------------------------------
+    # 6. BLOCK REGULAR ERP ACCESS
+    # -----------------------------------------------------
+
+    if maintenance_mode == "ON":
+        response = make_response(
+            render_template(
+                "maintenance.html",
+                message=maintenance_message,
+                maintenance_message=maintenance_message,
+            ),
+            503,
+        )
+
+        response.headers["Cache-Control"] = (
+            "no-store, no-cache, must-revalidate, max-age=0"
+        )
+
+        response.headers["Pragma"] = "no-cache"
+
+        response.headers["Expires"] = "0"
+
+        return response
+
+    # -----------------------------------------------------
+    # 7. NORMAL OPERATION
+    # -----------------------------------------------------
+
+    return None
 
 
 # =========================================================
@@ -2842,7 +2904,335 @@ def logout():
 
 
 # =========================================================
-# 📊 SUPER ADMIN DASHBOARD
+# SUPERADMIN NOTIFICATION HELPER — MYSQL
+# =========================================================
+
+
+def create_superadmin_notification(
+    cursor,
+    event_key,
+    event_type,
+    title,
+    message,
+    target_url,
+    school_id=None,
+):
+    """
+    Create one platform notification.
+
+    The caller owns the transaction and must commit or roll back.
+
+    Duplicate event keys are ignored by the database.
+    """
+
+    allowed_types = {
+        "lead",
+        "school",
+        "payment",
+        "renewal",
+        "subscription",
+    }
+
+    allowed_targets = {
+        "/superadmin/leads",
+        "/superadmin/schools",
+        "/superadmin/subscriptions",
+        "/superadmin/payments",
+    }
+
+    if event_type not in allowed_types:
+        raise ValueError("Invalid superadmin notification type")
+
+    if target_url not in allowed_targets:
+        raise ValueError("Invalid notification destination")
+
+    cursor.execute(
+        """
+        INSERT INTO superadmin_notifications (
+            event_key,
+            event_type,
+            title,
+            message,
+            target_url,
+            school_id
+        )
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            event_key = VALUES(event_key)
+        """,
+        (
+            event_key,
+            event_type,
+            title,
+            message,
+            target_url,
+            school_id,
+        ),
+    )
+
+
+# =========================================================
+# SUPERADMIN BUSINESS ANALYTICS HELPERS
+# MySQL-backed analytics for the dashboard and auto-refresh
+# =========================================================
+
+import calendar
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+
+def _superadmin_previous_months(count=6):
+    """Return the current month and preceding months in order."""
+
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+
+    year = today.year
+    month = today.month
+
+    months = []
+
+    for _ in range(count):
+        months.append((year, month))
+
+        month -= 1
+
+        if month == 0:
+            month = 12
+            year -= 1
+
+    return list(reversed(months))
+
+
+def _get_superadmin_analytics(cursor):
+    """
+    Fetch business analytics directly from MySQL.
+
+    Returns:
+        revenue_labels
+        revenue_values
+        subscription_labels
+        subscription_values
+        revenue_this_month
+        total_revenue
+        upcoming_renewals
+        active_schools
+        expired_schools
+    """
+
+    india_today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+
+    # -----------------------------------------------------
+    # 1. REVENUE: LAST SIX CALENDAR MONTHS
+    # -----------------------------------------------------
+
+    months = _superadmin_previous_months(6)
+
+    first_year, first_month = months[0]
+
+    first_month_start = datetime(first_year, first_month, 1).date()
+
+    current_year = india_today.year
+    current_month = india_today.month
+
+    if current_month == 12:
+        next_month_start = datetime(current_year + 1, 1, 1).date()
+    else:
+        next_month_start = datetime(current_year, current_month + 1, 1).date()
+
+    cursor.execute(
+        """
+        SELECT
+            YEAR(created_at) AS report_year,
+            MONTH(created_at) AS report_month,
+            COALESCE(SUM(amount), 0) AS revenue
+        FROM payment_logs
+        WHERE LOWER(payment_status) = 'success'
+          AND created_at >= %s
+          AND created_at < %s
+        GROUP BY
+            YEAR(created_at),
+            MONTH(created_at)
+        ORDER BY
+            report_year,
+            report_month
+        """,
+        (first_month_start, next_month_start),
+    )
+
+    revenue_rows = cursor.fetchall()
+
+    # Convert database results into a year/month lookup.
+    revenue_lookup = {
+        (int(row[0]), int(row[1])): float(row[2] or 0) for row in revenue_rows
+    }
+
+    # Fill missing months with zero so the graph is continuous.
+    revenue_labels = []
+    revenue_values = []
+
+    for year, month in months:
+        revenue_labels.append(
+            calendar.month_abbr[month]
+            + (f" '{str(year)[-2:]}" if year != current_year else "")
+        )
+
+        revenue_values.append(round(revenue_lookup.get((year, month), 0), 2))
+
+    revenue_this_month = revenue_lookup.get((current_year, current_month), 0)
+
+    # -----------------------------------------------------
+    # 2. TOTAL SUCCESSFUL REVENUE
+    # -----------------------------------------------------
+
+    cursor.execute(
+        """
+        SELECT COALESCE(SUM(amount), 0)
+        FROM payment_logs
+        WHERE LOWER(payment_status) = 'success'
+        """
+    )
+
+    total_revenue = float(cursor.fetchone()[0] or 0)
+
+    # -----------------------------------------------------
+    # 3. SUBSCRIPTION BREAKDOWN
+    #
+    # Active:
+    #     Active status and expiry beyond the next 30 days.
+    #
+    # Renewals Due:
+    #     Active status and expiry between today and
+    #     the next 30 days, inclusive.
+    #
+    # Expired:
+    #     Explicitly expired OR expiry date before today.
+    #
+    # Each subscription belongs to one category only.
+    # -----------------------------------------------------
+
+    cursor.execute(
+        """
+        SELECT
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN LOWER(status) = 'active'
+                         AND end_date > DATE_ADD(
+                             CURDATE(), INTERVAL 30 DAY
+                         )
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS active_count,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN LOWER(status) = 'active'
+                         AND end_date >= CURDATE()
+                         AND end_date <= DATE_ADD(
+                             CURDATE(), INTERVAL 30 DAY
+                         )
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS renewal_count,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN LOWER(status) = 'expired'
+                          OR (
+                              end_date IS NOT NULL
+                              AND end_date < CURDATE()
+                          )
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS expired_count
+
+        FROM subscriptions
+        """
+    )
+
+    subscription_row = cursor.fetchone()
+
+    active_subscriptions = int(subscription_row[0] or 0)
+
+    renewal_subscriptions = int(subscription_row[1] or 0)
+
+    expired_subscriptions = int(subscription_row[2] or 0)
+
+    subscription_labels = ["Active", "Renewals Due", "Expired"]
+
+    subscription_values = [
+        active_subscriptions,
+        renewal_subscriptions,
+        expired_subscriptions,
+    ]
+
+    # Existing dashboard KPIs count schools rather than
+    # individual subscription records.
+    cursor.execute(
+        """
+        SELECT COUNT(DISTINCT school_id)
+        FROM subscriptions
+        WHERE LOWER(status) = 'active'
+          AND end_date >= CURDATE()
+        """
+    )
+
+    active_schools = int(cursor.fetchone()[0] or 0)
+
+    cursor.execute(
+        """
+        SELECT COUNT(DISTINCT school_id)
+        FROM subscriptions
+        WHERE LOWER(status) = 'active'
+          AND end_date >= CURDATE()
+          AND end_date <= DATE_ADD(
+              CURDATE(), INTERVAL 30 DAY
+          )
+        """
+    )
+
+    upcoming_renewals = int(cursor.fetchone()[0] or 0)
+
+    cursor.execute(
+        """
+        SELECT COUNT(DISTINCT school_id)
+        FROM subscriptions
+        WHERE LOWER(status) = 'expired'
+           OR (
+               end_date IS NOT NULL
+               AND end_date < CURDATE()
+           )
+        """
+    )
+
+    expired_schools = int(cursor.fetchone()[0] or 0)
+
+    return {
+        "revenue_labels": revenue_labels,
+        "revenue_values": revenue_values,
+        "subscription_labels": subscription_labels,
+        "subscription_values": subscription_values,
+        "revenue_this_month": revenue_this_month,
+        "total_revenue": total_revenue,
+        "active_schools": active_schools,
+        "upcoming_renewals": upcoming_renewals,
+        "expired_schools": expired_schools,
+    }
+
+
+# =========================================================
+# SUPER ADMIN DASHBOARD
 # =========================================================
 
 
@@ -2854,122 +3244,167 @@ def superadmin_dashboard():
     cursor = None
 
     try:
+        # =====================================================
+        # 1. INDIA STANDARD TIME
+        # =====================================================
+
+        india_now = datetime.now(ZoneInfo("Asia/Kolkata"))
+        india_today = india_now.date()
+
+        current_date = india_now.strftime("%d %b %Y")
+        current_time = india_now.strftime("%I:%M %p")
+
+        # =====================================================
+        # 2. DYNAMIC GREETING
+        # =====================================================
+
+        current_hour = india_now.hour
+
+        if 5 <= current_hour < 12:
+            greeting = "Good Morning,"
+        elif 12 <= current_hour < 17:
+            greeting = "Good Afternoon,"
+        elif 17 <= current_hour < 21:
+            greeting = "Good Evening,"
+        else:
+            greeting = "Good Night,"
+
+        # =====================================================
+        # 3. DATABASE CONNECTION
+        # =====================================================
+
         conn = get_connection()
         cursor = conn.cursor()
 
-        # TOTAL SCHOOLS
+        # =====================================================
+        # 4. SCHOOL STATISTICS
+        # =====================================================
+
         cursor.execute("""
             SELECT COUNT(*)
             FROM schools
         """)
+
         total_schools = cursor.fetchone()[0] or 0
 
-        # ACTIVE SCHOOLS BASED ON SUBSCRIPTION
         cursor.execute("""
             SELECT COUNT(DISTINCT school_id)
             FROM subscriptions
             WHERE LOWER(status) = 'active'
-            AND end_date >= CURDATE()
+              AND end_date >= CURDATE()
         """)
+
         active_schools = cursor.fetchone()[0] or 0
 
-        # EXPIRED SCHOOLS
         cursor.execute("""
             SELECT COUNT(DISTINCT school_id)
             FROM subscriptions
             WHERE LOWER(status) = 'expired'
-            OR end_date < CURDATE()
+               OR end_date < CURDATE()
         """)
+
         expired_schools = cursor.fetchone()[0] or 0
 
-        # TOTAL STUDENTS
+        # =====================================================
+        # 5. STUDENT STATISTICS
+        # =====================================================
+
         cursor.execute("""
             SELECT COUNT(*)
             FROM students
         """)
+
         total_students = cursor.fetchone()[0] or 0
 
-        # TOTAL TC
+        # =====================================================
+        # 6. CERTIFICATE STATISTICS
+        # =====================================================
+
         cursor.execute("""
             SELECT COUNT(*)
             FROM tc
         """)
+
         total_tc = cursor.fetchone()[0] or 0
 
-        # TOTAL BONAFIDE
         cursor.execute("""
             SELECT COUNT(*)
             FROM bonafide
         """)
+
         total_bonafide = cursor.fetchone()[0] or 0
 
-        # NEW LEADS
+        # =====================================================
+        # 7. NEW LEADS
+        # =====================================================
+
         cursor.execute("""
             SELECT COUNT(*)
             FROM lead_requests
-            WHERE status='New'
+            WHERE LOWER(status) = 'new'
         """)
+
         new_leads_count = cursor.fetchone()[0] or 0
 
-        # REVENUE THIS MONTH
+        # =====================================================
+        # 8. REVENUE THIS MONTH
+        # =====================================================
+
         cursor.execute("""
             SELECT COALESCE(SUM(amount), 0)
             FROM payment_logs
-            WHERE payment_status='success'
-            AND MONTH(created_at) = MONTH(CURDATE())
-            AND YEAR(created_at) = YEAR(CURDATE())
+            WHERE LOWER(payment_status) = 'success'
+              AND MONTH(created_at) = MONTH(CURDATE())
+              AND YEAR(created_at) = YEAR(CURDATE())
         """)
-        revenue_this_month = cursor.fetchone()[0] or 0
 
-        # TOTAL REVENUE
+        revenue_this_month = float(cursor.fetchone()[0] or 0)
+
+        # =====================================================
+        # 9. TOTAL REVENUE
+        # =====================================================
+
         cursor.execute("""
             SELECT COALESCE(SUM(amount), 0)
             FROM payment_logs
-            WHERE payment_status='success'
+            WHERE LOWER(payment_status) = 'success'
         """)
-        total_revenue = cursor.fetchone()[0] or 0
 
-        # UPCOMING RENEWALS NEXT 30 DAYS
+        total_revenue = float(cursor.fetchone()[0] or 0)
+
+        # =====================================================
+        # 10. UPCOMING RENEWALS
+        # =====================================================
+
         cursor.execute("""
             SELECT COUNT(DISTINCT school_id)
             FROM subscriptions
             WHERE end_date BETWEEN CURDATE()
-            AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+              AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+              AND LOWER(status) = 'active'
         """)
+
         upcoming_renewals = cursor.fetchone()[0] or 0
 
-        # SCHOOL WISE STUDENTS CHART
+        # =====================================================
+        # 11. BUSINESS ANALYTICS: REVENUE - LAST 6 MONTHS
+        # =====================================================
+
         cursor.execute("""
             SELECT
-                s.name,
-                COUNT(st.id)
-            FROM schools s
-            LEFT JOIN students st
-                ON st.school_id = s.school_id
-            GROUP BY
-                s.school_id,
-                s.name
-            ORDER BY COUNT(st.id) DESC
-        """)
-        school_chart = cursor.fetchall()
-
-        chart_labels = []
-        chart_values = []
-
-        for row in school_chart:
-            chart_labels.append(row[0])
-            chart_values.append(row[1])
-
-        # REAL REVENUE ANALYTICS - LAST 6 MONTHS
-        cursor.execute("""
-            SELECT
-                DATE_FORMAT(MIN(created_at), '%b') AS month_name,
                 YEAR(created_at) AS report_year,
                 MONTH(created_at) AS report_month,
                 COALESCE(SUM(amount), 0) AS revenue
             FROM payment_logs
-            WHERE payment_status='success'
-            AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            WHERE LOWER(payment_status) = 'success'
+              AND created_at >= DATE_FORMAT(
+                    DATE_SUB(CURDATE(), INTERVAL 5 MONTH),
+                    '%Y-%m-01'
+                  )
+              AND created_at < DATE_ADD(
+                    LAST_DAY(CURDATE()),
+                    INTERVAL 1 DAY
+                  )
             GROUP BY
                 YEAR(created_at),
                 MONTH(created_at)
@@ -2977,35 +3412,371 @@ def superadmin_dashboard():
                 report_year,
                 report_month
         """)
+
         revenue_rows = cursor.fetchall()
 
+        # Fill all six calendar months, including months with zero revenue.
         revenue_labels = []
         revenue_values = []
 
-        for row in revenue_rows:
-            revenue_labels.append(row[0])
-            revenue_values.append(float(row[3] or 0))
+        revenue_by_month = {
+            (int(row[0]), int(row[1])): float(row[2] or 0) for row in revenue_rows
+        }
 
-        # SUBSCRIPTION ANALYTICS
-        subscription_labels = ["Active", "Expired"]
+        for month_offset in range(5, -1, -1):
+            month_date = india_today.replace(day=1)
 
-        subscription_values = [active_schools, expired_schools]
+            # Calculate month_offset months before the current month.
+            absolute_month = month_date.year * 12 + month_date.month - 1 - month_offset
 
-        # RECENT TC
+            report_year = absolute_month // 12
+            report_month = absolute_month % 12 + 1
+
+            month_key = (report_year, report_month)
+
+            revenue_labels.append(datetime(report_year, report_month, 1).strftime("%b"))
+
+            revenue_values.append(revenue_by_month.get(month_key, 0))
+
+        # =====================================================
+        # 12. BUSINESS ANALYTICS: SUBSCRIPTIONS
+        # =====================================================
+
+        # Count distinct schools in each subscription category.
+        # Renewals Due means active subscriptions ending within
+        # the next 30 days.
+
+        cursor.execute("""
+            SELECT
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(status) = 'active'
+                     AND end_date >= CURDATE()
+                     AND end_date > DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+                    THEN school_id
+                END) AS active_count,
+
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(status) = 'active'
+                     AND end_date BETWEEN CURDATE()
+                         AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+                    THEN school_id
+                END) AS renewal_count,
+
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(status) = 'expired'
+                      OR end_date < CURDATE()
+                    THEN school_id
+                END) AS expired_count
+
+            FROM subscriptions
+        """)
+
+        subscription_row = cursor.fetchone()
+
+        subscription_labels = ["Active", "Renewals Due", "Expired"]
+
+        subscription_values = [
+            subscription_row[0] or 0,
+            subscription_row[1] or 0,
+            subscription_row[2] or 0,
+        ]
+
+        # =====================================================
+        # 13. PLATFORM INSIGHTS: SCHOOL-WISE STUDENT COUNTS
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                s.name,
+                COUNT(st.id) AS student_count
+            FROM schools s
+            LEFT JOIN students st
+                ON st.school_id = s.school_id
+            GROUP BY
+                s.school_id,
+                s.name
+            ORDER BY
+                student_count DESC,
+                s.name ASC
+        """)
+
+        school_student_rows = cursor.fetchall()
+
+        school_student_labels = [
+            row[0] or "Unnamed School" for row in school_student_rows
+        ]
+
+        school_student_values = [int(row[1] or 0) for row in school_student_rows]
+
+        # Retain the original variable names for any existing
+        # templates or JavaScript that still use these variables.
+        chart_labels = school_student_labels
+        chart_values = school_student_values
+
+        # =====================================================
+        # 14. PLATFORM INSIGHTS: RECENT ACTIVITY
+        #     Recent schools, payments and certificates
+        # =====================================================
+
+        recent_activity = []
+
+        # -----------------------------------------------------
+        # HELPER: FORMAT ACTIVITY DATE AND TIME
+        # -----------------------------------------------------
+
+        def format_activity_time(value):
+            """
+            Format database date/time values for the dashboard.
+
+            Datetime values:
+                27 Oct 2026, 10:30 AM
+
+            Date-only values:
+                27 Oct 2026
+
+            Missing values:
+                Date unavailable
+            """
+
+            if value is None:
+                return "Date unavailable"
+
+            if isinstance(value, datetime):
+                return value.strftime("%d %b %Y, %I:%M %p")
+
+            if isinstance(value, date):
+                return value.strftime("%d %b %Y")
+
+            # Handle database drivers returning strings.
+            if isinstance(value, str):
+                value = value.strip()
+
+                if not value:
+                    return "Date unavailable"
+
+                formats = (
+                    "%Y-%m-%d %H:%M:%S",
+                    "%Y-%m-%d %H:%M:%S.%f",
+                    "%Y-%m-%d %H:%M",
+                    "%Y-%m-%d",
+                    "%d %b %Y %I:%M %p",
+                )
+
+                for date_format in formats:
+                    try:
+                        parsed_date = datetime.strptime(value, date_format)
+
+                        if date_format == "%Y-%m-%d":
+                            return parsed_date.strftime("%d %b %Y")
+
+                        return parsed_date.strftime("%d %b %Y, %I:%M %p")
+
+                    except ValueError:
+                        continue
+
+            return "Date unavailable"
+
+        # -----------------------------------------------------
+        # HELPER: BUILD CONSISTENT ACTIVITY ITEMS
+        # -----------------------------------------------------
+
+        def add_platform_activity(
+            activity_type,
+            icon,
+            title,
+            description,
+            reference,
+            created_at,
+            status=None,
+            status_class=None,
+        ):
+            recent_activity.append(
+                {
+                    "type": activity_type,
+                    "icon": icon,
+                    "title": title or "Platform Activity",
+                    "description": description or "",
+                    "reference": reference or "",
+                    "created_at": created_at,
+                    "time": format_activity_time(created_at),
+                    "status": status,
+                    "status_class": status_class or activity_type,
+                }
+            )
+
+        # -----------------------------------------------------
+        # 14.1 RECENT SCHOOL REGISTRATIONS
+        # -----------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                school_id,
+                name,
+                created_at
+            FROM schools
+            WHERE created_at IS NOT NULL
+            ORDER BY created_at DESC
+            LIMIT 10
+        """)
+
+        for row in cursor.fetchall():
+            add_platform_activity(
+                activity_type="school",
+                icon="fa-solid fa-school",
+                title=row[1] or "Unnamed School",
+                description="New school registered on the platform",
+                reference=row[0],
+                created_at=row[2],
+                status="Registered",
+                status_class="school",
+            )
+
+        # -----------------------------------------------------
+        # 14.2 RECENT SUCCESSFUL PAYMENTS
+        # -----------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                id,
+                amount,
+                created_at
+            FROM payment_logs
+            WHERE LOWER(payment_status) = 'success'
+              AND created_at IS NOT NULL
+            ORDER BY created_at DESC
+            LIMIT 10
+        """)
+
+        for row in cursor.fetchall():
+            amount = float(row[1] or 0)
+
+            add_platform_activity(
+                activity_type="payment",
+                icon="fa-solid fa-indian-rupee-sign",
+                title="Payment received",
+                description=(f"Successful payment of ₹{amount:,.2f}"),
+                reference=row[0],
+                created_at=row[2],
+                status="Successful",
+                status_class="success",
+            )
+
+        # -----------------------------------------------------
+        # 14.3 RECENT TRANSFER CERTIFICATES
+        # -----------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                tc.tc_number,
+                st.name,
+                tc.tc_date
+            FROM tc
+            INNER JOIN students st
+                ON tc.student_id = st.id
+            WHERE tc.tc_date IS NOT NULL
+            ORDER BY tc.tc_date DESC, tc.id DESC
+            LIMIT 10
+        """)
+
+        for row in cursor.fetchall():
+            add_platform_activity(
+                activity_type="tc",
+                icon="fa-solid fa-file-circle-check",
+                title=row[1] or "Student",
+                description=(
+                    f"Transfer Certificate generated "
+                    f"({row[0] or 'Reference unavailable'})"
+                ),
+                reference=row[0],
+                created_at=row[2],
+                status="Generated",
+                status_class="certificate",
+            )
+
+        # -----------------------------------------------------
+        # 14.4 RECENT BONAFIDE CERTIFICATES
+        # -----------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                b.bonafide_number,
+                st.name,
+                b.created_at
+            FROM bonafide b
+            INNER JOIN students st
+                ON b.student_id = st.id
+            WHERE b.created_at IS NOT NULL
+            ORDER BY b.created_at DESC, b.id DESC
+            LIMIT 10
+        """)
+
+        for row in cursor.fetchall():
+            add_platform_activity(
+                activity_type="bonafide",
+                icon="fa-solid fa-award",
+                title=row[1] or "Student",
+                description=(
+                    f"Bonafide Certificate generated "
+                    f"({row[0] or 'Reference unavailable'})"
+                ),
+                reference=row[0],
+                created_at=row[2],
+                status="Generated",
+                status_class="certificate",
+            )
+
+        # -----------------------------------------------------
+        # 14.5 COMBINE AND SORT ALL ACTIVITY TYPES
+        # -----------------------------------------------------
+
+        def activity_sort_key(item):
+
+            value = item.get("created_at")
+
+            if isinstance(value, datetime):
+                return value.replace(tzinfo=None)
+
+            if isinstance(value, date):
+                return datetime.combine(value, datetime.min.time())
+
+            if isinstance(value, str):
+                try:
+                    return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(
+                        tzinfo=None
+                    )
+
+                except ValueError:
+                    return datetime.min
+
+            return datetime.min
+
+        recent_activity.sort(key=activity_sort_key, reverse=True)
+
+        # Display the ten latest activities across all categories.
+        recent_activity = recent_activity[:10]
+
+        # =====================================================
+        # 15. ORIGINAL RECENT TC DATA
+        # =====================================================
+
         cursor.execute("""
             SELECT
                 st.name,
                 tc.tc_number,
                 tc.tc_date
-            FROM tc tc
+            FROM tc
             JOIN students st
                 ON tc.student_id = st.id
             ORDER BY tc.id DESC
             LIMIT 5
         """)
+
         recent_tc = cursor.fetchall()
 
-        # RECENT BONAFIDE
+        # =====================================================
+        # 16. ORIGINAL RECENT BONAFIDE DATA
+        # =====================================================
+
         cursor.execute("""
             SELECT
                 st.name,
@@ -3017,37 +3788,79 @@ def superadmin_dashboard():
             ORDER BY b.id DESC
             LIMIT 5
         """)
+
         recent_bonafide = cursor.fetchall()
+
+        # =====================================================
+        # 17. SUPERADMIN PROFILE
+        # =====================================================
+
+        superadmin_name = (
+            session.get("name")
+            or session.get("username")
+            or session.get("user_name")
+            or "SchoolSphere Admin"
+        )
+
+        superadmin_email = session.get("email") or ""
+
+        # =====================================================
+        # 18. RENDER DASHBOARD
+        # =====================================================
 
         return render_template(
             "dashboard/superadmin.html",
+            # Date and greeting
+            current_date=current_date,
+            current_time=current_time,
+            greeting=greeting,
+            # School statistics
             total_schools=total_schools,
             active_schools=active_schools,
             expired_schools=expired_schools,
+            # Students and certificates
             total_students=total_students,
             total_tc=total_tc,
             total_bonafide=total_bonafide,
+            # Business statistics
+            new_leads_count=new_leads_count,
             revenue_this_month=revenue_this_month,
             total_revenue=total_revenue,
             upcoming_renewals=upcoming_renewals,
-            new_leads_count=new_leads_count,
-            chart_labels=chart_labels,
-            chart_values=chart_values,
+            # Business analytics
             revenue_labels=revenue_labels,
             revenue_values=revenue_values,
             subscription_labels=subscription_labels,
             subscription_values=subscription_values,
+            # Platform Insights
+            chart_labels=chart_labels,
+            chart_values=chart_values,
+            school_student_labels=school_student_labels,
+            school_student_values=school_student_values,
+            recent_activity=recent_activity,
+            # Original recent certificate data
             recent_tc=recent_tc,
             recent_bonafide=recent_bonafide,
+            # Layout and navigation
             role="admin",
             active_page="dashboard",
-            school_name="SchoolSphere Admin",
+            school_name="ShalaSarthi ERP Admin",
+            # Profile
+            superadmin_name=superadmin_name,
+            superadmin_email=superadmin_email,
         )
 
     except Exception as e:
-        print("❌ ADMIN DASHBOARD ERROR:", e)
+        # Log the full exception on the server for debugging.
+        app.logger.exception("Superadmin dashboard failed")
 
-        return f"Dashboard Error: {str(e)}"
+        # Do not expose database errors or internal details
+        # to the browser.
+        flash("Unable to load the dashboard right now. Please try again.", "error")
+
+        # Avoid returning a successful-looking dashboard
+        # with missing data when a required query fails.
+        return render_template("errors/500.html"), 500
 
     finally:
         if cursor:
@@ -3055,6 +3868,311 @@ def superadmin_dashboard():
 
         if conn:
             conn.close()
+
+
+# =========================================================
+# SUPERADMIN NOTIFICATIONS API — CURSOR PAGINATION
+# =========================================================
+
+
+@app.route("/superadmin/api/notifications", methods=["GET"])
+@admin_required
+def get_superadmin_notifications():
+
+    conn = None
+    cursor = None
+
+    try:
+        # -------------------------------------------------
+        # 1. Validate pagination parameters
+        # -------------------------------------------------
+        limit = 5
+
+        raw_before_id = request.args.get("before_id")
+
+        before_id = None
+
+        if raw_before_id not in (None, ""):
+            try:
+                before_id = int(raw_before_id)
+
+                if before_id < 1:
+                    return jsonify(
+                        {"success": False, "message": "Invalid notification cursor."}
+                    ), 400
+
+            except (TypeError, ValueError):
+                return jsonify(
+                    {"success": False, "message": "Invalid notification cursor."}
+                ), 400
+
+        # -------------------------------------------------
+        # 2. Connect to MySQL
+        # -------------------------------------------------
+        conn = get_connection()
+
+        if conn is None:
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "Notification service is temporarily unavailable.",
+                }
+            ), 503
+
+        cursor = conn.cursor(dictionary=True)
+
+        # -------------------------------------------------
+        # 3. Get total unread count
+        # -------------------------------------------------
+        cursor.execute("""
+            SELECT COUNT(*) AS unread_count
+            FROM superadmin_notifications
+            WHERE read_at IS NULL
+        """)
+
+        count_row = cursor.fetchone()
+
+        unread_count = int((count_row or {}).get("unread_count") or 0)
+
+        # -------------------------------------------------
+        # 4. Fetch latest unread notifications
+        #
+        # First request:
+        #   latest 5 unread notifications
+        #
+        # Next request:
+        #   next 5 unread notifications with id < before_id
+        #
+        # Fetch 1 extra row to detect has_more.
+        # -------------------------------------------------
+        if before_id is None:
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    event_type,
+                    title,
+                    message,
+                    target_url,
+                    created_at
+                FROM superadmin_notifications
+                WHERE read_at IS NULL
+                ORDER BY id DESC
+                LIMIT %s
+            """,
+                (limit + 1,),
+            )
+
+        else:
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    event_type,
+                    title,
+                    message,
+                    target_url,
+                    created_at
+                FROM superadmin_notifications
+                WHERE read_at IS NULL
+                  AND id < %s
+                ORDER BY id DESC
+                LIMIT %s
+            """,
+                (before_id, limit + 1),
+            )
+
+        rows = cursor.fetchall() or []
+
+        # -------------------------------------------------
+        # 5. Determine pagination state
+        # -------------------------------------------------
+        has_more = len(rows) > limit
+
+        page_rows = rows[:limit]
+
+        # -------------------------------------------------
+        # 6. Prepare JSON response
+        # -------------------------------------------------
+        notifications = []
+
+        for row in page_rows:
+            created_at = row.get("created_at")
+
+            notifications.append(
+                {
+                    "id": row["id"],
+                    "type": row["event_type"],
+                    "title": row["title"],
+                    "message": row["message"],
+                    "url": row["target_url"],
+                    "created_at": (created_at.isoformat() if created_at else None),
+                }
+            )
+
+        next_cursor = page_rows[-1]["id"] if page_rows else None
+
+        return jsonify(
+            {
+                "success": True,
+                "unread_count": unread_count,
+                "notifications": notifications,
+                "has_more": has_more,
+                "next_cursor": next_cursor,
+                "page_size": limit,
+            }
+        ), 200
+
+    except Exception:
+        app.logger.exception("Failed to load superadmin notifications.")
+
+        return jsonify(
+            {
+                "success": False,
+                "message": "Unable to load notifications. Please try again.",
+            }
+        ), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# =========================================================
+# SUPERADMIN — MARK NOTIFICATION AS READ
+# =========================================================
+
+
+@app.route(
+    "/superadmin/api/notifications/<int:notification_id>/read",
+    methods=["POST"],
+)
+@admin_required
+def mark_superadmin_notification_read(notification_id):
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+
+        if conn is None:
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "Database connection unavailable.",
+                }
+            ), 503
+
+        cursor = conn.cursor()
+
+        # MySQL-compatible UPDATE.
+        # No RETURNING clause is required.
+        cursor.execute(
+            """
+            UPDATE superadmin_notifications
+            SET read_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+              AND read_at IS NULL
+            """,
+            (notification_id,),
+        )
+
+        updated = cursor.rowcount > 0
+
+        conn.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "marked_read": updated,
+                "notification_id": notification_id,
+            }
+        ), 200
+
+    except Exception:
+        if conn:
+            conn.rollback()
+
+        app.logger.exception("Failed to mark superadmin notification as read")
+
+        return jsonify(
+            {
+                "success": False,
+                "message": "Unable to update notification.",
+            }
+        ), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# =========================================================
+# SUPERADMIN ANALYTICS AUTO-REFRESH API
+# =========================================================
+
+
+@app.route("/superadmin/dashboard/analytics", methods=["GET"])
+@admin_required
+def superadmin_dashboard_analytics():
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        analytics = _get_superadmin_analytics(cursor)
+
+        # Browser-friendly JSON response.
+        response = jsonify(
+            {
+                "success": True,
+                **analytics,
+                "updated_at": datetime.now(ZoneInfo("Asia/Kolkata")).strftime(
+                    "%d %b %Y, %I:%M:%S %p"
+                ),
+            }
+        )
+
+        response.headers["Cache-Control"] = (
+            "no-store, no-cache, must-revalidate, max-age=0"
+        )
+
+        return response
+
+    except Exception:
+        app.logger.exception("Failed to refresh Super Admin analytics")
+
+        return jsonify(
+            {
+                "success": False,
+                "message": (
+                    "Analytics could not be refreshed. Please try again later."
+                ),
+            }
+        ), 500
+
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                app.logger.exception("Failed to close analytics cursor")
+
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                app.logger.exception("Failed to close analytics connection")
 
 
 # =========================================================
@@ -3377,7 +4495,8 @@ def save_school():
         # =====================================================
 
         if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email):
-            return "Invalid email format ❌"
+            flash("Please enter a valid email address for the school.", "error")
+            return redirect(url_for("superadmin_schools"))
 
         # =====================================================
         # PHONE VALIDATION
@@ -3386,7 +4505,10 @@ def save_school():
         clean_phone = "".join(filter(str.isdigit, phone))
 
         if len(clean_phone) < 10 or len(clean_phone) > 15:
-            return "Invalid phone number ❌"
+            flash(
+                "Please enter a valid phone number containing 10 to 15 digits.", "error"
+            )
+            return redirect(url_for("superadmin_schools"))
 
         phone = clean_phone
 
@@ -3394,38 +4516,30 @@ def save_school():
         # LENGTH VALIDATION
         # =====================================================
 
-        if len(name) > 150:
-            return "School name too long ❌"
+        validation_errors = [
+            (len(name) > 150, "School name cannot exceed 150 characters."),
+            (len(address) > 500, "School address cannot exceed 500 characters."),
+            (len(phone) > 15, "Phone number cannot exceed 15 digits."),
+            (len(email) > 150, "Email address cannot exceed 150 characters."),
+            (len(principal_name) > 150, "Principal name cannot exceed 150 characters."),
+            (len(school_code) > 20, "School code cannot exceed 20 characters."),
+            (len(udise_no) > 30, "UDISE number cannot exceed 30 characters."),
+            (
+                len(recognition_no) > 100,
+                "Recognition number cannot exceed 100 characters.",
+            ),
+            (len(medium) > 50, "Medium cannot exceed 50 characters."),
+            (
+                len(school_index_no) > 100,
+                "School index number cannot exceed 100 characters.",
+            ),
+            (len(board_name) > 100, "Board name cannot exceed 100 characters."),
+        ]
 
-        if len(address) > 500:
-            return "Address too long ❌"
-
-        if len(phone) > 15:
-            return "Invalid phone ❌"
-
-        if len(email) > 150:
-            return "Invalid email ❌"
-
-        if len(principal_name) > 150:
-            return "Principal name too long ❌"
-
-        if len(school_code) > 20:
-            return "School code too long ❌"
-
-        if len(udise_no) > 30:
-            return "UDISE number too long ❌"
-
-        if len(recognition_no) > 100:
-            return "Recognition number too long ❌"
-
-        if len(medium) > 50:
-            return "Medium value too long ❌"
-
-        if len(school_index_no) > 100:
-            return "School index number too long ❌"
-
-        if len(board_name) > 100:
-            return "Board name too long ❌"
+        for invalid, error_message in validation_errors:
+            if invalid:
+                flash(error_message, "error")
+                return redirect(url_for("superadmin_schools"))
 
         # =====================================================
         # DATABASE CONNECTION
@@ -3463,7 +4577,12 @@ def save_school():
         existing_school = cursor.fetchone()
 
         if existing_school:
-            return "School with same UDISE, Email or School Code already exists ❌"
+            flash(
+                "A school with this UDISE number, email address, or school code "
+                "already exists. Please verify the details.",
+                "error",
+            )
+            return redirect(url_for("superadmin_schools"))
 
         # =====================================================
         # GET SYSTEM SETTINGS
@@ -3735,7 +4854,11 @@ def save_school():
         if not plan:
             conn.rollback()
 
-            flash("Default plan not found.", "error")
+            flash(
+                "The default subscription plan could not be found. "
+                "Please configure a valid default plan before registering a school.",
+                "error",
+            )
 
             return redirect(url_for("superadmin_schools"))
 
@@ -3791,12 +4914,26 @@ def save_school():
         )
 
         # =====================================================
-        # COMMIT
+        # CREATE SUPERADMIN NOTIFICATION
+        # =====================================================
+
+        create_superadmin_notification(
+            cursor=cursor,
+            event_key=f"school:{new_school_id}:registered",
+            event_type="school",
+            title="New school registered",
+            message=f"{name} has been successfully registered on ShalaSarthi ERP.",
+            target_url="/superadmin/schools",
+            school_id=new_school_id,
+        )
+
+        # =====================================================
+        # COMMIT SCHOOL + SEQUENCE + SUBSCRIPTION + NOTIFICATION
         # =====================================================
 
         conn.commit()
 
-        print("SCHOOL CREATED:", name)
+        app.logger.info("School registered successfully. School ID: %s", new_school_id)
 
         # =====================================================
         # WELCOME EMAIL
@@ -3863,8 +5000,6 @@ def save_school():
 
             send_email(email, subject, body)
 
-            print("✅ SCHOOL WELCOME EMAIL SENT")
-
         except Exception as email_error:
             print("❌ WELCOME EMAIL ERROR:", email_error)
 
@@ -3872,15 +5007,28 @@ def save_school():
         # REDIRECT
         # =====================================================
 
-        return redirect(url_for("superadmin_schools"))
+        flash(
+            f"{name} has been registered successfully. "
+            "The default subscription has also been created.",
+            "success",
+        )
 
-    except Exception as e:
+        return redirect(url_for("superadmin_schools"))
+    # =====================================================
+    # ERROR HANDLING
+    # =====================================================
+
+    except Exception:
         if conn:
             conn.rollback()
 
-        logger.exception("SUPERADMIN SCHOOLS SAVE PAGE ERROR")
+        app.logger.exception("Failed to register school in Super Admin.")
 
-        flash("School details saved successfully.", "success")
+        flash(
+            "We couldn't register the school right now. "
+            "Please try again. If the problem continues, contact support.",
+            "error",
+        )
 
         return redirect(url_for("superadmin_schools"))
 
@@ -3966,7 +5114,8 @@ def update_school():
         # =====================================================
 
         if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email):
-            return "Invalid email format ❌"
+            flash("Please enter a valid email address for the school.", "error")
+            return redirect(url_for("superadmin_schools"))
 
         # =====================================================
         # PHONE VALIDATION
@@ -3975,7 +5124,10 @@ def update_school():
         clean_phone = "".join(filter(str.isdigit, phone))
 
         if len(clean_phone) < 10 or len(clean_phone) > 15:
-            return "Invalid phone number ❌"
+            flash(
+                "Please enter a valid phone number containing 10 to 15 digits.", "error"
+            )
+            return redirect(url_for("superadmin_schools"))
 
         phone = clean_phone
 
@@ -3983,35 +5135,30 @@ def update_school():
         # LENGTH VALIDATION
         # =====================================================
 
-        if len(name) > 150:
-            return "School name too long ❌"
+        validation_errors = [
+            (len(name) > 150, "School name cannot exceed 150 characters."),
+            (len(address) > 500, "School address cannot exceed 500 characters."),
+            (len(phone) > 15, "Phone number cannot exceed 15 digits."),
+            (len(email) > 150, "Email address cannot exceed 150 characters."),
+            (len(principal_name) > 150, "Principal name cannot exceed 150 characters."),
+            (len(school_code) > 20, "School code cannot exceed 20 characters."),
+            (len(udise_no) > 30, "UDISE number cannot exceed 30 characters."),
+            (
+                len(recognition_no) > 100,
+                "Recognition number cannot exceed 100 characters.",
+            ),
+            (len(medium) > 50, "Medium cannot exceed 50 characters."),
+            (
+                len(school_index_no) > 100,
+                "School index number cannot exceed 100 characters.",
+            ),
+            (len(board_name) > 100, "Board name cannot exceed 100 characters."),
+        ]
 
-        if len(address) > 500:
-            return "Address too long ❌"
-
-        if len(email) > 150:
-            return "Invalid email ❌"
-
-        if len(principal_name) > 150:
-            return "Principal name too long ❌"
-
-        if len(school_code) > 20:
-            return "School code too long ❌"
-
-        if len(udise_no) > 30:
-            return "UDISE number too long ❌"
-
-        if len(recognition_no) > 100:
-            return "Recognition number too long ❌"
-
-        if len(medium) > 50:
-            return "Medium value too long ❌"
-
-        if len(school_index_no) > 100:
-            return "School index number too long ❌"
-
-        if len(board_name) > 100:
-            return "Board name too long ❌"
+        for invalid, error_message in validation_errors:
+            if invalid:
+                flash(error_message, "error")
+                return redirect(url_for("superadmin_schools"))
 
         # =====================================================
         # DATABASE CONNECTION
@@ -8999,11 +10146,30 @@ def submit_lead():
         lead_id = cursor.lastrowid
 
         # -------------------------------------------------
-        # 8. Commit before returning success
+        # 8. CREATE SUPERADMIN NOTIFICATION
+        # Same transaction as the lead insertion.
+        # -------------------------------------------------
+        create_superadmin_notification(
+            cursor=cursor,
+            event_key=f"lead:{lead_id}:created",
+            event_type="lead",
+            title="New lead enquiry",
+            message=(
+                f"{school_name} has submitted a demo request. "
+                "Review the enquiry and contact the school."
+            ),
+            target_url="/superadmin/leads",
+        )
+
+        # -------------------------------------------------
+        # 9. Commit the lead and notification together
         # -------------------------------------------------
         conn.commit()
 
-        current_app.logger.info("Demo lead created successfully. Lead ID: %s", lead_id)
+        current_app.logger.info(
+            "Demo lead and superadmin notification created. Lead ID: %s",
+            lead_id,
+        )
 
         # The frontend displays its own success confirmation.
         # Do not use flash() or alert() for this AJAX request.
@@ -16421,6 +17587,8 @@ table.data-table {
 # =========================================================
 # ⚙️ SUPER ADMIN - SETTINGS PAGE
 # =========================================================
+
+
 @app.route("/superadmin/settings")
 @admin_required
 def superadmin_settings():
@@ -16429,10 +17597,17 @@ def superadmin_settings():
     cursor = None
 
     try:
+        # =====================================================
+        # DATABASE CONNECTION
+        # =====================================================
+
         conn = get_connection()
         cursor = conn.cursor()
 
-        # ================= SETTINGS =================
+        # =====================================================
+        # 1. LOAD SYSTEM SETTINGS
+        # =====================================================
+
         cursor.execute("""
             SELECT *
             FROM system_settings
@@ -16440,65 +17615,123 @@ def superadmin_settings():
             LIMIT 1
         """)
 
-        row = cursor.fetchone()
+        settings_row = cursor.fetchone()
 
-        if not row:
-            return "System settings record missing ❌"
+        if not settings_row:
+            flash("System settings record was not found.", "error")
 
-        columns = [col[0] for col in cursor.description]
-        settings = dict(zip(columns, row))
+            return redirect(url_for("superadmin_dashboard"))
 
-        # ================= ACTIVE SCHOOLS =================
+        settings_columns = [column[0] for column in cursor.description]
+
+        settings = dict(zip(settings_columns, settings_row))
+
+        # =====================================================
+        # 2. LOAD ACTIVE SCHOOLS
+        # =====================================================
+
         cursor.execute("""
             SELECT COUNT(*)
             FROM schools
             WHERE is_active = 1
         """)
+
         total_schools = cursor.fetchone()[0] or 0
 
-        # ================= ALERTS =================
+        # =====================================================
+        # 3. LOAD NEW ENQUIRIES
+        # =====================================================
+
         cursor.execute("""
             SELECT COUNT(*)
             FROM lead_requests
             WHERE status = 'New'
         """)
+
         new_leads = cursor.fetchone()[0] or 0
+
+        # =====================================================
+        # 4. LOAD UPCOMING RENEWALS
+        # =====================================================
 
         cursor.execute("""
             SELECT COUNT(*)
             FROM subscriptions
-            WHERE end_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+            WHERE end_date >= CURDATE()
+              AND end_date <= DATE_ADD(
+                    CURDATE(),
+                    INTERVAL 7 DAY
+              )
         """)
+
         renewal_alerts = cursor.fetchone()[0] or 0
 
         pending_alerts = new_leads + renewal_alerts
 
-        # ================= SUBSCRIPTION PLANS =================
+        # =====================================================
+        # 5. LOAD ACTIVE SUBSCRIPTION PLANS
+        # =====================================================
+
         cursor.execute("""
             SELECT
                 id,
                 plan_name,
-                monthly_price
+                monthly_price,
+                yearly_price,
+                duration_months,
+                student_limit,
+                tc_limit,
+                bonafide_limit,
+                staff_limit,
+                support_type,
+                storage_limit,
+                enable_tc_management,
+                enable_bonafide_management,
+                enable_import_export,
+                enable_attendance,
+                enable_fee_management,
+                enable_teacher_management,
+                enable_results,
+                enable_timetable,
+                enable_notice_board,
+                display_order,
+                is_featured,
+                short_description,
+                best_for,
+                is_public
             FROM subscription_plans
             WHERE is_active = 1
-            ORDER BY monthly_price ASC
+            ORDER BY
+                display_order ASC,
+                monthly_price ASC,
+                id ASC
         """)
 
-        plans = [
-            {"id": p[0], "plan_name": p[1], "monthly_price": p[2]}
-            for p in cursor.fetchall()
-        ]
+        plan_rows = cursor.fetchall()
 
-        # ================= DEFAULT PLAN NAME =================
+        plan_columns = [column[0] for column in cursor.description]
+
+        plans = [dict(zip(plan_columns, row)) for row in plan_rows]
+
+        # =====================================================
+        # 6. RESOLVE DEFAULT PLAN NAME
+        # =====================================================
+
         default_plan_name = "No Plan Selected"
 
-        if settings.get("default_plan_id"):
+        default_plan_id = settings.get("default_plan_id")
+
+        if default_plan_id is not None:
             for plan in plans:
-                if int(plan["id"]) == int(settings["default_plan_id"]):
+                if int(plan["id"]) == int(default_plan_id):
                     default_plan_name = plan["plan_name"]
+
                     break
 
-        # ================= BACKUP LOGS =================
+        # =====================================================
+        # 7. LOAD RECENT BACKUP LOGS
+        # =====================================================
+
         cursor.execute("""
             SELECT
                 id,
@@ -16513,37 +17746,64 @@ def superadmin_settings():
         """)
 
         backup_rows = cursor.fetchall()
-        backup_columns = [col[0] for col in cursor.description]
+
+        backup_columns = [column[0] for column in cursor.description]
 
         backup_logs = [dict(zip(backup_columns, row)) for row in backup_rows]
 
+        # =====================================================
+        # 8. RENDER SETTINGS PAGE
+        # =====================================================
+
         return render_template(
             "superadmin/superadmin_settings.html",
+            # General and subscription settings
             settings=settings,
             plans=plans,
             default_plan_name=default_plan_name,
+            # Backup settings
             backup_logs=backup_logs,
+            # System overview
             total_schools=total_schools,
+            new_leads=new_leads,
+            renewal_alerts=renewal_alerts,
             pending_alerts=pending_alerts,
+            # Dashboard context
             role="admin",
             school_name="Admin Panel",
             active_page="settings",
         )
 
-    except Exception as e:
-        logger.exception("SETTINGS ERROR")
-        return f"SETTINGS ERROR: {e}"
+    except Exception:
+        # Log the complete traceback on the server.
+        logger.exception("Failed to load Superadmin Settings page")
+
+        flash(
+            "Unable to load system settings. Please try again or contact support.",
+            "error",
+        )
+
+        return redirect(url_for("superadmin_dashboard"))
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                logger.exception("Failed to close settings cursor")
+
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                logger.exception("Failed to close settings connection")
 
 
 # =========================================================
-# 💾 SAVE GENERAL SETTINGS
+# SAVE GENERAL SETTINGS
 # =========================================================
+
+
 @app.route("/superadmin/settings/general", methods=["POST"])
 @admin_required
 def save_general_settings():
@@ -16551,52 +17811,109 @@ def save_general_settings():
     conn = None
     cursor = None
 
+    new_logo_path = None
+    old_logo_path = None
+
+    transaction_committed = False
+
     try:
-        # ================= FORM DATA =================
+        # -------------------------------------------------
+        # 1. READ FORM DATA
+        # -------------------------------------------------
+
         system_name = (request.form.get("system_name") or "").strip()
 
         support_email = (request.form.get("support_email") or "").strip().lower()
 
         support_phone = (request.form.get("support_phone") or "").strip()
 
-        default_language = (request.form.get("default_language") or "English").strip()
+        default_language = (request.form.get("default_language") or "").strip()
 
-        timezone_value = (request.form.get("timezone") or "Asia/Kolkata").strip()
+        timezone_value = (request.form.get("timezone") or "").strip()
 
-        # ================= VALIDATION =================
+        logo = request.files.get("system_logo")
+
+        # -------------------------------------------------
+        # 2. VALIDATE SYSTEM NAME
+        # -------------------------------------------------
+
         if not system_name:
-            return "System name required ❌"
+            flash("Please enter the system name.", "warning")
+
+            return redirect(url_for("superadmin_settings") + "#general")
 
         if len(system_name) > 150:
-            return "System name too long ❌"
+            flash("System name cannot exceed 150 characters.", "warning")
+
+            return redirect(url_for("superadmin_settings") + "#general")
+
+        # -------------------------------------------------
+        # 3. VALIDATE SUPPORT EMAIL
+        # -------------------------------------------------
+
+        if len(support_email) > 150:
+            flash("Support email cannot exceed 150 characters.", "warning")
+
+            return redirect(url_for("superadmin_settings") + "#general")
 
         if support_email:
-            if len(support_email) > 150:
-                return "Support email too long ❌"
-
+            # Use the project's existing email validator.
             if not is_valid_email(support_email):
-                return "Invalid support email ❌"
+                flash("Please enter a valid support email address.", "warning")
+
+                return redirect(url_for("superadmin_settings") + "#general")
+
+        # -------------------------------------------------
+        # 4. VALIDATE SUPPORT PHONE
+        # -------------------------------------------------
+
+        if len(support_phone) > 20:
+            flash("Support phone cannot exceed 20 characters.", "warning")
+
+            return redirect(url_for("superadmin_settings") + "#general")
 
         if support_phone:
-            clean_phone = support_phone.replace("+", "")
+            # Permit international numbers containing digits,
+            # spaces, +, parentheses and hyphens.
+            if not re.fullmatch(r"\+?[0-9()\-\s]+", support_phone):
+                flash("Please enter a valid support phone number.", "warning")
 
-            if not clean_phone.isdigit():
-                return "Invalid support phone ❌"
+                return redirect(url_for("superadmin_settings") + "#general")
 
-            if len(support_phone) > 20:
-                return "Support phone too long ❌"
+            digit_count = sum(character.isdigit() for character in support_phone)
 
-        valid_languages = ["English", "Marathi"]
+            if not 7 <= digit_count <= 15:
+                flash("Support phone must contain between 7 and 15 digits.", "warning")
+
+                return redirect(url_for("superadmin_settings") + "#general")
+
+        # -------------------------------------------------
+        # 5. VALIDATE LANGUAGE AND TIMEZONE
+        # -------------------------------------------------
+
+        valid_languages = {
+            "English",
+            "Marathi",
+        }
+
+        valid_timezones = {
+            "Asia/Kolkata",
+        }
 
         if default_language not in valid_languages:
-            return "Invalid language ❌"
+            flash("Please select a supported language.", "warning")
 
-        valid_timezones = ["Asia/Kolkata"]
+            return redirect(url_for("superadmin_settings") + "#general")
 
         if timezone_value not in valid_timezones:
-            return "Invalid timezone ❌"
+            flash("Please select a supported timezone.", "warning")
 
-        # ================= DB =================
+            return redirect(url_for("superadmin_settings") + "#general")
+
+        # -------------------------------------------------
+        # 6. OPEN DATABASE CONNECTION
+        # -------------------------------------------------
+
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -16612,142 +17929,249 @@ def save_general_settings():
         settings_row = cursor.fetchone()
 
         if not settings_row:
-            return "System settings record missing ❌"
+            conn.rollback()
+
+            flash(
+                "System settings have not been initialized. "
+                "Please contact the system administrator.",
+                "danger",
+            )
+
+            return redirect(url_for("superadmin_settings") + "#general")
 
         settings_id = settings_row[0]
         old_logo = settings_row[1]
 
-        # ================= LOGO UPLOAD =================
-        logo_filename = None
+        # -------------------------------------------------
+        # 7. VALIDATE AND SAVE NEW LOGO, IF PROVIDED
+        # -------------------------------------------------
 
-        logo = request.files.get("system_logo")
+        logo_filename = old_logo
 
         if logo and logo.filename:
             original_filename = secure_filename(logo.filename)
 
-            if "." not in original_filename:
-                return "Invalid logo file ❌"
+            if not original_filename or "." not in original_filename:
+                flash("Please select a valid logo file.", "warning")
+
+                return redirect(url_for("superadmin_settings") + "#general")
 
             extension = original_filename.rsplit(".", 1)[1].lower()
 
-            allowed_extensions = ["png", "jpg", "jpeg", "webp"]
+            allowed_extensions = {
+                "png",
+                "jpg",
+                "jpeg",
+                "webp",
+            }
 
             if extension not in allowed_extensions:
-                return "Invalid logo file type ❌"
+                flash("Unsupported logo format. Use PNG, JPG, JPEG or WEBP.", "warning")
 
-            # Optional size check: 2 MB
+                return redirect(url_for("superadmin_settings") + "#general")
+
+            # Determine the uploaded file size.
             logo.seek(0, os.SEEK_END)
             file_size = logo.tell()
             logo.seek(0)
 
-            if file_size > 2 * 1024 * 1024:
-                return "Logo size must be below 2 MB ❌"
+            max_logo_size = 2 * 1024 * 1024
 
-            upload_folder = os.path.join("static", "uploads", "system")
+            if file_size == 0:
+                flash("The selected logo file is empty.", "warning")
+
+                return redirect(url_for("superadmin_settings") + "#general")
+
+            if file_size > max_logo_size:
+                flash("Logo size must not exceed 2 MB.", "warning")
+
+                return redirect(url_for("superadmin_settings") + "#general")
+
+            # Check file signatures rather than relying only
+            # on the user-supplied extension.
+            logo_signatures = {
+                "png": lambda data: data.startswith(b"\x89PNG\r\n\x1a\n"),
+                "jpg": lambda data: data.startswith(b"\xff\xd8\xff"),
+                "jpeg": lambda data: data.startswith(b"\xff\xd8\xff"),
+                "webp": lambda data: (
+                    len(data) >= 12
+                    and data.startswith(b"RIFF")
+                    and data[8:12] == b"WEBP"
+                ),
+            }
+
+            signature = logo.read(12)
+            logo.seek(0)
+
+            if not logo_signatures[extension](signature):
+                flash(
+                    "The selected file does not match the declared image format.",
+                    "warning",
+                )
+
+                return redirect(url_for("superadmin_settings") + "#general")
+
+            upload_folder = os.path.join(current_app.static_folder, "uploads", "system")
 
             os.makedirs(upload_folder, exist_ok=True)
 
-            new_filename = (
-                f"system_logo_{settings_id}_"
-                f"{int(datetime.now().timestamp())}."
-                f"{extension}"
+            # Use a unique filename to avoid overwriting
+            # the current logo or colliding with another upload.
+            new_filename = f"system_logo_{settings_id}_{uuid.uuid4().hex}.{extension}"
+
+            new_logo_path = os.path.join(upload_folder, new_filename)
+
+            logo.save(new_logo_path)
+
+            # Store a path relative to the static folder.
+            logo_filename = os.path.join("uploads", "system", new_filename).replace(
+                "\\", "/"
             )
 
-            upload_path = os.path.join(upload_folder, new_filename)
+            # Remember the old file for deletion after commit.
+            if old_logo and old_logo != logo_filename:
+                old_logo_path = os.path.join(current_app.static_folder, old_logo)
 
-            logo.save(upload_path)
+        # -------------------------------------------------
+        # 8. UPDATE SETTINGS
+        # -------------------------------------------------
 
-            logo_filename = f"uploads/system/{new_filename}"
+        cursor.execute(
+            """
+            UPDATE system_settings
+            SET
+                system_name = %s,
+                support_email = %s,
+                support_phone = %s,
+                default_language = %s,
+                timezone = %s,
+                system_logo = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """,
+            (
+                system_name,
+                support_email or None,
+                support_phone or None,
+                default_language,
+                timezone_value,
+                logo_filename,
+                settings_id,
+            ),
+        )
 
-            # ================= DELETE OLD LOGO =================
-            if old_logo:
-                old_logo_path = os.path.join("static", old_logo)
-
-                if os.path.exists(old_logo_path):
-                    try:
-                        os.remove(old_logo_path)
-
-                    except Exception as delete_error:
-                        print("⚠️ OLD LOGO DELETE ERROR:", delete_error)
-
-        # ================= UPDATE SETTINGS =================
-        if logo_filename:
-            cursor.execute(
-                """
-                UPDATE system_settings
-                SET
-                    system_name = %s,
-                    support_email = %s,
-                    support_phone = %s,
-                    default_language = %s,
-                    timezone = %s,
-                    system_logo = %s,
-                    updated_at = NOW()
-                WHERE id = %s
-            """,
-                (
-                    system_name,
-                    support_email,
-                    support_phone,
-                    default_language,
-                    timezone_value,
-                    logo_filename,
-                    settings_id,
-                ),
-            )
-
-        else:
-            cursor.execute(
-                """
-                UPDATE system_settings
-                SET
-                    system_name = %s,
-                    support_email = %s,
-                    support_phone = %s,
-                    default_language = %s,
-                    timezone = %s,
-                    updated_at = NOW()
-                WHERE id = %s
-            """,
-                (
-                    system_name,
-                    support_email,
-                    support_phone,
-                    default_language,
-                    timezone_value,
-                    settings_id,
-                ),
-            )
-
-        if cursor.rowcount < 1:
+        if cursor.rowcount != 1:
             conn.rollback()
-            return "No changes detected ❌"
+
+            flash("The settings could not be updated. Please try again.", "danger")
+
+            return redirect(url_for("superadmin_settings") + "#general")
+
+        # -------------------------------------------------
+        # 9. COMMIT DATABASE CHANGES
+        # -------------------------------------------------
 
         conn.commit()
+        transaction_committed = True
 
-        print("✅ GENERAL SETTINGS UPDATED")
+        current_app.logger.info(
+            "General settings updated successfully. Settings ID: %s", settings_id
+        )
+
+        # -------------------------------------------------
+        # 10. DELETE OLD LOGO AFTER SUCCESSFUL COMMIT
+        # -------------------------------------------------
+
+        if old_logo_path and old_logo_path != new_logo_path:
+            try:
+                # Only remove files inside the managed
+                # system uploads directory.
+                managed_folder = os.path.realpath(
+                    os.path.join(current_app.static_folder, "uploads", "system")
+                )
+
+                resolved_old_path = os.path.realpath(old_logo_path)
+
+                if os.path.commonpath(
+                    [managed_folder, resolved_old_path]
+                ) == managed_folder and os.path.isfile(resolved_old_path):
+                    os.remove(resolved_old_path)
+
+            except (OSError, ValueError):
+                # The settings have already been saved.
+                # Do not report a failed save because cleanup
+                # of the old image failed.
+                current_app.logger.warning(
+                    "Could not delete the previous system logo.", exc_info=True
+                )
+
+        # -------------------------------------------------
+        # 11. SUCCESS MESSAGE
+        # -------------------------------------------------
+
+        flash("General settings saved successfully.", "success")
 
         return redirect(url_for("superadmin_settings") + "#general")
 
-    except Exception as e:
-        if conn:
-            conn.rollback()
+    except Exception:
+        # -------------------------------------------------
+        # 12. DATABASE / SERVER ERROR HANDLING
+        # -------------------------------------------------
 
-        print("❌ GENERAL SETTINGS ERROR:", e)
+        if conn and not transaction_committed:
+            try:
+                conn.rollback()
 
-        return "Something went wrong ❌"
+            except Exception:
+                current_app.logger.exception(
+                    "Rollback failed while saving general settings."
+                )
+
+        # Delete a newly uploaded image if the database
+        # transaction did not succeed.
+        if new_logo_path and not transaction_committed:
+            try:
+                if os.path.isfile(new_logo_path):
+                    os.remove(new_logo_path)
+
+            except OSError:
+                current_app.logger.warning(
+                    "Could not clean up the failed logo upload.", exc_info=True
+                )
+
+        current_app.logger.exception("Unexpected error while saving general settings.")
+
+        flash(
+            "An unexpected error occurred while saving settings. "
+            "Your changes may not have been saved. Please try again.",
+            "danger",
+        )
+
+        return redirect(url_for("superadmin_settings") + "#general")
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                current_app.logger.warning(
+                    "Could not close the general settings cursor.", exc_info=True
+                )
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                current_app.logger.warning(
+                    "Could not close the general settings connection.", exc_info=True
+                )
 
 
 # =========================================================
-# 💳 SAVE SUBSCRIPTION SETTINGS
+# SAVE SUBSCRIPTION SETTINGS
 # =========================================================
+
+
 @app.route("/superadmin/settings/subscription", methods=["POST"])
 @admin_required
 def save_subscription_settings():
@@ -16756,75 +18180,168 @@ def save_subscription_settings():
     cursor = None
 
     try:
-        default_plan_id = (request.form.get("default_plan_id") or "").strip()
+        # -------------------------------------------------
+        # 1. READ FORM DATA
+        # -------------------------------------------------
 
-        trial_days = (request.form.get("trial_days") or "").strip()
+        default_plan_id_raw = (request.form.get("default_plan_id") or "").strip()
 
-        grace_period = (request.form.get("grace_period") or "").strip()
+        trial_days_raw = (request.form.get("trial_days") or "").strip()
 
-        # ================= VALIDATION =================
-        if not default_plan_id:
-            return "Default plan missing ❌"
+        grace_period_raw = (request.form.get("grace_period") or "").strip()
 
-        if not trial_days:
-            return "Trial days missing ❌"
+        # -------------------------------------------------
+        # 2. VALIDATE REQUIRED FIELDS
+        # -------------------------------------------------
 
-        if not grace_period:
-            return "Grace period missing ❌"
+        if not default_plan_id_raw:
+            flash("Please select a default subscription plan.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
 
-        if not default_plan_id.isdigit():
-            return "Invalid default plan ❌"
+        if not trial_days_raw:
+            flash("Please enter the trial period.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
 
-        if not trial_days.isdigit():
-            return "Invalid trial days ❌"
+        if not grace_period_raw:
+            flash("Please enter the grace period.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
 
-        if not grace_period.isdigit():
-            return "Invalid grace period ❌"
+        # -------------------------------------------------
+        # 3. STRICT INTEGER VALIDATION
+        # -------------------------------------------------
 
-        default_plan_id = int(default_plan_id)
-        trial_days = int(trial_days)
-        grace_period = int(grace_period)
+        # Reject decimal values, negative values, and non-digits.
+        if not default_plan_id_raw.isascii() or not default_plan_id_raw.isdecimal():
+            flash("The selected subscription plan is invalid.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
 
-        if trial_days < 0 or trial_days > 365:
-            return "Trial days must be between 0 and 365 ❌"
+        if not trial_days_raw.isascii() or not trial_days_raw.isdecimal():
+            flash("Trial period must be a whole number of days.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
 
-        if grace_period < 0 or grace_period > 90:
-            return "Grace period must be between 0 and 90 ❌"
+        if not grace_period_raw.isascii() or not grace_period_raw.isdecimal():
+            flash("Grace period must be a whole number of days.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
+
+        default_plan_id = int(default_plan_id_raw)
+        trial_days = int(trial_days_raw)
+        grace_period = int(grace_period_raw)
+
+        # -------------------------------------------------
+        # 4. SERVER-SIDE BUSINESS VALIDATION
+        # -------------------------------------------------
+
+        if default_plan_id <= 0:
+            flash("Please select a valid subscription plan.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
+
+        if not 0 <= trial_days <= 365:
+            flash("Trial period must be between 0 and 365 days.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
+
+        if not 0 <= grace_period <= 90:
+            flash("Grace period must be between 0 and 90 days.", "error")
+            return redirect(url_for("superadmin_settings") + "#subscription")
+
+        # -------------------------------------------------
+        # 5. DATABASE CONNECTION
+        # -------------------------------------------------
 
         conn = get_connection()
         cursor = conn.cursor()
 
-        # ================= CHECK PLAN =================
+        # -------------------------------------------------
+        # 6. VERIFY SELECTED PLAN
+        # -------------------------------------------------
+
         cursor.execute(
             """
-            SELECT id
+            SELECT
+                id,
+                plan_name
             FROM subscription_plans
             WHERE id = %s
-            AND is_active = 1
+              AND is_active = 1
             LIMIT 1
-        """,
+            """,
             (default_plan_id,),
         )
 
-        if not cursor.fetchone():
-            return "Selected subscription plan not found ❌"
+        selected_plan = cursor.fetchone()
 
-        # ================= CHECK SETTINGS =================
-        cursor.execute("""
-            SELECT id
+        if not selected_plan:
+            conn.rollback()
+
+            flash(
+                "The selected subscription plan does not exist "
+                "or is inactive. Please select an active plan.",
+                "error",
+            )
+
+            return redirect(url_for("superadmin_settings") + "#subscription")
+
+        # -------------------------------------------------
+        # 7. FETCH EXISTING SYSTEM SETTINGS
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                default_plan_id,
+                trial_days,
+                grace_period
             FROM system_settings
             ORDER BY id ASC
             LIMIT 1
-        """)
+            """
+        )
 
-        settings = cursor.fetchone()
+        settings_row = cursor.fetchone()
 
-        if not settings:
-            return "System settings not found ❌"
+        if not settings_row:
+            conn.rollback()
 
-        settings_id = settings[0]
+            flash(
+                "System settings could not be found. "
+                "Please contact the system administrator.",
+                "error",
+            )
 
-        # ================= UPDATE =================
+            return redirect(url_for("superadmin_settings") + "#subscription")
+
+        settings_id = settings_row[0]
+
+        old_plan_id = settings_row[1]
+        old_trial_days = settings_row[2]
+        old_grace_period = settings_row[3]
+
+        # -------------------------------------------------
+        # 8. CHECK FOR CHANGES
+        # -------------------------------------------------
+
+        current_values = (
+            int(old_plan_id) if old_plan_id is not None else None,
+            int(old_trial_days) if old_trial_days is not None else None,
+            int(old_grace_period) if old_grace_period is not None else None,
+        )
+
+        new_values = (default_plan_id, trial_days, grace_period)
+
+        if current_values == new_values:
+            conn.rollback()
+
+            flash(
+                "No changes detected. Subscription settings are already up to date.",
+                "info",
+            )
+
+            return redirect(url_for("superadmin_settings") + "#subscription")
+
+        # -------------------------------------------------
+        # 9. UPDATE SUBSCRIPTION SETTINGS
+        # -------------------------------------------------
+
         cursor.execute(
             """
             UPDATE system_settings
@@ -16834,35 +18351,85 @@ def save_subscription_settings():
                 grace_period = %s,
                 updated_at = NOW()
             WHERE id = %s
-        """,
+            """,
             (default_plan_id, trial_days, grace_period, settings_id),
         )
 
+        if cursor.rowcount != 1:
+            conn.rollback()
+
+            flash(
+                "Subscription settings could not be updated. Please try again.", "error"
+            )
+
+            return redirect(url_for("superadmin_settings") + "#subscription")
+
+        # -------------------------------------------------
+        # 10. COMMIT TRANSACTION
+        # -------------------------------------------------
+
         conn.commit()
 
-        print("✅ SUBSCRIPTION SETTINGS UPDATED")
+        # -------------------------------------------------
+        # 11. SUCCESS MESSAGE
+        # -------------------------------------------------
+
+        current_app.logger.info(
+            "Subscription settings updated successfully. Settings ID: %s, Plan ID: %s",
+            settings_id,
+            default_plan_id,
+        )
+
+        flash("Subscription settings saved successfully.", "success")
 
         return redirect(url_for("superadmin_settings") + "#subscription")
 
-    except Exception as e:
+    # -----------------------------------------------------
+    # DATABASE / APPLICATION ERROR HANDLING
+    # -----------------------------------------------------
+
+    except Exception:
         if conn:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                current_app.logger.exception(
+                    "Rollback failed while saving subscription settings."
+                )
 
-        print("❌ SUBSCRIPTION SETTINGS ERROR:", e)
+        current_app.logger.exception(
+            "Unexpected error while saving subscription settings."
+        )
 
-        return "Something went wrong ❌"
+        flash(
+            "Unable to save subscription settings right now. Please try again.", "error"
+        )
+
+        return redirect(url_for("superadmin_settings") + "#subscription")
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                current_app.logger.exception(
+                    "Unable to close subscription settings cursor."
+                )
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                current_app.logger.exception(
+                    "Unable to close subscription settings connection."
+                )
 
 
 # =========================================================
 # 🔐 SAVE SECURITY SETTINGS
 # =========================================================
+
+
 @app.route("/superadmin/settings/security", methods=["POST"])
 @admin_required
 def save_security_settings():
@@ -16871,51 +18438,117 @@ def save_security_settings():
     cursor = None
 
     try:
-        password_length = (request.form.get("password_length") or "").strip()
-        login_attempt_limit = (request.form.get("login_attempt_limit") or "").strip()
-        session_timeout = (request.form.get("session_timeout") or "").strip()
+        # =================================================
+        # 1. READ FORM VALUES
+        # =================================================
 
-        if not password_length or not login_attempt_limit or not session_timeout:
-            return "Required fields missing ❌"
+        password_length_raw = (request.form.get("password_length") or "").strip()
 
-        if not password_length.isdigit():
-            return "Invalid password length ❌"
+        login_attempt_limit_raw = (
+            request.form.get("login_attempt_limit") or ""
+        ).strip()
 
-        if not login_attempt_limit.isdigit():
-            return "Invalid login attempt limit ❌"
+        session_timeout_raw = (request.form.get("session_timeout") or "").strip()
 
-        if not session_timeout.isdigit():
-            return "Invalid session timeout ❌"
+        # =================================================
+        # 2. VALIDATE REQUIRED FIELDS
+        # =================================================
 
-        password_length = int(password_length)
-        login_attempt_limit = int(login_attempt_limit)
-        session_timeout = int(session_timeout)
+        submitted_values = {
+            "Minimum password length": password_length_raw,
+            "Login attempt limit": login_attempt_limit_raw,
+            "Session timeout": session_timeout_raw,
+        }
 
-        if password_length < 6 or password_length > 50:
-            return "Password length must be between 6 and 50 ❌"
+        for field_name, field_value in submitted_values.items():
+            if not field_value:
+                flash(f"{field_name} is required.", "error")
 
-        if login_attempt_limit < 1 or login_attempt_limit > 20:
-            return "Login attempts must be between 1 and 20 ❌"
+                return redirect(url_for("superadmin_settings") + "#security")
 
-        if session_timeout < 5 or session_timeout > 1440:
-            return "Session timeout must be between 5 and 1440 minutes ❌"
+        # =================================================
+        # 3. VALIDATE WHOLE NUMBERS
+        # =================================================
+        # Accept only ASCII digits.
+        # Reject decimals, negative values, signs and text.
+
+        for field_name, field_value in submitted_values.items():
+            if not field_value.isascii() or not field_value.isdigit():
+                flash(f"{field_name} must be a valid whole number.", "error")
+
+                return redirect(url_for("superadmin_settings") + "#security")
+
+        # =================================================
+        # 4. CONVERT TO INTEGERS
+        # =================================================
+
+        password_length = int(password_length_raw)
+
+        login_attempt_limit = int(login_attempt_limit_raw)
+
+        session_timeout = int(session_timeout_raw)
+
+        # =================================================
+        # 5. SERVER-SIDE RANGE VALIDATION
+        # =================================================
+
+        if not 6 <= password_length <= 50:
+            flash(
+                "Minimum password length must be between 6 and 50 characters.", "error"
+            )
+
+            return redirect(url_for("superadmin_settings") + "#security")
+
+        if not 1 <= login_attempt_limit <= 20:
+            flash("Login attempt limit must be between 1 and 20.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#security")
+
+        if not 5 <= session_timeout <= 1440:
+            flash("Session timeout must be between 5 and 1440 minutes.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#security")
+
+        # =================================================
+        # 6. CONNECT TO DATABASE
+        # =================================================
 
         conn = get_connection()
         cursor = conn.cursor()
 
+        # =================================================
+        # 7. LOAD THE EXISTING SETTINGS RECORD
+        # =================================================
+
         cursor.execute("""
-            SELECT id
+            SELECT
+                id,
+                password_length,
+                login_attempt_limit,
+                session_timeout
             FROM system_settings
             ORDER BY id ASC
             LIMIT 1
         """)
 
-        settings = cursor.fetchone()
+        settings_row = cursor.fetchone()
 
-        if not settings:
-            return "System settings not found ❌"
+        if not settings_row:
+            conn.rollback()
 
-        settings_id = settings[0]
+            flash(
+                "System settings record was not found. "
+                "Please initialize the system settings first.",
+                "error",
+            )
+
+            return redirect(url_for("superadmin_settings") + "#security")
+
+        settings_id = settings_row[0]
+
+        # =================================================
+        # 8. UPDATE SECURITY SETTINGS
+        # =================================================
 
         cursor.execute(
             """
@@ -16930,28 +18563,73 @@ def save_security_settings():
             (password_length, login_attempt_limit, session_timeout, settings_id),
         )
 
+        # =================================================
+        # 9. COMMIT CHANGES
+        # =================================================
+
         conn.commit()
+
+        # Do not rely on cursor.rowcount to determine success.
+        # Some database drivers report zero affected rows when
+        # the submitted values are identical to existing values.
+
+        current_app.logger.info(
+            "Security settings saved successfully. Settings ID: %s", settings_id
+        )
+
+        flash("Security settings saved successfully.", "success")
 
         return redirect(url_for("superadmin_settings") + "#security")
 
-    except Exception as e:
-        if conn:
-            conn.rollback()
+    except Exception:
+        # =================================================
+        # 10. ROLLBACK ON DATABASE OR APPLICATION ERROR
+        # =================================================
 
-        print("❌ SECURITY SETTINGS ERROR:", e)
-        return "Something went wrong ❌"
+        if conn:
+            try:
+                conn.rollback()
+
+            except Exception:
+                current_app.logger.exception("SECURITY SETTINGS ROLLBACK FAILED")
+
+        current_app.logger.exception("SECURITY SETTINGS UPDATE FAILED")
+
+        flash(
+            "Unable to save security settings. "
+            "Please try again or contact the system administrator.",
+            "error",
+        )
+
+        return redirect(url_for("superadmin_settings") + "#security")
 
     finally:
+        # =================================================
+        # 11. CLEAN UP DATABASE RESOURCES
+        # =================================================
+
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+
+            except Exception:
+                current_app.logger.exception("SECURITY SETTINGS CURSOR CLOSE FAILED")
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+
+            except Exception:
+                current_app.logger.exception(
+                    "SECURITY SETTINGS CONNECTION CLOSE FAILED"
+                )
 
 
 # =========================================================
 # 📄 SAVE CERTIFICATE SETTINGS
 # =========================================================
+
+
 @app.route("/superadmin/settings/certificate", methods=["POST"])
 @admin_required
 def save_certificate_settings():
@@ -16960,56 +18638,100 @@ def save_certificate_settings():
     cursor = None
 
     try:
-        tc_prefix = (request.form.get("tc_prefix") or "TC").strip().upper()
+        # =================================================
+        # 1. READ AND NORMALIZE PREFIXES
+        # =================================================
 
-        bonafide_prefix = (request.form.get("bonafide_prefix") or "BON").strip().upper()
+        tc_prefix = (request.form.get("tc_prefix") or "").strip().upper()
 
-        auto_numbering = (request.form.get("auto_numbering") or "Enabled").strip()
+        bonafide_prefix = (request.form.get("bonafide_prefix") or "").strip().upper()
 
-        enable_certificate_labels = (
-            request.form.get("enable_certificate_labels") or "Enabled"
-        ).strip()
+        # =================================================
+        # 2. READ TOGGLE VALUES
+        # =================================================
 
-        show_tc_logo = (request.form.get("show_tc_logo") or "Enabled").strip()
+        toggle_fields = {
+            "auto_numbering": "Automatic Numbering",
+            "enable_certificate_labels": "Certificate Labels",
+            "show_tc_logo": "TC Logo",
+            "show_tc_watermark": "TC Watermark",
+            "show_bonafide_logo": "Bonafide Logo",
+            "show_bonafide_watermark": "Bonafide Watermark",
+        }
 
-        show_tc_watermark = (request.form.get("show_tc_watermark") or "Enabled").strip()
+        toggle_values = {}
 
-        show_bonafide_logo = (
-            request.form.get("show_bonafide_logo") or "Enabled"
-        ).strip()
+        valid_options = {"Enabled", "Disabled"}
 
-        show_bonafide_watermark = (
-            request.form.get("show_bonafide_watermark") or "Enabled"
-        ).strip()
+        for field_name, label in toggle_fields.items():
+            value = (request.form.get(field_name) or "").strip()
 
-        # ================= VALIDATION =================
+            if value not in valid_options:
+                flash(
+                    f"Invalid value for {label}. Please select Enabled or Disabled.",
+                    "error",
+                )
+
+                return redirect(url_for("superadmin_settings") + "#certificate")
+
+            toggle_values[field_name] = value
+
+        # =================================================
+        # 3. VALIDATE TC PREFIX
+        # =================================================
+
+        if not tc_prefix:
+            flash("TC prefix is required.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#certificate")
+
         if len(tc_prefix) > 10:
-            return "TC prefix too long ❌"
+            flash("TC prefix cannot exceed 10 characters.", "error")
 
-        if len(bonafide_prefix) > 10:
-            return "Bonafide prefix too long ❌"
+            return redirect(url_for("superadmin_settings") + "#certificate")
 
         if not re.fullmatch(r"[A-Z0-9_-]+", tc_prefix):
-            return "Invalid TC prefix ❌"
+            flash(
+                "Invalid TC prefix. Use only letters, numbers, "
+                "hyphens, and underscores.",
+                "error",
+            )
+
+            return redirect(url_for("superadmin_settings") + "#certificate")
+
+        # =================================================
+        # 4. VALIDATE BONAFIDE PREFIX
+        # =================================================
+
+        if not bonafide_prefix:
+            flash("Bonafide prefix is required.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#certificate")
+
+        if len(bonafide_prefix) > 10:
+            flash("Bonafide prefix cannot exceed 10 characters.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#certificate")
 
         if not re.fullmatch(r"[A-Z0-9_-]+", bonafide_prefix):
-            return "Invalid Bonafide prefix ❌"
+            flash(
+                "Invalid Bonafide prefix. Use only letters, "
+                "numbers, hyphens, and underscores.",
+                "error",
+            )
 
-        valid_options = ["Enabled", "Disabled"]
+            return redirect(url_for("superadmin_settings") + "#certificate")
 
-        for value in [
-            auto_numbering,
-            enable_certificate_labels,
-            show_tc_logo,
-            show_tc_watermark,
-            show_bonafide_logo,
-            show_bonafide_watermark,
-        ]:
-            if value not in valid_options:
-                return "Invalid certificate setting ❌"
+        # =================================================
+        # 5. CONNECT TO DATABASE
+        # =================================================
 
         conn = get_connection()
         cursor = conn.cursor()
+
+        # =================================================
+        # 6. VERIFY SYSTEM SETTINGS RECORD
+        # =================================================
 
         cursor.execute("""
             SELECT id
@@ -17021,9 +18743,19 @@ def save_certificate_settings():
         settings_row = cursor.fetchone()
 
         if not settings_row:
-            return "System settings not found ❌"
+            flash(
+                "System settings record was not found. "
+                "Please initialize system settings first.",
+                "error",
+            )
+
+            return redirect(url_for("superadmin_settings") + "#certificate")
 
         settings_id = settings_row[0]
+
+        # =================================================
+        # 7. UPDATE CERTIFICATE SETTINGS
+        # =================================================
 
         cursor.execute(
             """
@@ -17031,50 +18763,92 @@ def save_certificate_settings():
             SET
                 tc_prefix = %s,
                 bonafide_prefix = %s,
+
                 auto_numbering = %s,
                 enable_certificate_labels = %s,
+
                 show_tc_logo = %s,
                 show_tc_watermark = %s,
+
                 show_bonafide_logo = %s,
                 show_bonafide_watermark = %s,
+
                 updated_at = NOW()
+
             WHERE id = %s
-        """,
+            """,
             (
                 tc_prefix,
                 bonafide_prefix,
-                auto_numbering,
-                enable_certificate_labels,
-                show_tc_logo,
-                show_tc_watermark,
-                show_bonafide_logo,
-                show_bonafide_watermark,
+                toggle_values["auto_numbering"],
+                toggle_values["enable_certificate_labels"],
+                toggle_values["show_tc_logo"],
+                toggle_values["show_tc_watermark"],
+                toggle_values["show_bonafide_logo"],
+                toggle_values["show_bonafide_watermark"],
                 settings_id,
             ),
         )
 
+        # =================================================
+        # 8. COMMIT TRANSACTION
+        # =================================================
+
         conn.commit()
+
+        logger.info(
+            "Certificate settings updated successfully for system_settings id=%s",
+            settings_id,
+        )
+
+        flash("Certificate settings saved successfully.", "success")
 
         return redirect(url_for("superadmin_settings") + "#certificate")
 
-    except Exception as e:
-        if conn:
-            conn.rollback()
+    except Exception:
+        # =================================================
+        # 9. ROLLBACK ON ERROR
+        # =================================================
 
-        print("❌ CERTIFICATE SETTINGS ERROR:", e)
-        return "Something went wrong ❌"
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                logger.exception("Failed to roll back certificate settings transaction")
+
+        logger.exception("CERTIFICATE SETTINGS UPDATE FAILED")
+
+        flash(
+            "Unable to save certificate settings. "
+            "Please check the configuration and try again.",
+            "error",
+        )
+
+        return redirect(url_for("superadmin_settings") + "#certificate")
 
     finally:
+        # =================================================
+        # 10. RELEASE DATABASE RESOURCES
+        # =================================================
+
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                logger.exception("Failed to close certificate settings cursor")
 
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                logger.exception("Failed to close certificate settings connection")
 
 
 # =========================================================
-# 🧩 SAVE FEATURE MODULE SETTINGS
+# SAVE FEATURE MODULE SETTINGS
 # =========================================================
+
+
 @app.route("/superadmin/settings/modules", methods=["POST"])
 @admin_required
 def save_feature_module_settings():
@@ -17082,46 +18856,74 @@ def save_feature_module_settings():
     conn = None
     cursor = None
 
-    try:
-        fields = [
-            "enable_tc_management",
-            "enable_bonafide_management",
-            "enable_attendance",
-            "enable_fee_management",
-            "enable_teacher_management",
-            "enable_results",
-            "enable_import_export",
-            "enable_timetable",
-            "enable_notice_board",
-        ]
+    settings_fields = [
+        "enable_tc_management",
+        "enable_bonafide_management",
+        "enable_attendance",
+        "enable_fee_management",
+        "enable_teacher_management",
+        "enable_results",
+        "enable_import_export",
+        "enable_timetable",
+        "enable_notice_board",
+    ]
 
+    try:
+        # -------------------------------------------------
+        # 1. READ AND VALIDATE TOGGLE VALUES
+        # -------------------------------------------------
+        # Checked checkbox   -> Enabled
+        # Unchecked checkbox -> field is absent -> Disabled
+        #
+        # Reject unexpected values and duplicate submissions
+        # for individual module fields.
         values = {}
 
-        for field in fields:
-            value = (request.form.get(field) or "Disabled").strip()
+        for field in settings_fields:
+            submitted_values = request.form.getlist(field)
 
-            if value not in ["Enabled", "Disabled"]:
-                return "Invalid feature setting ❌"
+            if submitted_values == []:
+                values[field] = "Disabled"
 
-            values[field] = value
+            elif submitted_values == ["Enabled"]:
+                values[field] = "Enabled"
 
+            else:
+                flash("Invalid value submitted for a feature module.", "error")
+
+                return redirect(url_for("superadmin_settings") + "#modules")
+
+        # -------------------------------------------------
+        # 2. OPEN DATABASE CONNECTION
+        # -------------------------------------------------
         conn = get_connection()
         cursor = conn.cursor()
 
+        # -------------------------------------------------
+        # 3. FIND SYSTEM SETTINGS RECORD
+        # -------------------------------------------------
         cursor.execute("""
             SELECT id
             FROM system_settings
             ORDER BY id ASC
             LIMIT 1
+            FOR UPDATE
         """)
 
         settings_row = cursor.fetchone()
 
         if not settings_row:
-            return "System settings not found ❌"
+            conn.rollback()
+
+            flash("System settings record was not found.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#modules")
 
         settings_id = settings_row[0]
 
+        # -------------------------------------------------
+        # 4. UPDATE FEATURE MODULE SETTINGS
+        # -------------------------------------------------
         cursor.execute(
             """
             UPDATE system_settings
@@ -17137,7 +18939,7 @@ def save_feature_module_settings():
                 enable_notice_board = %s,
                 updated_at = NOW()
             WHERE id = %s
-        """,
+            """,
             (
                 values["enable_tc_management"],
                 values["enable_bonafide_management"],
@@ -17152,9 +18954,14 @@ def save_feature_module_settings():
             ),
         )
 
+        # -------------------------------------------------
+        # 5. COMMIT TRANSACTION
+        # -------------------------------------------------
         conn.commit()
 
-        print("✅ FEATURE MODULE SETTINGS UPDATED")
+        print("FEATURE MODULE SETTINGS UPDATED:", values)
+
+        flash("Default feature settings saved successfully.", "success")
 
         return redirect(url_for("superadmin_settings") + "#modules")
 
@@ -17162,9 +18969,13 @@ def save_feature_module_settings():
         if conn:
             conn.rollback()
 
-        print("❌ FEATURE MODULE SETTINGS ERROR:", e)
+        # Log the detailed exception on the server.
+        # Do not expose database details to the browser.
+        app.logger.exception("Error saving feature module settings")
 
-        return "Something went wrong ❌"
+        flash("Unable to save feature settings. Please try again.", "error")
+
+        return redirect(url_for("superadmin_settings") + "#modules")
 
     finally:
         if cursor:
@@ -17185,62 +18996,157 @@ def save_payment_settings():
     cursor = None
 
     try:
-        payment_gateway = (request.form.get("payment_gateway") or "Razorpay").strip()
+        # -------------------------------------------------
+        # 1. READ FORM VALUES
+        # -------------------------------------------------
+
+        payment_gateway = (request.form.get("payment_gateway") or "").strip()
 
         razorpay_key_id = (request.form.get("razorpay_key_id") or "").strip()
 
-        razorpay_mode = (request.form.get("razorpay_mode") or "Sandbox").strip()
+        razorpay_mode = (request.form.get("razorpay_mode") or "").strip()
 
-        currency = (request.form.get("currency") or "INR").strip().upper()
+        currency = (request.form.get("currency") or "").strip().upper()
 
-        gst_percentage = (request.form.get("gst_percentage") or "18").strip()
+        gst_raw = (request.form.get("gst_percentage") or "").strip()
 
-        # ================= VALIDATION =================
-        allowed_gateways = ["Razorpay", "Disabled"]
+        # -------------------------------------------------
+        # 2. VALIDATE PAYMENT GATEWAY
+        # -------------------------------------------------
+
+        allowed_gateways = {
+            "Razorpay",
+            "Disabled",
+        }
 
         if payment_gateway not in allowed_gateways:
-            return "Invalid payment gateway ❌"
+            flash("Please select a valid payment gateway.", "error")
 
-        allowed_modes = ["Sandbox", "Live"]
+            return redirect(url_for("superadmin_settings") + "#payment")
+
+        # -------------------------------------------------
+        # 3. VALIDATE PAYMENT MODE
+        # -------------------------------------------------
+
+        allowed_modes = {
+            "Sandbox",
+            "Live",
+        }
 
         if razorpay_mode not in allowed_modes:
-            return "Invalid payment mode ❌"
+            flash("Please select a valid payment mode.", "error")
 
-        allowed_currencies = ["INR"]
+            return redirect(url_for("superadmin_settings") + "#payment")
 
-        if currency not in allowed_currencies:
-            return "Invalid currency ❌"
+        # -------------------------------------------------
+        # 4. VALIDATE CURRENCY
+        # -------------------------------------------------
+
+        # USD is intentionally excluded because the current
+        # configuration and payment workflow support INR only.
+
+        if currency != "INR":
+            flash("Only INR currency is currently supported.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#payment")
+
+        # -------------------------------------------------
+        # 5. VALIDATE GST
+        # -------------------------------------------------
 
         try:
-            gst_percentage = float(gst_percentage)
-        except ValueError:
-            return "Invalid GST percentage ❌"
+            gst_percentage = Decimal(gst_raw)
 
-        if gst_percentage < 0 or gst_percentage > 100:
-            return "GST must be between 0 and 100 ❌"
+        except (InvalidOperation, ValueError):
+            flash("Enter a valid GST percentage.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#payment")
+
+        if not gst_percentage.is_finite():
+            flash("GST percentage must be a finite number.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#payment")
+
+        if not Decimal("0") <= gst_percentage <= Decimal("100"):
+            flash("GST must be between 0 and 100.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#payment")
+
+        if gst_percentage.as_tuple().exponent < -2:
+            flash("GST percentage supports a maximum of two decimal places.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#payment")
+
+        # -------------------------------------------------
+        # 6. VALIDATE RAZORPAY KEY ID
+        # -------------------------------------------------
 
         if len(razorpay_key_id) > 200:
-            return "Razorpay key too long ❌"
+            flash("Razorpay Key ID exceeds the maximum allowed length.", "error")
 
-        if payment_gateway == "Razorpay" and not razorpay_key_id:
-            return "Razorpay Key ID required ❌"
+            return redirect(url_for("superadmin_settings") + "#payment")
+
+        if payment_gateway == "Razorpay":
+            if not razorpay_key_id:
+                flash(
+                    "Razorpay Key ID is required when the gateway is enabled.", "error"
+                )
+
+                return redirect(url_for("superadmin_settings") + "#payment")
+
+            # Razorpay Key IDs normally begin with rzp_test_
+            # or rzp_live_. Validate the selected environment.
+            #
+            # This checks the identifier's format only. It does
+            # not prove that the credentials are valid.
+
+            expected_prefix = "rzp_live_" if razorpay_mode == "Live" else "rzp_test_"
+
+            if not razorpay_key_id.startswith(expected_prefix):
+                flash("Razorpay Key ID must match the selected payment mode.", "error")
+
+                return redirect(url_for("superadmin_settings") + "#payment")
+
+            if not re.fullmatch(r"rzp_(?:test|live)_[A-Za-z0-9]+", razorpay_key_id):
+                flash("The Razorpay Key ID format is invalid.", "error")
+
+                return redirect(url_for("superadmin_settings") + "#payment")
+
+        # -------------------------------------------------
+        # 7. CONNECT TO DATABASE
+        # -------------------------------------------------
 
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        # -------------------------------------------------
+        # 8. LOCK SYSTEM SETTINGS RECORD
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
             SELECT id
             FROM system_settings
             ORDER BY id ASC
             LIMIT 1
-        """)
+            FOR UPDATE
+            """
+        )
 
         settings_row = cursor.fetchone()
 
         if not settings_row:
-            return "System settings not found ❌"
+            conn.rollback()
+
+            flash("System settings record was not found.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#payment")
 
         settings_id = settings_row[0]
+
+        # -------------------------------------------------
+        # 9. UPDATE SETTINGS
+        # -------------------------------------------------
 
         cursor.execute(
             """
@@ -17253,7 +19159,7 @@ def save_payment_settings():
                 gst_percentage = %s,
                 updated_at = NOW()
             WHERE id = %s
-        """,
+            """,
             (
                 payment_gateway,
                 razorpay_key_id,
@@ -17264,19 +19170,29 @@ def save_payment_settings():
             ),
         )
 
+        # -------------------------------------------------
+        # 10. COMMIT
+        # -------------------------------------------------
+
         conn.commit()
 
-        print("✅ PAYMENT SETTINGS UPDATED")
+        current_app.logger.info(
+            "Payment settings updated successfully. Settings ID: %s", settings_id
+        )
+
+        flash("Payment settings saved successfully.", "success")
 
         return redirect(url_for("superadmin_settings") + "#payment")
 
-    except Exception as e:
+    except Exception:
         if conn:
             conn.rollback()
 
-        print("❌ PAYMENT SETTINGS ERROR:", e)
+        current_app.logger.exception("Failed to save payment settings.")
 
-        return "Something went wrong ❌"
+        flash("Unable to save payment settings. Please try again.", "error")
+
+        return redirect(url_for("superadmin_settings") + "#payment")
 
     finally:
         if cursor:
@@ -17287,8 +19203,10 @@ def save_payment_settings():
 
 
 # =========================================================
-# 📧 SAVE SMTP SETTINGS
+# SMTP / EMAIL SETTINGS
 # =========================================================
+
+
 @app.route("/superadmin/settings/smtp", methods=["POST"])
 @admin_required
 def save_smtp_settings():
@@ -17297,130 +19215,583 @@ def save_smtp_settings():
     cursor = None
 
     try:
+        # =====================================================
+        # 1. READ FORM VALUES
+        # =====================================================
+
         smtp_email = (request.form.get("smtp_email") or "").strip().lower()
 
         smtp_password = (request.form.get("smtp_password") or "").strip()
 
-        smtp_server = (request.form.get("smtp_server") or "").strip()
+        smtp_server = (request.form.get("smtp_server") or "").strip().lower()
 
-        smtp_port = (request.form.get("smtp_port") or "").strip()
+        smtp_port_raw = (request.form.get("smtp_port") or "").strip()
 
-        smtp_tls = (request.form.get("smtp_tls") or "Enabled").strip()
+        smtp_tls = (request.form.get("smtp_tls") or "").strip()
 
-        # =====================================
-        # REQUIRED
-        # =====================================
+        # =====================================================
+        # 2. REQUIRED FIELD VALIDATION
+        # =====================================================
 
         if not smtp_email:
-            return "SMTP Email required ❌"
+            return "SMTP email is required.", 400
 
         if not smtp_server:
-            return "SMTP Server required ❌"
+            return "SMTP server is required.", 400
 
-        if not smtp_port:
-            return "SMTP Port required ❌"
+        if not smtp_port_raw:
+            return "SMTP port is required.", 400
 
-        # =====================================
-        # EMAIL
-        # =====================================
+        if smtp_tls not in ("Enabled", "Disabled"):
+            return "Invalid SMTP TLS setting.", 400
 
-        if not is_valid_email(smtp_email):
-            return "Invalid SMTP Email ❌"
+        # =====================================================
+        # 3. EMAIL VALIDATION
+        # =====================================================
 
         if len(smtp_email) > 150:
-            return "SMTP email too long ❌"
+            return "SMTP email must not exceed 150 characters.", 400
+
+        if not is_valid_email(smtp_email):
+            return "Please enter a valid SMTP email address.", 400
+
+        # =====================================================
+        # 4. SMTP HOST VALIDATION
+        # =====================================================
 
         if len(smtp_server) > 255:
-            return "SMTP server too long ❌"
+            return "SMTP server must not exceed 255 characters.", 400
 
-        # =====================================
-        # PORT
-        # =====================================
+        # Accept a hostname such as smtp.gmail.com.
+        # Reject whitespace, URL schemes, paths and newlines.
+        hostname_pattern = (
+            r"(?=.{1,253}\Z)"
+            r"(?:[a-zA-Z0-9]"
+            r"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)"
+            r"(?:\."
+            r"(?:[a-zA-Z0-9]"
+            r"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)"
+            r")*"
+        )
 
-        if not smtp_port.isdigit():
-            return "Invalid SMTP Port ❌"
+        if not re.fullmatch(hostname_pattern, smtp_server):
+            return "Please enter a valid SMTP hostname.", 400
 
-        smtp_port = int(smtp_port)
+        # =====================================================
+        # 5. PORT VALIDATION
+        # =====================================================
 
-        if smtp_port < 1 or smtp_port > 65535:
-            return "SMTP Port out of range ❌"
+        if not smtp_port_raw.isdigit():
+            return "SMTP port must be a whole number.", 400
 
-        # =====================================
-        # TLS
-        # =====================================
+        smtp_port = int(smtp_port_raw)
 
-        if smtp_tls not in ["Enabled", "Disabled"]:
-            return "Invalid TLS setting ❌"
+        if not 1 <= smtp_port <= 65535:
+            return "SMTP port must be between 1 and 65535.", 400
 
-        # =====================================
-        # DB
-        # =====================================
+        # =====================================================
+        # 6. PASSWORD LENGTH VALIDATION
+        # =====================================================
+
+        if len(smtp_password) > 1024:
+            return "SMTP password exceeds the allowed length.", 400
+
+        # =====================================================
+        # 7. CONNECT TO DATABASE
+        # =====================================================
 
         conn = get_connection()
+
+        if not conn:
+            app.logger.error("SMTP settings: database connection unavailable.")
+
+            return "Unable to save SMTP settings. Please try again.", 500
+
         cursor = conn.cursor()
+
+        # Lock the settings row during the update where supported.
+        # This prevents concurrent updates from overwriting the
+        # settings row while this transaction is in progress.
 
         cursor.execute("""
             SELECT
                 id,
                 smtp_password
             FROM system_settings
+            ORDER BY id ASC
             LIMIT 1
+            FOR UPDATE
         """)
 
-        settings = cursor.fetchone()
+        settings_row = cursor.fetchone()
 
-        if not settings:
-            return "System settings not found ❌"
+        if not settings_row:
+            conn.rollback()
 
-        settings_id = settings[0]
+            return ("System settings have not been initialized.", 404)
 
-        existing_password = settings[1]
+        settings_id = settings_row[0]
+        existing_password = settings_row[1]
 
-        # =====================================
-        # KEEP OLD PASSWORD
-        # =====================================
+        # =====================================================
+        # 8. PRESERVE EXISTING PASSWORD
+        # =====================================================
 
-        if not smtp_password:
-            smtp_password = existing_password
+        if smtp_password:
+            password_to_save = smtp_password
 
-        if not smtp_password:
-            return "SMTP password required ❌"
+        else:
+            password_to_save = existing_password
 
-        # =====================================
-        # UPDATE
-        # =====================================
+        if not password_to_save:
+            conn.rollback()
+
+            return ("An SMTP password is required for the initial configuration.", 400)
+
+        # =====================================================
+        # 9. UPDATE SETTINGS
+        # =====================================================
 
         cursor.execute(
             """
             UPDATE system_settings
             SET
-
                 smtp_email = %s,
                 smtp_password = %s,
                 smtp_server = %s,
                 smtp_port = %s,
                 smtp_tls = %s,
-
                 updated_at = NOW()
-
             WHERE id = %s
-        """,
-            (smtp_email, smtp_password, smtp_server, smtp_port, smtp_tls, settings_id),
+            """,
+            (
+                smtp_email,
+                password_to_save,
+                smtp_server,
+                smtp_port,
+                smtp_tls,
+                settings_id,
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            conn.rollback()
+
+            app.logger.error("SMTP settings update did not affect the expected row.")
+
+            return ("Unable to save SMTP settings. Please try again.", 500)
+
+        # =====================================================
+        # 10. COMMIT TRANSACTION
+        # =====================================================
+
+        conn.commit()
+
+        app.logger.info(
+            "SMTP settings updated successfully for settings ID %s.", settings_id
+        )
+
+        # =====================================================
+        # 11. REDIRECT
+        # =====================================================
+
+        return redirect(url_for("superadmin_settings") + "#smtp", code=303)
+
+    except Exception:
+        # Do not return database errors or credentials to the browser.
+
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                app.logger.exception("SMTP settings rollback failed.")
+
+        app.logger.exception("An error occurred while saving SMTP settings.")
+
+        return (
+            "Unable to save SMTP settings. Please check the configuration "
+            "and try again.",
+            500,
+        )
+
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                app.logger.exception("Failed to close SMTP settings cursor.")
+
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                app.logger.exception(
+                    "Failed to close SMTP settings database connection."
+                )
+
+
+# =========================================================
+# SECURE BACKUP DIRECTORY
+# =========================================================
+
+
+def get_backup_directory():
+
+    backup_dir = (
+        Path(
+            os.environ.get(
+                "ERP_BACKUP_DIR",
+                str(Path(current_app.instance_path) / "secure_backups"),
+            )
+        )
+        .expanduser()
+        .resolve()
+    )
+
+    backup_dir.mkdir(parents=True, exist_ok=True)
+
+    return backup_dir
+
+
+# =========================================================
+# CREATE DATABASE BACKUP
+# MySQL / MariaDB
+# =========================================================
+
+
+@app.route("/superadmin/settings/backup/create", methods=["POST"])
+@admin_required
+def create_backup():
+
+    conn = None
+    cursor = None
+
+    backup_path = None
+    temp_path = None
+
+    backup_filename = None
+    backup_status = "Failed"
+    backup_size = None
+
+    try:
+        # -------------------------------------------------
+        # 1. DATABASE CONFIGURATION
+        # -------------------------------------------------
+
+        db_host = os.environ.get("DB_HOST", "").strip()
+        db_port = os.environ.get("DB_PORT", "3306").strip()
+        db_name = os.environ.get("DB_NAME", "").strip()
+        db_user = os.environ.get("DB_USER", "").strip()
+        db_password = os.environ.get("DB_PASSWORD", "")
+
+        mysqldump_path = os.environ.get("MYSQLDUMP_PATH", "mysqldump").strip()
+
+        if not all([db_host, db_name, db_user, db_password, mysqldump_path]):
+            flash(
+                "Backup configuration is incomplete. "
+                "Ask the system administrator to configure it.",
+                "error",
+            )
+
+            return redirect(url_for("superadmin_settings") + "#backup")
+
+        try:
+            db_port_number = int(db_port)
+
+            if not 1 <= db_port_number <= 65535:
+                raise ValueError
+
+        except (TypeError, ValueError):
+            flash("The configured database port is invalid.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#backup")
+
+        # -------------------------------------------------
+        # 2. VERIFY MYSQLDUMP IS AVAILABLE
+        # -------------------------------------------------
+
+        resolved_mysqldump = shutil.which(mysqldump_path)
+
+        if not resolved_mysqldump:
+            flash(
+                "The MySQL backup utility is unavailable. "
+                "Configure MYSQLDUMP_PATH on the server.",
+                "error",
+            )
+
+            return redirect(url_for("superadmin_settings") + "#backup")
+
+        # -------------------------------------------------
+        # 3. PREPARE SECURE BACKUP FILE
+        # -------------------------------------------------
+
+        backup_dir = get_backup_directory()
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        unique_id = uuid4().hex[:12]
+
+        backup_filename = f"schoolerp_{timestamp}_{unique_id}.sql"
+
+        backup_path = backup_dir / backup_filename
+
+        temp_path = backup_dir / (f".{backup_filename}.partial")
+
+        # -------------------------------------------------
+        # 4. RUN MYSQLDUMP
+        # -------------------------------------------------
+
+        command = [
+            resolved_mysqldump,
+            "--host",
+            db_host,
+            "--port",
+            str(db_port_number),
+            "--user",
+            db_user,
+            "--single-transaction",
+            "--quick",
+            "--routines",
+            "--events",
+            "--triggers",
+            "--no-tablespaces",
+            "--result-file",
+            str(temp_path),
+            db_name,
+        ]
+
+        # Avoid exposing the database password in command-line
+        # arguments. Do not print this environment dictionary.
+        dump_env = os.environ.copy()
+
+        dump_env["MYSQL_PWD"] = db_password
+
+        result = subprocess.run(
+            command,
+            env=dump_env,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            # Do not expose raw database errors to the browser.
+            current_app.logger.error(
+                "Database backup failed. Exit code: %s. Diagnostic: %s",
+                result.returncode,
+                (result.stderr or "")[:2000],
+            )
+
+            raise RuntimeError("The database backup utility reported a failure.")
+
+        # -------------------------------------------------
+        # 5. VERIFY AND FINALIZE THE BACKUP
+        # -------------------------------------------------
+
+        if (
+            not temp_path.exists()
+            or not temp_path.is_file()
+            or temp_path.stat().st_size == 0
+        ):
+            raise RuntimeError("The generated backup file is empty or missing.")
+
+        # A simple file check does not prove that the backup
+        # can be restored. Restore testing is a separate task.
+
+        backup_size_bytes = temp_path.stat().st_size
+
+        os.replace(temp_path, backup_path)
+
+        backup_size = f"{backup_size_bytes / (1024 * 1024):.2f} MB"
+
+        backup_status = "Success"
+
+        # -------------------------------------------------
+        # 6. WRITE BACKUP HISTORY
+        # -------------------------------------------------
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO backup_logs (
+                backup_file,
+                backup_type,
+                backup_status,
+                backup_size,
+                backup_date
+            )
+            VALUES (%s, %s, %s, %s, NOW())
+            """,
+            (backup_filename, "Full Database", backup_status, backup_size),
+        )
+
+        cursor.execute(
+            """
+            UPDATE system_settings
+            SET
+                last_backup = NOW(),
+                updated_at = NOW()
+            WHERE id = (
+                SELECT id
+                FROM (
+                    SELECT id
+                    FROM system_settings
+                    ORDER BY id ASC
+                    LIMIT 1
+                ) AS selected_settings
+            )
+            """
         )
 
         conn.commit()
 
-        print("✅ SMTP SETTINGS UPDATED")
+        current_app.logger.info(
+            "Database backup completed successfully: %s", backup_filename
+        )
 
-        return redirect(url_for("superadmin_settings") + "#smtp")
+        flash("Database backup created successfully.", "success")
 
-    except Exception as e:
+    except subprocess.TimeoutExpired:
         if conn:
             conn.rollback()
 
-        print("❌ SMTP SETTINGS ERROR:", e)
+        current_app.logger.error("Database backup timed out.")
 
-        return "Something went wrong ❌"
+        flash("The backup timed out. Check the server logs and database size.", "error")
+
+    except Exception:
+        if conn:
+            conn.rollback()
+
+        current_app.logger.exception("Database backup operation failed.")
+
+        flash("Backup creation failed. Check the server logs for details.", "error")
+
+    finally:
+        # Remove incomplete files.
+        for path in (temp_path,):
+            if path is not None:
+                try:
+                    if path.exists():
+                        path.unlink()
+                except OSError:
+                    current_app.logger.exception(
+                        "Could not remove an incomplete backup file."
+                    )
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+    # -----------------------------------------------------
+    # 7. RECORD FAILED ATTEMPTS
+    # -----------------------------------------------------
+
+    if backup_status != "Success":
+        log_conn = None
+        log_cursor = None
+
+        try:
+            log_conn = get_connection()
+            log_cursor = log_conn.cursor()
+
+            log_cursor.execute(
+                """
+                INSERT INTO backup_logs (
+                    backup_file,
+                    backup_type,
+                    backup_status,
+                    backup_size,
+                    backup_date
+                )
+                VALUES (%s, %s, %s, %s, NOW())
+                """,
+                (None, "Full Database", "Failed", None),
+            )
+
+            log_conn.commit()
+
+        except Exception:
+            if log_conn:
+                log_conn.rollback()
+
+            current_app.logger.exception(
+                "Failed to record backup failure in backup_logs."
+            )
+
+        finally:
+            if log_cursor:
+                log_cursor.close()
+
+            if log_conn:
+                log_conn.close()
+
+    return redirect(url_for("superadmin_settings") + "#backup")
+
+
+# =========================================================
+# SECURE BACKUP DOWNLOAD
+# =========================================================
+
+
+@app.route("/superadmin/settings/backup/download/<filename>", methods=["GET"])
+@admin_required
+def download_backup(filename):
+
+    conn = None
+    cursor = None
+
+    try:
+        # Only accept a simple, generated SQL backup filename.
+        filename = secure_filename(filename)
+
+        if not re.fullmatch(r"schoolerp_\d{8}_\d{6}_[a-f0-9]{12}\.sql", filename):
+            abort(404)
+
+        backup_dir = get_backup_directory()
+
+        backup_path = (backup_dir / filename).resolve()
+
+        # Prevent access outside the configured backup directory.
+        if backup_path.parent != backup_dir:
+            abort(404)
+
+        # A file must also have a successful history record.
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM backup_logs
+            WHERE backup_file = %s
+              AND backup_status = %s
+            LIMIT 1
+            """,
+            (filename, "Success"),
+        )
+
+        backup_record = cursor.fetchone()
+
+        if not backup_record:
+            abort(404)
+
+        if not backup_path.is_file() or backup_path.is_symlink():
+            abort(404)
+
+        return send_file(
+            str(backup_path),
+            as_attachment=True,
+            download_name=filename,
+            mimetype="application/sql",
+            conditional=True,
+            max_age=0,
+        )
 
     finally:
         if cursor:
@@ -17428,202 +19799,6 @@ def save_smtp_settings():
 
         if conn:
             conn.close()
-
-
-# =========================================================
-# 💾 CREATE REAL DATABASE BACKUP
-# =========================================================
-
-# @app.route(
-#     "/superadmin/settings/backup",
-#     methods=["POST"]
-# )
-# @admin_required
-# def create_backup():
-
-#     conn = None
-#     cursor = None
-
-#     try:
-
-# =========================================
-# DB CONNECTION
-# =========================================
-
-# conn = get_connection()
-
-# BACKUP DATABASE requires autocommit
-
-# conn.autocommit = True
-
-# cursor = conn.cursor()
-
-# =========================================
-# ADMIN SESSION
-# =========================================
-
-# admin_id = session.get(
-#     "admin_user_id"
-# )
-
-# if not admin_id:
-#     return "Admin session missing ❌"
-
-# =========================================
-# BACKUP DIRECTORY
-# =========================================
-
-# backup_dir = os.path.join(
-#     os.getcwd(),
-#     "backups"
-# )
-
-# os.makedirs(
-#     backup_dir,
-#     exist_ok=True
-# )
-
-# =========================================
-# FILE NAME
-# =========================================
-
-# backup_date = datetime.now()
-
-# backup_file = (
-#     f"backup_"
-#     f"{backup_date.strftime('%Y%m%d_%H%M%S')}"
-#     f".bak"
-# )
-
-# backup_path = os.path.join(
-#     backup_dir,
-#     backup_file
-# )
-
-# =========================================
-# SQL SERVER BACKUP COMMAND
-# =========================================
-
-# sql = f"""
-# BACKUP DATABASE SchoolERP
-# TO DISK = '{backup_path}'
-# WITH INIT,
-# NAME = 'Full Backup of SchoolERP';
-# """
-# cursor.execute(sql)
-
-# =========================================
-# FILE SIZE
-# =========================================
-
-# size_bytes = os.path.getsize(
-#     backup_path
-# )
-
-# size_mb = round(
-#     size_bytes / (1024 * 1024),
-#     2
-# )
-
-# backup_size = f"{size_mb} MB"
-
-# =========================================
-# SAVE BACKUP LOG
-# =========================================
-
-# cursor.execute("""
-
-#     INSERT INTO system_backup_logs
-#     (
-#         backup_file,
-#         backup_status,
-#         backup_size,
-#         backup_date,
-#         backup_type,
-#         created_by
-#     )
-
-#     VALUES (%s, %s, %s, %s, %s, %s)
-
-# """, (
-
-#     backup_file,
-#     "Success",
-#     backup_size,
-#     backup_date,
-#     "manual",
-#     admin_id
-
-# ))
-
-# =========================================
-# UPDATE SETTINGS
-# =========================================
-
-#     cursor.execute("""
-
-#         UPDATE system_settings
-
-#         SET
-
-#             last_backup = %s,
-#             backup_status = %s,
-#             updated_at = NOW()
-
-#         WHERE id = 1
-
-#     """, (
-
-#         backup_date,
-#         "Enabled"
-
-#     ))
-
-#     conn.commit()
-
-#     print("✅ REAL BACKUP CREATED")
-
-#     return redirect(
-#         url_for("superadmin_settings")
-#     )
-
-# except Exception as e:
-
-#     if conn:
-#         conn.rollback()
-
-#     print(
-#         "❌ BACKUP ERROR:",
-#         e
-#     )
-
-#     return "Something went wrong ❌"
-
-# finally:
-
-#     if cursor:
-#         cursor.close()
-
-#     if conn:
-#         conn.close()
-
-# =========================================================
-# 📥 DOWNLOAD BACKUP
-# =========================================================
-
-
-@app.route("/download-backup/<filename>")
-@admin_required
-def download_backup(filename):
-
-    filename = secure_filename(filename)
-
-    backup_path = os.path.join(os.getcwd(), "backups", filename)
-
-    if not os.path.exists(backup_path):
-        return "Backup file not found ❌"
-
-    return send_file(backup_path, as_attachment=True)
 
 
 # =========================================================
@@ -18068,8 +20243,10 @@ def download_backup(filename):
 
 
 # =========================================================
-# 🛠 SAVE MAINTENANCE SETTINGS (PRODUCTION SAFE)
+# MAINTENANCE SETTINGS
 # =========================================================
+
+
 @app.route("/superadmin/settings/maintenance", methods=["POST"])
 @admin_required
 def save_maintenance_settings():
@@ -18078,9 +20255,9 @@ def save_maintenance_settings():
     cursor = None
 
     try:
-        # =========================================
-        # GET FORM DATA
-        # =========================================
+        # -------------------------------------------------
+        # 1. GET FORM DATA
+        # -------------------------------------------------
 
         maintenance_mode = (
             (request.form.get("maintenance_mode") or "OFF").strip().upper()
@@ -18088,43 +20265,54 @@ def save_maintenance_settings():
 
         maintenance_message = (request.form.get("maintenance_message") or "").strip()
 
-        # =========================================
-        # VALIDATION
-        # =========================================
+        # -------------------------------------------------
+        # 2. VALIDATE MODE
+        # -------------------------------------------------
 
-        if maintenance_mode not in ["ON", "OFF"]:
-            return "Invalid maintenance mode ❌"
+        if maintenance_mode not in ("ON", "OFF"):
+            flash("Invalid maintenance mode.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#maintenance")
+
+        # -------------------------------------------------
+        # 3. VALIDATE MESSAGE
+        # -------------------------------------------------
 
         if len(maintenance_message) > 1000:
-            return "Maintenance message too long ❌"
+            flash("Maintenance message cannot exceed 1000 characters.", "error")
 
-        # =========================================
-        # DEFAULT MESSAGE
-        # =========================================
+            return redirect(url_for("superadmin_settings") + "#maintenance")
+
+        # -------------------------------------------------
+        # 4. APPLY DEFAULT MESSAGE
+        # -------------------------------------------------
 
         if not maintenance_message:
             if maintenance_mode == "ON":
                 maintenance_message = (
-                    "ERP system is currently under maintenance. Please try again later."
+                    "The ERP system is currently under maintenance. "
+                    "Please try again later."
                 )
 
             else:
-                maintenance_message = "System running normally"
+                maintenance_message = "The ERP system is operating normally."
 
-        # =========================================
-        # DB CONNECTION
-        # =========================================
+        # -------------------------------------------------
+        # 5. CONNECT TO DATABASE
+        # -------------------------------------------------
 
         conn = get_connection()
 
-        if not conn:
-            return "Database connection failed ❌"
+        if conn is None:
+            flash("Database connection failed. Settings were not saved.", "error")
+
+            return redirect(url_for("superadmin_settings") + "#maintenance")
 
         cursor = conn.cursor()
 
-        # =========================================
-        # CHECK SETTINGS EXISTS
-        # =========================================
+        # -------------------------------------------------
+        # 6. FETCH GLOBAL SETTINGS ROW
+        # -------------------------------------------------
 
         cursor.execute("""
             SELECT id
@@ -18133,62 +20321,68 @@ def save_maintenance_settings():
             LIMIT 1
         """)
 
-        settings = cursor.fetchone()
+        settings_row = cursor.fetchone()
 
-        if not settings:
-            return "System settings not found ❌"
+        if not settings_row:
+            flash("System settings record was not found.", "error")
 
-        settings_id = settings[0]
+            return redirect(url_for("superadmin_settings") + "#maintenance")
 
-        # =========================================
-        # UPDATE SETTINGS
-        # =========================================
+        settings_id = settings_row[0]
+
+        # -------------------------------------------------
+        # 7. UPDATE MAINTENANCE CONFIGURATION
+        # -------------------------------------------------
 
         cursor.execute(
             """
-
             UPDATE system_settings
-
             SET
-
                 maintenance_mode = %s,
                 maintenance_message = %s,
                 updated_at = NOW()
-
             WHERE id = %s
-
-        """,
+            """,
             (maintenance_mode, maintenance_message, settings_id),
         )
 
-        if cursor.rowcount == 0:
-            return "No settings updated ❌"
-
-        # =========================================
-        # SAVE
-        # =========================================
+        # -------------------------------------------------
+        # 8. COMMIT
+        # -------------------------------------------------
 
         conn.commit()
 
-        # =========================================
-        # TERMINAL LOG
-        # =========================================
+        app.logger.warning(
+            "Maintenance configuration updated: mode=%s, settings_id=%s",
+            maintenance_mode,
+            settings_id,
+        )
 
-        print(f"✅ MAINTENANCE MODE UPDATED: {maintenance_mode}")
+        # -------------------------------------------------
+        # 9. SUCCESS MESSAGE
+        # -------------------------------------------------
 
-        # =========================================
-        # REDIRECT
-        # =========================================
+        if maintenance_mode == "ON":
+            flash(
+                "Maintenance mode enabled. Regular ERP access is restricted.", "success"
+            )
+
+        else:
+            flash(
+                "Maintenance mode disabled. Regular ERP access is restored.", "success"
+            )
 
         return redirect(url_for("superadmin_settings") + "#maintenance")
 
-    except Exception as e:
+    except Exception:
         if conn:
             conn.rollback()
 
-        print("❌ MAINTENANCE SETTINGS ERROR:", e)
+        app.logger.exception("Failed to save maintenance settings.")
 
-        return "Something went wrong ❌"
+        flash("Unable to save maintenance settings. Please try again.", "error")
+
+        return redirect(url_for("superadmin_settings") + "#maintenance")
 
     finally:
         if cursor:
@@ -18199,8 +20393,91 @@ def save_maintenance_settings():
 
 
 # =========================================================
-# 🎨 SAVE BRANDING SETTINGS
+# MAINTENANCE SCREEN ROUTE
 # =========================================================
+
+
+@app.route("/maintenance", methods=["GET"])
+def maintenance_page():
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+
+        if not conn:
+            return "System temporarily unavailable.", 503
+
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT
+                maintenance_mode,
+                maintenance_message
+            FROM system_settings
+            WHERE id = 1
+            LIMIT 1
+        """)
+
+        row = cursor.fetchone()
+
+        if not row:
+            return "System settings unavailable.", 503
+
+        maintenance_mode = (row[0] or "OFF").strip().upper()
+
+        maintenance_message = (
+            row[1]
+            or "The ERP system is currently under maintenance. Please try again later."
+        )
+
+        if maintenance_mode != "ON":
+            return redirect(url_for("login"))
+
+        response = make_response(
+            render_template(
+                "maintenance.html", maintenance_message=maintenance_message
+            ),
+            503,
+        )
+
+        response.headers["Cache-Control"] = (
+            "no-store, no-cache, must-revalidate, max-age=0"
+        )
+
+        response.headers["Pragma"] = "no-cache"
+
+        return response
+
+    except Exception:
+        app.logger.exception("Unable to display maintenance screen.")
+
+        return "System temporarily unavailable.", 503
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# =========================================================
+# SAVE BRANDING SETTINGS
+# ShalaSarthi ERP
+#
+# Features:
+# - Validate theme colors and text fields
+# - Validate website URLs
+# - Validate favicon extension and size
+# - Preserve existing favicon when no replacement is uploaded
+# - Update system_settings transactionally
+# - Clear the existing settings cache after commit
+# - Remove the old favicon only after a successful update
+# =========================================================
+
+
 @app.route("/superadmin/save-branding-settings", methods=["POST"])
 @admin_required
 def save_branding_settings():
@@ -18208,7 +20485,23 @@ def save_branding_settings():
     conn = None
     cursor = None
 
+    new_favicon_path = None
+    old_favicon_path = None
+
+    upload_folder = os.path.join(
+        app.root_path,
+        "static",
+        "uploads",
+        "branding",
+    )
+
+    redirect_target = url_for("superadmin_settings") + "#branding"
+
     try:
+        # -------------------------------------------------
+        # 1. READ FORM DATA
+        # -------------------------------------------------
+
         primary_color = (request.form.get("primary_color") or "#0EA5A4").strip()
 
         secondary_color = (request.form.get("secondary_color") or "#14B8A6").strip()
@@ -18223,177 +20516,352 @@ def save_branding_settings():
 
         website_url = (request.form.get("website_url") or "").strip()
 
-        # ================= COLOR VALIDATION =================
+        # -------------------------------------------------
+        # 2. VALIDATE COLOR VALUES
+        # -------------------------------------------------
+
         color_pattern = r"^#[0-9A-Fa-f]{6}$"
 
-        for color in [primary_color, secondary_color, button_color]:
+        color_fields = {
+            "Primary color": primary_color,
+            "Secondary color": secondary_color,
+            "Button color": button_color,
+        }
+
+        for label, color in color_fields.items():
             if not re.fullmatch(color_pattern, color):
-                return "Invalid color code ❌"
+                flash(
+                    f"{label} must be a valid six-digit HEX color.",
+                    "error",
+                )
 
-        # ================= LENGTH VALIDATION =================
-        if len(erp_version) > 50:
-            return "ERP version too long ❌"
+                return redirect(redirect_target)
 
-        if len(footer_text) > 255:
-            return "Footer text too long ❌"
+        # Normalize colors to uppercase.
+        primary_color = primary_color.upper()
+        secondary_color = secondary_color.upper()
+        button_color = button_color.upper()
 
-        if len(powered_by) > 150:
-            return "Powered by text too long ❌"
+        # -------------------------------------------------
+        # 3. VALIDATE TEXT LENGTHS
+        # -------------------------------------------------
 
-        if len(website_url) > 255:
-            return "Website URL too long ❌"
+        text_limits = {
+            "ERP version": (erp_version, 50),
+            "Footer text": (footer_text, 255),
+            "Powered by text": (powered_by, 150),
+            "Website URL": (website_url, 255),
+        }
 
-        # ================= URL VALIDATION =================
+        for label, (value, limit) in text_limits.items():
+            if len(value) > limit:
+                flash(
+                    f"{label} cannot exceed {limit} characters.",
+                    "error",
+                )
+
+                return redirect(redirect_target)
+
+        # -------------------------------------------------
+        # 4. VALIDATE WEBSITE URL
+        # -------------------------------------------------
+
         if website_url:
-            if not (
-                website_url.startswith("http://") or website_url.startswith("https://")
-            ):
-                return "Invalid website URL ❌"
+            try:
+                parsed_url = urlsplit(website_url)
+
+                valid_url = (
+                    parsed_url.scheme.lower() in ("http", "https")
+                    and bool(parsed_url.hostname)
+                    and not any(character.isspace() for character in website_url)
+                    and parsed_url.username is None
+                    and parsed_url.password is None
+                )
+
+                # Validate the hostname/port syntax.
+                if parsed_url.port is not None:
+                    valid_url = valid_url and (1 <= parsed_url.port <= 65535)
+
+            except ValueError:
+                valid_url = False
+
+            if not valid_url:
+                flash(
+                    "Enter a valid website URL beginning with http:// or https://.",
+                    "error",
+                )
+
+                return redirect(redirect_target)
+
+        # -------------------------------------------------
+        # 5. VALIDATE FAVICON BEFORE SAVING
+        # -------------------------------------------------
+
+        favicon = request.files.get("favicon")
+
+        has_new_favicon = bool(favicon and favicon.filename)
+
+        safe_original_filename = None
+
+        if has_new_favicon:
+            safe_original_filename = secure_filename(favicon.filename)
+
+            if not safe_original_filename:
+                flash(
+                    "The selected favicon filename is invalid.",
+                    "error",
+                )
+
+                return redirect(redirect_target)
+
+            allowed_extensions = {
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".ico",
+                ".webp",
+            }
+
+            extension = os.path.splitext(safe_original_filename)[1].lower()
+
+            if extension not in allowed_extensions:
+                flash(
+                    "Unsupported favicon format. Use PNG, JPG, JPEG, ICO, or WEBP.",
+                    "error",
+                )
+
+                return redirect(redirect_target)
+
+            # Check actual uploaded stream size.
+            favicon.stream.seek(0, os.SEEK_END)
+
+            favicon_size = favicon.stream.tell()
+
+            favicon.stream.seek(0)
+
+            max_favicon_size = 2 * 1024 * 1024
+
+            if favicon_size == 0:
+                flash(
+                    "The selected favicon file is empty.",
+                    "error",
+                )
+
+                return redirect(redirect_target)
+
+            if favicon_size > max_favicon_size:
+                flash(
+                    "Favicon size cannot exceed 2 MB.",
+                    "error",
+                )
+
+                return redirect(redirect_target)
+
+        # -------------------------------------------------
+        # 6. CONNECT TO DATABASE
+        # -------------------------------------------------
 
         conn = get_connection()
 
-        if not conn:
-            return "Database connection failed ❌"
+        if conn is None:
+            flash(
+                "Database connection failed. Branding settings were not saved.",
+                "error",
+            )
+
+            return redirect(redirect_target)
 
         cursor = conn.cursor()
 
-        # ================= GET SETTINGS =================
+        # -------------------------------------------------
+        # 7. FETCH THE EXISTING SETTINGS RECORD
+        #
+        # Use the same record-selection rule as the other
+        # settings functions.
+        # -------------------------------------------------
+
         cursor.execute("""
-            SELECT
-                id,
-                favicon
+            SELECT id, favicon
             FROM system_settings
             ORDER BY id ASC
             LIMIT 1
         """)
 
-        settings = cursor.fetchone()
+        settings_row = cursor.fetchone()
 
-        if not settings:
-            return "System settings not found ❌"
-
-        settings_id = settings[0]
-        old_favicon = settings[1]
-
-        # ================= FAVICON UPLOAD =================
-        favicon_filename = None
-        favicon = request.files.get("favicon")
-
-        if favicon and favicon.filename:
-            favicon.seek(0, os.SEEK_END)
-            size = favicon.tell()
-            favicon.seek(0)
-
-            if size > 2 * 1024 * 1024:
-                return "Favicon size exceeds 2MB ❌"
-
-            original_filename = secure_filename(favicon.filename)
-
-            allowed_extensions = (".png", ".jpg", ".jpeg", ".ico", ".webp")
-
-            if not original_filename.lower().endswith(allowed_extensions):
-                return "Invalid favicon type ❌"
-
-            filename = f"{int(datetime.now().timestamp())}_" + original_filename
-
-            upload_folder = os.path.join("static", "uploads", "branding")
-
-            os.makedirs(upload_folder, exist_ok=True)
-
-            favicon_path = os.path.join(upload_folder, filename)
-
-            favicon.save(favicon_path)
-
-            favicon_filename = "uploads/branding/" + filename
-
-        # ================= UPDATE SETTINGS =================
-        if favicon_filename:
-            cursor.execute(
-                """
-                UPDATE system_settings
-                SET
-                    primary_color = %s,
-                    secondary_color = %s,
-                    button_color = %s,
-                    erp_version = %s,
-                    footer_text = %s,
-                    powered_by = %s,
-                    website_url = %s,
-                    favicon = %s,
-                    updated_at = NOW()
-                WHERE id = %s
-            """,
-                (
-                    primary_color,
-                    secondary_color,
-                    button_color,
-                    erp_version,
-                    footer_text,
-                    powered_by,
-                    website_url,
-                    favicon_filename,
-                    settings_id,
-                ),
+        if not settings_row:
+            flash(
+                "System settings record was not found.",
+                "error",
             )
 
-        else:
-            cursor.execute(
-                """
-                UPDATE system_settings
-                SET
-                    primary_color = %s,
-                    secondary_color = %s,
-                    button_color = %s,
-                    erp_version = %s,
-                    footer_text = %s,
-                    powered_by = %s,
-                    website_url = %s,
-                    updated_at = NOW()
-                WHERE id = %s
-            """,
-                (
-                    primary_color,
-                    secondary_color,
-                    button_color,
-                    erp_version,
-                    footer_text,
-                    powered_by,
-                    website_url,
-                    settings_id,
-                ),
+            return redirect(redirect_target)
+
+        settings_id = settings_row[0]
+        old_favicon = settings_row[1]
+
+        # -------------------------------------------------
+        # 8. SAVE NEW FAVICON, IF PROVIDED
+        # -------------------------------------------------
+
+        favicon_filename = old_favicon
+
+        if has_new_favicon:
+            os.makedirs(
+                upload_folder,
+                exist_ok=True,
             )
+
+            # Unique name prevents overwriting an existing file.
+            generated_filename = uuid.uuid4().hex + extension
+
+            new_favicon_path = os.path.join(
+                upload_folder,
+                generated_filename,
+            )
+
+            # Save the file before updating the database.
+            # If the DB update fails, remove this new file.
+            favicon.save(new_favicon_path)
+
+            favicon_filename = "uploads/branding/" + generated_filename
+
+        # -------------------------------------------------
+        # 9. UPDATE BRANDING SETTINGS
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            UPDATE system_settings
+            SET
+                primary_color = %s,
+                secondary_color = %s,
+                button_color = %s,
+                erp_version = %s,
+                footer_text = %s,
+                powered_by = %s,
+                website_url = %s,
+                favicon = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            """,
+            (
+                primary_color,
+                secondary_color,
+                button_color,
+                erp_version,
+                footer_text,
+                powered_by,
+                website_url,
+                favicon_filename,
+                settings_id,
+            ),
+        )
+
+        # -------------------------------------------------
+        # 10. VERIFY THE UPDATE
+        # -------------------------------------------------
+
+        if cursor.rowcount != 1:
+            raise RuntimeError("Branding settings were not updated.")
+
+        # -------------------------------------------------
+        # 11. COMMIT DATABASE TRANSACTION
+        # -------------------------------------------------
 
         conn.commit()
 
-        # =========================================================
-        # CLEAR SYSTEM SETTINGS CACHE
-        # Force next request to load fresh settings from database
-        # =========================================================
-        SYSTEM_SETTINGS_CACHE["data"] = None
-        SYSTEM_SETTINGS_CACHE["updated_at"] = None
+        # -------------------------------------------------
+        # 12. CLEAR SYSTEM SETTINGS CACHE
+        # -------------------------------------------------
 
-        # ================= DELETE OLD FAVICON AFTER SUCCESS =================
+        if "SYSTEM_SETTINGS_CACHE" in globals():
+            cache = SYSTEM_SETTINGS_CACHE
 
-        if favicon_filename and old_favicon:
-            old_path = os.path.join("static", old_favicon)
+            if isinstance(cache, dict):
+                cache["data"] = None
+                cache["updated_at"] = None
 
-            if os.path.exists(old_path):
+        # -------------------------------------------------
+        # 13. REMOVE OLD FAVICON AFTER SUCCESS
+        # -------------------------------------------------
+
+        if (
+            has_new_favicon
+            and new_favicon_path
+            and isinstance(old_favicon, str)
+            and old_favicon
+        ):
+            old_relative_path = old_favicon.replace("\\", "/")
+
+            if old_relative_path.startswith("uploads/branding/"):
+                old_favicon_path = os.path.realpath(
+                    os.path.join(
+                        app.root_path,
+                        "static",
+                        *old_relative_path.split("/"),
+                    )
+                )
+
+                resolved_upload_dir = os.path.realpath(upload_folder)
+
                 try:
-                    os.remove(old_path)
-                except Exception as delete_error:
-                    print("⚠️ OLD FAVICON DELETE ERROR:", delete_error)
+                    is_inside_branding_folder = (
+                        os.path.commonpath([resolved_upload_dir, old_favicon_path])
+                        == resolved_upload_dir
+                    )
+                except ValueError:
+                    is_inside_branding_folder = False
 
-        print("✅ BRANDING SETTINGS UPDATED")
+                if (
+                    is_inside_branding_folder
+                    and old_favicon_path != os.path.realpath(new_favicon_path)
+                    and os.path.isfile(old_favicon_path)
+                ):
+                    try:
+                        os.remove(old_favicon_path)
 
-        return redirect(url_for("superadmin_settings") + "#branding")
+                    except OSError:
+                        app.logger.exception("Unable to remove the previous favicon.")
 
-    except Exception as e:
+        # -------------------------------------------------
+        # 14. SUCCESS
+        # -------------------------------------------------
+
+        app.logger.info(
+            "Branding settings updated successfully. settings_id=%s",
+            settings_id,
+        )
+
+        flash(
+            "Branding settings saved successfully.",
+            "success",
+        )
+
+        return redirect(redirect_target)
+
+    except Exception:
         if conn:
             conn.rollback()
 
-        print("❌ BRANDING SETTINGS ERROR:", e)
+        # If the DB transaction fails, remove the newly
+        # uploaded file so it does not become an orphan.
+        if new_favicon_path and os.path.isfile(new_favicon_path):
+            try:
+                os.remove(new_favicon_path)
 
-        return "Something went wrong ❌"
+            except OSError:
+                app.logger.exception("Unable to remove the uncommitted favicon file.")
+
+        app.logger.exception("Failed to save branding settings.")
+
+        flash(
+            "Unable to save branding settings. "
+            "Please check the application logs and try again.",
+            "error",
+        )
+
+        return redirect(redirect_target)
 
     finally:
         if cursor:
@@ -18750,8 +21218,6 @@ def subscription_payment():
         # CALCULATE SERVER-SIDE PRICE
         # =================================================
 
-        from decimal import Decimal, ROUND_HALF_UP
-
         monthly_price = Decimal(str(plan["monthly_price"] or "0"))
 
         yearly_price = Decimal(str(plan["yearly_price"] or "0"))
@@ -18956,6 +21422,7 @@ def payment_success():
         # =================================================
 
         plan_id_raw = request.form.get("plan_id", "").strip()
+
         subscription_id_raw = request.form.get("subscription_id", "").strip()
 
         billing_cycle = request.form.get("billing_cycle", "").strip().lower()
@@ -19749,10 +22216,26 @@ def payment_success():
             )
 
             raise
+        # =========================================================
+        # CREATE SUPERADMIN NOTIFICATION — PAYMENT SUCCESS
+        # =========================================================
 
-        # =================================================
+        create_superadmin_notification(
+            cursor=cursor,
+            event_key=f"subscription:{subscription_id}:renewal:{razorpay_payment_id}",
+            event_type="renewal",
+            title="Subscription renewed successfully",
+            message=(
+                f"{school_name}'s subscription has been renewed successfully. "
+                "The payment has been recorded."
+            ),
+            target_url="/superadmin/subscriptions",
+            school_id=school_id,
+        )
+
+        # =========================================================
         # COMMIT TRANSACTION
-        # =================================================
+        # =========================================================
 
         conn.commit()
 

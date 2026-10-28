@@ -4,531 +4,1355 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
 
-<!-- ================= HEADER ================= -->
-<div class="admin-header">
 
-    <div>
+<!-- =====================================================
+     SUPERADMIN FLASH MESSAGES
+====================================================== -->
 
-        <h1>Super Admin Dashboard</h1>
+<div class="superadmin-flash-stack" id="superadminFlashStack" aria-live="polite" aria-atomic="false">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
 
-        <p>
-            Control all schools, students and system operations
-        </p>
+    {% set alert_type = category if category in
+    ['success', 'warning', 'danger', 'error', 'info']
+    else 'info' %}
 
-    </div>
+    {% if alert_type == 'error' %}
+    {% set alert_type = 'danger' %}
+    {% endif %}
 
-    <a href="/superadmin/leads"
-       class="lead-notification">
+    <div class="superadmin-flash superadmin-flash-{{ alert_type }}">
 
-        🔔
-
-        {% if new_leads_count is defined and new_leads_count > 0 %}
-        <span class="lead-badge">
-            {{ new_leads_count }}
+        <span class="superadmin-flash-icon" aria-hidden="true">
+            {% if alert_type == 'success' %}✓
+            {% elif alert_type == 'warning' %}!
+            {% elif alert_type == 'danger' %}×
+            {% else %}i
+            {% endif %}
         </span>
-        {% endif %}
 
-    </a>
+        <div class="superadmin-flash-content">
+            <strong>
+                {% if alert_type == 'success' %}Success
+                {% elif alert_type == 'warning' %}Attention
+                {% elif alert_type == 'danger' %}Error
+                {% else %}Information
+                {% endif %}
+            </strong>
 
-</div>
-<!-- ===================================== -->
-<!-- BUSINESS KPI CARDS -->
-<!-- ===================================== -->
-
-<div class="admin-stats-grid">
-
-    <!-- Active Schools -->
-    <div class="admin-stat-card card-active">
-
-        <div class="stat-icon">
-            ✅
+            <span>{{ message }}</span>
         </div>
 
-        <div class="stat-content">
-            <span class="stat-label">Active Schools</span>
-            <h2>{{ active_schools or 0 }}</h2>
-            <small>Currently subscribed</small>
-        </div>
+        <button type="button" class="superadmin-flash-close" aria-label="Dismiss message">
+            &times;
+        </button>
 
     </div>
 
-    <!-- Revenue -->
-
-    <div class="admin-stat-card card-revenue">
-
-        <div class="stat-icon">
-            💰
-        </div>
-
-        <div class="stat-content">
-            <span class="stat-label">Revenue This Month</span>
-            <h2>₹{{ revenue_this_month or 0 }}</h2>
-            <small>Current month earnings</small>
-        </div>
-
-    </div>
-
-    <!-- Renewals -->
-
-    <div class="admin-stat-card card-renewal">
-
-        <div class="stat-icon">
-            🔔
-        </div>
-
-        <div class="stat-content">
-            <span class="stat-label">Upcoming Renewals</span>
-            <h2>{{ upcoming_renewals or 0 }}</h2>
-            <small>Next 30 days</small>
-        </div>
-
-    </div>
-
-    <!-- Leads -->
-
-    <div class="admin-stat-card card-leads">
-
-        <div class="stat-icon">
-            📞
-        </div>
-
-        <div class="stat-content">
-            <span class="stat-label">New Leads</span>
-            <h2>{{ new_leads_count or 0 }}</h2>
-            <small>Pending enquiries</small>
-        </div>
-
-    </div>
-
-    <!-- Students -->
-
-    <div class="admin-stat-card card-student">
-
-        <div class="stat-icon">
-            🎓
-        </div>
-
-        <div class="stat-content">
-            <span class="stat-label">Total Students</span>
-            <h2>{{ total_students }}</h2>
-            <small>Across all schools</small>
-        </div>
-
-    </div>
-
-</div>
- 
-
-<!-- ===================================== -->
-<!-- QUICK ACTIONS -->
-<!-- ===================================== -->
-
-<div class="section-header">
-
-    <h2>Quick Actions</h2>
-
-    <p>
-        Most frequently used administration tools
-    </p>
+    {% endfor %}
+    {% endwith %}
 
 </div>
 
-<div class="admin-actions">
 
-    <!-- Schools -->
+<!-- =========================================================
+     MAIN superadmin DASHBOARD CONTAINER
+========================================================= -->
 
-    <div class="admin-action-card schools-card"
-         onclick="location.href='/superadmin/schools'">
+<div class="superadmin-dashboard-container">
 
-        <div class="action-icon">
-            🏫
+    <!-- =====================================================
+     SUPERADMIN NAVBAR
+====================================================== -->
+
+    {% set sa_name = superadmin_name | default('ShalaSarthi Admin', true) %}
+    {% set sa_email = superadmin_email | default('', true) %}
+    {% set sa_initial = sa_name[:1] | upper if sa_name else 'S' %}
+
+    <header class="superadmin-navbar" id="superadminNavbar">
+
+        <!-- LEFT: MENU + PAGE IDENTITY -->
+        <div class="superadmin-navbar-left">
+
+            <button type="button" class="superadmin-menu-toggle" id="superadminMenuToggle" aria-label="Toggle sidebar"
+                aria-expanded="false" title="Toggle navigation">
+
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" aria-hidden="true">
+
+                    <path d="M4 7h16"></path>
+                    <path d="M4 12h16"></path>
+                    <path d="M4 17h16"></path>
+
+                </svg>
+
+            </button>
+
+            <div class="superadmin-navbar-heading">
+
+                <span class="superadmin-navbar-eyebrow">
+                    SCHOOL ERP
+                </span>
+
+                <strong>Superadmin Dashboard</strong>
+
+            </div>
+
         </div>
 
-        <h3>Schools</h3>
 
-        <p>
-            Manage all registered schools
-        </p>
+        <!-- RIGHT: NOTIFICATIONS + PROFILE -->
+        <div class="superadmin-navbar-right">
 
-    </div>
+            <!-- =====================================================
+                SUPER ADMIN NOTIFICATIONS
+            ====================================================== -->
 
-    <!-- Students -->
+            <div class="superadmin-notification-wrapper" id="superadminNotificationWrapper">
 
-    <div class="admin-action-card students-card"
-         onclick="location.href='/superadmin/all-students'">
+                <!-- Notification button -->
+                <button type="button" class="superadmin-notification-button" id="superadminNotificationButton"
+                    aria-label="Notifications" aria-expanded="false" aria-controls="superadminNotificationPanel"
+                    title="Notifications">
 
-        <div class="action-icon">
-            🎓
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                        <path d="M10 21h4"></path>
+
+                    </svg>
+
+                    <span class="superadmin-notification-badge" id="superadminNotificationBadge"
+                        aria-label="Unread notifications" aria-live="polite" aria-atomic="true" hidden>0</span>
+
+                </button>
+
+                <!-- Notification panel -->
+                <section class="superadmin-notification-panel" id="superadminNotificationPanel"
+                    aria-label="Super Admin notifications" aria-hidden="true" inert>
+
+                    <!-- Header -->
+                    <header class="superadmin-notification-header">
+
+                        <div class="superadmin-notification-heading">
+
+                            <span class="superadmin-panel-eyebrow">
+                                PLATFORM UPDATES
+                            </span>
+
+                            <strong>Notifications</strong>
+
+                            <small id="superadminNotificationSummary" aria-live="polite">
+                                Loading updates...
+                            </small>
+                        </div>
+
+                        <span class="superadmin-notification-status">
+                            <span></span>
+                            Live overview
+                        </span>
+
+                    </header>
+
+                    <!-- Scrollable list -->
+                    <div class="superadmin-notification-list" id="superadminNotificationList" aria-live="polite"
+                        aria-busy="true">
+
+                        <div class="superadmin-notification-loading">
+                            Loading your latest notifications...
+                        </div>
+
+                    </div>
+
+                    <!-- Load more notifications -->
+                    <div class="superadmin-load-more-wrapper" id="superadminLoadMoreWrapper" style="display: none;">
+                        <button type="button" id="superadminNotificationLoadMore"
+                            class="superadmin-notification-load-more" aria-label="Load more notifications">
+                            <span class="superadmin-load-more-label">Load more notifications</span>
+                            <span class="superadmin-load-more-arrow" aria-hidden="true">↓</span>
+                        </button>
+                    </div>
+
+                    <!-- FIX: Changed from <a> tag to a clickable action <button> -->
+                    <button type="button" class="superadmin-notification-footer" id="superadminNotificationFooter">
+                        <span>View all notifications</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
+
+                </section>
+
+            </div>
+
+            <!-- =========================================================
+            PROFILE DROPDOWN
+        ========================================================= -->
+
+            <div class="superadmin-profile-wrapper" id="superadminProfileWrapper">
+
+                <!-- =====================================================
+         PROFILE TRIGGER
+    ====================================================== -->
+
+                <button type="button" class="superadmin-profile-button" id="superadminProfileButton"
+                    aria-expanded="false" aria-haspopup="true" aria-controls="superadminProfileDropdown">
+
+                    <!-- PROFILE INFORMATION -->
+                    <span class="superadmin-profile-info">
+
+                        <strong>
+                            {{ user_profile.name
+                            if user_profile and user_profile.name
+                            else "Super Admin" }}
+                        </strong>
+
+                        <span>Super Administrator</span>
+
+                    </span>
+
+                    <!-- AVATAR -->
+
+                    <span class="superadmin-profile-avatar" aria-hidden="true">
+
+                        {% if user_profile and user_profile.name %}
+
+                        {{ user_profile.name[0]|upper }}
+
+                        {% else %}
+
+                        {{ sa_initial }}
+
+                        {% endif %}
+
+                    </span>
+
+                    <!-- CHEVRON -->
+
+                    <svg class="superadmin-profile-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true">
+
+                        <path d="m7 10 5 5 5-5"></path>
+
+                    </svg>
+
+                </button>
+
+
+                <!-- =====================================================
+         PROFILE DROPDOWN
+    ====================================================== -->
+                <div class="superadmin-profile-dropdown" id="superadminProfileDropdown" role="menu" aria-hidden="true">
+
+                    <!-- PROFILE HEADER -->
+
+                    <div class="superadmin-profile-dropdown-header">
+
+                        <div class="superadmin-profile-dropdown-avatar" aria-hidden="true">
+
+                            {% if user_profile and user_profile.name %}
+
+                            {{ user_profile.name[0]|upper }}
+
+                            {% else %}
+
+                            {{ sa_initial }}
+
+                            {% endif %}
+
+                        </div>
+
+                        <div class="superadmin-profile-dropdown-user">
+
+                            <strong>{{ sa_name }}</strong>
+
+                            {% if sa_email %}
+                            <span>{{ sa_email }}</span>
+                            {% else %}
+                            <span>Platform administration</span>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    <!-- PROFILE STATUS -->
+
+                    <div class="superadmin-profile-status">
+
+                        <span class="superadmin-profile-status-dot"></span>
+
+                        <span>
+                            Account Active
+                        </span>
+
+                    </div>
+
+                    <!-- ==========================================
+                        SUPERADMIN PROFILE DROPDOWN MENU
+                    ========================================== -->
+
+                    <div class="superadmin-profile-dropdown-menu" role="menu">
+
+                        <!-- MY PROFILE -->
+                        <a href="{{ url_for('superadmin_dashboard') }}" class="superadmin-profile-dropdown-item"
+                            role="menuitem">
+
+                            <span class="superadmin-profile-dropdown-icon">
+                                <i class="fa-regular fa-user"></i>
+                            </span>
+
+                            <span class="superadmin-profile-dropdown-text">
+                                <strong>My Profile</strong>
+                                <small>Manage your account</small>
+                            </span>
+
+                            <i class="fa-solid fa-chevron-right dropdown-arrow" aria-hidden="true"></i>
+                        </a>
+
+                        <!-- DASHBOARD -->
+                        <a href="{{ url_for('superadmin_dashboard') }}" class="superadmin-profile-dropdown-item"
+                            role="menuitem">
+
+                            <span class="superadmin-profile-dropdown-icon">
+                                <i class="fa-solid fa-gauge-high"></i>
+                            </span>
+
+                            <span class="superadmin-profile-dropdown-text">
+                                <strong>Dashboard</strong>
+                                <small>View your dashboard</small>
+                            </span>
+
+                            <i class="fa-solid fa-chevron-right dropdown-arrow" aria-hidden="true"></i>
+                        </a>
+
+                    </div>
+
+                    <!-- DIVIDER -->
+                    <div class="superadmin-profile-divider"></div>
+
+                    <!-- ==========================================
+                        LOGOUT — SINGLE LOCATION IN PROFILE
+                    ========================================== -->
+
+                    <form method="POST" action="{{ url_for('logout') }}" class="superadmin-profile-logout-form"
+                        id="superadminLogoutForm">
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <input type="hidden" name="role" value="admin">
+
+                        <button type="submit" class="superadmin-profile-logout" id="superadminLogoutButton">
+
+                            <span class="superadmin-profile-dropdown-icon">
+                                <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                            </span>
+
+                            <span class="superadmin-profile-dropdown-text">
+                                <strong>Logout</strong>
+                                <small>Sign out of your account</small>
+                            </span>
+
+                            <i class="fa-solid fa-chevron-right dropdown-arrow" aria-hidden="true"></i>
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <h3>Students</h3>
+    </header>
 
-        <p>
-            View and manage students
-        </p>
+    <!-- =====================================================
+     SUPERADMIN PLATFORM WELCOME CARD
+===================================================== -->
 
-    </div>
+    <section class="superadmin-welcome-card" aria-labelledby="superadminWelcomeTitle">
 
-    <!-- Leads -->
+        <!-- Decorative background -->
+        <div class="superadmin-welcome-decoration" aria-hidden="true"></div>
 
-    <div class="admin-action-card leads-card"
-         onclick="location.href='/superadmin/leads'">
+        <!-- LEFT: PLATFORM INFORMATION -->
+        <div class="superadmin-welcome-content">
 
-        <div class="action-icon">
-            📞
+            <!-- Greeting -->
+            <div class="superadmin-welcome-greeting">
+                {{ greeting }}
+            </div>
+
+            <!-- Main heading -->
+            <h1 class="superadmin-welcome-school" id="superadminWelcomeTitle">
+                ShalaSarthi Platform Overview
+            </h1>
+
+            <!-- English description -->
+            <p class="superadmin-welcome-description">
+                Manage your school network, subscriptions, revenue
+                and platform operations from one central dashboard.
+            </p>
+
+            <!-- Marathi description -->
+            <p class="superadmin-welcome-marathi" lang="mr">
+                शाळा, सदस्यता, महसूल आणि संपूर्ण प्लॅटफॉर्मचे
+                व्यवस्थापन एका ठिकाणाहून करा.
+            </p>
+
+            <!-- Information chips -->
+            <div class="superadmin-welcome-meta">
+
+                <!-- Current date -->
+                <div class="superadmin-welcome-chip">
+
+                    <span class="superadmin-welcome-chip-icon" aria-hidden="true">
+                        <i class="fa-regular fa-calendar-days"></i>
+                    </span>
+
+                    <span class="superadmin-welcome-chip-text">
+                        <small>TODAY</small>
+
+                        <strong>{{ current_date }}</strong>
+                    </span>
+
+                </div>
+
+                <!-- Workspace -->
+                <div class="superadmin-welcome-chip">
+
+                    <span class="superadmin-welcome-chip-icon" aria-hidden="true">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </span>
+
+                    <span class="superadmin-welcome-chip-text">
+                        <small>WORKSPACE</small>
+
+                        <strong>Platform Admin</strong>
+                    </span>
+
+                </div>
+
+                <!-- Admin status -->
+                <div class="superadmin-welcome-status">
+
+                    <span class="superadmin-welcome-status-dot" aria-hidden="true"></span>
+
+                    <span>Superadmin Workspace</span>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <h3>Leads</h3>
 
-        <p>
-            Review new enquiries
-        </p>
+        <!-- RIGHT: PLATFORM NETWORK ILLUSTRATION -->
+        <div class="superadmin-welcome-visual" aria-hidden="true">
 
-    </div>
+            <!-- Decorative circles -->
+            <div class="superadmin-welcome-circle
+                    superadmin-circle-one"></div>
 
-    <!-- Subscription -->
+            <div class="superadmin-welcome-circle
+                    superadmin-circle-two"></div>
 
-    <div class="admin-action-card subscription-card"
-         onclick="location.href='/superadmin/subscriptions'">
 
-        <div class="action-icon">
-            💳
+            <!-- Platform illustration -->
+            <svg class="superadmin-platform-illustration" viewBox="0 0 420 260" xmlns="http://www.w3.org/2000/svg">
+
+                <!-- Soft background -->
+                <circle cx="215" cy="130" r="105" fill="#ecfdfb" />
+
+                <circle cx="340" cy="65" r="43" fill="#ccfbf1" opacity=".8" />
+
+
+                <!-- Connection lines behind nodes -->
+                <g fill="none" stroke="#5eead4" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 7">
+
+                    <path d="M210 91 L100 139" />
+                    <path d="M210 91 L320 139" />
+                    <path d="M210 153 L100 190" />
+                    <path d="M210 153 L320 190" />
+
+                </g>
+
+
+                <!-- Central platform card shadow -->
+                <rect x="143" y="68" width="134" height="116" rx="18" fill="#0f766e" opacity=".08" />
+
+
+                <!-- Central platform card -->
+                <rect x="137" y="61" width="146" height="116" rx="17" fill="#ffffff" stroke="#99f6e4"
+                    stroke-width="2" />
+
+
+                <!-- Central card top bar -->
+                <path d="M154 61 H266 Q283 61 283 78 V88 H137 V78 Q137 61 154 61Z" fill="#0f766e" />
+
+                <circle cx="153" cy="75" r="3" fill="#ccfbf1" />
+
+                <circle cx="164" cy="75" r="3" fill="#99f6e4" />
+
+                <circle cx="175" cy="75" r="3" fill="#5eead4" />
+
+
+                <!-- Platform icon -->
+                <rect x="177" y="102" width="66" height="43" rx="8" fill="#ecfdfb" />
+
+                <rect x="188" y="111" width="11" height="25" rx="3" fill="#5eead4" />
+
+                <rect x="204" y="120" width="11" height="16" rx="3" fill="#2dd4bf" />
+
+                <rect x="220" y="107" width="11" height="29" rx="3" fill="#0d9488" />
+
+
+                <!-- Platform label -->
+                <text x="210" y="160" text-anchor="middle" font-size="10" font-weight="800"
+                    font-family="Arial, sans-serif" fill="#0f766e">
+                    PLATFORM
+                </text>
+
+
+                <!-- Connection nodes -->
+                <circle cx="100" cy="139" r="22" fill="#d1fae5" />
+
+                <circle cx="320" cy="139" r="22" fill="#ccfbf1" />
+
+                <circle cx="100" cy="190" r="22" fill="#e0f2fe" />
+
+                <circle cx="320" cy="190" r="22" fill="#ede9fe" />
+
+
+                <!-- School building: top-left -->
+                <g transform="translate(83 126)">
+
+                    <path d="M-13 -2 L0 -12 L13 -2 V13 H-13Z" fill="#ffffff" stroke="#0d9488" stroke-width="1.8"
+                        stroke-linejoin="round" />
+
+                    <path d="M-16 -2 L0 -15 L16 -2" fill="none" stroke="#0d9488" stroke-width="2.5"
+                        stroke-linecap="round" />
+
+                    <rect x="-3.5" y="3" width="7" height="10" rx="1.5" fill="#99f6e4" />
+
+                    <rect x="-10" y="1" width="5" height="5" rx="1" fill="#ccfbf1" />
+
+                    <rect x="5" y="1" width="5" height="5" rx="1" fill="#ccfbf1" />
+
+                </g>
+
+
+                <!-- School building: top-right -->
+                <g transform="translate(320 139)">
+
+                    <path d="M-13 -2 L0 -12 L13 -2 V13 H-13Z" fill="#ffffff" stroke="#0d9488" stroke-width="1.8"
+                        stroke-linejoin="round" />
+
+                    <path d="M-16 -2 L0 -15 L16 -2" fill="none" stroke="#0d9488" stroke-width="2.5"
+                        stroke-linecap="round" />
+
+                    <rect x="-3.5" y="3" width="7" height="10" rx="1.5" fill="#99f6e4" />
+
+                    <rect x="-10" y="1" width="5" height="5" rx="1" fill="#ccfbf1" />
+
+                    <rect x="5" y="1" width="5" height="5" rx="1" fill="#ccfbf1" />
+
+                </g>
+
+
+                <!-- Users node: bottom-left -->
+                <g transform="translate(100 190)" fill="none" stroke="#0284c7" stroke-width="2.5"
+                    stroke-linecap="round">
+
+                    <circle cx="0" cy="-5" r="5" fill="#bae6fd" stroke="#0284c7" />
+
+                    <path d="M-9 8 Q-9 -1 0 -1 Q9 -1 9 8" fill="#ffffff" />
+
+                </g>
+
+
+                <!-- Analytics node: bottom-right -->
+                <g transform="translate(320 190)" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round">
+
+                    <path d="M-10 8 V-1 H-3 V8 M0 8 V-9 H7 V8" fill="#ddd6fe" />
+
+                    <path d="M-13 9 H12" />
+
+                </g>
+
+
+                <!-- Small accent -->
+                <circle cx="361" cy="99" r="6" fill="#5eead4" />
+
+                <circle cx="361" cy="99" r="12" fill="none" stroke="#99f6e4" stroke-width="3" opacity=".7" />
+
+            </svg>
+
         </div>
 
-        <h3>Subscriptions</h3>
+    </section>
 
-        <p>
-            Manage plans and billing
-        </p>
+    <!-- =====================================================
+     SUPERADMIN PLATFORM KPI SECTION
+===================================================== -->
 
-    </div>
+    <section class="superadmin-kpi-section" aria-label="Platform business statistics">
 
-</div>
+        <div class="superadmin-kpi-grid">
 
-<!-- ===================================== -->
-<!-- BUSINESS ANALYTICS -->
-<!-- ===================================== -->
+            <!-- 1. ACTIVE SCHOOLS -->
+            <article class="superadmin-kpi-card kpi-schools">
 
-<div class="section-header">
-    <h2>Business Analytics</h2>
-    <p>Revenue and subscription performance</p>
-</div>
+                <div class="superadmin-kpi-icon">
+                    <i class="fa-solid fa-school" aria-hidden="true"></i>
+                </div>
 
-<div class="analytics-grid">
+                <div class="superadmin-kpi-content">
 
-    <!-- Revenue Chart -->
+                    <span class="superadmin-kpi-label">
+                        Active Schools
+                    </span>
 
-    <div class="analytics-card"
-        id="revenueData"
-        data-labels='{{ revenue_labels|tojson }}'
-        data-values='{{ revenue_values|tojson }}'>
+                    <h2 class="superadmin-kpi-value">
+                        {{ active_schools or 0 }}
+                    </h2>
 
-        <div class="card-header">
-            <h3>Revenue Analytics</h3>
-            <span>Last 6 Months</span>
+                    <p class="superadmin-kpi-description">
+                        Currently subscribed schools
+                    </p>
+
+                </div>
+
+                <span class="superadmin-kpi-indicator" aria-hidden="true">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                </span>
+
+            </article>
+
+
+            <!-- 2. TOTAL REVENUE -->
+            <article class="superadmin-kpi-card kpi-revenue">
+
+                <div class="superadmin-kpi-icon">
+                    <i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i>
+                </div>
+
+                <div class="superadmin-kpi-content">
+
+                    <span class="superadmin-kpi-label">
+                        Total Revenue
+                    </span>
+
+                    <h2 class="superadmin-kpi-value kpi-revenue-value">
+                        ₹{{ "{:,.2f}".format(total_revenue or 0) }}
+                    </h2>
+
+                    <p class="superadmin-kpi-description">
+                        All successful payments
+                    </p>
+
+                </div>
+
+                <span class="superadmin-kpi-indicator" aria-hidden="true">
+                    <i class="fa-solid fa-wallet"></i>
+                </span>
+
+            </article>
+
+
+            <!-- 3. UPCOMING RENEWALS -->
+            <article class="superadmin-kpi-card kpi-renewals">
+
+                <div class="superadmin-kpi-icon">
+                    <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                </div>
+
+                <div class="superadmin-kpi-content">
+
+                    <span class="superadmin-kpi-label">
+                        Upcoming Renewals
+                    </span>
+
+                    <h2 class="superadmin-kpi-value">
+                        {{ upcoming_renewals or 0 }}
+                    </h2>
+
+                    <p class="superadmin-kpi-description">
+                        Subscriptions ending in 30 days
+                    </p>
+
+                </div>
+
+                <span class="superadmin-kpi-indicator" aria-hidden="true">
+                    <i class="fa-solid fa-clock"></i>
+                </span>
+
+            </article>
+
+
+            <!-- 4. NEW LEADS -->
+            <article class="superadmin-kpi-card kpi-leads">
+
+                <div class="superadmin-kpi-icon">
+                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                </div>
+
+                <div class="superadmin-kpi-content">
+
+                    <span class="superadmin-kpi-label">
+                        New Leads
+                    </span>
+
+                    <h2 class="superadmin-kpi-value">
+                        {{ new_leads_count or 0 }}
+                    </h2>
+
+                    <p class="superadmin-kpi-description">
+                        Pending customer enquiries
+                    </p>
+
+                </div>
+
+                <span class="superadmin-kpi-indicator" aria-hidden="true">
+                    <i class="fa-solid fa-headset"></i>
+                </span>
+
+            </article>
+
         </div>
 
-        <canvas id="revenueChart"></canvas>
+    </section>
 
-    </div>
+    <!-- =====================================================
+     SUPER ADMIN QUICK ACTIONS
+====================================================== -->
 
-    <!-- Subscription Chart -->
-    <div class="analytics-card"
-        id="subscriptionData"
-        data-labels='{{ subscription_labels|tojson }}'
-        data-values='{{ subscription_values|tojson }}'>
+    <section class="admin-quick-actions" aria-labelledby="quickActionsTitle">
 
-        <div class="card-header">
-            <h3>Subscription Analytics</h3>
-            <span>Active vs Expired</span>
+        <!-- SECTION HEADER -->
+        <div class="quick-actions-header">
+
+            <div class="quick-actions-heading">
+                <span class="quick-section-eyebrow">WORKSPACE SHORTCUTS</span>
+
+                <h2 id="quickActionsTitle">Quick Actions</h2>
+
+                <p>
+                    Access your most frequently used administration tools.
+                </p>
+            </div>
+
+            <span class="quick-actions-count">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                4 Shortcuts
+            </span>
+
         </div>
 
-        <canvas id="subscriptionChart"></canvas>
 
-    </div>
+        <!-- ACTION CARDS -->
+        <div class="admin-actions">
 
-</div>
+            <!-- 1. SCHOOLS -->
+            <a href="/superadmin/schools" class="admin-action-card schools-card">
 
-<!-- ===================================== -->
-<!-- PLATFORM INSIGHTS -->
-<!-- ===================================== -->
+                <div class="action-card-top">
 
-<div class="section-header">
-    <h2>Platform Insights</h2>
-    <p>Student distribution and recent platform activity</p>
-</div>
+                    <div class="action-icon">
+                        <i class="fa-solid fa-school" aria-hidden="true"></i>
+                    </div>
 
-<div class="admin-insight">
+                    <span class="action-arrow" aria-hidden="true">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </span>
 
-    <!-- STUDENT DISTRIBUTION -->
+                </div>
 
-    <div class="chart-card"
-         id="chartData"
-         data-labels='{{ chart_labels|tojson }}'
-         data-values='{{ chart_values|tojson }}'>
+                <div class="action-card-content">
 
-        <div class="card-header">
+                    <h3>School Management</h3>
 
+                    <p>
+                        Manage registered schools and their accounts.
+                    </p>
+
+                </div>
+
+                <div class="action-card-footer">
+                    <span>Manage schools</span>
+
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </div>
+
+            </a>
+
+
+            <!-- 2. USERS -->
+            <a href="/superadmin/users" class="admin-action-card users-card">
+
+                <div class="action-card-top">
+
+                    <div class="action-icon">
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
+                    </div>
+
+                    <span class="action-arrow" aria-hidden="true">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </span>
+
+                </div>
+
+                <div class="action-card-content">
+
+                    <h3>User Management</h3>
+
+                    <p>
+                        View and manage school clerk accounts.
+                    </p>
+
+                </div>
+
+                <div class="action-card-footer">
+                    <span>Manage users</span>
+
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </div>
+
+            </a>
+
+
+            <!-- 3. LEADS -->
+            <a href="/superadmin/leads" class="admin-action-card leads-card">
+
+                <div class="action-card-top">
+
+                    <div class="action-icon">
+                        <i class="fa-solid fa-headset" aria-hidden="true"></i>
+                    </div>
+
+                    {% if new_leads_count|default(0)|int > 0 %}
+                    <span class="action-notification">
+                        {{ new_leads_count }} new
+                    </span>
+                    {% else %}
+                    <span class="action-arrow" aria-hidden="true">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </span>
+                    {% endif %}
+
+                </div>
+
+                <div class="action-card-content">
+
+                    <h3>Lead Management</h3>
+
+                    <p>
+                        Review demo requests and customer enquiries.
+                    </p>
+
+                </div>
+
+                <div class="action-card-footer">
+                    <span>Review enquiries</span>
+
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </div>
+
+            </a>
+
+
+            <!-- 4. SUBSCRIPTIONS -->
+            <a href="/superadmin/subscriptions" class="admin-action-card subscriptions-card">
+
+                <div class="action-card-top">
+
+                    <div class="action-icon">
+                        <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
+                    </div>
+
+                    <span class="action-arrow" aria-hidden="true">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </span>
+
+                </div>
+
+                <div class="action-card-content">
+
+                    <h3>Subscriptions</h3>
+
+                    <p>
+                        Monitor school subscriptions and billing.
+                    </p>
+
+                </div>
+
+                <div class="action-card-footer">
+                    <span>Manage subscriptions</span>
+
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </div>
+
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+     BUSINESS ANALYTICS
+     Revenue Trends + Subscription Health
+========================================================= -->
+
+    <section class="sa-analytics-section" id="superadminBusinessAnalytics"
+        data-refresh-url="{{ url_for('superadmin_dashboard_analytics') }}" aria-labelledby="saAnalyticsTitle">
+
+        <!-- SECTION HEADER -->
+        <div class="sa-analytics-heading">
+
+            <div class="sa-analytics-heading-copy">
+
+                <span class="sa-section-eyebrow">
+                    PLATFORM INSIGHTS
+                </span>
+
+                <h2 id="saAnalyticsTitle">
+                    Business Analytics
+                </h2>
+
+                <p>
+                    Monitor revenue performance and subscription health
+                    across your school network.
+                </p>
+
+            </div>
+
+            <div class="sa-analytics-status">
+
+                <span class="sa-live-indicator" aria-hidden="true"></span>
+
+                <span>Live data</span>
+
+                <span class="sa-status-divider"></span>
+
+                <span id="saAnalyticsUpdatedAt" aria-live="polite">
+                    Loading analytics...
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- ANALYTICS GRID -->
+        <div class="sa-analytics-grid">
+
+            <!-- =================================================
+             REVENUE ANALYTICS
+        ================================================== -->
+
+            <article class="sa-analytics-card sa-revenue-card">
+
+                <div class="sa-analytics-card-header">
+
+                    <div class="sa-card-heading-group">
+
+                        <span class="sa-card-icon sa-revenue-icon">
+                            <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                        </span>
+
+                        <div>
+                            <h3>Revenue Analytics</h3>
+
+                            <p>
+                                Successful payments over time
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <span class="sa-chart-period">
+                        Last 6 months
+                    </span>
+
+                </div>
+
+
+                <div class="sa-revenue-summary">
+
+                    <div>
+                        <span class="sa-summary-label">
+                            Revenue this month
+                        </span>
+
+                        <strong id="saRevenueThisMonth">
+                            ₹{{ "%.2f"|format(revenue_this_month|default(0)|float) }}
+                        </strong>
+                    </div>
+
+                    <div class="sa-revenue-summary-badge">
+                        <i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i>
+
+                        <span>INR</span>
+                    </div>
+
+                </div>
+
+
+                <div class="sa-chart-container sa-revenue-chart-container">
+
+                    <canvas id="revenueChart" role="img" aria-label="Revenue over the last six months">
+                        Revenue chart.
+                    </canvas>
+
+                </div>
+
+
+                <div class="sa-chart-message" id="saRevenueChartMessage" role="status" hidden></div>
+
+            </article>
+
+
+            <!-- =================================================
+             SUBSCRIPTION ANALYTICS
+        ================================================== -->
+
+            <article class="sa-analytics-card sa-subscription-card">
+
+                <div class="sa-analytics-card-header">
+
+                    <div class="sa-card-heading-group">
+
+                        <span class="sa-card-icon sa-subscription-icon">
+                            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                        </span>
+
+                        <div>
+                            <h3>Subscription Health</h3>
+
+                            <p>
+                                Current subscription distribution
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <span class="sa-chart-period">
+                        All subscriptions
+                    </span>
+
+                </div>
+
+
+                <div class="sa-chart-container sa-subscription-chart-container">
+
+                    <canvas id="subscriptionChart" role="img"
+                        aria-label="Active, renewal due, and expired subscriptions">
+                        Subscription distribution chart.
+                    </canvas>
+
+                    <div class="sa-doughnut-center" aria-hidden="true">
+                        <strong id="saTotalSubscriptions">0</strong>
+
+                        <span>Total</span>
+                    </div>
+
+                </div>
+
+
+                <div class="sa-subscription-legend" id="saSubscriptionLegend" aria-label="Subscription breakdown">
+
+                    <div class="sa-legend-item">
+                        <span class="sa-legend-dot sa-legend-active"></span>
+
+                        <span>Active</span>
+
+                        <strong id="saActiveSubscriptions">0</strong>
+                    </div>
+
+                    <div class="sa-legend-item">
+                        <span class="sa-legend-dot sa-legend-renewal"></span>
+
+                        <span>Renewals Due</span>
+
+                        <strong id="saRenewalSubscriptions">0</strong>
+                    </div>
+
+                    <div class="sa-legend-item">
+                        <span class="sa-legend-dot sa-legend-expired"></span>
+
+                        <span>Expired</span>
+
+                        <strong id="saExpiredSubscriptions">0</strong>
+                    </div>
+
+                </div>
+
+
+                <div class="sa-chart-message" id="saSubscriptionChartMessage" role="status" hidden></div>
+
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+     PLATFORM INSIGHTS
+     Left: Recent Activity
+     Right: School & Student Overview
+========================================================= -->
+
+    <section class="platform-insights-section" aria-labelledby="platformInsightsTitle">
+
+        <!-- SECTION HEADER -->
+        <div class="section-header platform-insights-heading">
             <div>
-                <h3>Student Distribution</h3>
-                <span>Students across registered schools</span>
+                <span class="platform-section-eyebrow">PLATFORM MONITORING</span>
+                <h2 id="platformInsightsTitle">Platform Insights</h2>
+                <p>Monitor school activity and student distribution across your platform.</p>
             </div>
+
+            <span class="platform-live-indicator">
+                <span class="platform-live-dot"></span>
+                Database Overview
+            </span>
+        </div>
+
+        <div class="platform-insights-grid">
+
+            <!-- =================================================
+         LEFT: RECENT ACTIVITY
+    ================================================== -->
+
+            <article class="platform-panel activity-panel">
+
+                <div class="platform-panel-header">
+
+                    <div class="platform-panel-title">
+                        <div class="platform-panel-icon activity-heading-icon">
+                            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                        </div>
+
+                        <div>
+                            <h3>Recent Activity</h3>
+                            <p>Latest important platform events</p>
+                        </div>
+                    </div>
+
+                    <span class="activity-count-badge">
+                        {{ recent_activity|length }}
+                        {% if recent_activity|length == 1 %}
+                        event
+                        {% else %}
+                        events
+                        {% endif %}
+                    </span>
+
+                </div>
+
+                <div class="activity-list" id="platformActivityList">
+
+                    {% if recent_activity %}
+
+                    {% for activity in recent_activity %}
+
+                    <div class="platform-activity-item">
+
+                        <!-- Activity icon -->
+                        <div class="platform-activity-icon activity-{{ activity.type }}">
+                            <i class="{{ activity.icon }}" aria-hidden="true">
+                            </i>
+                        </div>
+
+                        <!-- Activity information -->
+                        <div class="platform-activity-details">
+
+                            <div class="platform-activity-topline">
+
+                                <h4>
+                                    {{ activity.title }}
+                                </h4>
+
+                                {% if activity.status %}
+                                <span class="activity-status status-{{ activity.status_class }}">
+                                    {{ activity.status }}
+                                </span>
+                                {% endif %}
+
+                            </div>
+
+                            <p>
+                                {{ activity.description }}
+                            </p>
+
+                            <!-- Date and time -->
+                            <span class="platform-activity-time">
+
+                                <i class="fa-regular fa-clock" aria-hidden="true">
+                                </i>
+
+                                <time>
+                                    {{ activity.time }}
+                                </time>
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                    {% else %}
+
+                    <div class="platform-activity-empty">
+
+                        <div class="activity-empty-icon">
+                            <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                        </div>
+
+                        <h4>No recent activity</h4>
+
+                        <p>
+                            New school registrations, successful payments
+                            and certificate events will appear here.
+                        </p>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+                <div class="platform-panel-footer">
+                    <span>
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        Platform administration activity
+                    </span>
+                </div>
+
+            </article>
+
+
+            <!-- =================================================
+         RIGHT: SCHOOL & STUDENT OVERVIEW
+    ================================================== -->
+
+            <article class="platform-panel school-overview-panel">
+
+                <div class="platform-panel-header">
+
+                    <div class="platform-panel-title">
+                        <div class="platform-panel-icon school-heading-icon">
+                            <i class="fa-solid fa-school" aria-hidden="true"></i>
+                        </div>
+
+                        <div>
+                            <h3>School &amp; Student Overview</h3>
+                            <p>Student distribution across registered schools</p>
+                        </div>
+                    </div>
+
+                    <span class="school-chart-period">
+                        Current totals
+                    </span>
+
+                </div>
+
+
+                <!-- SUMMARY METRICS -->
+
+                <div class="school-overview-metrics">
+
+                    <div class="school-overview-metric metric-schools">
+
+                        <div class="overview-metric-icon">
+                            <i class="fa-solid fa-building" aria-hidden="true"></i>
+                        </div>
+
+                        <div>
+                            <span>Total Schools</span>
+                            <strong>{{ total_schools|default(0) }}</strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="school-overview-metric metric-students">
+
+                        <div class="overview-metric-icon">
+                            <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+                        </div>
+
+                        <div>
+                            <span>Total Students</span>
+                            <strong>{{ total_students|default(0) }}</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CHART -->
+
+                <div class="school-student-chart-container" id="schoolStudentChartData"
+                    data-labels='{{ school_student_labels|default([])|tojson }}'
+                    data-values='{{ school_student_values|default([])|tojson }}' role="img"
+                    aria-label="Bar chart comparing student counts across registered schools">
+
+                    <canvas id="schoolStudentChart"></canvas>
+
+                </div>
+
+
+                <!-- EMPTY STATE -->
+
+                <div class="school-chart-empty" id="schoolStudentChartEmpty" {% if school_student_labels %}hidden{%
+                    endif %}>
+                    <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
+
+                    <h4>No school data available</h4>
+
+                    <p>School and student statistics will appear here when data is available.</p>
+                </div>
+
+
+                <div class="school-chart-footer">
+
+                    <div class="chart-legend-item">
+                        <span class="chart-legend-dot legend-school-dot"></span>
+                        Students per school
+                    </div>
+
+                    <span class="chart-updated-label">
+                        <i class="fa-solid fa-database" aria-hidden="true"></i>
+                        Live database totals
+                    </span>
+
+                </div>
+
+            </article>
 
         </div>
 
-        <canvas id="schoolChart"></canvas>
-
-    </div>
-
-    <!-- RECENT ACTIVITY -->
-
-    <div class="insight-card">
-
-        <div class="card-header">
-
-            <div>
-                <h3>Activity Feed</h3>
-                <span>Latest platform actions</span>
-            </div>
-
-        </div>
-
-        <div class="recent-list">
-
-            {% for tc in recent_tc %}
-            <div class="recent-item">
-
-                <div class="activity-icon tc-icon">
-                    📄
-                </div>
-
-                <div class="activity-content">
-                    <strong>{{ tc[0] }}</strong>
-                    <span>TC Generated ({{ tc[1] }})</span>
-                </div>
-
-            </div>
-            {% endfor %}
-
-            {% for b in recent_bonafide %}
-            <div class="recent-item">
-
-                <div class="activity-icon bonafide-icon">
-                    🏅
-                </div>
-
-                <div class="activity-content">
-                    <strong>{{ b[0] }}</strong>
-                    <span>Bonafide Generated ({{ b[1] }})</span>
-                </div>
-
-            </div>
-            {% endfor %}
-
-        </div>
-
-    </div>
+    </section>
 
 </div>
 
- 
+
 <!-- CHART JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
 
-document.addEventListener("DOMContentLoaded", function () {
 
-    // =====================================
-    // SCHOOL STUDENTS BAR CHART
-    // =====================================
-
-    const chartBox =
-        document.getElementById("chartData");
-
-    const labels =
-        JSON.parse(chartBox.dataset.labels);
-
-    const values =
-        JSON.parse(chartBox.dataset.values);
-
-    const schoolCtx =
-        document.getElementById("schoolChart");
-
-    new Chart(schoolCtx, {
-
-        type: "bar",
-
-        data: {
-
-            labels: labels,
-
-            datasets: [{
-
-                label: "Students",
-
-                data: values,
-
-                backgroundColor: "#3b82f6",
-
-                borderRadius: 8
-
-            }]
-
-        },
-
-        options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false,
-
-            plugins: {
-
-                legend: {
-
-                    display: false
-
-                }
-
-            }
-
-        }
-
-    });
-
-    // =====================================
-    // REVENUE ANALYTICS
-    // =====================================
-
-    const revenueBox =
-    document.getElementById("revenueData");
-
-const revenueLabels =
-    JSON.parse(revenueBox.dataset.labels);
-
-const revenueValues =
-    JSON.parse(revenueBox.dataset.values);
-
-const revenueCtx =
-    document.getElementById("revenueChart");
-
-new Chart(revenueCtx, {
-
-    type: "line",
-
-    data: {
-
-        labels: revenueLabels,
-
-        datasets: [{
-
-            label: "Revenue",
-
-            data: revenueValues,
-
-            borderColor: "#10b981",
-
-            backgroundColor: "rgba(16,185,129,.12)",
-
-            fill: true,
-
-            tension: .4,
-
-            borderWidth: 3,
-
-            pointRadius: 4
-
-        }]
-
-    },
-
-    options: {
-
-        responsive: true,
-
-        maintainAspectRatio: false,
-
-        plugins: {
-
-            legend: {
-
-                display: false
-
-            }
-
-        }
-
-    }
-
-});
-
-    // =====================================
-    // SUBSCRIPTION ANALYTICS
-    // =====================================
-
-    const subscriptionBox =
-    document.getElementById("subscriptionData");
-
-const subscriptionLabels =
-    JSON.parse(subscriptionBox.dataset.labels);
-
-const subscriptionValues =
-    JSON.parse(subscriptionBox.dataset.values);
-
-const subscriptionCtx =
-    document.getElementById("subscriptionChart");
-
-new Chart(subscriptionCtx, {
-
-    type: "doughnut",
-
-    data: {
-
-        labels: subscriptionLabels,
-
-        datasets: [{
-
-            data: subscriptionValues,
-
-            backgroundColor: [
-
-                "#10b981",
-                "#ef4444"
-
-            ],
-
-            borderWidth: 0
-
-        }]
-
-    },
-
-    options: {
-
-        responsive: true,
-
-        maintainAspectRatio: false,
-
-        cutout: "72%",
-        radius: "82%",
-
-        plugins: {
-
-            legend: {
-
-                position: "bottom"
-
-            }
-
-        }
-
-    }
-
-});
-
-});
-
-</script>
+<script src="{{ url_for(
+    'static',
+    filename='js/superadmin_dashboard.js'
+) }}" defer></script>
 
 {% endblock %}

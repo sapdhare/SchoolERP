@@ -343,11 +343,11 @@
 
     color: #94a3b8;
 
-    font-size: 8.5px;
+    font-size: 9px;
 
     font-weight: 850;
 
-    letter-spacing: .7px;
+    letter-spacing: .8px;
 
     text-transform: uppercase;
 }
@@ -575,7 +575,7 @@
 
     color: #94a3b8;
 
-    font-size: 6px;
+    font-size: 7.5px;
 
     font-weight: 850;
 
@@ -3592,10 +3592,8 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-
     margin-bottom: 12px;
 }
-
 
 .clerk-actions-heading {
     min-width: 0;
@@ -7622,3 +7620,6 @@
         border-radius: 20px;
     }
 }
+
+
+

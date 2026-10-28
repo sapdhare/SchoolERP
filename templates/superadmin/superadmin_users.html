@@ -25,34 +25,32 @@
      USERS MANAGEMENT HEADER
 ========================================================= -->
 
-    <section class="su-header">
+    <section class="su-header" aria-labelledby="suHeaderTitle">
 
         <!-- HEADER CONTENT -->
         <div class="su-header-content">
 
-            <!-- ICON -->
-            <div class="su-header-icon">
+            <!-- PAGE ICON -->
+            <div class="su-header-icon" aria-hidden="true">
                 <i class="fa-solid fa-users"></i>
             </div>
 
-            <!-- TITLE -->
+            <!-- PAGE INFORMATION -->
             <div class="su-header-text">
 
                 <div class="su-header-title-row">
 
-                    <h1>
-                        Users Management
-                    </h1>
+                    <h1 id="suHeaderTitle">Users Management</h1>
 
                     <span class="su-header-badge">
-                        <i class="fa-solid fa-shield-halved"></i>
-                        Access Control
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        <span>Access Control</span>
                     </span>
 
                 </div>
 
                 <p>
-                    Manage ERP users, access control, schools
+                    Manage ERP users, school accounts, access control,
                     and permissions from one place.
                 </p>
 
@@ -60,19 +58,16 @@
 
         </div>
 
-
         <!-- HEADER ACTION -->
         <div class="su-header-actions">
 
-            <button type="button" class="su-add-user-btn" onclick="openAddUserModal()">
+            <button type="button" class="su-add-user-btn" onclick="openAddUserModal()" aria-label="Add a new user">
 
-                <span class="su-add-user-icon">
+                <span class="su-add-user-icon" aria-hidden="true">
                     <i class="fa-solid fa-user-plus"></i>
                 </span>
 
-                <span class="su-add-user-text">
-                    Add New User
-                </span>
+                <span class="su-add-user-text">Add New User</span>
 
             </button>
 
@@ -81,100 +76,117 @@
     </section>
 
     <!-- =========================================================
-     USERS KPI CARDS
+     USERS MANAGEMENT KPI CARDS
 ========================================================= -->
 
-    <section class="su-stats-grid">
+    <section class="su-stats-grid" aria-label="User management statistics">
 
         <!-- TOTAL USERS -->
-        <div class="su-stat-card total-users">
+        <article class="su-stat-card total-users">
 
-            <div class="su-stat-content">
+            <div class="su-stat-top">
+                <span class="su-stat-label">Total Users</span>
 
-                <span class="su-stat-label">
-                    Total Users
+                <span class="su-stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-users"></i>
                 </span>
+            </div>
 
+            <div class="su-stat-bottom">
                 <strong class="su-stat-value">
                     {{ total_users or 0 }}
                 </strong>
 
+                <span class="su-stat-caption">
+                    Registered accounts
+                </span>
             </div>
 
-            <div class="su-stat-icon">
-                <i class="fa-solid fa-users"></i>
-            </div>
+            <span class="su-stat-accent" aria-hidden="true"></span>
 
-        </div>
+        </article>
 
 
         <!-- ACTIVE USERS -->
-        <div class="su-stat-card active-users">
+        <article class="su-stat-card active-users">
 
-            <div class="su-stat-content">
+            <div class="su-stat-top">
+                <span class="su-stat-label">Active Users</span>
 
-                <span class="su-stat-label">
-                    Active Users
+                <span class="su-stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-circle-check"></i>
                 </span>
+            </div>
 
+            <div class="su-stat-bottom">
                 <strong class="su-stat-value">
                     {{ active_users or 0 }}
                 </strong>
 
-            </div>
-
-            <div class="su-stat-icon">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
-
-        </div>
-
-
-        <!-- CLERK USERS -->
-        <div class="su-stat-card clerk-users">
-
-            <div class="su-stat-content">
-
-                <span class="su-stat-label">
-                    Clerk Accounts
+                <span class="su-stat-caption">
+                    Currently active accounts
                 </span>
+            </div>
 
+            <span class="su-stat-accent" aria-hidden="true"></span>
+
+        </article>
+
+
+        <!-- CLERK ACCOUNTS -->
+        <article class="su-stat-card clerk-users">
+
+            <div class="su-stat-top">
+                <span class="su-stat-label">Clerk Accounts</span>
+
+                <span class="su-stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-school"></i>
+                </span>
+            </div>
+
+            <div class="su-stat-bottom">
                 <strong class="su-stat-value">
                     {{ clerk_users or 0 }}
                 </strong>
 
-            </div>
-
-            <div class="su-stat-icon">
-                <i class="fa-solid fa-school"></i>
-            </div>
-
-        </div>
-
-
-        <!-- ADMIN USERS -->
-        <div class="su-stat-card admin-users">
-
-            <div class="su-stat-content">
-
-                <span class="su-stat-label">
-                    Admin Accounts
+                <span class="su-stat-caption">
+                    School-level accounts
                 </span>
+            </div>
 
+            <span class="su-stat-accent" aria-hidden="true"></span>
+
+        </article>
+
+
+        <!-- ADMIN ACCOUNTS -->
+        <article class="su-stat-card admin-users">
+
+            <div class="su-stat-top">
+                <span class="su-stat-label">Admin Accounts</span>
+
+                <span class="su-stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+            </div>
+
+            <div class="su-stat-bottom">
                 <strong class="su-stat-value">
                     {{ admin_users or 0 }}
                 </strong>
 
+                <span class="su-stat-caption">
+                    Platform administrators
+                </span>
             </div>
 
-            <div class="su-stat-icon">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
+            <span class="su-stat-accent" aria-hidden="true"></span>
 
-        </div>
+        </article>
 
     </section>
 
+    
     <!-- =========================================================
      USERS FILTER TOOLBAR
 ========================================================= -->

@@ -222,6 +222,10 @@
 
 @media (max-width: 768px) {
 
+    .sab-container {
+         padding: 14px 14px 22px;
+    }
+
     .sab-page-header {
 
         margin-bottom: 16px;
